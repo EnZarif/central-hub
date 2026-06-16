@@ -52,16 +52,10 @@
   .nav-btn i { font-size: 15px; flex-shrink: 0; }
   .nav-btn.active { background: rgba(55,138,221,0.1); color: var(--text); font-weight: 500; }
   .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); }
-  .nav-btn[data-page="tasks"].active i { color: var(--teal); }
-  .nav-btn[data-page="message"].active i { color: var(--purple-text); }
-  .nav-btn[data-page="templates"].active i { color: var(--coral-text); }
-  .nav-btn[data-page="meetings"].active i { color: var(--green-text); }
-  .nav-btn[data-page="kpi"].active i { color: var(--amber-text); }
-  .nav-btn[data-page="tasks"] i { color: var(--teal); }
-  .nav-btn[data-page="message"] i { color: var(--purple-text); }
-  .nav-btn[data-page="templates"] i { color: var(--coral-text); }
-  .nav-btn[data-page="meetings"] i { color: var(--green-text); }
-  .nav-btn[data-page="kpi"] i { color: var(--amber-text); }
+  .nav-btn[data-page="home"] i { color: var(--teal); }
+  .nav-btn[data-page="helpdesk"] i { color: var(--blue-text); }
+  .nav-btn[data-page="projects"] i { color: var(--amber-text); }
+  .nav-btn[data-page="personal"] i { color: var(--pink-text); }
   .nav-btn[data-page="settings"] i { color: var(--text-3); }
   .nav-bottom { margin-top: auto; padding-top: 10px; border-top: 0.5px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
   .theme-toggle-btn { width: 100%; padding: 8px 10px; font-size: 13px; border: none; background: transparent; cursor: pointer; border-radius: 8px; color: var(--text-3); font-family: inherit; display: flex; align-items: center; gap: 9px; transition: all 0.15s; }
@@ -112,6 +106,38 @@
   .hero-chip.c-coral { background: var(--coral-bg); border-color: rgba(210,85,40,0.25); color: var(--coral-text); }
   .hero-chip.c-green { background: var(--green-bg); border-color: rgba(99,153,34,0.25); color: var(--green-text); }
   .hero-chip-val { font-size: 14px; font-weight: 500; color: var(--text); }
+
+  /* HUB / LANDING */
+  .hub-head { margin-bottom: 1.6rem; }
+  .hub-back { font-size: 12px; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; padding: 0; margin-bottom: 10px; transition: color 0.15s; }
+  .hub-back:hover { color: var(--text-2); }
+  .hub-back i { font-size: 14px; }
+  .hub-head h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
+  .hub-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+  .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .app-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; display: flex; flex-direction: column; gap: 12px; min-height: 150px; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
+  .app-card:hover { border-color: var(--border-md); transform: translateY(-2px); }
+  .app-card.soon { cursor: default; opacity: 0.6; }
+  .app-card.soon:hover { transform: none; border-color: var(--border); }
+  .app-card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0; }
+  .app-card-icon.c-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .app-card-icon.c-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .app-card-icon.c-pink { background: var(--pink-bg); color: var(--pink-text); }
+  .app-card-icon.c-green { background: var(--green-bg); color: var(--green-text); }
+  .app-card-icon.c-purple { background: var(--purple-bg); color: var(--purple-text); }
+  .app-card-icon.c-coral { background: var(--coral-bg); color: var(--coral-text); }
+  .app-card-icon.c-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .app-card-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .app-card-desc { font-size: 12px; color: var(--text-3); line-height: 1.55; }
+  .app-card-meta { margin-top: auto; font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+  .app-card-meta i { font-size: 13px; }
+  .hub-grid .app-card:nth-child(1){animation-delay:.03s}
+  .hub-grid .app-card:nth-child(2){animation-delay:.08s}
+  .hub-grid .app-card:nth-child(3){animation-delay:.13s}
+  .hub-grid .app-card:nth-child(4){animation-delay:.18s}
+  .hub-grid .app-card:nth-child(5){animation-delay:.23s}
+  .hub-grid .app-card:nth-child(6){animation-delay:.28s}
+  @media (prefers-reduced-motion: reduce) { .app-card { animation: none; } }
 
   /* DASHBOARD */
   .dash-grid { display: flex; gap: 16px; align-items: center; }
@@ -510,14 +536,11 @@
 <nav class="nav">
   <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>Zarif Central Hub</span></div>
   <div class="nav-links">
-    <div class="nav-section-label">Workspace</div>
-    <button class="nav-btn active" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
-    <button class="nav-btn" data-page="message" onclick="showPage('message')"><i class="ti ti-message-2"></i><span>Daily message</span></button>
-    <button class="nav-btn" data-page="standup" onclick="showPage('standup')"><i class="ti ti-presentation"></i><span>Stand up</span></button>
-    <button class="nav-btn" data-page="meetings" onclick="showPage('meetings')"><i class="ti ti-notes"></i><span>Meetings</span></button>
-    <div class="nav-section-label">Tools</div>
-    <button class="nav-btn" data-page="templates" onclick="showPage('templates')"><i class="ti ti-template"></i><span>Templates</span></button>
-    <button class="nav-btn" data-page="kpi" onclick="showPage('kpi')"><i class="ti ti-report-analytics"></i><span>KPI Report</span></button>
+    <button class="nav-btn active" data-page="home" onclick="showPage('home')"><i class="ti ti-home"></i><span>Home</span></button>
+    <div class="nav-section-label">Hubs</div>
+    <button class="nav-btn" data-page="helpdesk" onclick="showPage('helpdesk')"><i class="ti ti-headset"></i><span>Helpdesk</span></button>
+    <button class="nav-btn" data-page="projects" onclick="showPage('projects')"><i class="ti ti-folders"></i><span>Projects</span></button>
+    <button class="nav-btn" data-page="personal" onclick="showPage('personal')"><i class="ti ti-user-heart"></i><span>Personal</span></button>
   </div>
   <div class="nav-bottom">
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
@@ -527,8 +550,123 @@
 
 <div class="wrap">
 
+  <!-- HOME LANDING -->
+  <div class="page active" id="page-home">
+    <div class="hub-head">
+      <h1><i class="ti ti-layout-grid" style="color:var(--teal);"></i> Zarif Central Hub</h1>
+      <p>Choose where you want to go.</p>
+    </div>
+    <div class="hub-grid">
+      <div class="app-card" onclick="showPage('helpdesk')">
+        <div class="app-card-icon c-blue"><i class="ti ti-headset"></i></div>
+        <div class="app-card-title">Helpdesk Management</div>
+        <div class="app-card-desc">Daily tasks, KPI reports, meetings, daily message and templates.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open hub</div>
+      </div>
+      <div class="app-card" onclick="showPage('projects')">
+        <div class="app-card-icon c-amber"><i class="ti ti-folders"></i></div>
+        <div class="app-card-title">Projects</div>
+        <div class="app-card-desc">Project meetings and more, coming over time.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open hub</div>
+      </div>
+      <div class="app-card" onclick="showPage('personal')">
+        <div class="app-card-icon c-pink"><i class="ti ti-user-heart"></i></div>
+        <div class="app-card-title">Personal</div>
+        <div class="app-card-desc">Your own personal space — to be filled in later.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open hub</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELPDESK HUB -->
+  <div class="page" id="page-helpdesk">
+    <div class="hub-head">
+      <button class="hub-back" onclick="showPage('home')"><i class="ti ti-arrow-left"></i> Home</button>
+      <h1><i class="ti ti-headset" style="color:var(--blue-text);"></i> Helpdesk Management</h1>
+      <p>Everything for running the helpdesk day to day.</p>
+    </div>
+    <div class="hub-grid">
+      <div class="app-card" onclick="showPage('tasks','helpdesk')">
+        <div class="app-card-icon c-teal"><i class="ti ti-checklist"></i></div>
+        <div class="app-card-title">Tasks</div>
+        <div class="app-card-desc">Your daily task dashboard with streaks and progress.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+      <div class="app-card" onclick="showPage('kpi','helpdesk')">
+        <div class="app-card-icon c-amber"><i class="ti ti-report-analytics"></i></div>
+        <div class="app-card-title">KPI Report</div>
+        <div class="app-card-desc">Generate the daily Helpdesk Metrics report from your exports.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+      <div class="app-card" onclick="showPage('meetings','helpdesk')">
+        <div class="app-card-icon c-green"><i class="ti ti-notes"></i></div>
+        <div class="app-card-title">Meetings</div>
+        <div class="app-card-desc">Meeting minutes for ANZWL, Wpay, DMG and ad hoc.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+      <div class="app-card" onclick="showPage('message','helpdesk')">
+        <div class="app-card-icon c-purple"><i class="ti ti-message-2"></i></div>
+        <div class="app-card-title">Daily Message</div>
+        <div class="app-card-desc">Generate your morning Teams message and break schedule.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+      <div class="app-card" onclick="showPage('templates','helpdesk')">
+        <div class="app-card-icon c-coral"><i class="ti ti-template"></i></div>
+        <div class="app-card-title">Templates</div>
+        <div class="app-card-desc">Reusable message templates and common numbers.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+      <div class="app-card" onclick="showPage('standup','helpdesk')">
+        <div class="app-card-icon c-pink"><i class="ti ti-presentation"></i></div>
+        <div class="app-card-title">Stand up</div>
+        <div class="app-card-desc">Draft and elaborate your daily stand up talking points.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECTS HUB -->
+  <div class="page" id="page-projects">
+    <div class="hub-head">
+      <button class="hub-back" onclick="showPage('home')"><i class="ti ti-arrow-left"></i> Home</button>
+      <h1><i class="ti ti-folders" style="color:var(--amber-text);"></i> Projects</h1>
+      <p>Project work and notes.</p>
+    </div>
+    <div class="hub-grid">
+      <div class="app-card" onclick="showPage('meetings','projects')">
+        <div class="app-card-icon c-green"><i class="ti ti-notes"></i></div>
+        <div class="app-card-title">Meetings</div>
+        <div class="app-card-desc">Project meeting notes, agendas and attendees.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+      <div class="app-card soon">
+        <div class="app-card-icon c-blue"><i class="ti ti-plus"></i></div>
+        <div class="app-card-title">More coming</div>
+        <div class="app-card-desc">Project tracking and tools will live here.</div>
+        <div class="app-card-meta"><i class="ti ti-clock"></i>Coming soon</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAL HUB -->
+  <div class="page" id="page-personal">
+    <div class="hub-head">
+      <button class="hub-back" onclick="showPage('home')"><i class="ti ti-arrow-left"></i> Home</button>
+      <h1><i class="ti ti-user-heart" style="color:var(--pink-text);"></i> Personal</h1>
+      <p>Your own personal space.</p>
+    </div>
+    <div class="hub-grid">
+      <div class="app-card soon">
+        <div class="app-card-icon c-pink"><i class="ti ti-sparkles"></i></div>
+        <div class="app-card-title">Coming soon</div>
+        <div class="app-card-desc">This space is yours to fill — tell me what you'd like here.</div>
+        <div class="app-card-meta"><i class="ti ti-clock"></i>To be added</div>
+      </div>
+    </div>
+  </div>
+
   <!-- TASKS PAGE -->
-  <div class="page active" id="page-tasks">
+  <div class="page" id="page-tasks">
 
     <div class="tasks-layout">
     <div class="tasks-main">
@@ -1710,9 +1848,15 @@ function moveTask(id, dir) {
   renderTasks();
 }
 
-function showPage(p) {
+let currentHub = null;
+const HUB_PAGES = ['home','helpdesk','projects','personal'];
+function showPage(p, hub) {
   document.querySelectorAll('.page').forEach(el => el.classList.toggle('active', el.id === 'page-'+p));
-  document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.page === p));
+  if (HUB_PAGES.includes(p)) currentHub = (p === 'home') ? null : p;
+  else if (hub) currentHub = hub;
+  const activeNav = (p === 'settings') ? 'settings' : HUB_PAGES.includes(p) ? p : currentHub;
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.page === activeNav));
+  window.scrollTo(0, 0);
 }
 
 function switchTab(t) {
@@ -3399,6 +3543,13 @@ document.getElementById('mtg-date').value = todayInputDate();
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '2.5.0', type: 'major', date: '16 Jun 2026', title: 'Hub landing page', changes: [
+    'New Home landing page with clickable app icons for each area.',
+    'Helpdesk Management hub: Tasks, KPI Report, Meetings, Daily Message, Templates and Stand up.',
+    'Projects hub: Meetings, with more to come.',
+    'Personal hub: a placeholder space to be filled in later.',
+    'Sidebar navigation reorganised around the three hubs.',
+  ]},
   { ver: '2.4.0', type: 'minor', date: '16 Jun 2026', title: 'Rebrand & changelog tools', changes: [
     'Renamed the app to "Zarif Central Hub".',
     'The changelog is now collapsible — tap the header to open or close it.',
