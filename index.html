@@ -530,6 +530,11 @@
   .cl-toggle:hover { color: var(--text); }
   #cl-chevron { margin-left: 10px; font-size: 16px; transition: transform 0.2s ease; }
   .cl-toggle.open #cl-chevron { transform: rotate(180deg); }
+  .s-toggle { cursor: pointer; margin-bottom: 0; user-select: none; display: flex; align-items: center; }
+  .s-toggle:hover { color: var(--text); }
+  .s-toggle .s-chev { margin-left: auto; font-size: 16px; transition: transform 0.2s ease; }
+  .s-toggle.open .s-chev { transform: rotate(180deg); }
+  .s-body { display: none; margin-top: 14px; }
   #changelog-body { margin-top: 16px; }
   .cl-filters { display: flex; gap: 6px; margin-bottom: 10px; }
   .cl-filter { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
@@ -1364,129 +1369,154 @@
     </div>
 
     <div class="card settings-section">
-      <div class="card-title"><i class="ti ti-sparkles"></i> AI — Groq</div>
-      <div class="settings-key-row">
-        <input type="password" class="settings-input" id="settings-gemini-key" placeholder="gsk_... (your Groq API key)" style="width:100%;">
-        <button class="settings-save-btn" onclick="saveGeminiKey()"><i class="ti ti-device-floppy"></i> Save</button>
-        <button class="settings-save-btn" onclick="testGeminiKey()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);"><i class="ti ti-plug-connected"></i> Test</button>
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-ai')">
+        <i class="ti ti-sparkles"></i> AI — Groq
+        <i class="ti ti-chevron-down s-chev"></i>
       </div>
-      <div class="ai-hint" id="gemini-key-status"></div>
-      <div class="ai-hint">Your key is stored only in this browser (localStorage) and never sent anywhere except Groq's API. Get a free key (no credit card needed) at <strong>console.groq.com</strong> → API Keys. Once set, all AI buttons across the app will use it.</div>
-    </div>
-
-    <div class="card settings-section">
-      <div class="card-title"><i class="ti ti-user"></i> Profile</div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Display name</div>
-          <div class="settings-row-desc">Shown in the "Hey, ..." greeting on the Tasks page</div>
+      <div class="s-body" id="s-ai">
+        <div class="settings-key-row">
+          <input type="password" class="settings-input" id="settings-gemini-key" placeholder="gsk_... (your Groq API key)" style="width:100%;">
+          <button class="settings-save-btn" onclick="saveGeminiKey()"><i class="ti ti-device-floppy"></i> Save</button>
+          <button class="settings-save-btn" onclick="testGeminiKey()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);"><i class="ti ti-plug-connected"></i> Test</button>
         </div>
-        <div class="settings-row-ctrl">
-          <input type="text" class="settings-input" id="settings-display-name" placeholder="Zarif">
-        </div>
+        <div class="ai-hint" id="gemini-key-status"></div>
+        <div class="ai-hint">Your key is stored only in this browser and never sent anywhere except Groq's API. Get a free key at <strong>console.groq.com</strong> → API Keys.</div>
       </div>
     </div>
 
     <div class="card settings-section">
-      <div class="card-title"><i class="ti ti-layout"></i> Appearance</div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Theme</div>
-          <div class="settings-row-desc">Switch between dark and light mode</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <select class="settings-input" id="settings-theme" style="width:120px;">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
-        </div>
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-profile')">
+        <i class="ti ti-user"></i> Profile
+        <i class="ti ti-chevron-down s-chev"></i>
       </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Show knowledge base sidebar</div>
-          <div class="settings-row-desc">The rotating fact panel beside your task list</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <label class="toggle-switch">
-            <input type="checkbox" id="settings-show-sidebar" checked onchange="applySettings()">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Show task hero section</div>
-          <div class="settings-row-desc">The summary banner with progress bar at the top of Tasks</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <label class="toggle-switch">
-            <input type="checkbox" id="settings-show-hero" checked onchange="applySettings()">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Compact task cards</div>
-          <div class="settings-row-desc">Reduce padding on task cards for a denser view</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <label class="toggle-switch">
-            <input type="checkbox" id="settings-compact" onchange="applySettings()">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div class="card settings-section" style="margin-top:8px;">
-      <div class="card-title"><i class="ti ti-database"></i> Data</div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Save appearance &amp; profile settings</div>
-          <div class="settings-row-desc">Saves display name and appearance choices</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <button class="settings-save-btn" onclick="saveAppSettings()"><i class="ti ti-device-floppy"></i> Save</button>
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Reset all task completions</div>
-          <div class="settings-row-desc">Clears which tasks are marked done today</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <button class="danger-btn" onclick="resetDay()"><i class="ti ti-refresh"></i> Reset</button>
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Clear all app data</div>
-          <div class="settings-row-desc">Removes all tasks, templates, meetings, standup points and settings</div>
-        </div>
-        <div class="settings-row-ctrl">
-          <button class="danger-btn" onclick="clearAllData()"><i class="ti ti-trash"></i> Clear all</button>
+      <div class="s-body" id="s-profile">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Display name</div>
+            <div class="settings-row-desc">Shown in the "Hey, ..." greeting on the Tasks page</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <input type="text" class="settings-input" id="settings-display-name" placeholder="Zarif">
+          </div>
         </div>
       </div>
     </div>
 
     <div class="card settings-section">
-      <div class="card-title"><i class="ti ti-layout-grid-add"></i> Organise hubs</div>
-      <div class="ai-hint" style="margin-bottom:14px;">Choose which apps appear in each hub. An app can live in more than one hub.</div>
-      <div id="hub-organiser"></div>
-      <div style="display:flex; gap:8px; margin-top:14px;">
-        <button class="settings-save-btn" onclick="saveHubOrganiser()"><i class="ti ti-device-floppy"></i> Save layout</button>
-        <button class="settings-save-btn" onclick="resetHubOrganiser()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);"><i class="ti ti-refresh"></i> Reset to default</button>
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-appearance')">
+        <i class="ti ti-layout"></i> Appearance
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-appearance">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Theme</div>
+            <div class="settings-row-desc">Switch between dark and light mode</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <select class="settings-input" id="settings-theme" style="width:120px;">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Show knowledge base sidebar</div>
+            <div class="settings-row-desc">The rotating fact panel beside your task list</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-show-sidebar" checked onchange="applySettings()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Show task hero section</div>
+            <div class="settings-row-desc">The summary banner with progress bar at the top of Tasks</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-show-hero" checked onchange="applySettings()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Compact task cards</div>
+            <div class="settings-row-desc">Reduce padding on task cards for a denser view</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-compact" onchange="applySettings()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="card settings-section">
-      <div class="card-title cl-toggle" onclick="toggleChangelog()">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-data')">
+        <i class="ti ti-database"></i> Data
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-data">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Save appearance &amp; profile settings</div>
+            <div class="settings-row-desc">Saves display name and appearance choices</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <button class="settings-save-btn" onclick="saveAppSettings()"><i class="ti ti-device-floppy"></i> Save</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Reset all task completions</div>
+            <div class="settings-row-desc">Clears which tasks are marked done today</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <button class="danger-btn" onclick="resetDay()"><i class="ti ti-refresh"></i> Reset</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Clear all app data</div>
+            <div class="settings-row-desc">Removes all tasks, templates, meetings, standup points and settings</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <button class="danger-btn" onclick="clearAllData()"><i class="ti ti-trash"></i> Clear all</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-hubs')">
+        <i class="ti ti-layout-grid-add"></i> Organise hubs
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-hubs">
+        <div class="ai-hint" style="margin-bottom:14px;">Choose which apps appear in each hub. An app can live in more than one hub.</div>
+        <div id="hub-organiser"></div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button class="settings-save-btn" onclick="saveHubOrganiser()"><i class="ti ti-device-floppy"></i> Save layout</button>
+          <button class="settings-save-btn" onclick="resetHubOrganiser()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);"><i class="ti ti-refresh"></i> Reset to default</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-changelog')">
         <i class="ti ti-history"></i> Changelog
         <span id="app-version-badge" class="ver-badge"></span>
-        <i class="ti ti-chevron-down" id="cl-chevron"></i>
+        <i class="ti ti-chevron-down s-chev"></i>
       </div>
-      <div id="changelog-body" style="display:none;">
+      <div class="s-body" id="s-changelog">
         <div class="cl-filters">
           <button class="cl-filter active" data-f="all" onclick="setChangelogFilter('all')">All</button>
           <button class="cl-filter" data-f="major" onclick="setChangelogFilter('major')">Major</button>
@@ -4067,14 +4097,16 @@ const APP_VERSION = CHANGELOG[0].ver;
 
 let changelogFilter = 'all';
 
-function toggleChangelog() {
-  const body = document.getElementById('changelog-body');
-  const toggle = document.querySelector('.cl-toggle');
+function toggleSettingsSection(id) {
+  const body = document.getElementById(id);
   if (!body) return;
-  const open = body.style.display === 'none';
-  body.style.display = open ? 'block' : 'none';
-  if (toggle) toggle.classList.toggle('open', open);
+  const toggle = body.previousElementSibling;
+  const isOpen = body.style.display === 'block';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (toggle) toggle.classList.toggle('open', !isOpen);
 }
+
+function toggleChangelog() { toggleSettingsSection('s-changelog'); }
 
 function setChangelogFilter(f) {
   changelogFilter = f;
