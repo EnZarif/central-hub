@@ -336,6 +336,52 @@
   #page-templates .header h1 i, #page-templates .card-title i { color: var(--coral-text); }
   #page-meetings .header h1 i, #page-meetings .card-title i { color: var(--green-text); }
   #page-kpi .header h1 i, #page-kpi .card-title i { color: var(--pink-text); }
+  #page-wishlist .header h1 i, #page-wishlist .card-title i { color: var(--purple-text); }
+
+  /* WISHLIST */
+  .wl-form { display: flex; flex-direction: column; gap: 10px; }
+  .wl-tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+  .wl-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; user-select: none; }
+  .wl-tag.selected { border-color: currentColor; }
+  .wl-tag.t-feature { background: rgba(107,99,246,0.12); color: var(--purple-text); }
+  .wl-tag.t-feature.selected { background: rgba(107,99,246,0.25); }
+  .wl-tag.t-ux { background: rgba(59,130,246,0.12); color: var(--blue-text); }
+  .wl-tag.t-ux.selected { background: rgba(59,130,246,0.25); }
+  .wl-tag.t-bug { background: rgba(239,68,68,0.12); color: #ef4444; }
+  .wl-tag.t-bug.selected { background: rgba(239,68,68,0.25); }
+  .wl-tag.t-perf { background: rgba(245,158,11,0.12); color: var(--amber-text); }
+  .wl-tag.t-perf.selected { background: rgba(245,158,11,0.25); }
+  .wl-tag.t-idea { background: rgba(16,185,129,0.12); color: var(--green-text); }
+  .wl-tag.t-idea.selected { background: rgba(16,185,129,0.25); }
+  .wl-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .wl-item { background: var(--bg); border: 1px solid var(--border-md); border-radius: 10px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; transition: border-color 0.15s; }
+  .wl-item:hover { border-color: var(--purple-text); }
+  .wl-item-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-md); flex-shrink: 0; margin-top: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .wl-item-check:hover { border-color: var(--purple-text); }
+  .wl-item.done .wl-item-check { background: var(--purple-text); border-color: var(--purple-text); }
+  .wl-item.done .wl-item-check::after { content: '✓'; font-size: 11px; color: #fff; }
+  .wl-item.done .wl-item-title { text-decoration: line-through; color: var(--text-3); }
+  .wl-item-body { flex: 1; min-width: 0; }
+  .wl-item-title { font-size: 13px; font-weight: 500; color: var(--text); word-break: break-word; }
+  .wl-item-desc { font-size: 12px; color: var(--text-3); margin-top: 3px; word-break: break-word; }
+  .wl-item-footer { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .wl-item-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .wl-item-tag.t-feature { background: rgba(107,99,246,0.15); color: var(--purple-text); }
+  .wl-item-tag.t-ux { background: rgba(59,130,246,0.15); color: var(--blue-text); }
+  .wl-item-tag.t-bug { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .wl-item-tag.t-perf { background: rgba(245,158,11,0.15); color: var(--amber-text); }
+  .wl-item-tag.t-idea { background: rgba(16,185,129,0.15); color: var(--green-text); }
+  .wl-item-date { font-size: 10px; color: var(--text-3); margin-left: auto; }
+  .wl-item-del { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
+  .wl-item-del:hover { color: #ef4444; }
+  .wl-filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .wl-filter-row select, .wl-filter-row input { font-size: 12px; padding: 5px 9px; border: 0.5px solid var(--border-md); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; font-family: inherit; }
+  .wl-filter-row input { flex: 1; min-width: 120px; }
+  .wl-empty { text-align: center; color: var(--text-3); font-size: 13px; padding: 28px 0; }
+  .wl-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .wl-stat { background: var(--surface); border-radius: 10px; padding: 10px 16px; flex: 1; min-width: 100px; text-align: center; }
+  .wl-stat-n { font-size: 22px; font-weight: 700; color: var(--text); }
+  .wl-stat-l { font-size: 11px; color: var(--text-3); margin-top: 2px; }
   .field-row { display: grid; grid-template-columns: 160px 1fr; gap: 10px; align-items: start; margin-bottom: 16px; }
   .field-label { font-size: 13px; color: var(--text-2); padding-top: 8px; }
   .field-input { width: 100%; padding: 7px 10px; font-size: 13px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
@@ -868,6 +914,69 @@
       <p>Your own personal space.</p>
     </div>
     <div class="hub-grid" id="hub-grid-personal"></div>
+  </div>
+
+  <!-- WISHLIST PAGE -->
+  <div class="page" id="page-wishlist">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-sparkles"></i> Feature Wishlist</h1>
+        <p>Ideas and future features for this project</p>
+      </div>
+      <span class="date-pill" id="datebadge-wl"></span>
+    </div>
+
+    <div class="wl-stats">
+      <div class="wl-stat"><div class="wl-stat-n" id="wl-stat-total">0</div><div class="wl-stat-l">Total ideas</div></div>
+      <div class="wl-stat"><div class="wl-stat-n" id="wl-stat-open">0</div><div class="wl-stat-l">Open</div></div>
+      <div class="wl-stat"><div class="wl-stat-n" id="wl-stat-done">0</div><div class="wl-stat-l">Shipped</div></div>
+    </div>
+
+    <div class="split-grid">
+    <div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-plus" style="font-size:13px;"></i> Add idea</div>
+      <div class="wl-form">
+        <input class="field-input" id="wl-title" placeholder="Feature title…" style="font-size:13px;">
+        <textarea id="wl-desc" rows="3" placeholder="More details (optional)…" style="font-size:13px; resize:vertical; padding:7px 10px; border:0.5px solid var(--border-md); border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:inherit; outline:none;"></textarea>
+        <div>
+          <div style="font-size:11px; color:var(--text-3); margin-bottom:6px;">Category</div>
+          <div class="wl-tag-row" id="wl-tag-picker">
+            <span class="wl-tag t-feature selected" onclick="wlPickTag('feature')">Feature</span>
+            <span class="wl-tag t-ux" onclick="wlPickTag('ux')">UX / Design</span>
+            <span class="wl-tag t-bug" onclick="wlPickTag('bug')">Bug fix</span>
+            <span class="wl-tag t-perf" onclick="wlPickTag('perf')">Performance</span>
+            <span class="wl-tag t-idea" onclick="wlPickTag('idea')">Idea</span>
+          </div>
+        </div>
+        <button class="generate-btn" onclick="wlAdd()"><i class="ti ti-device-floppy" style="font-size:15px;"></i> Save idea</button>
+      </div>
+    </div>
+    </div>
+
+    <div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list" style="font-size:13px;"></i> All ideas</div>
+      <div class="wl-filter-row">
+        <select id="wl-filter-tag" onchange="renderWishlist()">
+          <option value="">All categories</option>
+          <option value="feature">Feature</option>
+          <option value="ux">UX / Design</option>
+          <option value="bug">Bug fix</option>
+          <option value="perf">Performance</option>
+          <option value="idea">Idea</option>
+        </select>
+        <select id="wl-filter-status" onchange="renderWishlist()">
+          <option value="">All statuses</option>
+          <option value="open">Open</option>
+          <option value="done">Shipped</option>
+        </select>
+        <input type="text" id="wl-search" placeholder="Search…" oninput="renderWishlist()">
+      </div>
+      <div class="wl-list" id="wl-list"></div>
+    </div>
+    </div>
+    </div>
   </div>
 
   <!-- TASKS PAGE -->
@@ -2122,6 +2231,7 @@ const PAGES = {
   message:   { title:'Daily Message', icon:'ti-message-2',        color:'c-purple', desc:'Generate your morning Teams message and break schedule.' },
   templates: { title:'Templates',     icon:'ti-template',         color:'c-coral',  desc:'Reusable message templates and common numbers.' },
   standup:   { title:'Stand up',      icon:'ti-presentation',     color:'c-pink',   desc:'Draft and elaborate your daily stand up talking points.' },
+  wishlist:  { title:'Wishlist',       icon:'ti-sparkles',          color:'c-purple', desc:'Ideas and future features for this project.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -2132,7 +2242,7 @@ const HUB_META = {
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','meetings','message','templates','standup'],
   projects: ['meetings'],
-  personal: [],
+  personal: ['wishlist'],
 };
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -4078,8 +4188,106 @@ async function copyRichText(html, text) {
 
 document.getElementById('mtg-date').value = todayInputDate();
 
+// ===== WISHLIST =====
+let wishlist = [];
+let nextWishlistId = 1;
+let _wlPickedTag = 'feature';
+
+function saveWishlist() { dbSet('zarif_wishlist', wishlist); }
+
+function wlPickTag(tag) {
+  _wlPickedTag = tag;
+  document.querySelectorAll('#wl-tag-picker .wl-tag').forEach(el => {
+    el.classList.toggle('selected', el.getAttribute('onclick').includes(`'${tag}'`));
+  });
+}
+
+function wlAdd() {
+  const titleEl = document.getElementById('wl-title');
+  const descEl  = document.getElementById('wl-desc');
+  const title = titleEl.value.trim();
+  if (!title) { titleEl.focus(); return; }
+  wishlist.unshift({ id: nextWishlistId++, title, desc: descEl.value.trim(), tag: _wlPickedTag, done: false, createdAt: new Date().toISOString() });
+  saveWishlist();
+  titleEl.value = '';
+  descEl.value  = '';
+  renderWishlist();
+}
+
+function wlToggleDone(id) {
+  const item = wishlist.find(w => w.id === id);
+  if (item) { item.done = !item.done; saveWishlist(); renderWishlist(); }
+}
+
+function wlDelete(id) {
+  wishlist = wishlist.filter(w => w.id !== id);
+  saveWishlist();
+  renderWishlist();
+}
+
+const WL_TAG_LABELS = { feature:'Feature', ux:'UX / Design', bug:'Bug fix', perf:'Performance', idea:'Idea' };
+
+function renderWishlist() {
+  const filterTag    = (document.getElementById('wl-filter-tag')    || {}).value || '';
+  const filterStatus = (document.getElementById('wl-filter-status') || {}).value || '';
+  const search       = ((document.getElementById('wl-search')        || {}).value || '').toLowerCase();
+
+  const dateBadge = document.getElementById('datebadge-wl');
+  if (dateBadge) dateBadge.textContent = new Date().toLocaleDateString('en-AU', {weekday:'short',day:'numeric',month:'short'});
+
+  const total = wishlist.length;
+  const done  = wishlist.filter(w => w.done).length;
+  const open  = total - done;
+  const stTotal = document.getElementById('wl-stat-total');
+  const stOpen  = document.getElementById('wl-stat-open');
+  const stDone  = document.getElementById('wl-stat-done');
+  if (stTotal) stTotal.textContent = total;
+  if (stOpen)  stOpen.textContent  = open;
+  if (stDone)  stDone.textContent  = done;
+
+  const list = document.getElementById('wl-list');
+  if (!list) return;
+
+  const filtered = wishlist.filter(w => {
+    if (filterTag    && w.tag  !== filterTag)                      return false;
+    if (filterStatus === 'open' && w.done)                         return false;
+    if (filterStatus === 'done' && !w.done)                        return false;
+    if (search && !w.title.toLowerCase().includes(search) && !w.desc.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="wl-empty"><i class="ti ti-sparkles" style="font-size:28px;opacity:0.3;display:block;margin-bottom:8px;"></i>No ideas yet — add one!</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(w => {
+    const date = new Date(w.createdAt).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'});
+    return `<div class="wl-item${w.done ? ' done' : ''}">
+      <div class="wl-item-check" onclick="wlToggleDone(${w.id})" title="${w.done ? 'Mark open' : 'Mark shipped'}"></div>
+      <div class="wl-item-body">
+        <div class="wl-item-title">${w.title}</div>
+        ${w.desc ? `<div class="wl-item-desc">${w.desc}</div>` : ''}
+        <div class="wl-item-footer">
+          <span class="wl-item-tag t-${w.tag}">${WL_TAG_LABELS[w.tag] || w.tag}</span>
+          <span class="wl-item-date">${date}</span>
+        </div>
+      </div>
+      <button class="wl-item-del" onclick="wlDelete(${w.id})" title="Delete"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.3.0', type: 'minor', date: '17 Jun 2026', title: 'Feature Wishlist', changes: [
+    'Added Wishlist page under Personal hub',
+    'Add ideas with title, description, and category tag (Feature, UX, Bug fix, Performance, Idea)',
+    'Mark ideas as shipped (crossed out) or reopen them',
+    'Filter by category and status; search by keyword',
+    'Stats bar shows total / open / shipped counts',
+    'Wishlist persisted in Supabase as zarif_wishlist',
+  ]},
   { ver: '3.2.0', type: 'minor', date: '17 Jun 2026', title: 'Scratch Pad records', changes: [
     'Scratch Pad now lets you save the current draft as a named record.',
     'Saved records appear in a scrollable list below the editor — click to expand, restore to pad, or delete.',
@@ -4697,6 +4905,9 @@ function initNotes() {
   meetings       = dbGet('zarif_meetings')       || [];
   nextMeetingId  = meetings.reduce((m,x) => Math.max(m, x.id || 0), 0) + 1;
 
+  wishlist       = dbGet('zarif_wishlist')       || [];
+  nextWishlistId = wishlist.reduce((m,w) => Math.max(m, w.id || 0), 0) + 1;
+
   // Filter expired once-tasks
   const _before = customTasks.length;
   customTasks = customTasks.filter(t => !(t.freq === 'once' && t.date !== todayInputDate()));
@@ -4718,6 +4929,7 @@ function initNotes() {
   renderNumbers();
   renderMeetings();
   initNotes();
+  renderWishlist();
 })();
 </script>
 </body>
