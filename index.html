@@ -466,53 +466,55 @@
   .proj-stat-ico { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
   .proj-stat-n { font-size: 18px; font-weight: 600; color: var(--text); line-height: 1; }
   .proj-stat-l { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-  .proj-list { display: flex; flex-direction: column; gap: 14px; }
-  .proj-card { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 14px; overflow: hidden; }
-  .proj-card-head { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; cursor: pointer; transition: background 0.15s; }
-  .proj-card-head:hover { background: var(--surface2); }
-  .proj-card-chev { font-size: 14px; color: var(--text-3); transition: transform 0.2s; flex-shrink: 0; margin-top: 2px; }
+  /* card grid — matches widgets section */
+  .proj-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 800px) { .proj-list { grid-template-columns: 1fr; } }
+  /* cartoon card shell */
+  .proj-card { border-radius: 22px; overflow: hidden; background: var(--surface); transition: transform 0.15s, box-shadow 0.15s; display: flex; flex-direction: column; }
+  .proj-card:hover { transform: translate(-2px,-2px); }
+  /* colored banner */
+  .proj-card-banner { display: flex; align-items: flex-start; gap: 13px; padding: 18px 20px 16px; flex-shrink: 0; cursor: pointer; position: relative; }
+  .proj-card-banner i.proj-banner-icon { font-size: 28px; color: rgba(255,255,255,0.9); flex-shrink: 0; margin-top: 2px; }
+  .proj-banner-text { flex: 1; min-width: 0; }
+  .proj-banner-title { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.2px; margin-bottom: 3px; line-height: 1.3; }
+  .proj-banner-sub { font-size: 11px; color: rgba(255,255,255,0.65); }
+  .proj-banner-actions { display: flex; gap: 3px; flex-shrink: 0; }
+  .proj-banner-btn { background: rgba(255,255,255,0.15); border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; padding: 4px 7px; border-radius: 7px; transition: background 0.15s; }
+  .proj-banner-btn:hover { background: rgba(255,255,255,0.28); color: #fff; }
+  .proj-card-chev { font-size: 13px; color: rgba(255,255,255,0.6); transition: transform 0.2s; flex-shrink: 0; margin-top: 4px; }
   .proj-card.open .proj-card-chev { transform: rotate(180deg); }
-  .proj-card-info { flex: 1; min-width: 0; }
-  .proj-card-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
-  .proj-card-desc { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
-  .proj-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .proj-type-pill { font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
-  .ptype-operational { background: var(--blue-bg); color: var(--blue-text); }
-  .ptype-handover    { background: var(--purple-bg); color: var(--purple-text); }
-  .ptype-rollout     { background: var(--amber-bg); color: var(--amber-text); }
-  .ptype-internal    { background: var(--teal-bg); color: var(--teal-text); }
-  .ptype-managerial  { background: var(--coral-bg); color: var(--coral-text); }
-  .proj-status-pill { font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
-  .pstatus-active    { background: rgba(99,153,34,0.15); color: var(--green-text); }
+  /* status pills in body */
+  .pstatus-active    { background: rgba(99,153,34,0.18); color: var(--green-text); }
   .pstatus-onhold    { background: var(--amber-bg); color: var(--amber-text); }
   .pstatus-delivered { background: var(--surface2); color: var(--text-3); }
-  .proj-sub-count { font-size: 11px; color: var(--text-3); margin-left: auto; flex-shrink: 0; }
-  .proj-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  .proj-icon-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 7px; transition: all 0.15s; }
-  .proj-icon-btn:hover { color: var(--text); background: var(--surface2); }
-  .proj-body { display: none; border-top: 0.5px solid var(--border); }
-  .proj-card.open .proj-body { display: block; }
-  .proj-sub-list { padding: 10px 18px 14px; display: flex; flex-direction: column; gap: 6px; }
-  .proj-sub-add-row { display: flex; gap: 8px; align-items: center; padding: 8px 18px 12px; border-top: 0.5px solid var(--border); }
-  .proj-sub-add-input { flex: 1; font-size: 13px; padding: 6px 10px; border: 0.5px solid var(--border-md); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
-  .proj-sub-add-input:focus { border-color: var(--amber-text); }
-  .proj-sub-add-btn { font-size: 12px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid var(--amber-text); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
-  .proj-sub-add-btn:hover { background: var(--amber-text); color: #000; }
-  .proj-sub-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; background: var(--bg); border: 0.5px solid var(--border); transition: border-color 0.15s; }
+  /* body */
+  .proj-body { display: none; padding: 14px 18px 16px; flex: 1; display: none; flex-direction: column; gap: 0; border-top: 2px solid rgba(0,0,0,0.15); }
+  .proj-card.open .proj-body { display: flex; }
+  .proj-body-status { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .proj-status-lbl { font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px; cursor: pointer; }
+  .proj-body-desc { font-size: 12px; color: var(--text-3); margin-bottom: 12px; line-height: 1.5; }
+  .proj-sub-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-bottom: 6px; }
+  .proj-sub-list { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .proj-sub-add-row { display: flex; gap: 7px; align-items: center; margin-top: 10px; }
+  .proj-sub-add-input { flex: 1; font-size: 12px; padding: 6px 10px; border: 0.5px solid var(--border-md); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .proj-sub-add-btn { font-size: 12px; padding: 6px 11px; border-radius: 8px; border: 1.5px solid var(--border-md); background: var(--surface2); color: var(--text-2); cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
+  .proj-sub-add-btn:hover { border-color: var(--text-3); color: var(--text); }
+  .proj-sub-row { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 9px; background: var(--bg); border: 0.5px solid var(--border); transition: border-color 0.15s; }
   .proj-sub-row:hover { border-color: var(--border-md); }
-  .proj-sub-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .proj-sub-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .proj-sub-dot.pstatus-active    { background: var(--green-text); }
   .proj-sub-dot.pstatus-onhold    { background: var(--amber-text); }
   .proj-sub-dot.pstatus-delivered { background: var(--text-3); }
-  .proj-sub-name { font-size: 13px; color: var(--text); flex: 1; min-width: 0; }
+  .proj-sub-name { font-size: 12px; color: var(--text); flex: 1; min-width: 0; }
   .proj-sub-name.delivered { text-decoration: line-through; color: var(--text-3); }
-  .proj-sub-status { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; cursor: pointer; transition: all 0.15s; }
+  .proj-sub-status { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; flex-shrink: 0; cursor: pointer; transition: all 0.15s; }
   .proj-sub-date { font-size: 10px; color: var(--text-3); flex-shrink: 0; }
   .proj-sub-del { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 5px; transition: color 0.15s; }
   .proj-sub-del:hover { color: #ef4444; }
-  .proj-empty { text-align: center; padding: 60px 20px; color: var(--text-3); }
+  .proj-empty { text-align: center; padding: 60px 20px; color: var(--text-3); grid-column: 1 / -1; }
   .proj-empty i { font-size: 36px; opacity: 0.25; display: block; margin-bottom: 12px; }
   .proj-empty-title { font-size: 15px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+  /* modal */
   .proj-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .proj-modal { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 16px; padding: 24px; width: 100%; max-width: 480px; }
   .proj-modal-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
@@ -4689,6 +4691,13 @@ let _projFilter = 'all';
 function saveProjects() { dbSet('zarif_projects', projects); }
 
 const PROJ_TYPE_LABELS = { operational:'Operational', handover:'Handover', rollout:'Rollout', internal:'Internal', managerial:'Managerial' };
+const PROJ_TYPE_STYLES = {
+  operational: { border:'#378ADD', shadow:'rgba(55,138,221,0.4)', bg:'linear-gradient(135deg,#185FA5 0%,#378ADD 100%)', icon:'ti-server' },
+  managerial:  { border:'#D85A30', shadow:'rgba(216,90,48,0.4)',  bg:'linear-gradient(135deg,#993C1D 0%,#D85A30 100%)', icon:'ti-briefcase' },
+  handover:    { border:'#7F77DD', shadow:'rgba(127,119,221,0.4)',bg:'linear-gradient(135deg,#534AB7 0%,#7F77DD 100%)', icon:'ti-arrow-right-left' },
+  rollout:     { border:'#EF9F27', shadow:'rgba(239,159,39,0.4)', bg:'linear-gradient(135deg,#854F0B 0%,#EF9F27 100%)', icon:'ti-rocket' },
+  internal:    { border:'#1D9E75', shadow:'rgba(29,158,117,0.4)', bg:'linear-gradient(135deg,#0F6E56 0%,#1D9E75 100%)', icon:'ti-tools' },
+};
 const PROJ_STATUS_LABELS = { active:'Active', onhold:'On hold', delivered:'Delivered' };
 
 function openProjModal(id) {
@@ -4849,31 +4858,32 @@ function renderProjects() {
       </div>`;
     }).join('');
 
-    const typeLabel  = PROJ_TYPE_LABELS[p.type] || p.type;
+    const typeLabel   = PROJ_TYPE_LABELS[p.type] || p.type;
     const statusLabel = PROJ_STATUS_LABELS[p.status] || p.status;
-    const statusCls  = p.status === 'active' ? 'pstatus-active' : p.status === 'onhold' ? 'pstatus-onhold' : 'pstatus-delivered';
-    const delivNote  = p.deliveredAt ? `<span style="font-size:10px;color:var(--text-3)">Delivered ${new Date(p.deliveredAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>` : '';
-    const createdNote = `<span style="font-size:10px;color:var(--text-3)">Started ${new Date(p.createdAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>`;
+    const statusCls   = p.status === 'active' ? 'pstatus-active' : p.status === 'onhold' ? 'pstatus-onhold' : 'pstatus-delivered';
+    const style       = PROJ_TYPE_STYLES[p.type] || PROJ_TYPE_STYLES.internal;
+    const dateNote    = p.deliveredAt
+      ? `Delivered ${new Date(p.deliveredAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}`
+      : `Started ${new Date(p.createdAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}`;
 
-    return `<div class="proj-card${isOpen?' open':''}" id="proj-card-${p.id}">
-      <div class="proj-card-head" onclick="toggleProjOpen(${p.id})">
+    return `<div class="proj-card${isOpen?' open':''}" id="proj-card-${p.id}" style="border:2.5px solid ${style.border};box-shadow:5px 5px 0 ${style.shadow};">
+      <div class="proj-card-banner" style="background:${style.bg}" onclick="toggleProjOpen(${p.id})">
+        <i class="ti ${style.icon} proj-banner-icon"></i>
+        <div class="proj-banner-text">
+          <div class="proj-banner-title">${esc(p.title)}</div>
+          <div class="proj-banner-sub">${typeLabel} · ${subs.length} sub-project${subs.length!==1?'s':''} · ${dateNote}</div>
+        </div>
+        <div class="proj-banner-actions" onclick="event.stopPropagation()">
+          <button class="proj-banner-btn" onclick="openProjModal(${p.id})" title="Edit"><i class="ti ti-pencil"></i></button>
+          <button class="proj-banner-btn" onclick="deleteProject(${p.id})" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
         <i class="ti ti-chevron-down proj-card-chev"></i>
-        <div class="proj-card-info">
-          <div class="proj-card-title">${esc(p.title)}</div>
-          ${p.description ? `<div class="proj-card-desc">${esc(p.description)}</div>` : ''}
-          <div class="proj-card-meta">
-            <span class="proj-type-pill ptype-${p.type}">${typeLabel}</span>
-            <span class="proj-status-pill ${statusCls}">${statusLabel}</span>
-            ${delivNote || createdNote}
-          </div>
-        </div>
-        <span class="proj-sub-count">${subs.length} sub-project${subs.length!==1?'s':''}</span>
-        <div class="proj-card-actions" onclick="event.stopPropagation()">
-          <button class="proj-icon-btn" onclick="openProjModal(${p.id})" title="Edit"><i class="ti ti-pencil"></i></button>
-          <button class="proj-icon-btn" onclick="deleteProject(${p.id})" title="Delete"><i class="ti ti-trash"></i></button>
-        </div>
       </div>
       <div class="proj-body">
+        <div class="proj-body-status">
+          <span class="proj-status-lbl ${statusCls}" onclick="event.stopPropagation()">${statusLabel}</span>
+          ${p.description ? `<span style="font-size:11px;color:var(--text-3)">${esc(p.description)}</span>` : ''}
+        </div>
         <div class="proj-sub-list">
           ${subRows || '<div style="font-size:12px;color:var(--text-3);padding:4px 0">No sub-projects yet — add one below.</div>'}
         </div>
