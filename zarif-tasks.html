@@ -38,29 +38,54 @@
     --pink-bg: #fce8f4; --pink-text: #8c1f60;
     --hero-bg: #e8faf2;
   }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 4rem; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 196px; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
   .wrap:has(#page-templates.active) { max-width: 1100px; }
+  @media (max-width: 700px) { body { padding-left: 52px; } }
 
-  /* NAV */
-  .nav { display: flex; align-items: center; gap: 2px; background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 8px 1rem; position: sticky; top: 0; z-index: 10; }
-  .nav-logo { display: flex; align-items: center; gap: 9px; margin-right: 20px; font-size: 14px; font-weight: 500; color: var(--text); flex-shrink: 0; }
-  .nav-logo-icon { width: 26px; height: 26px; background: #185FA5; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .nav-logo-icon i { font-size: 13px; color: #fff; }
-  .nav-btn { padding: 6px 13px; font-size: 12px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 20px; color: var(--text-3); font-family: inherit; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
-  .nav-btn i { font-size: 14px; }
-  .nav-btn.active { background: var(--surface2); color: var(--text); font-weight: 500; border: 0.5px solid var(--border-md); }
-  .nav-btn:hover:not(.active) { color: var(--text-2); background: var(--surface2); }
+  /* APP LAYOUT */
+  body { padding: 0; }
+  .app-layout { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR NAV */
+  .nav { width: 196px; flex-shrink: 0; background: var(--surface); border-right: 0.5px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; padding: 18px 10px 14px; z-index: 10; overflow-y: auto; }
+  .nav-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--text); padding: 0 4px; margin-bottom: 22px; flex-shrink: 0; }
+  .nav-logo-icon { width: 28px; height: 28px; background: #185FA5; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .nav-logo-icon i { font-size: 14px; color: #fff; }
+  .nav-links { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .nav-section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); padding: 10px 8px 4px; margin-top: 6px; }
+  .nav-btn { width: 100%; padding: 8px 10px; font-size: 13px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 8px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 9px; transition: all 0.15s; text-align: left; }
+  .nav-btn i { font-size: 15px; flex-shrink: 0; }
+  .nav-btn.active { background: rgba(55,138,221,0.1); color: var(--text); font-weight: 500; }
+  .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); }
+  .nav-btn[data-page="tasks"].active i { color: var(--teal); }
+  .nav-btn[data-page="message"].active i { color: var(--purple-text); }
+  .nav-btn[data-page="templates"].active i { color: var(--coral-text); }
+  .nav-btn[data-page="meetings"].active i { color: var(--green-text); }
+  .nav-btn[data-page="kpi"].active i { color: var(--amber-text); }
   .nav-btn[data-page="tasks"] i { color: var(--teal); }
   .nav-btn[data-page="message"] i { color: var(--purple-text); }
   .nav-btn[data-page="templates"] i { color: var(--coral-text); }
   .nav-btn[data-page="meetings"] i { color: var(--green-text); }
   .nav-btn[data-page="kpi"] i { color: var(--amber-text); }
   .nav-btn[data-page="settings"] i { color: var(--text-3); }
+  .nav-bottom { margin-top: auto; padding-top: 10px; border-top: 0.5px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+  .theme-toggle-btn { width: 100%; padding: 8px 10px; font-size: 13px; border: none; background: transparent; cursor: pointer; border-radius: 8px; color: var(--text-3); font-family: inherit; display: flex; align-items: center; gap: 9px; transition: all 0.15s; }
+  .theme-toggle-btn i { font-size: 15px; }
+  .theme-toggle-btn:hover { color: var(--text-2); background: var(--surface2); }
   body.compact-mode .task { padding: 7px 10px; }
   body.compact-mode .task-hero { padding: 14px; }
-  .theme-toggle-btn { margin-left: auto; padding: 6px 10px; font-size: 15px; border: none; background: transparent; cursor: pointer; border-radius: 20px; color: var(--text-3); display: flex; align-items: center; transition: all 0.15s; }
-  .theme-toggle-btn:hover { color: var(--text-2); background: var(--surface2); }
+
+  @media (max-width: 700px) {
+    .nav { width: 52px; padding: 14px 6px; }
+    .nav-logo span { display: none; }
+    .nav-btn span { display: none; }
+    .nav-btn { justify-content: center; padding: 8px; }
+    .theme-toggle-btn span { display: none; }
+    .theme-toggle-btn { justify-content: center; padding: 8px; }
+    .nav-section-label { display: none; }
+    .wrap { margin-left: 52px !important; }
+  }
   .page { display: none; }
   .page.active { display: block; }
 
@@ -148,7 +173,7 @@
   .wrap:has(#page-tasks.active) { max-width: 1040px; }
   .tasks-layout { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
   @media (max-width: 900px) { .tasks-layout { grid-template-columns: 1fr; } }
-  .tasks-sidebar { position: sticky; top: 76px; }
+  .tasks-sidebar { position: sticky; top: 20px; }
   .kb-card { min-height: 150px; display: flex; flex-direction: column; }
   .kb-fact { font-size: 13px; line-height: 1.65; color: var(--text-2); flex: 1; opacity: 1; transition: opacity 0.35s ease; min-height: 60px; }
   .kb-fact.fading { opacity: 0; }
@@ -357,16 +382,25 @@
 </head>
 <body>
 
-<div class="nav">
-  <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div> ZTasks</div>
-  <button class="nav-btn active" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i> Tasks</button>
-  <button class="nav-btn" data-page="message" onclick="showPage('message')"><i class="ti ti-message-2"></i> Daily message</button>
-  <button class="nav-btn" data-page="templates" onclick="showPage('templates')"><i class="ti ti-template"></i> Templates</button>
-  <button class="nav-btn" data-page="meetings" onclick="showPage('meetings')"><i class="ti ti-notes"></i> Meetings</button>
-  <button class="nav-btn" data-page="kpi" onclick="showPage('kpi')"><i class="ti ti-report-analytics"></i> KPI Report</button>
-  <button class="nav-btn" data-page="settings" onclick="showPage('settings')" style="margin-left:auto;"><i class="ti ti-settings"></i> Settings</button>
-  <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode"><i class="ti ti-sun"></i></button>
-</div>
+<div class="app-layout">
+
+<nav class="nav">
+  <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>ZTasks</span></div>
+  <div class="nav-links">
+    <div class="nav-section-label">Workspace</div>
+    <button class="nav-btn active" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
+    <button class="nav-btn" data-page="message" onclick="showPage('message')"><i class="ti ti-message-2"></i><span>Daily message</span></button>
+    <button class="nav-btn" data-page="standup" onclick="showPage('standup')"><i class="ti ti-presentation"></i><span>Stand up</span></button>
+    <button class="nav-btn" data-page="meetings" onclick="showPage('meetings')"><i class="ti ti-notes"></i><span>Meetings</span></button>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-btn" data-page="templates" onclick="showPage('templates')"><i class="ti ti-template"></i><span>Templates</span></button>
+    <button class="nav-btn" data-page="kpi" onclick="showPage('kpi')"><i class="ti ti-report-analytics"></i><span>KPI Report</span></button>
+  </div>
+  <div class="nav-bottom">
+    <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode"><i class="ti ti-sun"></i><span>Toggle theme</span></button>
+  </div>
+</nav>
 
 <div class="wrap">
 
@@ -970,7 +1004,8 @@
     </div>
   </div>
 
-</div>
+</div><!-- end wrap -->
+</div><!-- end app-layout -->
 
 <div class="kpi-modal-overlay" id="kpi-ops-modal-overlay">
   <div class="kpi-modal">
