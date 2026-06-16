@@ -1944,8 +1944,6 @@ function showPage(p, hub) {
   if (HUB_PAGES.includes(p)) currentHub = (p === 'home') ? null : p;
   else if (hub) currentHub = hub;
   syncNavActive();
-  // auto-expand the active hub's cascade
-  if (currentHub) { const g = document.getElementById('nav-group-' + currentHub); if (g) g.classList.add('open'); }
   // global back button
   const back = document.getElementById('page-back');
   const backLbl = document.getElementById('page-back-label');
