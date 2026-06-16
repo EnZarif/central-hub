@@ -26,19 +26,87 @@
     --hero-bg: #0e1215;
     --radius: 10px; --radius-lg: 14px;
   }
-  :root[data-theme="light"] {
-    --bg: #f0f4f8; --surface: #ffffff; --surface2: #e4edf8;
-    --border: rgba(0,0,0,0.07); --border-md: rgba(0,0,0,0.13);
-    --text: #1a2230; --text-2: #4a5568; --text-3: #8a9bb0;
-    --teal: #185FA5; --teal-bg: #e4effe; --teal-text: #0c447c;
-    --amber-bg: #fef3db; --amber-text: #7a4800;
-    --coral-bg: #fdeee8; --coral-text: #8c2e10;
-    --blue-bg: #e4effe; --blue-text: #1a4f9c;
-    --green-bg: #e6f5d8; --green-text: #2d5e0e;
-    --purple-bg: #eeeeff; --purple-text: #3b33a8;
-    --pink-bg: #fce8f4; --pink-text: #8c1f60;
-    --hero-bg: #e8faf2;
+  /* ── INK: pure black + white ── */
+  :root[data-theme="ink"] {
+    --bg: #080808; --surface: #101010; --surface2: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.08); --border-md: rgba(255,255,255,0.17);
+    --text: #ffffff; --text-2: rgba(255,255,255,0.52); --text-3: rgba(255,255,255,0.28);
+    --teal: #d0d0d0; --teal-bg: rgba(255,255,255,0.09); --teal-text: #ffffff;
+    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
+    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
+    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
+    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
+    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
+    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
+    --hero-bg: #050505; --radius: 10px; --radius-lg: 14px;
   }
+  /* ── FOREST: deep green ── */
+  :root[data-theme="forest"] {
+    --bg: #0F1A10; --surface: #141F15; --surface2: rgba(99,153,34,0.07);
+    --border: rgba(99,153,34,0.1); --border-md: rgba(99,153,34,0.2);
+    --text: #D4F0B8; --text-2: rgba(212,240,184,0.5); --text-3: rgba(212,240,184,0.28);
+    --teal: #639922; --teal-bg: rgba(99,153,34,0.15); --teal-text: #97C459;
+    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
+    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
+    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
+    --green-bg: rgba(99,153,34,0.2); --green-text: #C0DD97;
+    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
+    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
+    --hero-bg: #0B1410; --radius: 10px; --radius-lg: 14px;
+  }
+  /* ── AURORA: deep navy + vibrant purple/teal/pink ── */
+  :root[data-theme="aurora"] {
+    --bg: #0D0D1A; --surface: #12122A; --surface2: rgba(127,119,221,0.08);
+    --border: rgba(127,119,221,0.1); --border-md: rgba(127,119,221,0.2);
+    --text: #E8E6FF; --text-2: rgba(232,230,255,0.5); --text-3: rgba(232,230,255,0.28);
+    --teal: #7F77DD; --teal-bg: rgba(127,119,221,0.13); --teal-text: #AFA9EC;
+    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
+    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
+    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
+    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
+    --purple-bg: rgba(127,119,221,0.18); --purple-text: #CECBF6;
+    --pink-bg: rgba(212,83,126,0.15); --pink-text: #ED93B1;
+    --hero-bg: #090916; --radius: 10px; --radius-lg: 14px;
+  }
+  /* ── EMBER: warm dark brown + amber/gold ── */
+  :root[data-theme="ember"] {
+    --bg: #1A1208; --surface: #211708; --surface2: rgba(239,159,39,0.07);
+    --border: rgba(239,159,39,0.1); --border-md: rgba(239,159,39,0.2);
+    --text: #FFE8C0; --text-2: rgba(255,232,192,0.5); --text-3: rgba(255,232,192,0.28);
+    --teal: #EF9F27; --teal-bg: rgba(239,159,39,0.13); --teal-text: #FAC775;
+    --amber-bg: rgba(239,159,39,0.18); --amber-text: #FAC775;
+    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
+    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
+    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
+    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
+    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
+    --hero-bg: #130E06; --radius: 10px; --radius-lg: 14px;
+  }
+  /* ── SLATE: cool blue-grey ── */
+  :root[data-theme="slate"] {
+    --bg: #0F1520; --surface: #141C2B; --surface2: rgba(74,158,232,0.07);
+    --border: rgba(74,158,232,0.1); --border-md: rgba(74,158,232,0.2);
+    --text: #C8D8EE; --text-2: rgba(200,216,238,0.5); --text-3: rgba(200,216,238,0.28);
+    --teal: #4A9EE8; --teal-bg: rgba(74,158,232,0.12); --teal-text: #85B7EB;
+    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
+    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
+    --blue-bg: rgba(74,158,232,0.12); --blue-text: #85B7EB;
+    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
+    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
+    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
+    --hero-bg: #0B1018; --radius: 10px; --radius-lg: 14px;
+  }
+
+  /* ── THEME PICKER (settings) ── */
+  .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; width: 100%; }
+  .tp-card { border-radius: 10px; border: 2px solid var(--border-md); padding: 8px; cursor: pointer; transition: border-color 0.15s; background: var(--bg); }
+  .tp-card:hover { border-color: var(--teal); }
+  .tp-card.tp-active { border-color: var(--teal); }
+  .tp-swatch { height: 38px; border-radius: 7px; overflow: hidden; display: flex; margin-bottom: 6px; }
+  .tp-sw-accent { width: 7px; height: 100%; flex-shrink: 0; }
+  .tp-sw-main { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 5px 6px; }
+  .tp-sw-line { height: 6px; border-radius: 3px; opacity: 0.6; }
+  .tp-name { font-size: 11px; font-weight: 500; color: var(--text-2); text-align: center; }
   body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 220px; }
   .wrap { padding: 2rem 3rem 4rem; }
 
@@ -814,7 +882,7 @@
   </div>
   <div class="nav-bottom">
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
-    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode"><i class="ti ti-sun"></i><span>Toggle theme</span></button>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cycle theme"><i class="ti ti-palette"></i><span>Theme</span></button>
   </div>
 </nav>
 
@@ -1623,16 +1691,72 @@
         <i class="ti ti-chevron-down s-chev"></i>
       </div>
       <div class="s-body" id="s-appearance">
-        <div class="settings-row">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
           <div class="settings-row-info">
             <div class="settings-row-label">Theme</div>
-            <div class="settings-row-desc">Switch between dark and light mode</div>
+            <div class="settings-row-desc">Choose your colour scheme — changes apply instantly</div>
           </div>
-          <div class="settings-row-ctrl">
-            <select class="settings-input" id="settings-theme" style="width:120px;">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
+          <div class="theme-picker" id="theme-picker">
+            <div class="tp-card" data-theme-id="midnight" onclick="pickTheme('midnight')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#378ADD"></div>
+                <div class="tp-sw-main" style="background:#111315">
+                  <div class="tp-sw-line" style="background:#378ADD;width:60%"></div>
+                  <div class="tp-sw-line" style="background:#e8ecee;width:85%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Midnight</div>
+            </div>
+            <div class="tp-card" data-theme-id="ink" onclick="pickTheme('ink')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#d0d0d0"></div>
+                <div class="tp-sw-main" style="background:#080808">
+                  <div class="tp-sw-line" style="background:#d0d0d0;width:50%"></div>
+                  <div class="tp-sw-line" style="background:#ffffff;width:80%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Ink</div>
+            </div>
+            <div class="tp-card" data-theme-id="forest" onclick="pickTheme('forest')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#639922"></div>
+                <div class="tp-sw-main" style="background:#0F1A10">
+                  <div class="tp-sw-line" style="background:#639922;width:55%"></div>
+                  <div class="tp-sw-line" style="background:#D4F0B8;width:80%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Forest</div>
+            </div>
+            <div class="tp-card" data-theme-id="aurora" onclick="pickTheme('aurora')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#7F77DD"></div>
+                <div class="tp-sw-main" style="background:#0D0D1A">
+                  <div class="tp-sw-line" style="background:#7F77DD;width:65%"></div>
+                  <div class="tp-sw-line" style="background:#E8E6FF;width:80%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Aurora</div>
+            </div>
+            <div class="tp-card" data-theme-id="ember" onclick="pickTheme('ember')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#EF9F27"></div>
+                <div class="tp-sw-main" style="background:#1A1208">
+                  <div class="tp-sw-line" style="background:#EF9F27;width:55%"></div>
+                  <div class="tp-sw-line" style="background:#FFE8C0;width:80%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Ember</div>
+            </div>
+            <div class="tp-card" data-theme-id="slate" onclick="pickTheme('slate')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#4A9EE8"></div>
+                <div class="tp-sw-main" style="background:#0F1520">
+                  <div class="tp-sw-line" style="background:#4A9EE8;width:60%"></div>
+                  <div class="tp-sw-line" style="background:#C8D8EE;width:80%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Slate</div>
+            </div>
           </div>
         </div>
         <div class="settings-row">
@@ -1878,24 +2002,30 @@ const DEFAULT_BREAKS = [
 ];
 
 // ===== THEME TOGGLE =====
+const THEMES = ['midnight','ink','forest','aurora','ember','slate'];
+
 function applyTheme(theme) {
-  if (theme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-  } else {
+  const t = THEMES.includes(theme) ? theme : 'midnight';
+  if (t === 'midnight') {
     document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', t);
   }
-  const icon = document.querySelector('#theme-toggle-btn i');
-  if (icon) icon.className = theme === 'light' ? 'ti ti-moon' : 'ti ti-sun';
+  document.querySelectorAll('.tp-card').forEach(c => c.classList.toggle('tp-active', c.dataset.themeId === t));
+}
+
+function pickTheme(name) {
+  localStorage.setItem('zarif_theme', name);
+  applyTheme(name);
 }
 
 function toggleTheme() {
-  const current = localStorage.getItem('zarif_theme') || 'dark';
-  const next = current === 'light' ? 'dark' : 'light';
-  localStorage.setItem('zarif_theme', next);
-  applyTheme(next);
+  const current = localStorage.getItem('zarif_theme') || 'midnight';
+  const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
+  pickTheme(next);
 }
 
-applyTheme(localStorage.getItem('zarif_theme') || 'dark');
+applyTheme(localStorage.getItem('zarif_theme') || 'midnight');
 
 const PO = {HIGH:0, MEDIUM:1, LOW:2};
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -4560,6 +4690,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.6.0', type: 'minor', date: '17 Jun 2026', title: 'Theme system', changes: [
+    'Added 5 new themes: Ink (pure black + white), Forest (deep green), Aurora (navy + purple/teal/pink), Ember (warm brown + gold), Slate (cool blue-grey)',
+    'Midnight remains the default theme',
+    'Visual theme picker in Settings → Appearance with live swatch previews',
+    'Sidebar "Theme" button cycles through all 6 themes',
+    'Theme selection persists in localStorage and applies instantly',
+  ]},
   { ver: '3.5.0', type: 'minor', date: '17 Jun 2026', title: 'CVTS auto-task', changes: [
     'When generating the daily message, checks if both Bella and Jack have brk set to OFF',
     'If both are off, auto-creates two HIGH priority once-tasks for today: "CVTS report sent — 9am" and "CVTS report sent — 4pm"',
@@ -4729,8 +4866,7 @@ function loadSettings() {
   const nameEl = document.getElementById('settings-display-name');
   if (nameEl) nameEl.value = s.displayName || 'Zarif';
 
-  const themeEl = document.getElementById('settings-theme');
-  if (themeEl) themeEl.value = localStorage.getItem('zarif_theme') || 'dark';
+  applyTheme(localStorage.getItem('zarif_theme') || 'midnight');
 
   const sidebarEl = document.getElementById('settings-show-sidebar');
   if (sidebarEl) sidebarEl.checked = s.showSidebar !== false;
@@ -4813,8 +4949,6 @@ function saveAppSettings() {
   const s = dbGet('zarif_settings') || {};
   const nameEl = document.getElementById('settings-display-name');
   s.displayName = (nameEl ? nameEl.value.trim() : '') || 'Zarif';
-  const themeEl = document.getElementById('settings-theme');
-  if (themeEl) { localStorage.setItem('zarif_theme', themeEl.value); applyTheme(themeEl.value); }
   const sidebarEl = document.getElementById('settings-show-sidebar');
   s.showSidebar = sidebarEl ? sidebarEl.checked : true;
   const heroEl = document.getElementById('settings-show-hero');
