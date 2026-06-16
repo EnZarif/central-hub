@@ -554,52 +554,67 @@
   .cl-list li { font-size: 13px; color: var(--text-2); line-height: 1.5; display: flex; gap: 8px; }
   .cl-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; margin-top: 7px; }
 
-  /* WIDGETS — POMODORO */
-  .widgets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-  .widgets-grid .notes-card { grid-column: 1 / -1; }
+  /* WIDGETS — GRID */
+  .widgets-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 760px) { .widgets-grid { grid-template-columns: 1fr; } }
 
-  /* SCRATCH PAD */
-  .notes-card { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
-  .notes-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .notes-card-head h3 { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-  .notes-card-head h3 i { font-size: 17px; color: var(--amber-text); }
-  .notes-saved-badge { font-size: 11px; color: var(--green-text); opacity: 0; transition: opacity 0.4s; }
-  .notes-saved-badge.show { opacity: 1; }
-  .notes-textarea { width: 100%; min-height: 160px; max-height: 420px; resize: vertical; background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 12px 14px; font-size: 14px; line-height: 1.65; color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
-  .notes-textarea:focus { border-color: var(--amber-text); }
-  .notes-textarea::placeholder { color: var(--text-3); }
-  .notes-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .notes-ai-btn { display: flex; align-items: center; gap: 7px; padding: 8px 14px; font-size: 13px; font-weight: 500; border: none; border-radius: var(--radius); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; transition: all 0.15s; }
-  .notes-ai-btn:hover { filter: brightness(1.15); }
-  .notes-ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .notes-char-count { font-size: 12px; color: var(--text-3); margin-left: auto; }
-  .notes-ai-result { background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 14px 16px; font-size: 13.5px; line-height: 1.7; color: var(--text); white-space: pre-wrap; display: none; }
-  .notes-ai-result.visible { display: block; }
-  .notes-ai-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .notes-ai-result-actions button { font-size: 12px; padding: 5px 12px; border-radius: 7px; border: 0.5px solid var(--border-md); background: var(--surface2); color: var(--text-2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
-  .notes-ai-result-actions button:hover { background: var(--border-md); color: var(--text); }
-  .pomo-card { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 26px 22px; }
+  /* WIDGET CARD SHELL — cartoon style */
+  .widget-card { border-radius: 22px; overflow: hidden; background: var(--surface); transition: transform 0.15s, box-shadow 0.15s; }
+  .widget-card:hover { transform: translate(-2px, -2px); }
+  .wcard-banner { display: flex; align-items: center; gap: 11px; padding: 18px 22px 16px; }
+  .wcard-banner i { font-size: 26px; }
+  .wcard-banner-text { display: flex; flex-direction: column; gap: 2px; }
+  .wcard-banner-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; color: #fff; }
+  .wcard-banner-sub { font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 400; letter-spacing: 0.02em; }
+  .wcard-body { padding: 20px 22px; }
+
+  /* Pomodoro card */
+  .pomo-wcard { border: 2.5px solid #D85A30; box-shadow: 5px 5px 0 rgba(216,90,48,0.4); }
+  .pomo-wcard:hover { box-shadow: 7px 7px 0 rgba(216,90,48,0.4); }
+  .pomo-banner { background: linear-gradient(135deg, #D85A30 0%, #E8733A 100%); }
+  .pomo-card { display: flex; flex-direction: column; align-items: center; gap: 18px; }
   .pomo-modes { display: flex; gap: 4px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 20px; padding: 3px; }
   .pomo-mode-btn { font-size: 13px; font-family: inherit; padding: 6px 18px; border: none; background: transparent; color: var(--text-3); border-radius: 20px; cursor: pointer; transition: all 0.15s; }
   .pomo-mode-btn.active { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
-  .pomo-ring { width: 210px; height: 210px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: conic-gradient(var(--pomo-accent, #D85A30) 0%, var(--border-md) 0); transition: background 0.95s linear; }
-  .pomo-ring-hole { width: 178px; height: 178px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-  .pomo-time { font-size: 44px; font-weight: 500; color: var(--text); letter-spacing: -1px; font-variant-numeric: tabular-nums; }
-  .pomo-state { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+  .pomo-ring { width: 200px; height: 200px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: conic-gradient(var(--pomo-accent, #D85A30) 0%, var(--border-md) 0); transition: background 0.95s linear; }
+  .pomo-ring-hole { width: 168px; height: 168px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .pomo-time { font-size: 42px; font-weight: 700; color: var(--text); letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .pomo-state { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
   .pomo-controls { display: flex; gap: 10px; align-items: center; }
-  .pomo-btn { font-size: 14px; font-family: inherit; font-weight: 500; padding: 11px 16px; border-radius: 12px; border: 0.5px solid var(--border-md); background: var(--surface2); color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; }
+  .pomo-btn { font-size: 14px; font-family: inherit; font-weight: 500; padding: 10px 16px; border-radius: 12px; border: 1.5px solid var(--border-md); background: var(--surface2); color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; }
   .pomo-btn:hover { border-color: var(--text-3); }
   .pomo-btn i { font-size: 17px; }
-  .pomo-btn.primary { background: var(--pomo-accent, #D85A30); border-color: transparent; color: #fff; padding: 11px 26px; }
-  .pomo-btn.primary:hover { opacity: 0.9; }
+  .pomo-btn.primary { background: #D85A30; border-color: #D85A30; color: #fff; padding: 10px 26px; font-weight: 700; }
+  .pomo-btn.primary:hover { opacity: 0.88; }
   .pomo-durations { display: flex; gap: 10px; }
-  .pomo-dur { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); background: var(--surface2); border: 0.5px solid var(--border); border-radius: 10px; padding: 6px 10px; }
-  .pomo-dur b { font-size: 14px; color: var(--text); font-weight: 500; min-width: 18px; text-align: center; }
+  .pomo-dur { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); background: var(--surface2); border: 1px solid var(--border-md); border-radius: 10px; padding: 6px 10px; }
+  .pomo-dur b { font-size: 14px; color: var(--text); font-weight: 600; min-width: 18px; text-align: center; }
   .pomo-dur small { color: var(--text-3); margin-left: -3px; }
-  .pomo-dur button { width: 22px; height: 22px; border-radius: 6px; border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-2); cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+  .pomo-dur button { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--border-md); background: var(--surface); color: var(--text-2); cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; font-family: inherit; }
   .pomo-dur button:hover { color: var(--text); border-color: var(--text-3); }
   .pomo-meta { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
-  .pomo-meta i { color: var(--amber-text); font-size: 13px; }
+  .pomo-meta i { color: #D85A30; font-size: 13px; }
+
+  /* Scratch pad card */
+  .notes-wcard { border: 2.5px solid #7F77DD; box-shadow: 5px 5px 0 rgba(127,119,221,0.4); }
+  .notes-wcard:hover { box-shadow: 7px 7px 0 rgba(127,119,221,0.4); }
+  .notes-banner { background: linear-gradient(135deg, #5E58B8 0%, #7F77DD 100%); }
+  .notes-card { display: flex; flex-direction: column; gap: 14px; }
+  .notes-saved-badge { font-size: 11px; color: var(--green-text); opacity: 0; transition: opacity 0.4s; }
+  .notes-saved-badge.show { opacity: 1; }
+  .notes-textarea { width: 100%; min-height: 200px; max-height: 480px; resize: vertical; background: var(--surface2); border: 1.5px solid var(--border-md); border-radius: var(--radius); padding: 12px 14px; font-size: 14px; line-height: 1.65; color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .notes-textarea:focus { border-color: #7F77DD; }
+  .notes-textarea::placeholder { color: var(--text-3); }
+  .notes-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .notes-ai-btn { display: flex; align-items: center; gap: 7px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid #7F77DD; border-radius: var(--radius); background: var(--purple-bg); color: var(--purple-text); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .notes-ai-btn:hover { background: #7F77DD; color: #fff; }
+  .notes-ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .notes-char-count { font-size: 12px; color: var(--text-3); margin-left: auto; }
+  .notes-ai-result { background: var(--surface2); border: 1px solid var(--border-md); border-radius: var(--radius); padding: 14px 16px; font-size: 13.5px; line-height: 1.7; color: var(--text); white-space: pre-wrap; display: none; }
+  .notes-ai-result.visible { display: block; }
+  .notes-ai-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .notes-ai-result-actions button { font-size: 12px; padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border-md); background: var(--surface2); color: var(--text-2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .notes-ai-result-actions button:hover { background: var(--border-md); color: var(--text); }
 
   /* FLOATING TIMER */
   .pomo-float { position: fixed; bottom: 20px; right: 20px; z-index: 80; display: flex; align-items: center; gap: 9px; padding: 9px 10px 9px 14px; background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.28); cursor: pointer; transition: transform 0.15s; }
@@ -731,56 +746,74 @@
       <p>Handy tools to keep beside your work.</p>
     </div>
     <div class="widgets-grid">
-      <div class="card pomo-card">
-        <div class="pomo-modes">
-          <button class="pomo-mode-btn active" data-m="work" onclick="pomoSetMode('work')">Focus</button>
-          <button class="pomo-mode-btn" data-m="break" onclick="pomoSetMode('break')">Break</button>
-        </div>
-        <div class="pomo-ring" id="pomo-ring">
-          <div class="pomo-ring-hole">
-            <div class="pomo-time" id="pomo-time">25:00</div>
-            <div class="pomo-state" id="pomo-state">Focus session</div>
+
+      <!-- POMODORO -->
+      <div class="widget-card pomo-wcard">
+        <div class="wcard-banner pomo-banner">
+          <i class="ti ti-clock-hour-4"></i>
+          <div class="wcard-banner-text">
+            <div class="wcard-banner-title">Focus Timer</div>
+            <div class="wcard-banner-sub">Pomodoro • stay in the zone</div>
           </div>
         </div>
-        <div class="pomo-controls">
-          <button class="pomo-btn primary" id="pomo-start-btn" onclick="pomoToggle()"><i class="ti ti-player-play"></i> Start</button>
-          <button class="pomo-btn" onclick="pomoReset()" title="Reset"><i class="ti ti-refresh"></i></button>
-        </div>
-        <div class="pomo-durations">
-          <div class="pomo-dur">
-            <span>Focus</span>
-            <button onclick="pomoAdjust('work',-5)">&minus;</button>
-            <b id="pomo-work-min">25</b><small>m</small>
-            <button onclick="pomoAdjust('work',5)">+</button>
+        <div class="wcard-body pomo-card">
+          <div class="pomo-modes">
+            <button class="pomo-mode-btn active" data-m="work" onclick="pomoSetMode('work')">Focus</button>
+            <button class="pomo-mode-btn" data-m="break" onclick="pomoSetMode('break')">Break</button>
           </div>
-          <div class="pomo-dur">
-            <span>Break</span>
-            <button onclick="pomoAdjust('break',-1)">&minus;</button>
-            <b id="pomo-break-min">5</b><small>m</small>
-            <button onclick="pomoAdjust('break',1)">+</button>
+          <div class="pomo-ring" id="pomo-ring">
+            <div class="pomo-ring-hole">
+              <div class="pomo-time" id="pomo-time">25:00</div>
+              <div class="pomo-state" id="pomo-state">Focus session</div>
+            </div>
           </div>
+          <div class="pomo-controls">
+            <button class="pomo-btn primary" id="pomo-start-btn" onclick="pomoToggle()"><i class="ti ti-player-play"></i> Start</button>
+            <button class="pomo-btn" onclick="pomoReset()" title="Reset"><i class="ti ti-refresh"></i></button>
+          </div>
+          <div class="pomo-durations">
+            <div class="pomo-dur">
+              <span>Focus</span>
+              <button onclick="pomoAdjust('work',-5)">&minus;</button>
+              <b id="pomo-work-min">25</b><small>m</small>
+              <button onclick="pomoAdjust('work',5)">+</button>
+            </div>
+            <div class="pomo-dur">
+              <span>Break</span>
+              <button onclick="pomoAdjust('break',-1)">&minus;</button>
+              <b id="pomo-break-min">5</b><small>m</small>
+              <button onclick="pomoAdjust('break',1)">+</button>
+            </div>
+          </div>
+          <div class="pomo-meta"><i class="ti ti-flame"></i> <span id="pomo-count">0</span> focus sessions today</div>
         </div>
-        <div class="pomo-meta"><i class="ti ti-flame"></i> <span id="pomo-count">0</span> focus sessions today</div>
       </div>
 
       <!-- SCRATCH PAD -->
-      <div class="card notes-card">
-        <div class="notes-card-head">
-          <h3><i class="ti ti-notes"></i> Scratch Pad</h3>
-          <span class="notes-saved-badge" id="notes-saved-badge"><i class="ti ti-check"></i> Saved</span>
+      <div class="widget-card notes-wcard">
+        <div class="wcard-banner notes-banner">
+          <i class="ti ti-pencil"></i>
+          <div class="wcard-banner-text">
+            <div class="wcard-banner-title">Scratch Pad</div>
+            <div class="wcard-banner-sub">Ideas • brainstorms • anything</div>
+          </div>
+          <span class="notes-saved-badge" id="notes-saved-badge" style="margin-left:auto;color:rgba(255,255,255,0.8);"><i class="ti ti-check"></i> Saved</span>
         </div>
-        <textarea class="notes-textarea" id="notes-textarea" placeholder="Dump your thoughts here — ideas, brainstorms, things to figure out…" oninput="notesOnInput()"></textarea>
-        <div class="notes-actions">
-          <button class="notes-ai-btn" id="notes-ai-btn" onclick="notesElaborate()"><i class="ti ti-sparkles"></i> Elaborate with AI</button>
-          <span class="notes-char-count" id="notes-char-count">0 chars</span>
-        </div>
-        <div class="notes-ai-result" id="notes-ai-result"></div>
-        <div class="notes-ai-result-actions" id="notes-ai-result-actions" style="display:none">
-          <button onclick="notesInsertResult()"><i class="ti ti-corner-down-left"></i> Insert into notes</button>
-          <button onclick="notesCopyResult()"><i class="ti ti-copy"></i> Copy</button>
-          <button onclick="notesDismissResult()"><i class="ti ti-x"></i> Dismiss</button>
+        <div class="wcard-body notes-card">
+          <textarea class="notes-textarea" id="notes-textarea" placeholder="Dump your thoughts here — ideas, brainstorms, things to figure out…" oninput="notesOnInput()"></textarea>
+          <div class="notes-actions">
+            <button class="notes-ai-btn" id="notes-ai-btn" onclick="notesElaborate()"><i class="ti ti-sparkles"></i> Elaborate with AI</button>
+            <span class="notes-char-count" id="notes-char-count">0 chars</span>
+          </div>
+          <div class="notes-ai-result" id="notes-ai-result"></div>
+          <div class="notes-ai-result-actions" id="notes-ai-result-actions" style="display:none">
+            <button onclick="notesInsertResult()"><i class="ti ti-corner-down-left"></i> Insert into notes</button>
+            <button onclick="notesCopyResult()"><i class="ti ti-copy"></i> Copy</button>
+            <button onclick="notesDismissResult()"><i class="ti ti-x"></i> Dismiss</button>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 
