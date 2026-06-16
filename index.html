@@ -54,6 +54,8 @@
   .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); }
   /* per-hub coloured icon tiles */
   .nav-btn[data-page="home"] i { background: var(--teal-bg); color: var(--teal-text); }
+  .nav-btn[data-page="tasks"] i { background: var(--teal-bg); color: var(--teal-text); }
+  .nav-btn[data-page="tasks"].active { background: var(--teal-bg); box-shadow: inset 3px 0 0 #1D9E75; }
   .nav-btn[data-page="widgets"] i { background: var(--purple-bg); color: var(--purple-text); }
   .nav-btn[data-page="widgets"].active { background: var(--purple-bg); box-shadow: inset 3px 0 0 #7F77DD; }
   .nav-btn[data-page="helpdesk"] i { background: var(--blue-bg); color: var(--blue-text); }
@@ -632,6 +634,7 @@
   <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>Zarif Central Hub</span></div>
   <div class="nav-links">
     <button class="nav-btn active" data-page="home" onclick="showPage('home')"><i class="ti ti-home"></i><span>Home</span></button>
+    <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
     <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
     <div class="nav-section-label">Hubs</div>
     <div class="nav-group" id="nav-group-helpdesk">
@@ -1997,7 +2000,7 @@ const HUB_META = {
   personal: { title:'Personal',            icon:'ti-user-heart' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['tasks','kpi','meetings','message','templates','standup'],
+  helpdesk: ['kpi','meetings','message','templates','standup'],
   projects: ['meetings'],
   personal: [],
 };
@@ -2051,7 +2054,7 @@ function toggleNavGroup(h) {
   if (g) g.classList.toggle('open');
 }
 
-const TOP_LEVEL = ['home','widgets','settings','helpdesk','projects','personal'];
+const TOP_LEVEL = ['home','tasks','widgets','settings','helpdesk','projects','personal'];
 
 function syncNavActive() {
   const activeNav = TOP_LEVEL.includes(currentPage) ? currentPage : currentHub;
