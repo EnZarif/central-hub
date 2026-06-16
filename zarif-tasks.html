@@ -160,6 +160,8 @@
   .freq-pill i { font-size: 11px; }
   .fp-daily, .fp-weekly, .fp-fortnightly, .fp-monthly, .fp-once { background: rgba(255,255,255,0.05); color: var(--text-3); border: 0.5px solid rgba(255,255,255,0.07); }
   .fp-once { background: var(--coral-bg); color: var(--coral-text); border-color: rgba(210,85,40,0.2); }
+  .fp-date { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,0.25); }
+  .fp-overdue { background: var(--coral-bg); color: var(--coral-text); border: 0.5px solid rgba(210,85,40,0.35); font-weight: 500; }
 
   /* TASK CARDS */
   .task { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.15s, opacity 0.2s, transform 0.15s ease; align-items: center; }
@@ -503,6 +505,7 @@
       <button class="tab" data-tab="daily" onclick="switchTab('daily')"><i class="ti ti-sun"></i> Daily</button>
       <button class="tab" data-tab="weekly" onclick="switchTab('weekly')"><i class="ti ti-calendar-week"></i> Weekly</button>
       <button class="tab" data-tab="monthly" onclick="switchTab('monthly')"><i class="ti ti-calendar-month"></i> Monthly</button>
+      <button class="tab" data-tab="date" onclick="switchTab('date')"><i class="ti ti-calendar-event"></i> By date</button>
       <button class="tab" data-tab="all" onclick="switchTab('all')"><i class="ti ti-layout-list"></i> All</button>
     </div>
 
@@ -533,6 +536,7 @@
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
+            <option value="date">On a date</option>
             <option value="once">Once (today only)</option>
           </select>
         </div>
@@ -1173,6 +1177,7 @@
           <option value="weekly">Weekly</option>
           <option value="fortnightly">Fortnightly</option>
           <option value="monthly">Monthly</option>
+          <option value="date">On a date</option>
           <option value="once">Once (today only)</option>
         </select>
       </div>
@@ -1364,6 +1369,9 @@ function renderCustomTaskDayField() {
         <option value="all">Every month</option>
         ${Array.from({length:31}, (_,i) => i+1).map(d => `<option value="${d}">${d}</option>`).join('')}
       </select>`;
+  } else if (freq === 'date') {
+    wrap.innerHTML = `<div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due date</div>
+      <input class="field-input" type="date" id="ct-date" value="${todayInputDate()}">`;
   } else {
     wrap.innerHTML = '';
   }
@@ -1385,6 +1393,9 @@ function addCustomTask() {
     task.dayRange = [parseInt(dayVal, 10), parseInt(dayVal, 10)];
   } else if (freq === 'once') {
     task.date = todayInputDate();
+  } else if (freq === 'date') {
+    const dEl = document.getElementById('ct-date');
+    task.date = (dEl && dEl.value) ? dEl.value : todayInputDate();
   }
 
   customTasks.push(task);
@@ -1495,6 +1506,10 @@ function renderTaskEditDayField(freq, task) {
         <option value="all"${current==='all'?' selected':''}>Every month</option>
         ${Array.from({length:31}, (_,i) => i+1).map(d => `<option value="${d}"${current===d?' selected':''}>${d}</option>`).join('')}
       </select>`;
+  } else if (freq === 'date') {
+    const current = (task && task.date) ? task.date : todayInputDate();
+    wrap.innerHTML = `<div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due date</div>
+      <input class="field-input" type="date" id="te-date" value="${current}">`;
   } else {
     wrap.innerHTML = '';
   }
@@ -1537,6 +1552,11 @@ function saveTaskEdit() {
     override.days = 'all';
     override.dayRange = null;
     override.date = todayInputDate();
+  } else if (freq === 'date') {
+    const dEl = document.getElementById('te-date');
+    override.days = 'all';
+    override.dayRange = null;
+    override.date = (dEl && dEl.value) ? dEl.value : todayInputDate();
   } else if (freq === 'daily') {
     override.days = 'all';
     override.dayRange = null;
@@ -1565,7 +1585,14 @@ function isToday(task) {
     return true;
   }
   if (task.freq === 'once') return task.date === todayInputDate();
+  if (task.freq === 'date') return task.date === todayInputDate();
   return false;
+}
+function fmtShortDate(s) {
+  if (!s) return '';
+  const [y, m, d] = s.split('-').map(Number);
+  const cur = now.getFullYear();
+  return `${d} ${MON_NAMES[m-1]}${y !== cur ? ' ' + y : ''}`;
 }
 function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
 
@@ -1607,8 +1634,8 @@ function switchTab(t) {
   renderTasks();
 }
 
-const FREQ_ICONS = {daily:'ti-sun', weekly:'ti-calendar-week', fortnightly:'ti-calendar-week', monthly:'ti-calendar-month', once:'ti-calendar-event'};
-const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', monthly:'Monthly', once:'Once'};
+const FREQ_ICONS = {daily:'ti-sun', weekly:'ti-calendar-week', fortnightly:'ti-calendar-week', monthly:'ti-calendar-month', once:'ti-calendar-event', date:'ti-calendar-event'};
+const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', monthly:'Monthly', once:'Once', date:'By date'};
 
 function taskHTML(t, showFreqPill) {
   const d = isDone(t.id);
@@ -1619,9 +1646,14 @@ function taskHTML(t, showFreqPill) {
   const pills = t.assignees.map(a=>`<span class="pill${a==='Zarif'?' me':''}">${a}</span>`).join('');
   const note = t.note ? `<div class="tnote"><i class="ti ti-info-circle"></i>${t.note}</div>` : '';
   const freq = (t.id === 8 && todayDow === 1) ? 'daily' : t.freq;
+  const isDated = freq === 'date' && t.date;
+  const overdue = isDated && t.date < todayInputDate() && !d;
+  const pillIcon = overdue ? 'ti-alert-triangle' : FREQ_ICONS[freq];
+  const pillLbl = isDated ? fmtShortDate(t.date) : FREQ_LABELS[freq];
+  const pillCls = overdue ? 'fp-overdue' : isDated ? 'fp-date' : 'fp-' + freq;
   const freqPill = showFreqPill
-    ? `<span class="freq-pill fp-${freq}"><i class="ti ${FREQ_ICONS[freq]}"></i>${FREQ_LABELS[freq]}</span>`
-    : `<span><i class="ti ${FREQ_ICONS[freq]}"></i>${FREQ_LABELS[freq]}</span>`;
+    ? `<span class="freq-pill ${pillCls}"><i class="ti ${pillIcon}"></i>${pillLbl}</span>`
+    : `<span><i class="ti ${pillIcon}"></i>${pillLbl}</span>`;
   const click = t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : `toggle('${t.id}')`;
   const delBtn = t.custom ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>` : '';
   const aiBtn = `<button class="task-ai-btn" title="Ask AI about this task" onclick="event.stopPropagation(); openAiModal('task','${t.id}')"><i class="ti ti-sparkles"></i></button>`;
@@ -1689,8 +1721,25 @@ function renderTasks() {
       if (t.priority !== lastP) { html += `<div class="section-header sh-${t.priority.toLowerCase()}"><span class="sec-dot"></span>${{HIGH:'High priority',MEDIUM:'Medium priority',LOW:'Low priority'}[t.priority]}</div>`; lastP = t.priority; }
       html += taskHTML(t, true);
     });
+  } else if (currentTab === 'date') {
+    const today = todayInputDate();
+    const dated = getAllTasks().filter(t => t.freq === 'date' && t.date)
+      .sort((a,b) => a.date.localeCompare(b.date) || PO[a.priority]-PO[b.priority]);
+    if (!dated.length) { paintList('<div class="empty">No dated tasks yet. Add one below with frequency “On a date”.</div>'); return; }
+    const groups = [
+      { label:'Overdue',          icon:'ti-alert-triangle', test: t => t.date < today && !isDone(t.id) },
+      { label:'Today',            icon:'ti-star',           test: t => t.date === today },
+      { label:'Upcoming',         icon:'ti-calendar-up',    test: t => t.date > today },
+      { label:'Completed & past', icon:'ti-check',          test: t => t.date < today && isDone(t.id) },
+    ];
+    groups.forEach(g => {
+      const grp = dated.filter(g.test);
+      if (!grp.length) return;
+      html += `<div class="freq-group-label"><i class="ti ${g.icon}"></i>${g.label}</div>`;
+      grp.forEach(t => { html += taskHTML(t, false); });
+    });
   } else if (currentTab === 'all') {
-    ['daily','weekly','fortnightly','monthly','once'].forEach(freq => {
+    ['daily','weekly','fortnightly','monthly','date','once'].forEach(freq => {
       const group = getAllTasks().filter(t => t.freq===freq).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
       if (!group.length) return;
       html += `<div class="freq-group-label"><i class="ti ${FREQ_ICONS[freq]}"></i>${FREQ_LABELS[freq]} tasks</div>`;
