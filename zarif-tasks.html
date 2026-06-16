@@ -129,6 +129,11 @@
   .statcard-ico.c-amber { background: var(--amber-bg); color: var(--amber-text); }
   .statcard-n { font-size: 19px; font-weight: 500; color: var(--text); line-height: 1.05; }
   .statcard-l { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .statcard.clickable { cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; }
+  .statcard.clickable:hover { border-color: var(--border-md); transform: translateY(-1px); }
+  .statcard.clickable.active { border-color: #185FA5; background: rgba(55,138,221,0.1); }
+  .stat-strip { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .stat-strip .statcard { flex: 1; min-width: 130px; }
   @media (max-width: 560px) {
     .dash-grid { flex-direction: column; align-items: stretch; }
     .dash-ring { flex-direction: row; justify-content: center; gap: 10px; }
@@ -468,21 +473,21 @@
           <div class="ring-cap">complete</div>
         </div>
         <div class="dash-stats">
-          <div class="statcard">
+          <div class="statcard clickable" id="stat-all" onclick="setStatFilter('all')" title="Show all of today's tasks">
             <div class="statcard-ico c-blue"><i class="ti ti-list-check"></i></div>
             <div><div class="statcard-n" id="s-total">0</div><div class="statcard-l">Tasks today</div></div>
           </div>
-          <div class="statcard">
+          <div class="statcard clickable" id="stat-done" onclick="setStatFilter('done')" title="Show completed tasks">
             <div class="statcard-ico c-green"><i class="ti ti-circle-check"></i></div>
             <div><div class="statcard-n" id="s-done">0</div><div class="statcard-l">Completed</div></div>
           </div>
-          <div class="statcard">
+          <div class="statcard clickable" id="stat-high" onclick="setStatFilter('high')" title="Show high-priority tasks">
             <div class="statcard-ico c-coral"><i class="ti ti-flame"></i></div>
             <div><div class="statcard-n" id="s-high">0</div><div class="statcard-l">High priority</div></div>
           </div>
           <div class="statcard">
             <div class="statcard-ico c-amber"><i class="ti ti-bolt"></i></div>
-            <div><div class="statcard-n" id="s-streak">0</div><div class="statcard-l">Day streak</div></div>
+            <div><div class="statcard-n" id="s-streak">0</div><div class="statcard-l" id="s-streak-l">Day streak</div></div>
           </div>
         </div>
       </div>
@@ -768,6 +773,17 @@
       <span class="date-pill" id="datebadge5"></span>
     </div>
 
+    <div class="stat-strip">
+      <div class="statcard">
+        <div class="statcard-ico c-blue"><i class="ti ti-list-details"></i></div>
+        <div><div class="statcard-n" id="su-total">0</div><div class="statcard-l">Talking points</div></div>
+      </div>
+      <div class="statcard">
+        <div class="statcard-ico c-green"><i class="ti ti-sparkles"></i></div>
+        <div><div class="statcard-n" id="su-ai">0</div><div class="statcard-l">AI scripts ready</div></div>
+      </div>
+    </div>
+
     <div class="split-grid" style="align-items: start;">
       <div>
         <div class="card">
@@ -865,6 +881,21 @@
         <p>Meeting minutes for ANZWL, Wpay &amp; DMG</p>
       </div>
       <span class="date-pill" id="datebadge7"></span>
+    </div>
+
+    <div class="stat-strip">
+      <div class="statcard">
+        <div class="statcard-ico c-green"><i class="ti ti-notes"></i></div>
+        <div><div class="statcard-n" id="mtg-stat-total">0</div><div class="statcard-l">Total meetings</div></div>
+      </div>
+      <div class="statcard">
+        <div class="statcard-ico c-blue"><i class="ti ti-calendar-month"></i></div>
+        <div><div class="statcard-n" id="mtg-stat-month">0</div><div class="statcard-l">This month</div></div>
+      </div>
+      <div class="statcard">
+        <div class="statcard-ico c-amber"><i class="ti ti-bolt"></i></div>
+        <div><div class="statcard-n" id="mtg-stat-adhoc">0</div><div class="statcard-l">Ad hoc</div></div>
+      </div>
     </div>
 
     <div class="split-grid">
@@ -1219,6 +1250,14 @@ const todayDow = now.getDay();
 const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
 
 let currentTab = 'today';
+let statFilter = 'all';
+function setStatFilter(f) {
+  statFilter = (statFilter === f) ? 'all' : f;
+  currentTab = 'today';
+  skipListAnim = false;
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === 'today'));
+  renderTasks();
+}
 let done = JSON.parse(localStorage.getItem('zarif_done_v2') || '{}');
 let breaks = JSON.parse(localStorage.getItem('zarif_breaks') || 'null') || DEFAULT_BREAKS.map(r => ({...r}));
 let customTasks = JSON.parse(localStorage.getItem('zarif_custom_tasks') || '[]');
@@ -1276,8 +1315,11 @@ function updateStreak(allDoneToday) {
   if (allDoneToday && s.lastDate !== today) {
     s.count = (s.lastDate === yday) ? s.count + 1 : 1;
     s.lastDate = today;
-    try { localStorage.setItem('zarif_streak', JSON.stringify(s)); } catch(e) {}
   }
+  s.best = Math.max(s.best || 0, s.count || 0);
+  try { localStorage.setItem('zarif_streak', JSON.stringify(s)); } catch(e) {}
+  const label = document.getElementById('s-streak-l');
+  if (label) label.textContent = s.best > 0 ? `Day streak · best ${s.best}` : 'Day streak';
   return (s.lastDate === today || s.lastDate === yday) ? s.count : 0;
 }
 function animateCount(el, to) {
@@ -1559,6 +1601,7 @@ function showPage(p) {
 
 function switchTab(t) {
   currentTab = t;
+  statFilter = 'all';
   skipListAnim = false;
   document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
   renderTasks();
@@ -1618,6 +1661,11 @@ function renderTasks() {
   const allDone = todayTotal > 0 && todayDone === todayTotal;
   animateCount(document.getElementById('s-streak'), updateStreak(allDone));
 
+  const activeFilter = currentTab === 'today' ? statFilter : 'all';
+  document.getElementById('stat-all').classList.toggle('active', activeFilter === 'all');
+  document.getElementById('stat-done').classList.toggle('active', activeFilter === 'done');
+  document.getElementById('stat-high').classList.toggle('active', activeFilter === 'high');
+
   const remaining = todayTotal - todayDone;
   document.getElementById('s-sub').textContent = remaining > 0 ? `${remaining} task${remaining!==1?'s':''} remaining today` : todayTotal > 0 ? 'All done for today!' : 'Nothing scheduled for today';
 
@@ -1630,7 +1678,12 @@ function renderTasks() {
   let tasks, html = '';
   if (currentTab === 'today') {
     tasks = todayTasks;
-    if (!tasks.length) { paintList('<div class="empty">No tasks for today.</div>'); return; }
+    if (statFilter === 'done') tasks = tasks.filter(t => isDone(t.id));
+    else if (statFilter === 'high') tasks = tasks.filter(t => t.priority === 'HIGH');
+    const emptyMsg = statFilter === 'done' ? 'No completed tasks yet today.'
+      : statFilter === 'high' ? 'No high-priority tasks today.'
+      : 'No tasks for today.';
+    if (!tasks.length) { paintList(`<div class="empty">${emptyMsg}</div>`); return; }
     let lastP = null;
     tasks.forEach(t => {
       if (t.priority !== lastP) { html += `<div class="section-header sh-${t.priority.toLowerCase()}"><span class="sec-dot"></span>${{HIGH:'High priority',MEDIUM:'Medium priority',LOW:'Low priority'}[t.priority]}</div>`; lastP = t.priority; }
@@ -2024,6 +2077,10 @@ function copyElaboration(id, btn) {
 
 function renderStandup() {
   const list = document.getElementById('standup-list');
+  const suTotal = document.getElementById('su-total');
+  const suAi = document.getElementById('su-ai');
+  if (suTotal) suTotal.textContent = standupPoints.length;
+  if (suAi) suAi.textContent = standupPoints.filter(p => p.elaboration).length;
   if (!standupPoints.length) {
     list.innerHTML = '<div class="standup-empty">No points yet — add what you want to bring up in stand up.</div>';
     return;
@@ -2431,6 +2488,13 @@ function saveMeetingEdit(id) {
 
 function renderMeetings() {
   const list = document.getElementById('meetings-list');
+  const mTotal = document.getElementById('mtg-stat-total');
+  if (mTotal) {
+    mTotal.textContent = meetings.length;
+    const thisMonth = ymd(now).slice(0, 7);
+    document.getElementById('mtg-stat-month').textContent = meetings.filter(m => (m.date||'').slice(0,7) === thisMonth).length;
+    document.getElementById('mtg-stat-adhoc').textContent = meetings.filter(m => m.type === 'Misc').length;
+  }
   const typeFilter = document.getElementById('mtg-filter').value;
   const query = document.getElementById('mtg-search').value.trim().toLowerCase();
   const filtered = meetings
