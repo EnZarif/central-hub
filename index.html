@@ -2882,16 +2882,9 @@ function calNav(delta) {
   renderCalendar();
 }
 
-function calSelectDay(dateStr, el) {
-  // toggle off if same day clicked again
-  if (_calSelected === dateStr) { _calSelected = null; renderCalendar(); return; }
-  _calSelected = dateStr;
-  // highlight selected cell without full re-render for snappiness, then update panel
-  document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('is-selected'));
-  if (el) el.classList.add('is-selected');
-  // re-render just the panel section
-  const panelEl = document.getElementById('cal-panel');
-  if (panelEl) panelEl.outerHTML = buildCalPanel(dateStr);
+function calSelectDay(dateStr) {
+  _calSelected = (_calSelected === dateStr) ? null : dateStr;
+  renderCalendar();
 }
 
 function calToggle(id, dateStr) {
@@ -3004,7 +2997,7 @@ function renderCalendar() {
     const dots  = buildCalDots(tasks, dateStr);
     const taskCount = tasks.length;
     const title = taskCount ? `${taskCount} task${taskCount !== 1 ? 's' : ''}` : '';
-    cells += `<div class="${cls}" data-date="${dateStr}" onclick="calSelectDay('${dateStr}', this)" title="${title}">
+    cells += `<div class="${cls}" data-date="${dateStr}" onclick="calSelectDay('${dateStr}')" title="${title}">
       <span class="cal-date">${d}</span>
       ${dots}
     </div>`;
