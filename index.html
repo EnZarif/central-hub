@@ -230,6 +230,52 @@
   .today-banner i { font-size: 15px; }
   .tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); margin-bottom: 1.2rem; }
   .tab { flex: 1; padding: 9px 6px; font-size: 12px; font-weight: 400; border: none; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.15s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+  /* CALENDAR VIEW */
+  .cal-wrap { display: flex; flex-direction: column; gap: 16px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .cal-nav-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .cal-nav-btn { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 8px; color: var(--text-2); cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.15s; }
+  .cal-nav-btn:hover { background: var(--border-md); color: var(--text); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-day-name { text-align: center; font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 0 6px; }
+  .cal-cell { min-height: 58px; border-radius: 10px; padding: 6px; cursor: pointer; border: 1.5px solid transparent; transition: border-color 0.15s, background 0.15s; display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
+  .cal-cell:hover { background: var(--surface); border-color: var(--border-md); }
+  .cal-cell.other-month .cal-date { color: var(--text-3); opacity: 0.4; }
+  .cal-cell.other-month { cursor: default; }
+  .cal-cell.other-month:hover { background: none; border-color: transparent; }
+  .cal-cell.is-today { background: rgba(24,95,165,0.1); border-color: rgba(24,95,165,0.35); }
+  .cal-cell.is-today .cal-date { color: #185FA5; font-weight: 700; }
+  .cal-cell.is-selected { background: rgba(24,95,165,0.18); border-color: #185FA5; }
+  .cal-cell.is-selected .cal-date { color: #185FA5; font-weight: 700; }
+  .cal-date { font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .cal-dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; max-width: 44px; }
+  .cal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cal-dot.p-high   { background: #E05A3A; }
+  .cal-dot.p-medium { background: #185FA5; }
+  .cal-dot.p-low    { background: #639922; }
+  .cal-dot.p-done   { background: var(--border-md); }
+  .cal-overflow { font-size: 9px; color: var(--text-3); }
+  .cal-panel { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 14px; padding: 16px; }
+  .cal-panel-header { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .cal-panel-header i { color: #185FA5; }
+  .cal-task-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; background: var(--bg); border: 0.5px solid var(--border); transition: border-color 0.15s; }
+  .cal-task-row:hover { border-color: var(--border-md); }
+  .cal-task-row.done { opacity: 0.5; }
+  .cal-task-row.done .cal-task-name { text-decoration: line-through; }
+  .cal-task-cb { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border-md); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .cal-task-cb:hover { border-color: #185FA5; }
+  .cal-task-cb.on { background: #185FA5; border-color: #185FA5; color: #fff; font-size: 10px; }
+  .cal-task-name { font-size: 13px; color: var(--text); flex: 1; }
+  .cal-task-freq { font-size: 10px; color: var(--text-3); margin-left: auto; flex-shrink: 0; }
+  .cal-task-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; flex-shrink: 0; }
+  .cal-task-badge.b-high   { background: rgba(224,90,58,0.15);  color: #E05A3A; }
+  .cal-task-badge.b-medium { background: rgba(24,95,165,0.15);  color: #185FA5; }
+  .cal-task-badge.b-low    { background: rgba(99,153,34,0.15);  color: #639922; }
+  .cal-empty { text-align: center; color: var(--text-3); font-size: 13px; padding: 20px 0; }
+  .cal-section-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin: 10px 0 4px; padding: 0 2px; }
+  .cal-today-btn { background: none; border: 0.5px solid var(--border-md); border-radius: 8px; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 4px 10px; font-family: inherit; transition: all 0.15s; }
+  .cal-today-btn:hover { color: var(--text); border-color: var(--text-3); }
   .tab i { font-size: 13px; }
   .tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 500; }
   .tab:hover:not(.active) { color: var(--text-2); }
@@ -1032,6 +1078,7 @@
       <button class="tab" data-tab="monthly" onclick="switchTab('monthly')"><i class="ti ti-calendar-month"></i> Monthly</button>
       <button class="tab" data-tab="date" onclick="switchTab('date')"><i class="ti ti-calendar-event"></i> By date</button>
       <button class="tab" data-tab="all" onclick="switchTab('all')"><i class="ti ti-layout-list"></i> All</button>
+      <button class="tab" data-tab="calendar" onclick="switchTab('calendar')"><i class="ti ti-calendar-month"></i> Calendar</button>
     </div>
 
     <div id="list"></div>
@@ -2647,6 +2694,9 @@ function renderTasks() {
         html += taskHTML(t, false);
       });
     });
+  } else if (currentTab === 'calendar') {
+    renderCalendar();
+    return;
   } else {
     tasks = getAllTasks().filter(t => t.freq===currentTab).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
     if (!tasks.length) { paintList('<div class="empty">No tasks here.</div>'); return; }
@@ -2657,6 +2707,202 @@ function renderTasks() {
     });
   }
   paintList(html);
+}
+
+// ===== CALENDAR VIEW =====
+let _calYear  = now.getFullYear();
+let _calMonth = now.getMonth(); // 0-indexed
+let _calSelected = null; // 'YYYY-MM-DD'
+
+function isTaskActiveOnDate(task, dateStr) {
+  const d   = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  const dom = d.getDate();
+  if (task.freq === 'daily') return true;
+  if (task.freq === 'weekly') {
+    if (task.days === 'all') return true;
+    return task.days.includes(dow);
+  }
+  if (task.freq === 'fortnightly') {
+    const [y, m, day] = task.anchor;
+    const anchor = new Date(y, m - 1, day);
+    const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff   = Math.round((target - anchor) / 86400000);
+    return diff >= 0 && diff % 14 === 0;
+  }
+  if (task.freq === 'monthly') {
+    if (task.dayRange) return dom >= task.dayRange[0] && dom <= task.dayRange[1];
+    return true;
+  }
+  if (task.freq === 'once') return task.date === dateStr;
+  if (task.freq === 'date') return task.date === dateStr;
+  return false;
+}
+
+function getTasksForCalDate(dateStr) {
+  return getAllTasks()
+    .filter(t => isTaskActiveOnDate(t, dateStr))
+    .sort((a, b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
+}
+
+function calNav(delta) {
+  _calMonth += delta;
+  if (_calMonth > 11) { _calMonth = 0;  _calYear++; }
+  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  renderCalendar();
+}
+
+function calSelectDay(dateStr, el) {
+  // toggle off if same day clicked again
+  if (_calSelected === dateStr) { _calSelected = null; renderCalendar(); return; }
+  _calSelected = dateStr;
+  // highlight selected cell without full re-render for snappiness, then update panel
+  document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('is-selected'));
+  if (el) el.classList.add('is-selected');
+  // re-render just the panel section
+  const panelEl = document.getElementById('cal-panel');
+  if (panelEl) panelEl.outerHTML = buildCalPanel(dateStr);
+}
+
+function calToggle(id, dateStr) {
+  // same key logic as normal toggle but keyed to today for recurring; for dated tasks use their own key
+  const task = getAllTasks().find(t => String(t.id) === String(id));
+  if (!task) return;
+  // For recurring tasks on non-today dates we store a date-scoped done key
+  const key = (task.freq === 'date' || task.freq === 'once') ? taskKey(id) : `${id}__${dateStr}`;
+  done[key] = !done[key];
+  save();
+  const panelEl = document.getElementById('cal-panel');
+  if (panelEl) panelEl.outerHTML = buildCalPanel(dateStr);
+  // refresh dots on the cell
+  const cell = document.querySelector(`.cal-cell[data-date="${dateStr}"]`);
+  if (cell) {
+    const tasks = getTasksForCalDate(dateStr);
+    const dotHtml = buildCalDots(tasks, dateStr);
+    const existingDots = cell.querySelector('.cal-dots');
+    if (existingDots) existingDots.outerHTML = dotHtml;
+  }
+}
+
+function buildCalDots(tasks, dateStr) {
+  // Show dots only for specific/dated tasks; cap at 5 dots + overflow indicator
+  const specific = tasks.filter(t => t.freq === 'date' || t.freq === 'once');
+  if (!specific.length) return '<div class="cal-dots"></div>';
+  const shown = specific.slice(0, 5);
+  const rest  = specific.length - shown.length;
+  const dots  = shown.map(t => {
+    const d   = isDone(t.id) || done[`${t.id}__${dateStr}`];
+    const cls = d ? 'p-done' : t.priority === 'HIGH' ? 'p-high' : t.priority === 'MEDIUM' ? 'p-medium' : 'p-low';
+    return `<span class="cal-dot ${cls}" title="${esc(t.name)}"></span>`;
+  }).join('');
+  const over  = rest > 0 ? `<span class="cal-overflow">+${rest}</span>` : '';
+  return `<div class="cal-dots">${dots}${over}</div>`;
+}
+
+function buildCalPanel(dateStr) {
+  const tasks = getTasksForCalDate(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
+  const label = d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const todayStr = todayInputDate();
+
+  if (!tasks.length) {
+    return `<div class="cal-panel" id="cal-panel">
+      <div class="cal-panel-header"><i class="ti ti-calendar-event"></i>${label}</div>
+      <div class="cal-empty"><i class="ti ti-coffee" style="font-size:24px;opacity:0.3;display:block;margin-bottom:6px;"></i>No tasks on this day</div>
+    </div>`;
+  }
+
+  const groups = [
+    { label:'Scheduled for this date', freqs: ['date','once'] },
+    { label:'Recurring',               freqs: ['daily','weekly','fortnightly','monthly'] },
+  ];
+
+  let html = `<div class="cal-panel" id="cal-panel">
+    <div class="cal-panel-header"><i class="ti ti-calendar-event"></i>${label}</div>`;
+
+  groups.forEach(g => {
+    const grp = tasks.filter(t => g.freqs.includes(t.freq));
+    if (!grp.length) return;
+    html += `<div class="cal-section-label">${g.label}</div>`;
+    grp.forEach(t => {
+      // For date/once tasks use the normal done key; for recurring use date-scoped key
+      const isDoneHere = (t.freq === 'date' || t.freq === 'once') ? isDone(t.id) : !!done[`${t.id}__${dateStr}`];
+      const bCls = t.priority === 'HIGH' ? 'b-high' : t.priority === 'MEDIUM' ? 'b-medium' : 'b-low';
+      const bLbl = t.priority[0] + t.priority.slice(1).toLowerCase();
+      const fLbl = t.freq === 'date' || t.freq === 'once' ? (t.date ? fmtShortDate(t.date) : '') : FREQ_LABELS[t.freq];
+      html += `<div class="cal-task-row${isDoneHere ? ' done' : ''}">
+        <div class="cal-task-cb${isDoneHere ? ' on' : ''}" onclick="calToggle('${t.id}','${dateStr}')">${isDoneHere ? '✓' : ''}</div>
+        <span class="cal-task-name">${esc(t.name)}</span>
+        <span class="cal-task-badge ${bCls}">${bLbl}</span>
+        <span class="cal-task-freq">${fLbl}</span>
+      </div>`;
+    });
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function renderCalendar() {
+  const todayStr  = todayInputDate();
+  const firstDay  = new Date(_calYear, _calMonth, 1);
+  const lastDay   = new Date(_calYear, _calMonth + 1, 0);
+  const startDow  = (firstDay.getDay() + 6) % 7; // Mon=0
+  const totalDays = lastDay.getDate();
+  const monthLabel = firstDay.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+
+  // Day headers Mon–Sun
+  const dayHeaders = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    .map(d => `<div class="cal-day-name">${d}</div>`).join('');
+
+  // Cells
+  let cells = '';
+  // Leading cells from previous month
+  const prevLast = new Date(_calYear, _calMonth, 0).getDate();
+  for (let i = startDow - 1; i >= 0; i--) {
+    cells += `<div class="cal-cell other-month"><span class="cal-date">${prevLast - i}</span><div class="cal-dots"></div></div>`;
+  }
+  // Current month cells
+  for (let d = 1; d <= totalDays; d++) {
+    const mm    = String(_calMonth + 1).padStart(2, '0');
+    const dd    = String(d).padStart(2, '0');
+    const dateStr = `${_calYear}-${mm}-${dd}`;
+    const tasks = getTasksForCalDate(dateStr);
+    const isTod = dateStr === todayStr;
+    const isSel = dateStr === _calSelected;
+    const cls   = ['cal-cell', isTod ? 'is-today' : '', isSel ? 'is-selected' : ''].filter(Boolean).join(' ');
+    const dots  = buildCalDots(tasks, dateStr);
+    const taskCount = tasks.length;
+    const title = taskCount ? `${taskCount} task${taskCount !== 1 ? 's' : ''}` : '';
+    cells += `<div class="${cls}" data-date="${dateStr}" onclick="calSelectDay('${dateStr}', this)" title="${title}">
+      <span class="cal-date">${d}</span>
+      ${dots}
+    </div>`;
+  }
+  // Trailing cells
+  const totalCells = startDow + totalDays;
+  const trailing   = totalCells % 7 ? 7 - (totalCells % 7) : 0;
+  for (let d = 1; d <= trailing; d++) {
+    cells += `<div class="cal-cell other-month"><span class="cal-date">${d}</span><div class="cal-dots"></div></div>`;
+  }
+
+  const panel = _calSelected ? buildCalPanel(_calSelected) : '';
+
+  const html = `<div class="cal-wrap">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calNav(-1)"><i class="ti ti-chevron-left"></i></button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="cal-nav-title">${monthLabel}</span>
+        <button class="cal-today-btn" onclick="_calYear=${now.getFullYear()};_calMonth=${now.getMonth()};_calSelected='${todayStr}';renderCalendar()">Today</button>
+      </div>
+      <button class="cal-nav-btn" onclick="calNav(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+    <div class="cal-grid">${dayHeaders}${cells}</div>
+    ${panel}
+  </div>`;
+
+  const listEl = document.getElementById('list');
+  if (listEl) listEl.innerHTML = html;
 }
 
 function renderBreakTable() {
@@ -4194,7 +4440,7 @@ const DEFAULT_WISHLIST = [
   { id:1,  title:'Add sub-cards to hubs via + button',            desc:'Each hub should have a + button to add new app cards directly from the hub page, without going into Settings → Organise hubs.',                                              tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   { id:2,  title:'Deliverables / Delivered section',               desc:'A section (likely under Projects) that aggregates everything completed: shipped wishlist items, closed tasks, and a monthly summary of tasks done.',                           tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   { id:3,  title:'CVTS report auto-task (Bella + Jack both off)',  desc:'When generating the daily message, if both Bella and Jack are marked absent, automatically create two tasks: "CVTS report sent" at 9 am and "CVTS report sent" at 4 pm.', tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
-  { id:4,  title:'Calendar view',                                  desc:'A full calendar page showing tasks, meetings, and deadlines laid out by day/week/month.',                                                                                      tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
+  { id:4,  title:'Calendar view',                                  desc:'A full calendar page showing tasks, meetings, and deadlines laid out by day/week/month.',                                                                                      tag:'feature', done:true,  createdAt:'2026-06-17T00:00:00.000Z' },
   { id:5,  title:'Global search across all content',               desc:'A Cmd+K / Ctrl+K search palette that searches tasks, meeting notes, templates, KB facts, and wishlist items in one place.',                                                   tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   { id:6,  title:'Reminder / notification system',                 desc:'Allow tasks and meetings to have a reminder time. Use browser Notification API to pop an alert at the set time.',                                                             tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   { id:7,  title:'Export data (CSV / JSON)',                       desc:'A one-click export of tasks, meetings, or the full hub database to CSV or JSON for backup or reporting.',                                                                     tag:'feature', done:false, createdAt:'2026-06-17T00:00:00.000Z' },
@@ -4298,6 +4544,16 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.4.0', type: 'minor', date: '17 Jun 2026', title: 'Calendar view', changes: [
+    'Added Calendar tab to the Task Manager page',
+    'Month grid with Mon–Sun layout and prev/next navigation',
+    'Coloured dots on dates that have specific scheduled tasks (red=high, blue=medium, green=low)',
+    'Click any date to reveal a task panel showing all tasks active on that day',
+    'Recurring tasks (daily, weekly, fortnightly, monthly) computed correctly for each date',
+    'Tasks can be marked done directly from the calendar panel',
+    'Today button jumps back to current month and selects today',
+    'Marked Calendar view as shipped in the Feature Wishlist',
+  ]},
   { ver: '3.3.0', type: 'minor', date: '17 Jun 2026', title: 'Feature Wishlist', changes: [
     'Added Wishlist page under Personal hub',
     'Add ideas with title, description, and category tag (Feature, UX, Bug fix, Performance, Idea)',
