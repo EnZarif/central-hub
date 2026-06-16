@@ -56,6 +56,9 @@
   .nav-btn[data-page="templates"] i { color: var(--coral-text); }
   .nav-btn[data-page="meetings"] i { color: var(--green-text); }
   .nav-btn[data-page="kpi"] i { color: var(--amber-text); }
+  .nav-btn[data-page="settings"] i { color: var(--text-3); }
+  body.compact-mode .task { padding: 7px 10px; }
+  body.compact-mode .task-hero { padding: 14px; }
   .theme-toggle-btn { margin-left: auto; padding: 6px 10px; font-size: 15px; border: none; background: transparent; cursor: pointer; border-radius: 20px; color: var(--text-3); display: flex; align-items: center; transition: all 0.15s; }
   .theme-toggle-btn:hover { color: var(--text-2); background: var(--surface2); }
   .page { display: none; }
@@ -303,6 +306,46 @@
   .kpi-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; color: var(--text); }
   .kpi-modal-preview { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow: auto; color: #000000; }
   .kpi-modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+
+  /* SETTINGS PAGE */
+  #page-settings .card-title i { color: var(--teal); }
+  .settings-section { margin-bottom: 8px; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 0; border-bottom: 0.5px solid var(--border); }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-info { flex: 1; min-width: 0; }
+  .settings-row-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .settings-row-desc { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .settings-row-ctrl { flex-shrink: 0; }
+  .settings-input { padding: 7px 10px; font-size: 13px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; width: 220px; }
+  .settings-input:focus { border-color: var(--teal); }
+  .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--border-md); border-radius: 22px; cursor: pointer; transition: background 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background: #185FA5; }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+  .settings-save-btn { padding: 8px 18px; font-size: 13px; font-weight: 500; font-family: inherit; background: #185FA5; color: white; border: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
+  .settings-save-btn:hover { opacity: 0.88; }
+  .danger-btn { padding: 8px 18px; font-size: 13px; font-weight: 500; font-family: inherit; background: transparent; color: var(--coral-text); border: 0.5px solid var(--coral-text); border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .danger-btn:hover { background: var(--coral-bg); }
+  .settings-key-row { display: flex; gap: 8px; align-items: center; }
+  .settings-key-row input { flex: 1; }
+  .ai-hint { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
+
+  /* AI modal */
+  .ai-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .ai-modal-overlay.active { display: flex; }
+  .ai-modal { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; width: 100%; max-width: 520px; box-shadow: 0 10px 40px rgba(0,0,0,0.35); }
+  .ai-modal-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; }
+  .ai-modal-title i { color: var(--teal); font-size: 16px; }
+  .ai-modal-context { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
+  .ai-modal-prompt { width: 100%; padding: 8px 10px; font-size: 13px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; resize: vertical; min-height: 60px; line-height: 1.5; }
+  .ai-modal-prompt:focus { border-color: var(--teal); }
+  .ai-modal-result { margin-top: 12px; padding: 12px; font-size: 13px; line-height: 1.65; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); white-space: pre-wrap; color: var(--text-2); min-height: 60px; display: none; }
+  .ai-modal-result.visible { display: block; }
+  .ai-modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; flex-wrap: wrap; }
+  .task-ai-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 5px; font-size: 14px; display: flex; align-items: center; align-self: flex-start; flex-shrink: 0; transition: all 0.15s; }
+  .task-ai-btn:hover { color: var(--teal); background: var(--teal-bg); }
 </style>
 </head>
 <body>
@@ -314,6 +357,7 @@
   <button class="nav-btn" data-page="templates" onclick="showPage('templates')"><i class="ti ti-template"></i> Templates</button>
   <button class="nav-btn" data-page="meetings" onclick="showPage('meetings')"><i class="ti ti-notes"></i> Meetings</button>
   <button class="nav-btn" data-page="kpi" onclick="showPage('kpi')"><i class="ti ti-report-analytics"></i> KPI Report</button>
+  <button class="nav-btn" data-page="settings" onclick="showPage('settings')" style="margin-left:auto;"><i class="ti ti-settings"></i> Settings</button>
   <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode"><i class="ti ti-sun"></i></button>
 </div>
 
@@ -402,6 +446,7 @@
           <div class="kb-add-row">
             <input class="field-input" id="kb-new-fact" placeholder="Add a fact or tip..." onkeydown="if(event.key==='Enter') addKbFact()">
             <button class="task-edit-btn" onclick="addKbFact()"><i class="ti ti-plus"></i></button>
+          <button class="task-ai-btn" title="AI suggest a fact" onclick="openAiModal('kb', null)"><i class="ti ti-sparkles"></i></button>
           </div>
         </div>
       </div>
@@ -621,15 +666,6 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><i class="ti ti-key"></i> AI elaboration</div>
-      <div class="api-key-row">
-        <input type="password" id="openai-key" placeholder="sk-... (your OpenAI API key)">
-        <button class="icon-btn" id="save-key-btn" onclick="saveApiKey()" title="Save key"><i class="ti ti-device-floppy"></i></button>
-      </div>
-      <div class="api-key-hint">Stored only in this browser (localStorage). Used to call OpenAI directly from this page so "Elaborate" can write a short script for each point.</div>
-    </div>
-
-    <div class="card">
       <div class="card-title"><i class="ti ti-list-details"></i> Talking points</div>
       <div class="add-point-row">
         <input type="text" id="new-point" placeholder="Add a point to bring up..." onkeydown="if(event.key==='Enter') addStandupPoint()">
@@ -796,6 +832,121 @@
     </div>
   </div>
 
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-settings" style="color:var(--teal);"></i> Settings</h1>
+        <p>Manage preferences, AI, and data</p>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title"><i class="ti ti-sparkles"></i> AI — Google Gemini</div>
+      <div class="settings-key-row">
+        <input type="password" class="settings-input" id="settings-gemini-key" placeholder="AIza... (your Gemini API key)" style="width:100%;">
+        <button class="settings-save-btn" onclick="saveGeminiKey()"><i class="ti ti-device-floppy"></i> Save</button>
+      </div>
+      <div class="ai-hint">Your key is stored only in this browser (localStorage) and never sent anywhere except Google's API. Get a free key at <strong>aistudio.google.com</strong>. Once set, all AI buttons across the app will use it.</div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title"><i class="ti ti-user"></i> Profile</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Display name</div>
+          <div class="settings-row-desc">Shown in the "Hey, ..." greeting on the Tasks page</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <input type="text" class="settings-input" id="settings-display-name" placeholder="Zarif">
+        </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title"><i class="ti ti-layout"></i> Appearance</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Theme</div>
+          <div class="settings-row-desc">Switch between dark and light mode</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <select class="settings-input" id="settings-theme" style="width:120px;">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Show knowledge base sidebar</div>
+          <div class="settings-row-desc">The rotating fact panel beside your task list</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <label class="toggle-switch">
+            <input type="checkbox" id="settings-show-sidebar" checked onchange="applySettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Show task hero section</div>
+          <div class="settings-row-desc">The summary banner with progress bar at the top of Tasks</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <label class="toggle-switch">
+            <input type="checkbox" id="settings-show-hero" checked onchange="applySettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Compact task cards</div>
+          <div class="settings-row-desc">Reduce padding on task cards for a denser view</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <label class="toggle-switch">
+            <input type="checkbox" id="settings-compact" onchange="applySettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card settings-section" style="margin-top:8px;">
+      <div class="card-title"><i class="ti ti-database"></i> Data</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Save appearance &amp; profile settings</div>
+          <div class="settings-row-desc">Saves display name and appearance choices</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <button class="settings-save-btn" onclick="saveAppSettings()"><i class="ti ti-device-floppy"></i> Save</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Reset all task completions</div>
+          <div class="settings-row-desc">Clears which tasks are marked done today</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <button class="danger-btn" onclick="resetDay()"><i class="ti ti-refresh"></i> Reset</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Clear all app data</div>
+          <div class="settings-row-desc">Removes all tasks, templates, meetings, standup points and settings</div>
+        </div>
+        <div class="settings-row-ctrl">
+          <button class="danger-btn" onclick="clearAllData()"><i class="ti ti-trash"></i> Clear all</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="kpi-modal-overlay" id="kpi-ops-modal-overlay">
@@ -808,6 +959,21 @@
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="kpiOpsModalClose()">Close</button>
       <button class="generate-btn" id="kpi-ops-modal-copy-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="kpiOpsModalCopy()"><i class="ti ti-copy" style="font-size:15px;"></i> Copy email</button>
+    </div>
+  </div>
+</div>
+
+<div class="ai-modal-overlay" id="ai-modal-overlay" onclick="if(event.target===this) closeAiModal()">
+  <div class="ai-modal">
+    <div class="ai-modal-title"><i class="ti ti-sparkles"></i> <span id="ai-modal-title-text">AI assist</span></div>
+    <div class="ai-modal-context" id="ai-modal-context"></div>
+    <textarea class="ai-modal-prompt" id="ai-modal-prompt" placeholder="Add any extra context or instructions (optional)..." rows="3"></textarea>
+    <div class="ai-modal-result" id="ai-modal-result"></div>
+    <div class="ai-modal-actions">
+      <button class="kpi-file-btn" onclick="closeAiModal()">Cancel</button>
+      <button class="icon-btn" id="ai-modal-copy-btn" title="Copy result" onclick="copyAiResult()" style="display:none;"><i class="ti ti-copy"></i></button>
+      <button class="generate-btn" id="ai-modal-apply-btn" style="width:auto; margin-bottom:0; padding:8px 18px; display:none;" onclick="applyAiResult()"><i class="ti ti-check" style="font-size:15px;"></i> Apply</button>
+      <button class="generate-btn" id="ai-modal-run-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="runAiModal()"><i class="ti ti-sparkles" style="font-size:15px;"></i> Generate</button>
     </div>
   </div>
 </div>
@@ -1225,6 +1391,7 @@ function taskHTML(t, showFreqPill) {
     : `<span><i class="ti ${FREQ_ICONS[freq]}"></i>${FREQ_LABELS[freq]}</span>`;
   const click = t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : `toggle('${t.id}')`;
   const delBtn = t.custom ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>` : '';
+  const aiBtn = `<button class="task-ai-btn" title="Ask AI about this task" onclick="event.stopPropagation(); openAiModal('task','${t.id}')"><i class="ti ti-sparkles"></i></button>`;
   const editBtn = `<button class="task-edit-btn" onclick="event.stopPropagation(); openTaskEdit('${t.id}')"><i class="ti ti-pencil"></i></button>`;
   const upBtn = `<button class="task-move-btn" onclick="event.stopPropagation(); moveTask('${t.id}', -1)"><i class="ti ti-chevron-up"></i></button>`;
   const downBtn = `<button class="task-move-btn" onclick="event.stopPropagation(); moveTask('${t.id}', 1)"><i class="ti ti-chevron-down"></i></button>`;
@@ -1237,7 +1404,7 @@ function taskHTML(t, showFreqPill) {
     </div>
     <div class="task-actions">
       <div class="task-move-col">${upBtn}${downBtn}</div>
-      ${editBtn}${delBtn}
+      ${aiBtn}${editBtn}${delBtn}
     </div>
   </div>`;
 }
@@ -1622,14 +1789,6 @@ let nextStandupId = standupPoints.reduce((m,p) => Math.max(m, p.id), 0) + 1;
 
 function saveStandup() { try { localStorage.setItem('zarif_standup_points', JSON.stringify(standupPoints)); } catch(e){} }
 
-function saveApiKey() {
-  const key = document.getElementById('openai-key').value.trim();
-  try { localStorage.setItem('zarif_openai_key', key); } catch(e){}
-  const btn = document.getElementById('save-key-btn');
-  btn.innerHTML = '<i class="ti ti-check"></i>';
-  btn.classList.add('copied');
-  setTimeout(() => { btn.innerHTML = '<i class="ti ti-device-floppy"></i>'; btn.classList.remove('copied'); }, 1500);
-}
 
 function addStandupPoint() {
   const input = document.getElementById('new-point');
@@ -1656,33 +1815,30 @@ function updateStandupText(id, text) {
 async function elaboratePoint(id, btn) {
   const point = standupPoints.find(p => p.id === id);
   if (!point || !point.text.trim()) return;
-  const apiKey = localStorage.getItem('zarif_openai_key') || '';
+  const apiKey = localStorage.getItem('zarif_gemini_key') || '';
   if (!apiKey) {
-    alert('Add your OpenAI API key above first.');
+    alert('Add your Gemini API key above first.');
     return;
   }
   const original = btn.innerHTML;
   btn.innerHTML = '<i class="ti ti-loader-2"></i>';
   btn.disabled = true;
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {role:'system', content:'You help a team lead prepare for a daily stand up. Given a short bullet point, write a brief elaboration (3-5 sentences) the person can use as a mini script when speaking about it. Keep it natural, concise and conversational.'},
-          {role:'user', content: point.text},
-        ],
-        temperature: 0.7,
+        contents: [{
+          parts: [{
+            text: `You help a team lead prepare for a daily stand up. Given a short bullet point, write a brief elaboration (3-5 sentences) the person can use as a mini script when speaking about it. Keep it natural, concise and conversational.\n\nBullet point: ${point.text}`,
+          }],
+        }],
+        generationConfig: { temperature: 0.7 },
       }),
     });
-    if (!res.ok) throw new Error(`OpenAI error: ${res.status}`);
+    if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
     const data = await res.json();
-    point.elaboration = data.choices?.[0]?.message?.content?.trim() || '';
+    point.elaboration = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     saveStandup();
     renderStandup();
   } catch (e) {
@@ -1728,8 +1884,6 @@ function renderStandup() {
   `).join('');
 }
 
-const savedKey = localStorage.getItem('zarif_openai_key');
-if (savedKey) document.getElementById('openai-key').value = savedKey;
 
 // ---- Templates ----
 const DEFAULT_TEMPLATES = [
@@ -2145,6 +2299,7 @@ function renderMeetings() {
         </div>
         <div class="meeting-item-actions">
           <button class="copy-mini-btn" title="Copy notes" onclick="copyTemplateField(${jsAttr(m.notes)}, this)"><i class="ti ti-copy"></i></button>
+          <button class="icon-btn" title="Elaborate with AI" onclick="openAiModal('meeting',${m.id})"><i class="ti ti-sparkles"></i></button>
           <button class="icon-btn" title="Edit" onclick="toggleEditMeeting(${m.id})"><i class="ti ti-pencil"></i></button>
           <button class="icon-btn danger" title="Delete" onclick="deleteMeeting(${m.id})"><i class="ti ti-trash"></i></button>
         </div>
@@ -2557,6 +2712,7 @@ async function kpiGenerateReport() {
 }
 
 renderKpiPage();
+loadSettings();
 
 // ===== OPERATOR KPI EMAILS =====
 const KPI_OPS_COLUMNS = [
@@ -2809,6 +2965,262 @@ async function copyRichText(html, text) {
 }
 
 document.getElementById('mtg-date').value = todayInputDate();
+
+// ===== SETTINGS =====
+function loadSettings() {
+  const s = JSON.parse(localStorage.getItem('zarif_settings') || '{}');
+  const key = localStorage.getItem('zarif_gemini_key') || '';
+  const keyEl = document.getElementById('settings-gemini-key');
+  if (keyEl && key) keyEl.value = key;
+
+  const nameEl = document.getElementById('settings-display-name');
+  if (nameEl) nameEl.value = s.displayName || 'Zarif';
+
+  const themeEl = document.getElementById('settings-theme');
+  if (themeEl) themeEl.value = localStorage.getItem('zarif_theme') || 'dark';
+
+  const sidebarEl = document.getElementById('settings-show-sidebar');
+  if (sidebarEl) sidebarEl.checked = s.showSidebar !== false;
+
+  const heroEl = document.getElementById('settings-show-hero');
+  if (heroEl) heroEl.checked = s.showHero !== false;
+
+  const compactEl = document.getElementById('settings-compact');
+  if (compactEl) compactEl.checked = !!s.compact;
+
+  applySettings(s);
+}
+
+function applySettings(s) {
+  if (!s) {
+    s = JSON.parse(localStorage.getItem('zarif_settings') || '{}');
+    const sidebarEl = document.getElementById('settings-show-sidebar');
+    if (sidebarEl) s.showSidebar = sidebarEl.checked;
+    const heroEl = document.getElementById('settings-show-hero');
+    if (heroEl) s.showHero = heroEl.checked;
+    const compactEl = document.getElementById('settings-compact');
+    if (compactEl) s.compact = compactEl.checked;
+    const nameEl = document.getElementById('settings-display-name');
+    if (nameEl) s.displayName = nameEl.value.trim() || 'Zarif';
+  }
+
+  // Display name
+  const greetEl = document.querySelector('.task-hero-greeting');
+  if (greetEl) greetEl.textContent = `Hey, ${s.displayName || 'Zarif'}`;
+
+  // Sidebar visibility
+  const sidebar = document.querySelector('.tasks-sidebar');
+  if (sidebar) sidebar.style.display = s.showSidebar !== false ? '' : 'none';
+  const layout = document.querySelector('.tasks-layout');
+  if (layout) layout.style.gridTemplateColumns = s.showSidebar !== false ? '' : '1fr';
+
+  // Hero section
+  const hero = document.querySelector('.task-hero');
+  if (hero) hero.style.display = s.showHero !== false ? '' : 'none';
+
+  // Compact
+  document.body.classList.toggle('compact-mode', !!s.compact);
+}
+
+function saveGeminiKey() {
+  const key = (document.getElementById('settings-gemini-key').value || '').trim();
+  try { localStorage.setItem('zarif_gemini_key', key); } catch(e) {}
+  const btn = event.currentTarget;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-check"></i> Saved';
+  setTimeout(() => { btn.innerHTML = orig; }, 1500);
+}
+
+function saveAppSettings() {
+  const s = JSON.parse(localStorage.getItem('zarif_settings') || '{}');
+  const nameEl = document.getElementById('settings-display-name');
+  s.displayName = (nameEl ? nameEl.value.trim() : '') || 'Zarif';
+  const themeEl = document.getElementById('settings-theme');
+  if (themeEl) { localStorage.setItem('zarif_theme', themeEl.value); applyTheme(themeEl.value); }
+  const sidebarEl = document.getElementById('settings-show-sidebar');
+  s.showSidebar = sidebarEl ? sidebarEl.checked : true;
+  const heroEl = document.getElementById('settings-show-hero');
+  s.showHero = heroEl ? heroEl.checked : true;
+  const compactEl = document.getElementById('settings-compact');
+  s.compact = compactEl ? compactEl.checked : false;
+  try { localStorage.setItem('zarif_settings', JSON.stringify(s)); } catch(e) {}
+  applySettings(s);
+  const btn = event.currentTarget;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-check"></i> Saved';
+  setTimeout(() => { btn.innerHTML = orig; }, 1500);
+}
+
+function clearAllData() {
+  if (!confirm('This will delete ALL your tasks, meetings, templates, standup points and settings. Are you sure?')) return;
+  const keys = ['zarif_done','zarif_custom_tasks','zarif_task_order','zarif_task_overrides',
+    'zarif_standup_points','zarif_templates','zarif_numbers','zarif_meetings',
+    'zarif_kb_facts','zarif_settings','zarif_gemini_key','zarif_theme'];
+  keys.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+  location.reload();
+}
+
+// ===== GLOBAL AI =====
+async function geminiCall(prompt) {
+  const apiKey = localStorage.getItem('zarif_gemini_key') || '';
+  if (!apiKey) throw new Error('NO_KEY');
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7 },
+    }),
+  });
+  if (!res.ok) throw new Error(`Gemini error ${res.status}`);
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+}
+
+// ===== AI MODAL =====
+let aiModalState = { type: null, id: null, result: '' };
+
+const AI_PROMPTS = {
+  task: (name, extra) => `You are a helpful work assistant. A team lead has the task: "${name}". ${extra ? 'Extra context: ' + extra + '.' : ''} Write a short, practical description of how to approach this task — 2-4 sentences, actionable and concise. No fluff.`,
+  meeting: (notes, extra) => `Clean up and expand these raw meeting notes into a clear, readable summary. Fix grammar, organise into bullet points where helpful, and keep it concise.\n\nRaw notes:\n${notes}${extra ? '\n\nExtra instructions: ' + extra : ''}`,
+  kb: (extra) => `Suggest one concise, useful workplace fact, tip, or piece of knowledge relevant to a helpdesk team lead. ${extra ? 'Topic hint: ' + extra + '.' : ''} Return only the fact itself, no preamble.`,
+  standup: (point, extra) => `You help a team lead prepare for a daily stand up. Given a short bullet point, write a brief elaboration (3-5 sentences) the person can use as a mini script when speaking about it. Keep it natural, concise and conversational.\n\nBullet point: ${point}${extra ? '\n\nExtra context: ' + extra : ''}`,
+};
+
+function openAiModal(type, id) {
+  aiModalState = { type, id, result: '' };
+  const overlay = document.getElementById('ai-modal-overlay');
+  const titleEl = document.getElementById('ai-modal-title-text');
+  const contextEl = document.getElementById('ai-modal-context');
+  const promptEl = document.getElementById('ai-modal-prompt');
+  const resultEl = document.getElementById('ai-modal-result');
+  const applyBtn = document.getElementById('ai-modal-apply-btn');
+  const copyBtn = document.getElementById('ai-modal-copy-btn');
+
+  promptEl.value = '';
+  resultEl.textContent = '';
+  resultEl.classList.remove('visible');
+  applyBtn.style.display = 'none';
+  copyBtn.style.display = 'none';
+
+  if (type === 'task') {
+    const task = getAllTasks().find(t => String(t.id) === String(id));
+    titleEl.textContent = 'AI task assist';
+    contextEl.textContent = task ? `Task: "${task.name}"` : '';
+    applyBtn.textContent = '';
+    applyBtn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Save as note';
+  } else if (type === 'meeting') {
+    const m = meetings.find(m => m.id === id);
+    titleEl.textContent = 'AI meeting notes';
+    contextEl.textContent = m ? `Meeting: ${m.type} — ${m.date}` : '';
+    applyBtn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Replace notes';
+  } else if (type === 'kb') {
+    titleEl.textContent = 'AI suggest a fact';
+    contextEl.textContent = 'AI will suggest a new fact for the knowledge base';
+    applyBtn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Add to KB';
+  } else if (type === 'standup') {
+    const point = standupPoints.find(p => p.id === id);
+    titleEl.textContent = 'AI standup elaboration';
+    contextEl.textContent = point ? `Point: "${point.text}"` : '';
+    applyBtn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Save elaboration';
+  }
+
+  overlay.classList.add('active');
+  promptEl.focus();
+}
+
+function closeAiModal() {
+  document.getElementById('ai-modal-overlay').classList.remove('active');
+}
+
+async function runAiModal() {
+  const { type, id } = aiModalState;
+  const extra = document.getElementById('ai-modal-prompt').value.trim();
+  const runBtn = document.getElementById('ai-modal-run-btn');
+  const resultEl = document.getElementById('ai-modal-result');
+  const applyBtn = document.getElementById('ai-modal-apply-btn');
+  const copyBtn = document.getElementById('ai-modal-copy-btn');
+
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<i class="ti ti-loader-2" style="font-size:15px;"></i> Generating...';
+  resultEl.classList.remove('visible');
+  applyBtn.style.display = 'none';
+  copyBtn.style.display = 'none';
+
+  try {
+    let prompt = '';
+    if (type === 'task') {
+      const task = getAllTasks().find(t => String(t.id) === String(id));
+      prompt = AI_PROMPTS.task(task ? task.name : '', extra);
+    } else if (type === 'meeting') {
+      const m = meetings.find(m => m.id === id);
+      prompt = AI_PROMPTS.meeting(m ? m.notes : '', extra);
+    } else if (type === 'kb') {
+      prompt = AI_PROMPTS.kb(extra);
+    } else if (type === 'standup') {
+      const point = standupPoints.find(p => p.id === id);
+      prompt = AI_PROMPTS.standup(point ? point.text : '', extra);
+    }
+
+    const result = await geminiCall(prompt);
+    aiModalState.result = result;
+    resultEl.textContent = result;
+    resultEl.classList.add('visible');
+    applyBtn.style.display = '';
+    copyBtn.style.display = '';
+  } catch(e) {
+    if (e.message === 'NO_KEY') {
+      resultEl.textContent = 'No Gemini API key set. Go to Settings to add your key.';
+    } else {
+      resultEl.textContent = `Error: ${e.message}`;
+    }
+    resultEl.classList.add('visible');
+  } finally {
+    runBtn.disabled = false;
+    runBtn.innerHTML = '<i class="ti ti-sparkles" style="font-size:15px;"></i> Generate';
+  }
+}
+
+function applyAiResult() {
+  const { type, id, result } = aiModalState;
+  if (!result) return;
+
+  if (type === 'task') {
+    if (!taskOverrides[id]) taskOverrides[id] = {};
+    taskOverrides[id].note = result;
+    saveTaskOverrides();
+    renderTasks();
+  } else if (type === 'meeting') {
+    const m = meetings.find(m => m.id === id);
+    if (m) { m.notes = result; saveMeetings(); renderMeetings(); }
+  } else if (type === 'kb') {
+    kbFacts.push(result);
+    saveKbFacts();
+    renderKbFact();
+    renderKbList();
+  } else if (type === 'standup') {
+    const point = standupPoints.find(p => p.id === id);
+    if (point) { point.elaboration = result; saveStandup(); renderStandup(); }
+  }
+
+  closeAiModal();
+}
+
+function copyAiResult() {
+  const { result } = aiModalState;
+  if (!result) return;
+  navigator.clipboard.writeText(result).then(() => {
+    const btn = document.getElementById('ai-modal-copy-btn');
+    btn.innerHTML = '<i class="ti ti-check"></i>';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy"></i>'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// Update standup elaborate button to use the modal
+function elaboratePoint(id, btn) {
+  openAiModal('standup', id);
+}
 
 renderBreakTable();
 renderTasks();
