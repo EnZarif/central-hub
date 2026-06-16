@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zarif — Task Manager</title>
+<title>Zarif Central Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
@@ -439,6 +439,15 @@
 
   /* CHANGELOG */
   .ver-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: var(--blue-bg); color: var(--blue-text); margin-left: auto; }
+  .cl-toggle { cursor: pointer; margin-bottom: 0; user-select: none; }
+  .cl-toggle:hover { color: var(--text); }
+  #cl-chevron { margin-left: 10px; font-size: 16px; transition: transform 0.2s ease; }
+  .cl-toggle.open #cl-chevron { transform: rotate(180deg); }
+  #changelog-body { margin-top: 16px; }
+  .cl-filters { display: flex; gap: 6px; margin-bottom: 10px; }
+  .cl-filter { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .cl-filter:hover { background: var(--surface2); color: var(--text); }
+  .cl-filter.active { background: rgba(55,138,221,0.1); border-color: #185FA5; color: var(--text); font-weight: 500; }
   .cl-entry { padding: 14px 0; border-bottom: 0.5px solid var(--border); }
   .cl-entry:first-child { padding-top: 2px; }
   .cl-entry:last-child { border-bottom: none; padding-bottom: 2px; }
@@ -499,7 +508,7 @@
 <div class="app-layout">
 
 <nav class="nav">
-  <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>ZTasks</span></div>
+  <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>Zarif Central Hub</span></div>
   <div class="nav-links">
     <div class="nav-section-label">Workspace</div>
     <button class="nav-btn active" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
@@ -1183,8 +1192,19 @@
     </div>
 
     <div class="card settings-section">
-      <div class="card-title"><i class="ti ti-history"></i> Changelog <span id="app-version-badge" class="ver-badge"></span></div>
-      <div id="changelog-list"></div>
+      <div class="card-title cl-toggle" onclick="toggleChangelog()">
+        <i class="ti ti-history"></i> Changelog
+        <span id="app-version-badge" class="ver-badge"></span>
+        <i class="ti ti-chevron-down" id="cl-chevron"></i>
+      </div>
+      <div id="changelog-body" style="display:none;">
+        <div class="cl-filters">
+          <button class="cl-filter active" data-f="all" onclick="setChangelogFilter('all')">All</button>
+          <button class="cl-filter" data-f="major" onclick="setChangelogFilter('major')">Major</button>
+          <button class="cl-filter" data-f="minor" onclick="setChangelogFilter('minor')">Minor</button>
+        </div>
+        <div id="changelog-list"></div>
+      </div>
     </div>
   </div>
 
@@ -3379,6 +3399,11 @@ document.getElementById('mtg-date').value = todayInputDate();
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '2.4.0', type: 'minor', date: '16 Jun 2026', title: 'Rebrand & changelog tools', changes: [
+    'Renamed the app to "Zarif Central Hub".',
+    'The changelog is now collapsible — tap the header to open or close it.',
+    'Added filters to view all, major-only, or minor-only releases.',
+  ]},
   { ver: '2.3.0', type: 'minor', date: '16 Jun 2026', title: 'Changelog', changes: [
     'Added this version history to Settings.',
   ]},
@@ -3426,12 +3451,31 @@ const CHANGELOG = [
 ];
 const APP_VERSION = CHANGELOG[0].ver;
 
+let changelogFilter = 'all';
+
+function toggleChangelog() {
+  const body = document.getElementById('changelog-body');
+  const toggle = document.querySelector('.cl-toggle');
+  if (!body) return;
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if (toggle) toggle.classList.toggle('open', open);
+}
+
+function setChangelogFilter(f) {
+  changelogFilter = f;
+  document.querySelectorAll('.cl-filter').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  renderChangelog();
+}
+
 function renderChangelog() {
   const el = document.getElementById('changelog-list');
   if (!el) return;
   const badge = document.getElementById('app-version-badge');
   if (badge) badge.textContent = 'v' + APP_VERSION;
-  el.innerHTML = CHANGELOG.map(v => `
+  const entries = CHANGELOG.filter(v => changelogFilter === 'all' || v.type === changelogFilter);
+  if (!entries.length) { el.innerHTML = '<div class="standup-empty">No ' + changelogFilter + ' releases.</div>'; return; }
+  el.innerHTML = entries.map(v => `
     <div class="cl-entry">
       <div class="cl-head">
         <span class="cl-ver">v${v.ver}</span>
