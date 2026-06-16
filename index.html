@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -73,6 +74,12 @@
   .theme-toggle-btn:hover i { background: var(--border-md); }
   body.compact-mode .task { padding: 7px 10px; }
   body.compact-mode .task-hero { padding: 14px; }
+
+  /* DB LOADING OVERLAY */
+  #app-loading { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  #app-loading .load-spinner { width: 36px; height: 36px; border: 3px solid var(--border-md); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  #app-loading p { font-size: 14px; color: var(--text-2); }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 760px) {
     /* Mobile: nav becomes a bottom bar */
@@ -617,6 +624,7 @@
 </style>
 </head>
 <body>
+<div id="app-loading"><div class="load-spinner"></div><p>Loading your hub…</p></div>
 
 <div class="app-layout">
 
@@ -1524,6 +1532,25 @@
 </div>
 
 <script>
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://qwceyzswwtyqiozxnlah.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_7iT7MOE7JMGv5Vl0j_13iw_s5tyQTMJ';
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let _db = {};
+async function dbLoad() {
+  const { data, error } = await _sb.from('hub_data').select('key,value');
+  if (data) data.forEach(r => { _db[r.key] = r.value; });
+}
+function dbGet(key) { return _db[key]; }
+function dbSet(key, value) {
+  _db[key] = value;
+  _sb.from('hub_data').upsert({ key, value, updated_at: new Date().toISOString() }).then(() => {});
+}
+function dbDel(key) {
+  delete _db[key];
+  _sb.from('hub_data').delete().eq('key', key).then(() => {});
+}
+
 const TASKS = [
   {id:1,  freq:'daily',   days:'all', name:'Daily tasks message',                    priority:'HIGH',   assignees:['Zarif','Fin','Nalani'], note:''},
   {id:2,  freq:'daily',   days:'all', name:'Daily KPIs to operators',                priority:'HIGH',   assignees:['Zarif','Fin','Nalani'], note:''},
@@ -1596,16 +1623,11 @@ function setStatFilter(f) {
   document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === 'today'));
   renderTasks();
 }
-let done = JSON.parse(localStorage.getItem('zarif_done_v2') || '{}');
-let breaks = JSON.parse(localStorage.getItem('zarif_breaks') || 'null') || DEFAULT_BREAKS.map(r => ({...r}));
-let customTasks = JSON.parse(localStorage.getItem('zarif_custom_tasks') || '[]');
-let taskOverrides = JSON.parse(localStorage.getItem('zarif_task_overrides') || '{}');
-let taskOrder = JSON.parse(localStorage.getItem('zarif_task_order') || '{}');
-{
-  const before = customTasks.length;
-  customTasks = customTasks.filter(t => !(t.freq === 'once' && t.date !== todayInputDate()));
-  if (customTasks.length !== before) saveCustomTasks();
-}
+let done = {};
+let breaks = DEFAULT_BREAKS.map(r => ({...r}));
+let customTasks = [];
+let taskOverrides = {};
+let taskOrder = {};
 
 const DEFAULT_KB_FACTS = [
   "Tip: Use the 'All' tab to see every task grouped by frequency, regardless of whether it's due today.",
@@ -1615,15 +1637,15 @@ const DEFAULT_KB_FACTS = [
   "Reminder: Reset today's checklist at the start of each shift using the 'Reset today' button.",
   "Tip: Add your own one-off or recurring tasks using the 'Add your own task' card below the list.",
 ];
-let kbFacts = JSON.parse(localStorage.getItem('zarif_kb_facts') || 'null') || DEFAULT_KB_FACTS.slice();
+let kbFacts = DEFAULT_KB_FACTS.slice();
 let kbIndex = 0;
 let kbTimer = null;
 
-function save() { try { localStorage.setItem('zarif_done_v2', JSON.stringify(done)); } catch(e){} }
-function saveBreaks() { try { localStorage.setItem('zarif_breaks', JSON.stringify(breaks)); } catch(e){} }
-function saveCustomTasks() { try { localStorage.setItem('zarif_custom_tasks', JSON.stringify(customTasks)); } catch(e){} }
-function saveTaskOverrides() { try { localStorage.setItem('zarif_task_overrides', JSON.stringify(taskOverrides)); } catch(e){} }
-function saveTaskOrder() { try { localStorage.setItem('zarif_task_order', JSON.stringify(taskOrder)); } catch(e){} }
+function save() { dbSet('zarif_done_v2', done); }
+function saveBreaks() { dbSet('zarif_breaks', breaks); }
+function saveCustomTasks() { dbSet('zarif_custom_tasks', customTasks); }
+function saveTaskOverrides() { dbSet('zarif_task_overrides', taskOverrides); }
+function saveTaskOrder() { dbSet('zarif_task_order', taskOrder); }
 function getOrder(id) { return taskOrder[id] !== undefined ? taskOrder[id] : 0; }
 function getAllTasks() {
   return [...TASKS, ...customTasks].map(t => taskOverrides[t.id] ? {...t, ...taskOverrides[t.id]} : t);
@@ -1643,8 +1665,7 @@ function toggle(id) {
 }
 function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function loadStreak() {
-  try { return JSON.parse(localStorage.getItem('zarif_streak') || 'null') || {count:0, lastDate:''}; }
-  catch(e) { return {count:0, lastDate:''}; }
+  return dbGet('zarif_streak') || {count:0, lastDate:''};
 }
 function updateStreak(allDoneToday) {
   const today = ymd(now);
@@ -1655,7 +1676,7 @@ function updateStreak(allDoneToday) {
     s.lastDate = today;
   }
   s.best = Math.max(s.best || 0, s.count || 0);
-  try { localStorage.setItem('zarif_streak', JSON.stringify(s)); } catch(e) {}
+  dbSet('zarif_streak', s);
   const label = document.getElementById('s-streak-l');
   if (label) label.textContent = s.best > 0 ? `Day streak · best ${s.best}` : 'Day streak';
   return (s.lastDate === today || s.lastDate === yday) ? s.count : 0;
@@ -1748,7 +1769,7 @@ function deleteCustomTask(id) {
 }
 
 // ===== KNOWLEDGE BASE SIDEBAR =====
-function saveKbFacts() { try { localStorage.setItem('zarif_kb_facts', JSON.stringify(kbFacts)); } catch(e){} }
+function saveKbFacts() { dbSet('zarif_kb_facts', kbFacts); }
 
 function renderKbFact() {
   const factEl = document.getElementById('kb-fact');
@@ -1978,10 +1999,9 @@ const DEFAULT_HUB_LAYOUT = {
   projects: ['meetings'],
   personal: [],
 };
-let hubLayout = loadHubLayout();
+let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
-  let saved = {};
-  try { saved = JSON.parse(localStorage.getItem('zarif_hub_layout') || '{}') || {}; } catch(e) {}
+  const saved = dbGet('zarif_hub_layout') || {};
   const layout = {};
   HUBS.forEach(h => {
     const list = Array.isArray(saved[h]) ? saved[h].filter(p => PAGES[p]) : DEFAULT_HUB_LAYOUT[h].slice();
@@ -1989,7 +2009,7 @@ function loadHubLayout() {
   });
   return layout;
 }
-function saveHubLayout() { try { localStorage.setItem('zarif_hub_layout', JSON.stringify(hubLayout)); } catch(e) {} }
+function saveHubLayout() { dbSet('zarif_hub_layout', hubLayout); }
 
 function renderHubs() {
   HUBS.forEach(h => {
@@ -2109,8 +2129,7 @@ function resetHubOrganiser() {
 const POMO_ACCENT = { work: '#D85A30', break: '#1D9E75' };
 let pomo = loadPomo();
 function loadPomo() {
-  let s = {};
-  try { s = JSON.parse(localStorage.getItem('zarif_pomo') || '{}') || {}; } catch(e) {}
+  const s = dbGet('zarif_pomo') || {};
   const today = (typeof ymd === 'function') ? ymd(now) : new Date().toISOString().slice(0,10);
   const p = {
     work: s.work || 25,
@@ -2128,9 +2147,7 @@ function loadPomo() {
   }
   return p;
 }
-function savePomo() {
-  try { localStorage.setItem('zarif_pomo', JSON.stringify(pomo)); } catch(e) {}
-}
+function savePomo() { dbSet('zarif_pomo', pomo); }
 function pomoDuration(mode) { return (mode === 'break' ? pomo.break : pomo.work) * 60; }
 function fmtPomo(sec) {
   const m = Math.floor(sec / 60), s = sec % 60;
@@ -2721,10 +2738,10 @@ document.getElementById('aw-body').value = `Hi team,\n\nPlease see attached the 
 document.getElementById('vir-body').value = `Hi team,\n\nPlease see attached ANZ WL, Fiserv, SmartPay Scheduled Jobs allocated to Viridian IT.\n\nKind regards,`;
 
 // ---- Stand up notes ----
-let standupPoints = JSON.parse(localStorage.getItem('zarif_standup_points') || 'null') || [];
-let nextStandupId = standupPoints.reduce((m,p) => Math.max(m, p.id), 0) + 1;
+let standupPoints = [];
+let nextStandupId = 1;
 
-function saveStandup() { try { localStorage.setItem('zarif_standup_points', JSON.stringify(standupPoints)); } catch(e){} }
+function saveStandup() { dbSet('zarif_standup_points', standupPoints); }
 
 
 function addStandupPoint() {
@@ -2827,10 +2844,10 @@ Have I checked the Wiki:
 Fault:`},
 ];
 
-let templates = JSON.parse(localStorage.getItem('zarif_templates') || 'null') || DEFAULT_TEMPLATES.map(t => ({...t}));
-let nextTemplateId = templates.reduce((m,t) => Math.max(m, t.id), 0) + 1;
+let templates = DEFAULT_TEMPLATES.map(t => ({...t}));
+let nextTemplateId = 1;
 
-function saveTemplates() { try { localStorage.setItem('zarif_templates', JSON.stringify(templates)); } catch(e){} }
+function saveTemplates() { dbSet('zarif_templates', templates); }
 
 function addTemplate() {
   const name = document.getElementById('tpl-name').value.trim();
@@ -3007,10 +3024,10 @@ const DEFAULT_NUMBERS = [
   {id:9, name:'Customer Relations', value:'02 9959 7910'},
 ];
 
-let numbers = JSON.parse(localStorage.getItem('zarif_numbers') || 'null') || DEFAULT_NUMBERS.map(n => ({...n}));
-let nextNumberId = numbers.reduce((m,n) => Math.max(m, n.id), 0) + 1;
+let numbers = DEFAULT_NUMBERS.map(n => ({...n}));
+let nextNumberId = 1;
 
-function saveNumbers() { try { localStorage.setItem('zarif_numbers', JSON.stringify(numbers)); } catch(e){} }
+function saveNumbers() { dbSet('zarif_numbers', numbers); }
 
 function addNumber() {
   const name = document.getElementById('num-name').value.trim();
@@ -3092,11 +3109,11 @@ function saveNumberEdit(id) {
 }
 
 // ---- Meetings ----
-let meetings = JSON.parse(localStorage.getItem('zarif_meetings') || 'null') || [];
-let nextMeetingId = meetings.reduce((m,x) => Math.max(m, x.id), 0) + 1;
+let meetings = [];
+let nextMeetingId = 1;
 let editingMeetingId = null;
 
-function saveMeetings() { try { localStorage.setItem('zarif_meetings', JSON.stringify(meetings)); } catch(e){} }
+function saveMeetings() { dbSet('zarif_meetings', meetings); }
 
 function todayInputDate() {
   return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -3363,15 +3380,14 @@ function kpiSaveTemplate(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    localStorage.setItem(KPI_TEMPLATE_KEY, JSON.stringify({ name: file.name, data: arrayBufferToBase64(reader.result) }));
+    dbSet(KPI_TEMPLATE_KEY, { name: file.name, data: arrayBufferToBase64(reader.result) });
     renderKpiPage();
   };
   reader.readAsArrayBuffer(file);
 }
 
 function kpiGetTemplate() {
-  const raw = localStorage.getItem(KPI_TEMPLATE_KEY);
-  return raw ? JSON.parse(raw) : null;
+  return dbGet(KPI_TEMPLATE_KEY) || null;
 }
 
 function colLetter(n) {
@@ -4044,7 +4060,7 @@ function renderChangelog() {
 function loadSettings() {
   renderChangelog();
   initHubOrganiser();
-  const s = JSON.parse(localStorage.getItem('zarif_settings') || '{}');
+  const s = dbGet('zarif_settings') || {};
   const key = localStorage.getItem('zarif_groq_key') || '';
   const keyEl = document.getElementById('settings-gemini-key');
   if (keyEl && key) keyEl.value = key;
@@ -4070,7 +4086,7 @@ function loadSettings() {
 
 function applySettings(s) {
   if (!s) {
-    s = JSON.parse(localStorage.getItem('zarif_settings') || '{}');
+    s = dbGet('zarif_settings') || {};
     const sidebarEl = document.getElementById('settings-show-sidebar');
     if (sidebarEl) s.showSidebar = sidebarEl.checked;
     const heroEl = document.getElementById('settings-show-hero');
@@ -4134,7 +4150,7 @@ async function testGeminiKey() {
 }
 
 function saveAppSettings() {
-  const s = JSON.parse(localStorage.getItem('zarif_settings') || '{}');
+  const s = dbGet('zarif_settings') || {};
   const nameEl = document.getElementById('settings-display-name');
   s.displayName = (nameEl ? nameEl.value.trim() : '') || 'Zarif';
   const themeEl = document.getElementById('settings-theme');
@@ -4145,7 +4161,7 @@ function saveAppSettings() {
   s.showHero = heroEl ? heroEl.checked : true;
   const compactEl = document.getElementById('settings-compact');
   s.compact = compactEl ? compactEl.checked : false;
-  try { localStorage.setItem('zarif_settings', JSON.stringify(s)); } catch(e) {}
+  dbSet('zarif_settings', s);
   applySettings(s);
   const btn = event.currentTarget;
   const orig = btn.innerHTML;
@@ -4153,12 +4169,10 @@ function saveAppSettings() {
   setTimeout(() => { btn.innerHTML = orig; }, 1500);
 }
 
-function clearAllData() {
+async function clearAllData() {
   if (!confirm('This will delete ALL your tasks, meetings, templates, standup points and settings. Are you sure?')) return;
-  const keys = ['zarif_done','zarif_custom_tasks','zarif_task_order','zarif_task_overrides',
-    'zarif_standup_points','zarif_templates','zarif_numbers','zarif_meetings',
-    'zarif_kb_facts','zarif_settings','zarif_gemini_key','zarif_groq_key','zarif_theme','zarif_streak','zarif_hub_layout','zarif_pomo'];
-  keys.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+  await _sb.from('hub_data').delete().neq('key', '');
+  _db = {};
   location.reload();
 }
 
@@ -4347,17 +4361,56 @@ function elaboratePoint(id, btn) {
   openAiModal('standup', id);
 }
 
-loadSettings();
-renderHubs();
-pomoRender();
-renderBreakTable();
-renderTasks();
-renderKbFact();
-startKbRotation();
-renderStandup();
-renderTemplates();
-renderNumbers();
-renderMeetings();
+(async () => {
+  try {
+    await dbLoad();
+  } catch(e) {
+    console.warn('Supabase load failed, continuing with defaults:', e);
+  }
+
+  // Reinitialize all variables from db
+  done          = dbGet('zarif_done_v2')        || {};
+  breaks        = dbGet('zarif_breaks')         || DEFAULT_BREAKS.map(r => ({...r}));
+  customTasks   = dbGet('zarif_custom_tasks')   || [];
+  taskOverrides = dbGet('zarif_task_overrides') || {};
+  taskOrder     = dbGet('zarif_task_order')     || {};
+  kbFacts       = dbGet('zarif_kb_facts')       || DEFAULT_KB_FACTS.slice();
+  hubLayout     = loadHubLayout();
+  pomo          = loadPomo();
+
+  standupPoints  = dbGet('zarif_standup_points') || [];
+  nextStandupId  = standupPoints.reduce((m,p) => Math.max(m, p.id || 0), 0) + 1;
+
+  templates      = dbGet('zarif_templates')      || DEFAULT_TEMPLATES.map(t => ({...t}));
+  nextTemplateId = templates.reduce((m,t) => Math.max(m, t.id || 0), 0) + 1;
+
+  numbers        = dbGet('zarif_numbers')        || DEFAULT_NUMBERS.map(n => ({...n}));
+  nextNumberId   = numbers.reduce((m,n) => Math.max(m, n.id || 0), 0) + 1;
+
+  meetings       = dbGet('zarif_meetings')       || [];
+  nextMeetingId  = meetings.reduce((m,x) => Math.max(m, x.id || 0), 0) + 1;
+
+  // Filter expired once-tasks
+  const _before = customTasks.length;
+  customTasks = customTasks.filter(t => !(t.freq === 'once' && t.date !== todayInputDate()));
+  if (customTasks.length !== _before) saveCustomTasks();
+
+  // Hide loading overlay and render
+  const loadEl = document.getElementById('app-loading');
+  if (loadEl) loadEl.style.display = 'none';
+
+  loadSettings();
+  renderHubs();
+  pomoRender();
+  renderBreakTable();
+  renderTasks();
+  renderKbFact();
+  startKbRotation();
+  renderStandup();
+  renderTemplates();
+  renderNumbers();
+  renderMeetings();
+})();
 </script>
 </body>
 </html>
