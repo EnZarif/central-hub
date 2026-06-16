@@ -109,8 +109,34 @@
   .hero-chip.c-coral { background: var(--coral-bg); border-color: rgba(210,85,40,0.25); color: var(--coral-text); }
   .hero-chip.c-green { background: var(--green-bg); border-color: rgba(99,153,34,0.25); color: var(--green-text); }
   .hero-chip-val { font-size: 14px; font-weight: 500; color: var(--text); }
-  .progress-track { height: 2px; background: var(--border); border-radius: 2px; margin-top: 16px; overflow: hidden; }
-  .progress-fill { height: 100%; background: #185FA5; border-radius: 2px; transition: width 0.85s cubic-bezier(.2,.85,.25,1); }
+
+  /* DASHBOARD */
+  .dash-grid { display: flex; gap: 16px; align-items: center; }
+  .dash-ring { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; animation: taskSlideIn 0.45s cubic-bezier(.2,.85,.25,1) both; }
+  .ring { width: 88px; height: 88px; border-radius: 50%; background: conic-gradient(#185FA5 0%, var(--border-md) 0); display: flex; align-items: center; justify-content: center; transition: background 0.85s cubic-bezier(.2,.85,.25,1); }
+  .ring-hole { width: 66px; height: 66px; border-radius: 50%; background: var(--hero-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500; color: var(--text); }
+  .ring-cap { font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+  .dash-stats { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .statcard { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; display: flex; align-items: center; gap: 11px; animation: taskSlideIn 0.45s cubic-bezier(.2,.85,.25,1) both; }
+  .dash-stats .statcard:nth-child(1){animation-delay:.05s}
+  .dash-stats .statcard:nth-child(2){animation-delay:.10s}
+  .dash-stats .statcard:nth-child(3){animation-delay:.15s}
+  .dash-stats .statcard:nth-child(4){animation-delay:.20s}
+  .statcard-ico { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .statcard-ico.c-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .statcard-ico.c-green { background: var(--green-bg); color: var(--green-text); }
+  .statcard-ico.c-coral { background: var(--coral-bg); color: var(--coral-text); }
+  .statcard-ico.c-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .statcard-n { font-size: 19px; font-weight: 500; color: var(--text); line-height: 1.05; }
+  .statcard-l { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  @media (max-width: 560px) {
+    .dash-grid { flex-direction: column; align-items: stretch; }
+    .dash-ring { flex-direction: row; justify-content: center; gap: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dash-ring, .statcard { animation: none !important; }
+    .ring { transition: none; }
+  }
 
   /* TABS */
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
@@ -436,12 +462,30 @@
         </div>
         <span class="date-pill"><i class="ti ti-calendar"></i><span id="datebadge"></span></span>
       </div>
-      <div class="task-hero-chips">
-        <div class="hero-chip c-teal"><i class="ti ti-list-check"></i><span class="hero-chip-val" id="s-total">0</span> total</div>
-        <div class="hero-chip c-green"><i class="ti ti-check"></i><span class="hero-chip-val" id="s-done">0</span> done</div>
-        <div class="hero-chip c-coral"><i class="ti ti-flame"></i><span class="hero-chip-val" id="s-high">0</span> high priority</div>
+      <div class="dash-grid">
+        <div class="dash-ring">
+          <div class="ring" id="s-ring"><div class="ring-hole"><span id="s-ring-pct">0%</span></div></div>
+          <div class="ring-cap">complete</div>
+        </div>
+        <div class="dash-stats">
+          <div class="statcard">
+            <div class="statcard-ico c-blue"><i class="ti ti-list-check"></i></div>
+            <div><div class="statcard-n" id="s-total">0</div><div class="statcard-l">Tasks today</div></div>
+          </div>
+          <div class="statcard">
+            <div class="statcard-ico c-green"><i class="ti ti-circle-check"></i></div>
+            <div><div class="statcard-n" id="s-done">0</div><div class="statcard-l">Completed</div></div>
+          </div>
+          <div class="statcard">
+            <div class="statcard-ico c-coral"><i class="ti ti-flame"></i></div>
+            <div><div class="statcard-n" id="s-high">0</div><div class="statcard-l">High priority</div></div>
+          </div>
+          <div class="statcard">
+            <div class="statcard-ico c-amber"><i class="ti ti-bolt"></i></div>
+            <div><div class="statcard-n" id="s-streak">0</div><div class="statcard-l">Day streak</div></div>
+          </div>
+        </div>
       </div>
-      <div class="progress-track"><div class="progress-fill" id="s-bar" style="width:0%"></div></div>
     </div>
 
     <div id="today-banner" style="display:none" class="today-banner">
@@ -1220,6 +1264,22 @@ function toggle(id) {
   save();
   renderTasks();
 }
+function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function loadStreak() {
+  try { return JSON.parse(localStorage.getItem('zarif_streak') || 'null') || {count:0, lastDate:''}; }
+  catch(e) { return {count:0, lastDate:''}; }
+}
+function updateStreak(allDoneToday) {
+  const today = ymd(now);
+  const yday = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate()-1));
+  const s = loadStreak();
+  if (allDoneToday && s.lastDate !== today) {
+    s.count = (s.lastDate === yday) ? s.count + 1 : 1;
+    s.lastDate = today;
+    try { localStorage.setItem('zarif_streak', JSON.stringify(s)); } catch(e) {}
+  }
+  return (s.lastDate === today || s.lastDate === yday) ? s.count : 0;
+}
 function animateCount(el, to) {
   if (!el) return;
   to = Number(to) || 0;
@@ -1548,7 +1608,16 @@ function renderTasks() {
   animateCount(document.getElementById('s-total'), todayTotal);
   animateCount(document.getElementById('s-done'), todayDone);
   animateCount(document.getElementById('s-high'), todayHigh);
-  document.getElementById('s-bar').style.width = todayTotal ? Math.round(todayDone/todayTotal*100)+'%' : '0%';
+
+  const pct = todayTotal ? Math.round(todayDone/todayTotal*100) : 0;
+  const ring = document.getElementById('s-ring');
+  if (ring) ring.style.background = `conic-gradient(#185FA5 ${pct}%, var(--border-md) 0)`;
+  const ringPct = document.getElementById('s-ring-pct');
+  if (ringPct) ringPct.textContent = pct + '%';
+
+  const allDone = todayTotal > 0 && todayDone === todayTotal;
+  animateCount(document.getElementById('s-streak'), updateStreak(allDone));
+
   const remaining = todayTotal - todayDone;
   document.getElementById('s-sub').textContent = remaining > 0 ? `${remaining} task${remaining!==1?'s':''} remaining today` : todayTotal > 0 ? 'All done for today!' : 'Nothing scheduled for today';
 
@@ -3224,7 +3293,7 @@ function clearAllData() {
   if (!confirm('This will delete ALL your tasks, meetings, templates, standup points and settings. Are you sure?')) return;
   const keys = ['zarif_done','zarif_custom_tasks','zarif_task_order','zarif_task_overrides',
     'zarif_standup_points','zarif_templates','zarif_numbers','zarif_meetings',
-    'zarif_kb_facts','zarif_settings','zarif_gemini_key','zarif_groq_key','zarif_theme'];
+    'zarif_kb_facts','zarif_settings','zarif_gemini_key','zarif_groq_key','zarif_theme','zarif_streak'];
   keys.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
   location.reload();
 }
