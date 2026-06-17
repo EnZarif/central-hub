@@ -409,6 +409,17 @@
   .fp-date { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,0.25); }
   .fp-untildone { background: var(--amber-bg,rgba(239,159,39,0.12)); color: var(--amber-text,#ef9f27); border: 0.5px solid rgba(239,159,39,0.25); }
   .fp-overdue { background: var(--coral-bg); color: var(--coral-text); border: 0.5px solid rgba(210,85,40,0.35); font-weight: 500; }
+  /* time pill on task cards */
+  .time-pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; background: var(--purple-bg); color: var(--purple-text); border: 0.5px solid rgba(127,119,221,0.25); }
+  .time-pill i { font-size: 11px; }
+  .time-pill.tp-overdue { background: var(--coral-bg); color: var(--coral-text); border-color: rgba(210,85,40,0.4); }
+  /* styled native time input */
+  .time-field { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 0.5px solid var(--border-md); border-radius: 9px; background: var(--surface); width: 100%; box-sizing: border-box; }
+  .time-field-ico { font-size: 15px; color: var(--text-3); flex-shrink: 0; }
+  .time-field-input { border: none; background: transparent; color: var(--text); font-family: inherit; font-size: 13px; outline: none; width: 100%; color-scheme: dark; }
+  .time-field-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+  /* live Melbourne clock pill */
+  .clock-pill { font-variant-numeric: tabular-nums; }
 
   /* TASK CARDS */
   .task { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.15s, opacity 0.2s, transform 0.15s ease; align-items: center; }
@@ -644,6 +655,9 @@
   .spd-todo-dp .dp-trigger.dp-empty .dp-val { font-size: 11px; }
   .spd-todo-dp .dp-cal-ico { font-size: 12px; }
   .spd-todo-dp .dp-caret { display: none; }
+  .spd-todo-tf .time-field { width: auto; padding: 2px 8px; border-radius: 20px; background: var(--surface2); border-color: var(--border); gap: 4px; }
+  .spd-todo-tf .time-field-ico { font-size: 12px; }
+  .spd-todo-tf .time-field-input { width: 72px; font-size: 11.5px; }
   /* notes/deliverables as records */
   .spd-record-add { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
   .spd-record-textarea { width: 100%; padding: 9px 12px; font-size: 13px; border: 0.5px solid var(--border-md); border-radius: 10px; background: var(--surface); color: var(--text); font-family: inherit; outline: none; resize: vertical; min-height: 70px; box-sizing: border-box; line-height: 1.6; transition: border-color 0.15s; }
@@ -1543,7 +1557,10 @@
           <div class="task-hero-greeting">Hey, Zarif</div>
           <div class="task-hero-sub" id="s-sub">Loading tasks...</div>
         </div>
-        <span class="date-pill"><i class="ti ti-calendar"></i><span id="datebadge"></span></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+          <span class="date-pill"><i class="ti ti-calendar"></i><span id="datebadge"></span></span>
+          <span class="date-pill clock-pill" title="Melbourne time"><i class="ti ti-clock"></i><span id="melb-clock"></span></span>
+        </div>
       </div>
       <div class="dash-grid">
         <div class="dash-ring">
@@ -1636,6 +1653,10 @@
           </select>
         </div>
         <div class="queue-block" id="ct-day-wrap"></div>
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due by time <span style="font-weight:400;">(optional)</span></div>
+          <div id="ct-time-holder"></div>
+        </div>
       </div>
       <button class="generate-btn" style="margin-top:14px; margin-bottom:0;" onclick="addCustomTask()"><i class="ti ti-plus" style="font-size:16px;"></i> Add task</button>
     </div>
@@ -2030,6 +2051,10 @@
         <div id="mtg-date-holder"></div>
       </div>
       <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Time <span style="font-weight:400;">(optional)</span></div>
+        <div id="mtg-time-holder"></div>
+      </div>
+      <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Notes</div>
         <textarea id="mtg-notes" rows="6" placeholder="What was discussed, action items, follow ups..."></textarea>
       </div>
@@ -2393,6 +2418,10 @@
         </select>
       </div>
       <div class="queue-block" id="te-day-wrap"></div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due by time <span style="font-weight:400;">(optional)</span></div>
+        <div id="te-time-holder"></div>
+      </div>
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Hub</div>
         <select class="field-input" id="te-hub">
@@ -2845,7 +2874,9 @@ function addCustomTask() {
 
   const hubEl = document.getElementById('ct-hub');
   const hub = hubEl ? hubEl.value : 'helpdesk';
-  const task = { id: 'c' + Date.now(), freq, priority, name, days: 'all', assignees: ['Me'], note: '', custom: true, hub };
+  const timeEl = document.getElementById('ct-time');
+  const time = timeEl && timeEl.value ? timeEl.value : '';
+  const task = { id: 'c' + Date.now(), freq, priority, name, days: 'all', assignees: ['Me'], note: '', custom: true, hub, time };
   if (freq === 'weekly' && dayVal !== 'all') {
     task.days = [parseInt(dayVal, 10)];
   } else if (freq === 'monthly' && dayVal !== 'all') {
@@ -2860,6 +2891,7 @@ function addCustomTask() {
   customTasks.push(task);
   saveCustomTasks();
   nameEl.value = '';
+  if (timeEl) timeEl.value = '';
   renderTasks();
 }
 
@@ -2983,6 +3015,8 @@ function openTaskEdit(id) {
   document.getElementById('te-freq').value = task.freq;
   document.getElementById('te-hub').value = task.hub || 'helpdesk';
   renderTaskEditDayField(task.freq, task);
+  const th = document.getElementById('te-time-holder');
+  if (th) th.innerHTML = timeField('te-time', task.time || '');
   document.getElementById('task-edit-modal-overlay').classList.add('active');
 }
 
@@ -3025,6 +3059,8 @@ function saveTaskEdit() {
   // fortnightly: leave days/dayRange/date/anchor untouched
 
   override.hub = document.getElementById('te-hub').value;
+  const teTime = document.getElementById('te-time');
+  override.time = teTime && teTime.value ? teTime.value : '';
   taskOverrides[editingTaskId] = { ...(taskOverrides[editingTaskId] || {}), ...override };
   saveTaskOverrides();
   closeTaskEditModal();
@@ -3055,6 +3091,45 @@ function fmtShortDate(s) {
   const [y, m, d] = s.split('-').map(Number);
   const cur = now.getFullYear();
   return `${d} ${MON_NAMES[m-1]}${y !== cur ? ' ' + y : ''}`;
+}
+
+// ===== TIME SYSTEM (Melbourne timezone) =====
+const MELB_TZ = 'Australia/Melbourne';
+function melbFmt(opts, ts) {
+  return new Intl.DateTimeFormat('en-AU', { timeZone: MELB_TZ, ...opts }).format(ts ? new Date(ts) : new Date());
+}
+// current Melbourne time as minutes-since-midnight
+function melbNowMinutes() {
+  const s = melbFmt({ hour: '2-digit', minute: '2-digit', hour12: false });
+  let [h, m] = s.split(':').map(Number);
+  if (h === 24) h = 0;
+  return h * 60 + m;
+}
+// Melbourne hour (0-23) for a given timestamp — used by Insights
+function melbHourOfTs(ts) {
+  let h = Number(melbFmt({ hour: '2-digit', hour12: false }, ts));
+  return h === 24 ? 0 : h;
+}
+// "14:30" -> "2:30pm"
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ap = h < 12 ? 'am' : 'pm';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')}${ap}`;
+}
+function timeToMin(t) { if (!t) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+// styled native time input; onChangeAttr is an optional inline handler string
+function timeField(id, value, onChangeAttr) {
+  return `<div class="time-field">
+    <i class="ti ti-clock time-field-ico"></i>
+    <input type="time" class="time-field-input" id="${id}" value="${value || ''}"${onChangeAttr ? ` onchange="${onChangeAttr}"` : ''}>
+  </div>`;
+}
+// live clock in the Tasks hero
+function tickMelbClock() {
+  const el = document.getElementById('melb-clock');
+  if (el) el.textContent = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s?(am|pm)/i, m => m.trim().toLowerCase());
 }
 function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
 
@@ -3418,6 +3493,10 @@ function taskHTML(t, showFreqPill) {
   const freqPill = showFreqPill
     ? `<span class="freq-pill ${pillCls}"><i class="ti ${pillIcon}"></i>${pillLbl}</span>`
     : `<span><i class="ti ${pillIcon}"></i>${pillLbl}</span>`;
+  const timeOverdue = t.time && !d && isToday(t) && melbNowMinutes() > timeToMin(t.time);
+  const timePill = t.time
+    ? `<span class="time-pill${timeOverdue ? ' tp-overdue' : ''}"><i class="ti ti-clock"></i>${fmtTime(t.time)}</span>`
+    : '';
   const click = t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : `toggle('${t.id}')`;
   const delBtn = t.custom ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>` : '';
   const aiBtn = `<button class="task-ai-btn" title="Ask AI about this task" onclick="event.stopPropagation(); openAiModal('task','${t.id}')"><i class="ti ti-sparkles"></i></button>`;
@@ -3434,7 +3513,7 @@ function taskHTML(t, showFreqPill) {
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
       <div class="trow1"><span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
-      <div class="tmeta">${freqPill}${hubBadge}<div class="pills">${pills}</div></div>
+      <div class="tmeta">${freqPill}${timePill}${hubBadge}<div class="pills">${pills}</div></div>
       ${note}
     </div>
     <div class="task-actions">
@@ -4608,9 +4687,11 @@ function insertAnzBriefIntoNotes() {
 function addMeeting() {
   const type = document.getElementById('mtg-type').value;
   const date = document.getElementById('mtg-date').value;
+  const timeEl = document.getElementById('mtg-time');
+  const time = timeEl && timeEl.value ? timeEl.value : '';
   const notes = document.getElementById('mtg-notes').value.trim();
   if (!date || !notes) { alert('Please pick a date and enter some notes.'); return; }
-  const entry = {id: nextMeetingId++, type, date, notes};
+  const entry = {id: nextMeetingId++, type, date, time, notes};
   if (type === 'Misc') {
     entry.requester = document.getElementById('mtg-requester').value.trim();
     entry.agenda = document.getElementById('mtg-agenda').value.trim();
@@ -4623,6 +4704,7 @@ function addMeeting() {
   saveMeetings();
   logActivity('meeting');
   document.getElementById('mtg-notes').value = '';
+  if (timeEl) timeEl.value = '';
   dpSetValue('mtg-date', todayInputDate());
   renderMeetings();
 }
@@ -4652,6 +4734,8 @@ function saveMeetingEdit(id) {
   if (!date || !notes) { alert('Please pick a date and enter some notes.'); return; }
   m.type = document.getElementById(`mtg-edit-type-${id}`).value;
   m.date = date;
+  const teTime = document.getElementById(`mtg-edit-time-${id}`);
+  m.time = teTime && teTime.value ? teTime.value : '';
   m.notes = notes;
   if (m.type === 'Misc') {
     m.requester = document.getElementById(`mtg-edit-requester-${id}`)?.value.trim() || '';
@@ -4737,6 +4821,10 @@ function renderMeetings() {
         ${makeDatePicker('mtg-edit-date-' + m.id, m.date, null, 'Pick a date')}
       </div>
       <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Time <span style="font-weight:400;">(optional)</span></div>
+        ${timeField('mtg-edit-time-' + m.id, m.time || '')}
+      </div>
+      <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Notes</div>
         <textarea id="mtg-edit-notes-${m.id}" rows="6">${esc(m.notes)}</textarea>
       </div>
@@ -4751,6 +4839,7 @@ function renderMeetings() {
       <div class="meeting-item-header">
         <div class="meeting-item-meta">
           <span class="mtg-pill mtg-${m.type}">${typeLabel}</span>
+          ${m.time ? `<span class="time-pill"><i class="ti ti-clock"></i>${fmtTime(m.time)}</span>` : ''}
         </div>
         <div class="meeting-item-actions">
           <button class="copy-mini-btn" title="Copy notes" onclick="copyTemplateField(${jsAttr(m.notes)}, this)"><i class="ti ti-copy"></i></button>
@@ -5803,6 +5892,7 @@ function openSubProjectPage(projId, subId) {
   const todoRows = todos.map(t => {
     const prio = t.priority ? `<span class="spd-todo-badge prio-${String(t.priority).toLowerCase()}">${esc(String(t.priority))}</span>` : '';
     const duePicker = `<span class="spd-todo-dp">${makeDatePicker('todo-due-' + t.id, t.dueDate || '', v => setTodoDueDate(projId, subId, t.id, v), 'Due date')}</span>`;
+    const timePicker = `<span class="spd-todo-tf">${timeField('todo-time-' + t.id, t.dueTime || '', `setTodoDueTime(${projId},${subId},${t.id},this.value)`)}</span>`;
     const linked = t.taskId ? `<span class="spd-todo-badge spd-task-badge" title="Added to your Task Manager"><i class="ti ti-checklist"></i> Task</span>` : '';
     const stat = makeStatusDropdown('todo-st-' + t.id, t.status || 'active', v => setTodoStatus(projId, subId, t.id, v), null, SUB_STATUS_OPTIONS);
     return `<div class="spd-todo-row">
@@ -5812,7 +5902,7 @@ function openSubProjectPage(projId, subId) {
       </div>
       <input type="checkbox" class="spd-todo-cb" ${t.done?'checked':''} onchange="toggleSubTodo(${projId},${subId},${t.id})">
       <span class="spd-todo-text${t.done?' done':''}">${esc(t.text)}</span>
-      ${prio}${duePicker}${linked}
+      ${prio}${duePicker}${timePicker}${linked}
       <span class="spd-todo-status">${stat}</span>
       <button class="spd-todo-del" onclick="deleteSubTodo(${projId},${subId},${t.id})"><i class="ti ti-x"></i></button>
     </div>`;
@@ -5917,7 +6007,7 @@ function setTodoDueDate(projId, subId, todoId, val) {
     if (t.taskId) {
       // update existing linked task
       const task = customTasks.find(ct => ct.id === t.taskId);
-      if (task) { task.date = val; saveCustomTasks(); if (typeof renderTasks === 'function') renderTasks(); }
+      if (task) { task.date = val; task.time = t.dueTime || ''; saveCustomTasks(); if (typeof renderTasks === 'function') renderTasks(); }
       else {
         // task was deleted externally — recreate
         t.taskId = null;
@@ -5931,7 +6021,7 @@ function setTodoDueDate(projId, subId, todoId, val) {
         days: 'all',
         assignees: [s.assignee ? s.assignee : 'Me'],
         note: `Auto-created from project checklist — ${p.title} › ${s.title}`,
-        custom: true, date: val,
+        custom: true, date: val, time: t.dueTime || '',
         projId: projId, subId: subId, todoId: t.id,
       };
       customTasks.push(task);
@@ -5948,6 +6038,24 @@ function setTodoDueDate(projId, subId, todoId, val) {
   }
   saveProjects();
   openSubProjectPage(projId, subId);
+}
+
+// set a due-by time on a checklist item; syncs to the linked Task Manager task
+function setTodoDueTime(projId, subId, todoId, val) {
+  const p = projects.find(x => x.id === projId);
+  if (!p) return;
+  const s = (p.subs || []).find(x => x.id === subId);
+  if (!s) return;
+  const t = (s.todos || []).find(x => x.id === todoId);
+  if (!t) return;
+  t.dueTime = val || '';
+  if (t.taskId) {
+    const task = customTasks.find(ct => ct.id === t.taskId);
+    if (task) { task.time = t.dueTime; saveCustomTasks(); if (typeof renderTasks === 'function') renderTasks(); }
+  }
+  saveProjects();
+  // re-render only if a linked task badge state could change; keep focus otherwise
+  if (currentPage === 'projdetail') openSubProjectPage(projId, subId);
 }
 
 function saveProjDesc(projId, val) {
@@ -6541,6 +6649,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.18.0', type: 'minor', date: '17 Jun 2026', title: 'Time system (Melbourne timezone)', changes: [
+    'Live Melbourne-time clock in the Tasks header',
+    'Tasks can now have an optional "due by" time — set it when adding or editing a task',
+    'Checklist items get a time field alongside their due date, synced to the linked task',
+    'Meetings can record a time (handy for recurring weekly meetings at a fixed time)',
+    'Tasks show a time pill; it turns red once the due time has passed and the task is still open',
+    'Activity log now captures completion timestamps in Melbourne time, ready for time-of-day insights',
+  ]},
   { ver: '3.17.0', type: 'minor', date: '17 Jun 2026', title: 'Mobile-responsive layout', changes: [
     'Sidebar now collapses into a slide-out hamburger drawer on phones, with a top app bar (menu + theme toggle)',
     'Tapping a nav item, the dimmed backdrop, or pressing Escape closes the drawer',
@@ -7341,7 +7457,13 @@ function initNotes() {
   renderProjects();
   const mdh = document.getElementById('mtg-date-holder');
   if (mdh) mdh.innerHTML = makeDatePicker('mtg-date', todayInputDate(), null, 'Pick a date');
+  const cth = document.getElementById('ct-time-holder');
+  if (cth) cth.innerHTML = timeField('ct-time', '');
+  const mth = document.getElementById('mtg-time-holder');
+  if (mth) mth.innerHTML = timeField('mtg-time', '');
   updateMtgAnzPanel();
+  tickMelbClock();
+  setInterval(tickMelbClock, 1000);
 })();
 </script>
 </body>
