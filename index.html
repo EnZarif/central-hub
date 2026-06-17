@@ -1181,9 +1181,26 @@
   .notes-record-preview { font-size: 12px; color: var(--text-2); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .notes-record-body { display: none; margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--text-2); white-space: pre-wrap; border-top: 0.5px solid var(--border); padding-top: 10px; }
   .notes-record-body.open { display: block; }
-  .notes-record-actions { display: flex; gap: 6px; margin-top: 10px; }
+  .notes-record-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
   .notes-record-actions button { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-md); background: var(--surface); color: var(--text-2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .notes-record-actions button:hover { color: var(--text); border-color: var(--text-3); }
+  .notes-record-actions .nra-wishlist { border-color: var(--teal); color: var(--teal); }
+  .notes-record-actions .nra-wishlist:hover { background: var(--teal-bg); }
+  .notes-record-actions .nra-task { border-color: var(--amber-text); color: var(--amber-text); }
+  .notes-record-actions .nra-task:hover { background: rgba(239,168,0,0.1); }
+  .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* Scratchpad → Task modal */
+  .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+  .sp-task-modal-overlay.active { display: flex; }
+  .sp-task-modal { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; width: 100%; max-width: 480px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 14px; }
+  .sp-task-modal-title { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .sp-task-modal label { font-size: 12px; color: var(--text-3); font-weight: 500; display: block; margin-bottom: 5px; }
+  .sp-task-modal input, .sp-task-modal select, .sp-task-modal textarea { width: 100%; background: var(--surface2); border: 1.5px solid var(--border-md); border-radius: var(--radius); padding: 8px 11px; font-size: 13px; color: var(--text); font-family: inherit; outline: none; box-sizing: border-box; transition: border-color 0.15s; }
+  .sp-task-modal input:focus, .sp-task-modal select:focus, .sp-task-modal textarea:focus { border-color: var(--teal); }
+  .sp-task-modal textarea { resize: vertical; min-height: 70px; line-height: 1.55; }
+  .sp-task-modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .sp-task-modal-actions .btn-cancel { padding: 7px 16px; font-size: 13px; border-radius: var(--radius); border: 1.5px solid var(--border-md); background: var(--surface2); color: var(--text-2); cursor: pointer; font-family: inherit; }
+  .sp-task-modal-actions .btn-add { padding: 7px 16px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: none; background: var(--teal); color: #fff; cursor: pointer; font-family: inherit; }
   .notes-empty { font-size: 13px; color: var(--text-3); text-align: center; padding: 16px 0; }
 
   /* FLOATING TIMER */
@@ -2568,6 +2585,44 @@
       <button class="icon-btn" id="ai-modal-copy-btn" title="Copy result" onclick="copyAiResult()" style="display:none;"><i class="ti ti-copy"></i></button>
       <button class="generate-btn" id="ai-modal-apply-btn" style="width:auto; margin-bottom:0; padding:8px 18px; display:none;" onclick="applyAiResult()"><i class="ti ti-check" style="font-size:15px;"></i> Apply</button>
       <button class="generate-btn" id="ai-modal-run-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="runAiModal()"><i class="ti ti-sparkles" style="font-size:15px;"></i> Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scratchpad → Task modal -->
+<div class="sp-task-modal-overlay" id="sp-task-modal-overlay" onclick="if(event.target===this)spTaskModalClose()">
+  <div class="sp-task-modal">
+    <div class="sp-task-modal-title"><i class="ti ti-sparkles" style="color:var(--amber-text)"></i> Convert to Task</div>
+    <div>
+      <label>Task name</label>
+      <input type="text" id="spt-name" placeholder="Task name…">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1">
+        <label>Priority</label>
+        <select id="spt-priority">
+          <option value="HIGH">High</option>
+          <option value="MEDIUM" selected>Medium</option>
+          <option value="LOW">Low</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label>Frequency</label>
+        <select id="spt-freq">
+          <option value="once">Once (today)</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="untildone">Until done</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label>Notes / context</label>
+      <textarea id="spt-note" placeholder="Additional details…"></textarea>
+    </div>
+    <div class="sp-task-modal-actions">
+      <button class="btn-cancel" onclick="spTaskModalClose()">Cancel</button>
+      <button class="btn-add" onclick="spTaskModalConfirm()"><i class="ti ti-plus"></i> Add task</button>
     </div>
   </div>
 </div>
@@ -7663,8 +7718,10 @@ function renderNotesRecords() {
       <div class="notes-record-preview" id="nrec-prev-${r.id}">${esc(preview)}${r.content.length > 80 ? '…' : ''}</div>
       <div class="notes-record-body" id="nrec-body-${r.id}">${esc(r.content)}
         <div class="notes-record-actions">
-          <button onclick="notesRestoreRecord(${r.id})"><i class="ti ti-corner-up-left"></i> Restore to pad</button>
-          <button onclick="notesDeleteRecord(${r.id})" style="color:var(--coral-text);border-color:var(--coral-text);"><i class="ti ti-trash"></i> Delete</button>
+          <button onclick="notesRestoreRecord(${r.id})"><i class="ti ti-corner-up-left"></i> Restore</button>
+          <button class="nra-wishlist" onclick="notesAddToWishlist(${r.id})"><i class="ti ti-sparkles"></i> Wishlist</button>
+          <button class="nra-task" id="nra-task-${r.id}" onclick="notesConvertToTask(${r.id})"><i class="ti ti-sparkles"></i> Task (AI)</button>
+          <button onclick="notesDeleteRecord(${r.id})" style="color:var(--coral-text);border-color:var(--coral-text);margin-left:auto;"><i class="ti ti-trash"></i></button>
         </div>
       </div>
     </div>`;
@@ -7694,6 +7751,74 @@ function notesDeleteRecord(id) {
   _notesRecords = _notesRecords.filter(x => x.id !== id);
   dbSet('zarif_notes_records', _notesRecords);
   renderNotesRecords();
+}
+
+function notesAddToWishlist(id) {
+  const r = _notesRecords.find(x => x.id === id);
+  if (!r) return;
+  const title = r.title.slice(0, 120);
+  const desc = r.content.length > r.title.length ? r.content.slice(r.title.length).trim().slice(0, 300) : '';
+  wishlist.unshift({ id: nextWishlistId++, title, desc, tag: 'idea', done: false, createdAt: new Date().toISOString() });
+  saveWishlist();
+  const btn = document.getElementById('nrec-body-' + id)?.querySelector('.nra-wishlist');
+  if (btn) { const orig = btn.innerHTML; btn.innerHTML = '<i class="ti ti-check"></i> Added!'; setTimeout(() => { btn.innerHTML = orig; }, 1800); }
+}
+
+let _spTaskRecordId = null;
+
+async function notesConvertToTask(id) {
+  const r = _notesRecords.find(x => x.id === id);
+  if (!r) return;
+  const btn = document.getElementById('nra-task-' + id);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Thinking…'; }
+  try {
+    const raw = await geminiCall(
+      `You are a personal task assistant. The user has a scratchpad note and wants to convert it into a structured task.\n\nNote:\n"""${r.content}"""\n\nReturn ONLY valid JSON (no markdown, no commentary) in this exact shape:\n{"name":"<concise task title, max 80 chars>","priority":"HIGH"|"MEDIUM"|"LOW","freq":"once"|"daily"|"weekly"|"untildone","note":"<1-2 sentence elaboration of what needs to be done>"}`
+    );
+    let parsed;
+    try { parsed = JSON.parse(raw.trim()); } catch { const m = raw.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; }
+    if (!parsed || !parsed.name) throw new Error('bad_parse');
+    _spTaskRecordId = id;
+    document.getElementById('spt-name').value = parsed.name || '';
+    document.getElementById('spt-priority').value = ['HIGH','MEDIUM','LOW'].includes(parsed.priority) ? parsed.priority : 'MEDIUM';
+    document.getElementById('spt-freq').value = ['once','daily','weekly','untildone'].includes(parsed.freq) ? parsed.freq : 'once';
+    document.getElementById('spt-note').value = parsed.note || '';
+    document.getElementById('sp-task-modal-overlay').classList.add('active');
+  } catch(e) {
+    // No key or parse fail — open modal with just the title prefilled
+    _spTaskRecordId = id;
+    document.getElementById('spt-name').value = r.title.slice(0, 80);
+    document.getElementById('spt-priority').value = 'MEDIUM';
+    document.getElementById('spt-freq').value = 'once';
+    document.getElementById('spt-note').value = r.content.slice(0, 300);
+    document.getElementById('sp-task-modal-overlay').classList.add('active');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Task (AI)'; }
+  }
+}
+
+function spTaskModalClose() {
+  document.getElementById('sp-task-modal-overlay').classList.remove('active');
+  _spTaskRecordId = null;
+}
+
+function spTaskModalConfirm() {
+  const name = document.getElementById('spt-name').value.trim();
+  if (!name) { document.getElementById('spt-name').focus(); return; }
+  const freq = document.getElementById('spt-freq').value;
+  const priority = document.getElementById('spt-priority').value;
+  const note = document.getElementById('spt-note').value.trim();
+  const task = { id: 'c' + Date.now(), freq, priority, name, days: 'all', assignees: ['Me'], note, custom: true, hub: 'helpdesk', time: '' };
+  if (freq === 'once' || freq === 'date') task.date = todayInputDate();
+  customTasks.push(task);
+  saveCustomTasks();
+  if (typeof renderTasks === 'function') renderTasks();
+  spTaskModalClose();
+  // Flash confirmation on the button
+  if (_spTaskRecordId !== null) {
+    const btn = document.getElementById('nra-task-' + _spTaskRecordId);
+    if (btn) { const orig = btn.innerHTML; btn.innerHTML = '<i class="ti ti-check"></i> Added!'; setTimeout(() => { btn.innerHTML = orig; }, 1800); }
+  }
 }
 
 async function notesElaborate() {
