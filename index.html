@@ -349,6 +349,7 @@
   .tab:hover:not(.active) { color: var(--text-2); }
   .freq-group-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-2); margin: 1.5rem 0 8px; }
   .freq-group-label i { font-size: 14px; }
+  .freq-group-label:has(.ti-clock-bolt) i { color: var(--amber-text); }
   .freq-group-label:has(.ti-sun) i { color: var(--amber-text); }
   .freq-group-label:has(.ti-calendar-week) i { color: var(--blue-text); }
   .freq-group-label:has(.ti-calendar-month) i { color: var(--purple-text); }
@@ -357,6 +358,7 @@
   .fp-daily, .fp-weekly, .fp-fortnightly, .fp-monthly, .fp-once { background: rgba(255,255,255,0.05); color: var(--text-3); border: 0.5px solid rgba(255,255,255,0.07); }
   .fp-once { background: var(--coral-bg); color: var(--coral-text); border-color: rgba(210,85,40,0.2); }
   .fp-date { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,0.25); }
+  .fp-untildone { background: var(--amber-bg,rgba(239,159,39,0.12)); color: var(--amber-text,#ef9f27); border: 0.5px solid rgba(239,159,39,0.25); }
   .fp-overdue { background: var(--coral-bg); color: var(--coral-text); border: 0.5px solid rgba(210,85,40,0.35); font-weight: 500; }
 
   /* TASK CARDS */
@@ -1448,6 +1450,7 @@
         <div class="queue-block">
           <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Frequency</div>
           <select class="field-input" id="ct-freq" onchange="renderCustomTaskDayField()">
+            <option value="untildone">Until completion</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
@@ -2203,6 +2206,7 @@
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Frequency</div>
         <select class="field-input" id="te-freq" onchange="renderTaskEditDayField(this.value)">
+          <option value="untildone">Until completion</option>
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
           <option value="fortnightly">Fortnightly</option>
@@ -2359,6 +2363,13 @@ function toggle(id) {
   skipListAnim = true;
   save();
   renderTasks();
+  // untildone tasks auto-delete once ticked — give the checkmark animation time to play
+  if (!wasDone) {
+    const t = getAllTasks().find(x => String(x.id) === String(id));
+    if (t && t.freq === 'untildone' && t.custom) {
+      setTimeout(() => { deleteCustomTask(id); }, 900);
+    }
+  }
 }
 function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function loadStreak() {
@@ -2637,6 +2648,7 @@ function isToday(task) {
   }
   if (task.freq === 'once') return task.date === todayInputDate();
   if (task.freq === 'date') return task.date === todayInputDate() || (task.date < todayInputDate() && !isDone(task.id));
+  if (task.freq === 'untildone') return !isDone(task.id);
   return false;
 }
 function fmtShortDate(s) {
@@ -2969,8 +2981,8 @@ function switchTab(t) {
   renderTasks();
 }
 
-const FREQ_ICONS = {daily:'ti-sun', weekly:'ti-calendar-week', fortnightly:'ti-calendar-week', monthly:'ti-calendar-month', once:'ti-calendar-event', date:'ti-calendar-event'};
-const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', monthly:'Monthly', once:'Once', date:'By date'};
+const FREQ_ICONS = {daily:'ti-sun', weekly:'ti-calendar-week', fortnightly:'ti-calendar-week', monthly:'ti-calendar-month', once:'ti-calendar-event', date:'ti-calendar-event', untildone:'ti-clock-bolt'};
+const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', monthly:'Monthly', once:'Once', date:'By date', untildone:'Until done'};
 
 function taskHTML(t, showFreqPill) {
   const d = isDone(t.id);
@@ -3091,7 +3103,7 @@ function renderTasks() {
       grp.forEach(t => { html += taskHTML(t, false); });
     });
   } else if (currentTab === 'all') {
-    ['daily','weekly','fortnightly','monthly','date','once'].forEach(freq => {
+    ['untildone','daily','weekly','fortnightly','monthly','date','once'].forEach(freq => {
       const group = getAllTasks().filter(t => t.freq===freq).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
       if (!group.length) return;
       html += `<div class="freq-group-label"><i class="ti ${FREQ_ICONS[freq]}"></i>${FREQ_LABELS[freq]} tasks</div>`;
@@ -5994,6 +6006,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.14.1', type: 'patch', date: '17 Jun 2026', title: '"Until completion" task frequency', changes: [
+    'New "Until completion" frequency — task appears every day until ticked, then auto-removes itself',
+    'Shown with an amber "Until done" pill; appears at the top of the All tab group list',
+  ]},
   { ver: '3.14.0', type: 'minor', date: '17 Jun 2026', title: 'Delete confirmations & ANZ meeting brief', changes: [
     'Deleting a project, sub-project, checklist item, or note/deliverable entry now asks for confirmation first',
     'Delete prompts warn when linked Task Manager tasks will also be removed (and now clean them up properly)',
