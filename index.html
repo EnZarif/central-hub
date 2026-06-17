@@ -3776,19 +3776,14 @@ function renderStandup() {
   list.innerHTML = standupPoints.map(p => `
     <div class="standup-item" id="su-item-${p.id}">
       <div class="standup-item-row">
-        <div class="standup-point-display" id="su-display-${p.id}">${esc(p.text)}</div>
+        <div class="standup-point-display" id="su-display-${p.id}">${esc(p.elaboration || p.text)}</div>
         <div class="standup-item-actions">
           <button class="icon-btn" title="Edit" onclick="editStandupPoint(${p.id})"><i class="ti ti-pencil"></i></button>
           <button class="icon-btn" title="Elaborate with AI" onclick="elaboratePoint(${p.id}, this)"><i class="ti ti-sparkles"></i></button>
+          ${p.elaboration ? `<button class="icon-btn" title="Copy" onclick="copyElaboration(${p.id}, this)"><i class="ti ti-copy"></i></button>` : ''}
           <button class="icon-btn danger" title="Delete" onclick="deleteStandupPoint(${p.id})"><i class="ti ti-trash"></i></button>
         </div>
       </div>
-      ${p.elaboration ? `
-        <div class="elaboration-box">${esc(p.elaboration)}</div>
-        <div style="display:flex; justify-content:flex-end; margin-top:6px;">
-          <button class="icon-btn" title="Copy script" onclick="copyElaboration(${p.id}, this)"><i class="ti ti-copy"></i></button>
-        </div>
-      ` : ''}
     </div>
   `).join('');
 }
