@@ -414,6 +414,15 @@
   .time-pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; background: var(--purple-bg); color: var(--purple-text); border: 0.5px solid rgba(127,119,221,0.25); }
   .time-pill i { font-size: 11px; }
   .time-pill.tp-overdue { background: var(--coral-bg); color: var(--coral-text); border-color: rgba(210,85,40,0.4); }
+  /* due-soon section */
+  .due-soon-section { margin-bottom: 14px; border: 1.5px solid var(--amber-text); border-radius: 14px; overflow: hidden; }
+  :root[data-theme="ink"] .due-soon-section { border-color: var(--amber-text); }
+  .due-soon-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--amber-bg); border-bottom: 1px solid rgba(180,120,0,0.15); }
+  .due-soon-header i { font-size: 15px; color: var(--amber-text); }
+  .due-soon-header-title { font-size: 13px; font-weight: 600; color: var(--amber-text); flex: 1; }
+  .due-soon-header-count { font-size: 11px; font-weight: 500; color: var(--amber-text); opacity: 0.8; background: rgba(180,120,0,0.12); border-radius: 20px; padding: 2px 8px; }
+  .due-soon-section .task { border-radius: 0; border-left: none; border-right: none; border-bottom: none; border-top: 1px solid var(--border); margin: 0; }
+  .due-soon-section .task:first-of-type { border-top: none; }
   /* styled native time input */
   .time-field { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 0.5px solid var(--border-md); border-radius: 9px; background: var(--surface); width: 100%; box-sizing: border-box; }
   .time-field-ico { font-size: 15px; color: var(--text-3); flex-shrink: 0; }
@@ -1652,6 +1661,7 @@
       <button class="tab" data-tab="calendar" onclick="switchTab('calendar')"><i class="ti ti-calendar-month"></i> Calendar</button>
     </div>
 
+    <div id="due-soon-section"></div>
     <div id="list"></div>
 
     <div class="footer">
@@ -3265,9 +3275,12 @@ function timeField(id, value, onChangeAttr) {
   </div>`;
 }
 // live clock in the Tasks hero
+let _dueSoonLastMin = -1;
 function tickMelbClock() {
   const timeEl = document.getElementById('melb-clock-time');
   if (!timeEl) return;
+  const nowMin = melbNowMinutes();
+  if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); }
   const hm = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }); // e.g. "6:01 pm"
   const m = hm.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
   timeEl.textContent = m ? m[1] : hm;
@@ -3279,6 +3292,42 @@ function tickMelbClock() {
   if (dy) dy.textContent = melbFmt({ day: 'numeric', month: 'long', year: 'numeric' });
 }
 function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
+
+function renderDueSoon() {
+  const el = document.getElementById('due-soon-section');
+  if (!el) return;
+  const nowMin = melbNowMinutes();
+  const WINDOW = 60; // show tasks due within the next 60 minutes
+  const tasks = getTodayTasks().filter(t => {
+    if (!t.time || isDone(t.id)) return false;
+    const taskMin = timeToMin(t.time);
+    // overdue (past but not done) OR coming up within the window
+    return taskMin <= nowMin || (taskMin > nowMin && taskMin - nowMin <= WINDOW);
+  });
+  if (!tasks.length) { el.innerHTML = ''; return; }
+  // sort: overdue first (by priority then time), then upcoming (by time then priority)
+  tasks.sort((a, b) => {
+    const aMin = timeToMin(a.time), bMin = timeToMin(b.time);
+    const aOver = aMin <= nowMin, bOver = bMin <= nowMin;
+    if (aOver !== bOver) return aOver ? -1 : 1;
+    if (aOver) return PO[a.priority] - PO[b.priority] || aMin - bMin;
+    return aMin - bMin || PO[a.priority] - PO[b.priority];
+  });
+  const count = tasks.length;
+  const overdueCount = tasks.filter(t => timeToMin(t.time) <= nowMin).length;
+  const subtitle = overdueCount > 0
+    ? `${overdueCount} overdue · ${count - overdueCount} upcoming`
+    : `${count} due within the hour`;
+  let html = `<div class="due-soon-section">
+    <div class="due-soon-header">
+      <i class="ti ti-alarm"></i>
+      <span class="due-soon-header-title">Needs Attention</span>
+      <span class="due-soon-header-count">${subtitle}</span>
+    </div>`;
+  tasks.forEach(t => { html += taskHTML(t, true); });
+  html += '</div>';
+  el.innerHTML = html;
+}
 
 function moveTask(id, dir) {
   const all = getAllTasks();
@@ -3671,6 +3720,7 @@ function taskHTML(t, showFreqPill) {
 }
 
 function renderTasks() {
+  renderDueSoon();
   const todayTasks = getTodayTasks();
   const todayTotal = todayTasks.length;
   const todayDone = todayTasks.filter(t => isDone(t.id)).length;
