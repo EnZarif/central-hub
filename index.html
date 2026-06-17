@@ -1111,6 +1111,70 @@
     .tasks-layout { grid-template-columns: 1fr; }
     .tasks-sidebar { position: static; }
   }
+
+  /* ═══ INSIGHTS / DASHBOARD ═══ */
+  .ins-greeting { font-size: 13px; color: var(--text-2); margin-bottom: 2px; }
+  .ins-h1 { font-size: 27px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; }
+  .ins-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 16px; align-items: start; margin-top: 18px; }
+  .ins-col { display: flex; flex-direction: column; gap: 16px; }
+  .ins-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .ins-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .ins-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .ins-card-sub { font-size: 11px; color: var(--text-3); }
+
+  /* KPI strip */
+  .ins-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .ins-kpi { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 15px 16px; position: relative; overflow: hidden; animation: taskSlideIn 0.5s cubic-bezier(.2,.85,.25,1) both; }
+  .ins-kpi:nth-child(1){animation-delay:.04s} .ins-kpi:nth-child(2){animation-delay:.10s}
+  .ins-kpi:nth-child(3){animation-delay:.16s} .ins-kpi:nth-child(4){animation-delay:.22s}
+  .ins-kpi-ico { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; margin-bottom: 12px; }
+  .ins-kpi-n { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; letter-spacing: -0.5px; }
+  .ins-kpi-l { font-size: 11.5px; color: var(--text-2); margin-top: 5px; }
+  .ins-kpi-trend { position: absolute; top: 16px; right: 16px; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .ins-kpi-trend.up { background: var(--green-bg); color: var(--green-text); }
+  .ins-kpi-trend.flat { background: var(--surface2); color: var(--text-3); }
+
+  /* Bar chart */
+  .ins-chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 190px; padding-top: 22px; }
+  .ins-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 9px; height: 100%; justify-content: flex-end; }
+  .ins-bar-track { width: 100%; max-width: 38px; flex: 1; display: flex; align-items: flex-end; justify-content: center; position: relative; }
+  .ins-bar { width: 100%; max-width: 38px; border-radius: 8px 8px 4px 4px; background: var(--teal-bg); min-height: 4px; transition: height 0.7s cubic-bezier(.2,.85,.25,1); position: relative; }
+  .ins-bar.peak { background: linear-gradient(180deg, var(--teal) 0%, var(--teal-text) 100%); box-shadow: 0 4px 14px var(--teal-bg); }
+  .ins-bar-tip { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 7px; white-space: nowrap; }
+  .ins-bar-tip::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--text); border-bottom: 0; }
+  .ins-bar-day { font-size: 11px; color: var(--text-3); font-weight: 500; }
+  .ins-bar-day.today { color: var(--teal-text); font-weight: 600; }
+
+  /* Hero completion donut card */
+  .ins-hero { background: linear-gradient(140deg, var(--teal) 0%, #1f6fb8 100%); border-radius: var(--radius-lg); padding: 20px; color: #fff; position: relative; overflow: hidden; }
+  :root[data-theme="forest"] .ins-hero { background: linear-gradient(140deg, #639922 0%, #3c6314 100%); }
+  :root[data-theme="ink"] .ins-hero { background: linear-gradient(140deg, #2a2a2a 0%, #0f0f0f 100%); border: 0.5px solid var(--border-md); }
+  .ins-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.08); }
+  .ins-hero-label { font-size: 12px; opacity: 0.85; font-weight: 500; }
+  .ins-hero-donut-wrap { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
+  .ins-donut { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.85s cubic-bezier(.2,.85,.25,1); }
+  .ins-donut-hole { width: 70px; height: 70px; border-radius: 50%; background: rgba(0,0,0,0.18); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ins-donut-pct { font-size: 21px; font-weight: 700; line-height: 1; }
+  .ins-donut-cap { font-size: 9.5px; opacity: 0.8; margin-top: 2px; }
+  .ins-hero-meta { font-size: 12.5px; line-height: 1.7; opacity: 0.92; }
+  .ins-hero-meta b { font-weight: 700; }
+
+  /* Activity feed (transactions style) */
+  .ins-feed { display: flex; flex-direction: column; gap: 4px; }
+  .ins-feed-row { display: flex; align-items: center; gap: 12px; padding: 9px 6px; border-radius: 10px; transition: background 0.15s; }
+  .ins-feed-row:hover { background: var(--surface2); }
+  .ins-feed-ico { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .ins-feed-body { flex: 1; min-width: 0; }
+  .ins-feed-title { font-size: 13px; color: var(--text); font-weight: 500; }
+  .ins-feed-time { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .ins-feed-empty { font-size: 12.5px; color: var(--text-3); text-align: center; padding: 24px 0; }
+  .ins-empty-hint { font-size: 11.5px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+
+  @media (max-width: 880px) {
+    .ins-layout { grid-template-columns: 1fr; }
+    .ins-kpis { grid-template-columns: 1fr 1fr; }
+    .ins-chart { height: 160px; }
+  }
 </style>
 </head>
 <body>
@@ -1123,6 +1187,7 @@
   <div class="nav-links">
     <button class="nav-btn active" data-page="home" onclick="showPage('home')"><i class="ti ti-home"></i><span>Home</span></button>
     <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Task Manager</span></button>
+    <button class="nav-btn" data-page="insights" onclick="showPage('insights')"><i class="ti ti-chart-pie"></i><span>Insights</span></button>
     <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
     <div class="nav-section-label">Hubs</div>
     <div class="nav-group" id="nav-group-helpdesk">
@@ -1331,6 +1396,18 @@
       <p>Your own personal space.</p>
     </div>
     <div class="hub-grid" id="hub-grid-personal"></div>
+  </div>
+
+  <!-- INSIGHTS / DASHBOARD PAGE -->
+  <div class="page" id="page-insights">
+    <div class="header">
+      <div>
+        <div class="ins-greeting">Hey Zarif 👋</div>
+        <h1 class="ins-h1">My Dashboard</h1>
+      </div>
+      <span class="date-pill"><i class="ti ti-calendar"></i><span id="ins-datebadge"></span></span>
+    </div>
+    <div id="ins-body"></div>
   </div>
 
   <!-- WISHLIST PAGE -->
@@ -2422,6 +2499,7 @@ function toggle(id) {
   const k = taskKey(id);
   const wasDone = done[k];
   done[k] = !done[k];
+  if (!wasDone) logActivity('task');
   justToggledId = !wasDone ? id : null;
   skipListAnim = true;
   save();
@@ -2452,6 +2530,188 @@ function updateStreak(allDoneToday) {
   if (label) label.textContent = s.best > 0 ? `Day streak · best ${s.best}` : 'Day streak';
   return (s.lastDate === today || s.lastDate === yday) ? s.count : 0;
 }
+// ===== Activity log (powers the Insights dashboard) =====
+let activityLog = null;
+function loadActivity() { return dbGet('zarif_activity') || []; }
+function logActivity(type) {
+  if (!activityLog) activityLog = loadActivity();
+  activityLog.push({ t: Date.now(), type });
+  // keep only the last 120 days to stay light
+  const cutoff = Date.now() - 120 * 86400000;
+  if (activityLog.length > 50) activityLog = activityLog.filter(a => a.t >= cutoff);
+  dbSet('zarif_activity', activityLog);
+  if (currentPage === 'insights') renderInsights();
+}
+
+function insTimeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  if (d === 1) return 'yesterday';
+  if (d < 7) return d + 'd ago';
+  return new Date(ts).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+}
+
+const INS_FEED_META = {
+  task:    { ico: 'ti-circle-check', cls: 'c-green', label: 'Completed a task' },
+  meeting: { ico: 'ti-notes',        cls: 'c-blue',  label: 'Logged a meeting' },
+  ai:      { ico: 'ti-sparkles',     cls: 'c-purple',label: 'Used AI assist' },
+};
+
+function renderInsights() {
+  const body = document.getElementById('ins-body');
+  if (!body) return;
+  const badge = document.getElementById('ins-datebadge');
+  if (badge) badge.textContent = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  if (!activityLog) activityLog = loadActivity();
+  const log = activityLog;
+  const dayMs = 86400000;
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const t0 = todayStart.getTime();
+
+  // last 7 days of task completions
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const start = t0 - i * dayMs;
+    days.push({ start, label: new Date(start).toLocaleDateString('en-AU', { weekday: 'short' }).slice(0, 3), tasks: 0, isToday: i === 0 });
+  }
+  let aiWeek = 0, aiPrevWeek = 0, taskPrevWeek = 0;
+  log.forEach(a => {
+    if (a.type === 'task') {
+      const b = days.find(d => a.t >= d.start && a.t < d.start + dayMs);
+      if (b) b.tasks++;
+      else if (a.t >= t0 - 13 * dayMs && a.t < t0 - 6 * dayMs) taskPrevWeek++;
+    }
+    if (a.type === 'ai') {
+      if (a.t >= t0 - 6 * dayMs) aiWeek++;
+      else if (a.t >= t0 - 13 * dayMs) aiPrevWeek++;
+    }
+  });
+  const weekTasks = days.reduce((s, d) => s + d.tasks, 0);
+  const maxBar = Math.max(1, ...days.map(d => d.tasks));
+
+  // streak
+  const streak = (typeof loadStreak === 'function') ? loadStreak() : { count: 0, best: 0 };
+
+  // meetings in last 30 days (by their date field)
+  const meetMonth = (meetings || []).filter(m => {
+    if (!m.date) return false;
+    const md = new Date(m.date + 'T00:00:00').getTime();
+    return md >= t0 - 30 * dayMs && md <= t0 + dayMs;
+  }).length;
+
+  // today's completion ring
+  const todayTasks = (typeof getTodayTasks === 'function') ? getTodayTasks() : [];
+  const tTotal = todayTasks.length;
+  const tDone = todayTasks.filter(t => isDone(t.id)).length;
+  const pct = tTotal ? Math.round(tDone / tTotal * 100) : 0;
+
+  const trendChip = (cur, prev) => {
+    if (cur > prev) return `<span class="ins-kpi-trend up"><i class="ti ti-trending-up" style="font-size:11px"></i> ${prev === 0 ? 'new' : '+' + (cur - prev)}</span>`;
+    return `<span class="ins-kpi-trend flat">${cur}</span>`;
+  };
+
+  const bars = days.map(d => {
+    const h = Math.round(d.tasks / maxBar * 100);
+    const peak = d.tasks === maxBar && d.tasks > 0;
+    return `<div class="ins-bar-col">
+      <div class="ins-bar-track">
+        <div class="ins-bar${peak ? ' peak' : ''}" style="height:${d.tasks ? Math.max(h, 6) : 4}%">
+          ${peak ? `<div class="ins-bar-tip">${d.tasks} task${d.tasks > 1 ? 's' : ''}</div>` : ''}
+        </div>
+      </div>
+      <div class="ins-bar-day${d.isToday ? ' today' : ''}">${d.label}</div>
+    </div>`;
+  }).join('');
+
+  const feed = log.slice(-7).reverse().map(a => {
+    const m = INS_FEED_META[a.type] || INS_FEED_META.task;
+    return `<div class="ins-feed-row">
+      <div class="ins-feed-ico statcard-ico ${m.cls}"><i class="ti ${m.ico}"></i></div>
+      <div class="ins-feed-body">
+        <div class="ins-feed-title">${m.label}</div>
+        <div class="ins-feed-time">${insTimeAgo(a.t)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const noData = log.length === 0;
+
+  body.innerHTML = `
+    <div class="ins-kpis">
+      <div class="ins-kpi">
+        ${trendChip(weekTasks, taskPrevWeek)}
+        <div class="ins-kpi-ico statcard-ico c-green"><i class="ti ti-circle-check"></i></div>
+        <div class="ins-kpi-n">${weekTasks}</div>
+        <div class="ins-kpi-l">Tasks completed this week</div>
+      </div>
+      <div class="ins-kpi">
+        <div class="ins-kpi-ico statcard-ico c-amber"><i class="ti ti-flame"></i></div>
+        <div class="ins-kpi-n">${streak.count || 0}</div>
+        <div class="ins-kpi-l">Day streak${streak.best ? ` · best ${streak.best}` : ''}</div>
+      </div>
+      <div class="ins-kpi">
+        <div class="ins-kpi-ico statcard-ico c-blue"><i class="ti ti-notes"></i></div>
+        <div class="ins-kpi-n">${meetMonth}</div>
+        <div class="ins-kpi-l">Meetings held (30 days)</div>
+      </div>
+      <div class="ins-kpi">
+        ${trendChip(aiWeek, aiPrevWeek)}
+        <div class="ins-kpi-ico statcard-ico c-purple"><i class="ti ti-sparkles"></i></div>
+        <div class="ins-kpi-n">${aiWeek}</div>
+        <div class="ins-kpi-l">AI calls made this week</div>
+      </div>
+    </div>
+
+    <div class="ins-layout">
+      <div class="ins-col">
+        <div class="ins-card">
+          <div class="ins-card-head">
+            <div>
+              <div class="ins-card-title">Productivity flow</div>
+              <div class="ins-card-sub">Tasks completed over the last 7 days</div>
+            </div>
+            <div class="ins-card-sub"><i class="ti ti-calendar-week" style="font-size:13px"></i></div>
+          </div>
+          <div class="ins-chart">${bars}</div>
+          ${noData ? `<div class="ins-empty-hint"><i class="ti ti-info-circle"></i> Your activity will start charting here as you complete tasks, log meetings and use AI.</div>` : ''}
+        </div>
+      </div>
+
+      <div class="ins-col">
+        <div class="ins-hero">
+          <div class="ins-hero-label">Today's progress</div>
+          <div class="ins-hero-donut-wrap">
+            <div class="ins-donut" style="background:conic-gradient(#fff ${pct}%, rgba(255,255,255,0.18) 0)">
+              <div class="ins-donut-hole">
+                <div class="ins-donut-pct">${pct}%</div>
+                <div class="ins-donut-cap">complete</div>
+              </div>
+            </div>
+            <div class="ins-hero-meta">
+              <div><b>${tDone}</b> of <b>${tTotal}</b> tasks done</div>
+              <div>${tTotal === 0 ? 'No tasks scheduled today' : (pct === 100 ? 'All done — nice work! 🎉' : (tTotal - tDone) + ' still to go')}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ins-card">
+          <div class="ins-card-head">
+            <div class="ins-card-title">Recent activity</div>
+          </div>
+          <div class="ins-feed">
+            ${feed || '<div class="ins-feed-empty">No activity yet — get started!</div>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
 function animateCount(el, to) {
   if (!el) return;
   to = Number(to) || 0;
@@ -2764,6 +3024,7 @@ const PAGES = {
   templates: { title:'Templates',     icon:'ti-template',         color:'c-coral',  desc:'Reusable message templates and common numbers.' },
   standup:   { title:'Stand up',      icon:'ti-presentation',     color:'c-pink',   desc:'Draft and elaborate your daily stand up talking points.' },
   wishlist:  { title:'Wishlist',       icon:'ti-sparkles',          color:'c-purple', desc:'Ideas and future features for this project.' },
+  insights:  { title:'Insights',       icon:'ti-chart-pie',         color:'c-green',  desc:'At-a-glance productivity dashboard: completions, streak, meetings & AI usage.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -2826,7 +3087,7 @@ function toggleNavGroup(h) {
   if (g) g.classList.toggle('open');
 }
 
-const TOP_LEVEL = ['home','tasks','widgets','settings','helpdesk','projects','personal'];
+const TOP_LEVEL = ['home','tasks','insights','widgets','settings','helpdesk','projects','personal'];
 
 function syncNavActive() {
   const activeNav = TOP_LEVEL.includes(currentPage) ? currentPage : currentHub;
@@ -2856,6 +3117,7 @@ function showPage(p, hub) {
   }
   if (typeof updatePomoFloat === 'function') updatePomoFloat();
   if (p === 'meetings' && typeof updateMtgAnzPanel === 'function') updateMtgAnzPanel();
+  if (p === 'insights' && typeof renderInsights === 'function') renderInsights();
   window.scrollTo(0, 0);
 }
 
@@ -3255,7 +3517,9 @@ function calToggle(id, dateStr) {
   if (!task) return;
   // For recurring tasks on non-today dates we store a date-scoped done key
   const key = (task.freq === 'date' || task.freq === 'once') ? taskKey(id) : `${id}__${dateStr}`;
+  const wasDone = done[key];
   done[key] = !done[key];
+  if (!wasDone) logActivity('task');
   save();
   const panelEl = document.getElementById('cal-panel');
   if (panelEl) panelEl.outerHTML = buildCalPanel(dateStr);
@@ -4269,6 +4533,7 @@ function addMeeting() {
   }
   meetings.push(entry);
   saveMeetings();
+  logActivity('meeting');
   document.getElementById('mtg-notes').value = '';
   dpSetValue('mtg-date', todayInputDate());
   renderMeetings();
@@ -6093,7 +6358,7 @@ const DEFAULT_WISHLIST = [
   { id:9,  title:'Keyboard shortcuts for common actions',          desc:'Hotkeys for saving, navigating between pages, adding tasks, and triggering AI — with a help overlay (e.g. ? key).',                                                           tag:'ux',      done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   { id:10, title:'Mobile-responsive layout improvements',          desc:'The sidebar and grid layouts break on small screens. A collapsible hamburger menu and single-column stacking would make it usable on phones.',                                tag:'ux',      done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   // ── Ideas ─────────────────────────────────────────────────────────────
-  { id:11, title:'Dashboard / insights page',                      desc:'A home-page-level analytics panel: tasks completed this week, streak graph, meetings held, AI calls made — at-a-glance productivity view.',                                   tag:'idea',    done:false, createdAt:'2026-06-17T00:00:00.000Z' },
+  { id:11, title:'Dashboard / insights page',                      desc:'A home-page-level analytics panel: tasks completed this week, streak graph, meetings held, AI calls made — at-a-glance productivity view.',                                   tag:'idea',    done:true,  createdAt:'2026-06-17T00:00:00.000Z' },
   { id:12, title:'Supabase auth (per-user data)',                  desc:'Add login so data is scoped to the signed-in user. Currently uses an open RLS policy — add user_id column and per-user policies when auth is ready.',                        tag:'idea',    done:false, createdAt:'2026-06-17T00:00:00.000Z' },
 ];
 
@@ -6188,6 +6453,15 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.16.0', type: 'minor', date: '17 Jun 2026', title: 'Insights dashboard', changes: [
+    'New top-level "Insights" page — an at-a-glance productivity dashboard',
+    'KPI cards: tasks completed this week, day streak, meetings held (30 days), AI calls this week',
+    '"Productivity flow" bar chart of tasks completed over the last 7 days, with the peak day highlighted',
+    'Today\'s progress donut showing your completion rate for the day',
+    'Recent activity feed of your latest completions, meetings and AI usage',
+    'New activity log quietly records task completions, meetings and AI calls to power the dashboard',
+    'Insights can also be added to any hub from Settings → Organise hubs',
+  ]},
   { ver: '3.15.5', type: 'patch', date: '17 Jun 2026', title: 'Save daily message queue assignments as default', changes: [
     'Queue assignments card now has a "Save as default" button',
     'Clicking it persists all queue input values to Supabase',
@@ -6599,6 +6873,7 @@ async function geminiCall(prompt) {
     throw err;
   }
   const data = await res.json();
+  if (typeof logActivity === 'function') logActivity('ai');
   return data.choices?.[0]?.message?.content?.trim() || '';
 }
 
@@ -6922,6 +7197,8 @@ function initNotes() {
   kbFacts       = dbGet('zarif_kb_facts')       || DEFAULT_KB_FACTS.slice();
   hubLayout     = loadHubLayout();
   pomo          = loadPomo();
+
+  activityLog    = dbGet('zarif_activity') || [];
 
   standupPoints  = dbGet('zarif_standup_points') || [];
   nextStandupId  = standupPoints.reduce((m,p) => Math.max(m, p.id || 0), 0) + 1;
