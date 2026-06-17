@@ -604,6 +604,12 @@
   .spd-todo-move-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 1px 3px; border-radius: 4px; line-height: 1; transition: all 0.12s; }
   .spd-todo-move-btn:hover { color: var(--text); background: var(--border); }
   .spd-todo-progress { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+  .spd-todo-dp .dp-wrap { width: auto; display: inline-block; }
+  .spd-todo-dp .dp-trigger { width: auto; padding: 3px 8px; font-size: 11.5px; border-radius: 20px; background: var(--surface2); border-color: var(--border); gap: 5px; }
+  .spd-todo-dp .dp-trigger.dp-empty { border-style: dashed; }
+  .spd-todo-dp .dp-trigger.dp-empty .dp-val { font-size: 11px; }
+  .spd-todo-dp .dp-cal-ico { font-size: 12px; }
+  .spd-todo-dp .dp-caret { display: none; }
   /* notes/deliverables as records */
   .spd-record-add { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
   .spd-record-textarea { width: 100%; padding: 9px 12px; font-size: 13px; border: 0.5px solid var(--border-md); border-radius: 10px; background: var(--surface); color: var(--text); font-family: inherit; outline: none; resize: vertical; min-height: 70px; box-sizing: border-box; line-height: 1.6; transition: border-color 0.15s; }
@@ -5421,7 +5427,7 @@ function openSubProjectPage(projId, subId) {
   const doneCnt = todos.filter(t => t.done).length;
   const todoRows = todos.map(t => {
     const prio = t.priority ? `<span class="spd-todo-badge prio-${String(t.priority).toLowerCase()}">${esc(String(t.priority))}</span>` : '';
-    const due = t.dueDate ? `<span class="spd-todo-badge spd-due-badge"><i class="ti ti-calendar-event"></i> ${dpFormat(t.dueDate)}</span>` : '';
+    const duePicker = `<span class="spd-todo-dp">${makeDatePicker('todo-due-' + t.id, t.dueDate || '', v => setTodoDueDate(projId, subId, t.id, v), 'Due date')}</span>`;
     const linked = t.taskId ? `<span class="spd-todo-badge spd-task-badge" title="Added to your Task Manager"><i class="ti ti-checklist"></i> Task</span>` : '';
     const stat = makeStatusDropdown('todo-st-' + t.id, t.status || 'active', v => setTodoStatus(projId, subId, t.id, v), null, SUB_STATUS_OPTIONS);
     return `<div class="spd-todo-row">
@@ -5431,7 +5437,7 @@ function openSubProjectPage(projId, subId) {
       </div>
       <input type="checkbox" class="spd-todo-cb" ${t.done?'checked':''} onchange="toggleSubTodo(${projId},${subId},${t.id})">
       <span class="spd-todo-text${t.done?' done':''}">${esc(t.text)}</span>
-      ${prio}${due}${linked}
+      ${prio}${duePicker}${linked}
       <span class="spd-todo-status">${stat}</span>
       <button class="spd-todo-del" onclick="deleteSubTodo(${projId},${subId},${t.id})"><i class="ti ti-x"></i></button>
     </div>`;
@@ -5519,6 +5525,52 @@ function setTodoStatus(projId, subId, todoId, val) {
   if (!t) return;
   t.status = val;
   if (val === 'delivered') t.done = true;
+  saveProjects();
+  openSubProjectPage(projId, subId);
+}
+
+function setTodoDueDate(projId, subId, todoId, val) {
+  const p = projects.find(x => x.id === projId);
+  if (!p) return;
+  const s = (p.subs || []).find(x => x.id === subId);
+  if (!s) return;
+  const t = (s.todos || []).find(x => x.id === todoId);
+  if (!t) return;
+  t.dueDate = val || '';
+  if (val) {
+    const prio = ['HIGH','MEDIUM','LOW'].includes((t.priority || '').toUpperCase()) ? t.priority.toUpperCase() : 'MEDIUM';
+    if (t.taskId) {
+      // update existing linked task
+      const task = customTasks.find(ct => ct.id === t.taskId);
+      if (task) { task.date = val; saveCustomTasks(); if (typeof renderTasks === 'function') renderTasks(); }
+      else {
+        // task was deleted externally — recreate
+        t.taskId = null;
+      }
+    }
+    if (!t.taskId) {
+      const task = {
+        id: 'c' + Date.now() + Math.floor(Math.random() * 1000),
+        freq: 'date', priority: prio,
+        name: `${p.title} › ${s.title}: ${t.text}`,
+        days: 'all',
+        assignees: [s.assignee ? s.assignee : 'Me'],
+        note: `Auto-created from project checklist — ${p.title} › ${s.title}`,
+        custom: true, date: val,
+        projId: projId, subId: subId, todoId: t.id,
+      };
+      customTasks.push(task);
+      t.taskId = task.id;
+      saveCustomTasks();
+      if (typeof renderTasks === 'function') renderTasks();
+    }
+  } else if (t.taskId) {
+    // date cleared — remove linked task
+    customTasks = customTasks.filter(ct => ct.id !== t.taskId);
+    t.taskId = null;
+    saveCustomTasks();
+    if (typeof renderTasks === 'function') renderTasks();
+  }
   saveProjects();
   openSubProjectPage(projId, subId);
 }
