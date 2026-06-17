@@ -1197,7 +1197,6 @@
   <div class="nav-links">
     <button class="nav-btn active" data-page="home" onclick="showPage('home')"><i class="ti ti-home"></i><span>Home</span></button>
     <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Task Manager</span></button>
-    <button class="nav-btn" data-page="insights" onclick="showPage('insights')"><i class="ti ti-chart-pie"></i><span>Insights</span></button>
     <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
     <div class="nav-section-label">Hubs</div>
     <div class="nav-group" id="nav-group-helpdesk">
@@ -3059,7 +3058,7 @@ const HUB_META = {
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','meetings','message','templates','standup'],
   projects: ['meetings'],
-  personal: ['wishlist'],
+  personal: ['wishlist','insights'],
 };
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -3111,7 +3110,7 @@ function toggleNavGroup(h) {
   if (g) g.classList.toggle('open');
 }
 
-const TOP_LEVEL = ['home','tasks','insights','widgets','settings','helpdesk','projects','personal'];
+const TOP_LEVEL = ['home','tasks','widgets','settings','helpdesk','projects','personal'];
 
 function syncNavActive() {
   const activeNav = TOP_LEVEL.includes(currentPage) ? currentPage : currentHub;
