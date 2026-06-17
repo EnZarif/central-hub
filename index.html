@@ -151,20 +151,42 @@
   #app-loading p { font-size: 14px; color: var(--text-2); }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* Mobile top bar + drawer scrim (hidden on desktop) */
+  .mobile-topbar { display: none; }
+  .nav-scrim { display: none; }
+
   @media (max-width: 760px) {
-    /* Mobile: nav becomes a bottom bar */
-    body { padding-left: 0; padding-bottom: 66px; }
-    .wrap { padding: 1.25rem 1rem 2rem; }
-    .nav { width: 100%; height: auto; top: auto; bottom: 0; left: 0; right: 0; flex-direction: row; align-items: stretch;
-           border-right: none; border-top: 0.5px solid var(--border); padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-           overflow-x: auto; overflow-y: hidden; gap: 2px; -webkit-overflow-scrolling: touch; }
-    .nav-logo, .nav-section-label { display: none; }
-    .nav-links, .nav-bottom, .nav-group, .nav-group-head { display: contents; }
-    .nav-expand, .nav-sub { display: none !important; }
-    .nav-btn, .theme-toggle-btn { flex: 0 0 auto; width: auto; min-width: 60px; flex-direction: column; justify-content: center;
-           gap: 4px; padding: 6px 8px; font-size: 10px; text-align: center; white-space: nowrap; }
-    .nav-btn i, .theme-toggle-btn i { font-size: 17px; width: 30px; height: 30px; }
-    .nav-btn.active { box-shadow: none !important; background: transparent; }
+    /* Mobile: sidebar becomes a slide-out hamburger drawer */
+    body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; }
+    .wrap { padding: 1.25rem 1rem 3rem; }
+
+    /* Top app bar */
+    .mobile-topbar { display: flex; align-items: center; gap: 11px; position: fixed; top: 0; left: 0; right: 0;
+           height: calc(54px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 12px 0;
+           background: var(--surface); border-bottom: 0.5px solid var(--border); z-index: 60; }
+    .mobile-menu-btn, .mobile-theme-btn { background: var(--surface2); border: none; color: var(--text);
+           width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+           font-size: 21px; cursor: pointer; flex-shrink: 0; transition: background 0.15s; }
+    .mobile-menu-btn:active, .mobile-theme-btn:active { background: var(--border-md); }
+    .mobile-theme-btn { margin-left: auto; }
+    .mobile-topbar-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--text); min-width: 0; }
+    .mobile-topbar-logo span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mobile-topbar-logo .nav-logo-icon { width: 28px; height: 28px; }
+
+    /* Drawer */
+    .nav { width: 270px; max-width: 84vw; z-index: 70; transform: translateX(-100%);
+           transition: transform 0.28s cubic-bezier(.4,0,.2,1); will-change: transform; }
+    body.nav-open .nav { transform: translateX(0); box-shadow: 8px 0 40px rgba(0,0,0,0.45); }
+    body.nav-open { overflow: hidden; }
+
+    /* Scrim behind drawer */
+    .nav-scrim { display: block; position: fixed; inset: 0; z-index: 65; background: rgba(0,0,0,0);
+           visibility: hidden; transition: background 0.28s ease, visibility 0.28s; }
+    body.nav-open .nav-scrim { background: rgba(0,0,0,0.55); visibility: visible; }
+
+    /* Slightly roomier tap targets inside the drawer */
+    .nav-btn { padding: 10px 10px; font-size: 14.5px; }
+    .nav-sublink { padding: 8px 8px; font-size: 13.5px; }
   }
   .page { display: none; }
   .page.active { display: block; }
@@ -1082,7 +1104,7 @@
   .pomo-float-mode { font-size: 12px; color: var(--text-3); }
   .pomo-float-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--surface2); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background 0.15s; }
   .pomo-float-btn:hover { background: var(--border-md); }
-  @media (max-width: 760px) { .pomo-float { bottom: 76px; right: 12px; } }
+  @media (max-width: 760px) { .pomo-float { bottom: calc(16px + env(safe-area-inset-bottom)); right: 12px; } body.nav-open .pomo-float { display: none; } }
 
   /* MOBILE COMPONENT TWEAKS (after base rules so they win the cascade) */
   @media (max-width: 760px) {
@@ -1110,6 +1132,11 @@
     .field-row { grid-template-columns: 1fr; gap: 5px; }
     .field-label { padding-top: 0; }
 
+    /* Stop cards & form controls forcing horizontal overflow */
+    .card, .split-grid, .split-grid > * { min-width: 0; }
+    .add-point-row, .api-key-row { flex-wrap: wrap; }
+    input, select, textarea, .field-input, .settings-input { min-width: 0; max-width: 100%; }
+
     /* Comfortable inputs (avoids iOS zoom on focus) */
     .field-input, .ai-modal-prompt, .standup-item-text, .add-point-row input,
     .api-key-row input, .settings-input, textarea, input[type="text"], input[type="date"] { font-size: 16px; }
@@ -1121,7 +1148,10 @@
 
     /* Sidebar (KB) drops below the list */
     .tasks-layout { grid-template-columns: 1fr; }
+    .tasks-main, .tasks-sidebar { min-width: 0; }
     .tasks-sidebar { position: static; }
+    /* Hero stat cards shrink to fit, no horizontal overflow */
+    .statcard { min-width: 0; }
   }
 
   /* ═══ INSIGHTS / DASHBOARD ═══ */
@@ -1203,6 +1233,13 @@
 <div id="app-loading"><div class="load-spinner"></div><p>Loading your hub…</p></div>
 
 <div class="app-layout">
+
+<header class="mobile-topbar">
+  <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+  <div class="mobile-topbar-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>Zarif Central Hub</span></div>
+  <button class="mobile-theme-btn" onclick="toggleTheme()" aria-label="Cycle theme"><i class="ti ti-palette"></i></button>
+</header>
+<div class="nav-scrim" id="nav-scrim" onclick="closeMobileNav()"></div>
 
 <nav class="nav">
   <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>Zarif Central Hub</span></div>
@@ -3122,6 +3159,11 @@ function toggleNavGroup(h) {
   if (g) g.classList.toggle('open');
 }
 
+// ---- Mobile hamburger drawer ----
+function toggleMobileNav() { document.body.classList.toggle('nav-open'); }
+function closeMobileNav() { document.body.classList.remove('nav-open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileNav(); });
+
 const TOP_LEVEL = ['home','tasks','widgets','settings','helpdesk','projects','personal'];
 
 function syncNavActive() {
@@ -3138,6 +3180,7 @@ function goBack() {
 
 function showPage(p, hub) {
   currentPage = p;
+  closeMobileNav();
   document.querySelectorAll('.page').forEach(el => el.classList.toggle('active', el.id === 'page-'+p));
   if (HUB_PAGES.includes(p)) currentHub = (p === 'home') ? null : p;
   else if (hub) currentHub = hub;
@@ -6401,7 +6444,7 @@ const DEFAULT_WISHLIST = [
   // ── UX / Design ───────────────────────────────────────────────────────
   { id:8,  title:'Bigger chevron & sub-card icons in sidebar',     desc:'The expand chevron on hub nav groups and the icons on sub-nav links are too small — increase their size and visual weight.',                                                   tag:'ux',      done:false, createdAt:'2026-06-17T00:00:00.000Z' },
   { id:9,  title:'Keyboard shortcuts for common actions',          desc:'Hotkeys for saving, navigating between pages, adding tasks, and triggering AI — with a help overlay (e.g. ? key).',                                                           tag:'ux',      done:false, createdAt:'2026-06-17T00:00:00.000Z' },
-  { id:10, title:'Mobile-responsive layout improvements',          desc:'The sidebar and grid layouts break on small screens. A collapsible hamburger menu and single-column stacking would make it usable on phones.',                                tag:'ux',      done:false, createdAt:'2026-06-17T00:00:00.000Z' },
+  { id:10, title:'Mobile-responsive layout improvements',          desc:'The sidebar and grid layouts break on small screens. A collapsible hamburger menu and single-column stacking would make it usable on phones.',                                tag:'ux',      done:true,  createdAt:'2026-06-17T00:00:00.000Z' },
   // ── Ideas ─────────────────────────────────────────────────────────────
   { id:11, title:'Dashboard / insights page',                      desc:'A home-page-level analytics panel: tasks completed this week, streak graph, meetings held, AI calls made — at-a-glance productivity view.',                                   tag:'idea',    done:true,  createdAt:'2026-06-17T00:00:00.000Z' },
   { id:12, title:'Supabase auth (per-user data)',                  desc:'Add login so data is scoped to the signed-in user. Currently uses an open RLS policy — add user_id column and per-user policies when auth is ready.',                        tag:'idea',    done:false, createdAt:'2026-06-17T00:00:00.000Z' },
@@ -6498,6 +6541,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.17.0', type: 'minor', date: '17 Jun 2026', title: 'Mobile-responsive layout', changes: [
+    'Sidebar now collapses into a slide-out hamburger drawer on phones, with a top app bar (menu + theme toggle)',
+    'Tapping a nav item, the dimmed backdrop, or pressing Escape closes the drawer',
+    'Hub sub-pages (KPI, Meetings, Daily Message, etc.) are now reachable on mobile — the old bottom bar hid them',
+    'Fixed horizontal-overflow bugs where the Tasks hero, Daily Message, Templates and Meetings cards spilled off-screen',
+    'Cards, forms and stat grids now stack cleanly into a single column and shrink to fit narrow screens',
+    'Bigger tap targets and 16px inputs to avoid iOS zoom-on-focus',
+  ]},
   { ver: '3.16.0', type: 'minor', date: '17 Jun 2026', title: 'Insights dashboard', changes: [
     'New top-level "Insights" page — an at-a-glance productivity dashboard',
     'KPI cards: tasks completed this week, day streak, meetings held (30 days), AI calls this week',
