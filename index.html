@@ -219,6 +219,9 @@
   .hero-chip-val { font-size: 14px; font-weight: 500; color: var(--text); }
 
   /* GLOBAL BACK BUTTON */
+  .page-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .page-topbar .clock-card { margin-left: auto; }
+  .page-topbar .page-back { margin-bottom: 0; }
   .page-back { font-size: 13px; font-weight: 500; border-radius: 20px; padding: 7px 15px 7px 11px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; transition: all 0.15s; border: 1.5px solid transparent; }
   .page-back i { font-size: 15px; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
   .page-back:hover { opacity: 0.82; transform: translateX(-2px); }
@@ -1302,7 +1305,18 @@
 
 <div class="wrap">
 
-  <button id="page-back" class="page-back" style="display:none" onclick="goBack()"><i class="ti ti-arrow-left"></i> <span id="page-back-label">Back</span></button>
+  <div class="page-topbar">
+    <button id="page-back" class="page-back" style="display:none" onclick="goBack()"><i class="ti ti-arrow-left"></i> <span id="page-back-label">Back</span></button>
+    <div class="clock-card" title="Melbourne time">
+      <div class="clock-card-ico"><i class="ti ti-clock"></i></div>
+      <div class="clock-card-time"><span class="clock-card-time-val" id="melb-clock-time">--:--</span><span class="clock-card-ampm" id="melb-clock-ampm"></span></div>
+      <div class="clock-card-divider"></div>
+      <div class="clock-card-date">
+        <div class="clock-card-weekday" id="melb-clock-weekday"></div>
+        <div class="clock-card-day" id="melb-clock-day"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- HOME LANDING -->
   <div class="page active" id="page-home">
@@ -1566,15 +1580,6 @@
         <div>
           <div class="task-hero-greeting">Hey, Zarif</div>
           <div class="task-hero-sub" id="s-sub">Loading tasks...</div>
-        </div>
-        <div class="clock-card" title="Melbourne time">
-          <div class="clock-card-ico"><i class="ti ti-clock"></i></div>
-          <div class="clock-card-time"><span class="clock-card-time-val" id="melb-clock-time">--:--</span><span class="clock-card-ampm" id="melb-clock-ampm"></span></div>
-          <div class="clock-card-divider"></div>
-          <div class="clock-card-date">
-            <div class="clock-card-weekday" id="melb-clock-weekday"></div>
-            <div class="clock-card-day" id="melb-clock-day"></div>
-          </div>
         </div>
       </div>
       <div class="dash-grid">
@@ -6671,6 +6676,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.18.2', type: 'patch', date: '17 Jun 2026', title: 'Clock moved to top-right corner', changes: [
+    'The clock card now sits in the top-right corner of every page, opposite the back button',
+    'Shows on all pages (not just the Tasks hero), wrapping below the back button on narrow screens',
+  ]},
   { ver: '3.18.1', type: 'patch', date: '17 Jun 2026', title: 'Bigger clock card', changes: [
     'Replaced the small clock pill with a cartoon-style card matching the widgets',
     'Shows a large live time alongside the full weekday and date, split by a divider',
