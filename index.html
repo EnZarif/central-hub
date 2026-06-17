@@ -2705,7 +2705,7 @@ function renderInsights() {
             <div>
               <div class="ins-hero-label">Today's progress</div>
               <div class="ins-hero-meta-title">${pct === 100 ? 'All done! 🎉' : tTotal === 0 ? 'No tasks today' : tDone + ' of ' + tTotal + ' tasks'}</div>
-              <div class="ins-hero-meta-sub">${pct === 100 ? 'Perfect day — keep the streak going' : tTotal === 0 ? 'Nothing scheduled yet' : (tTotal - tDone) + ' task${tTotal - tDone === 1 ? '' : 's'} still to go'}</div>
+              <div class="ins-hero-meta-sub">${pct === 100 ? 'Perfect day — keep the streak going' : tTotal === 0 ? 'Nothing scheduled yet' : (tTotal - tDone) + ' task' + (tTotal - tDone === 1 ? '' : 's') + ' still to go'}</div>
             </div>
           </div>
           <div class="ins-hero-body">
