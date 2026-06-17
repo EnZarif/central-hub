@@ -600,6 +600,9 @@
   .spd-todo-text.done { text-decoration: line-through; color: var(--text-3); }
   .spd-todo-del { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 5px; }
   .spd-todo-del:hover { color: #ef4444; }
+  .spd-todo-move-col { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
+  .spd-todo-move-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 1px 3px; border-radius: 4px; line-height: 1; transition: all 0.12s; }
+  .spd-todo-move-btn:hover { color: var(--text); background: var(--border); }
   .spd-todo-progress { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
   /* notes/deliverables as records */
   .spd-record-add { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
@@ -5400,6 +5403,10 @@ function openSubProjectPage(projId, subId) {
     const linked = t.taskId ? `<span class="spd-todo-badge spd-task-badge" title="Added to your Task Manager"><i class="ti ti-checklist"></i> Task</span>` : '';
     const stat = makeStatusDropdown('todo-st-' + t.id, t.status || 'active', v => setTodoStatus(projId, subId, t.id, v), null, SUB_STATUS_OPTIONS);
     return `<div class="spd-todo-row">
+      <div class="spd-todo-move-col">
+        <button class="spd-todo-move-btn" onclick="moveTodo(${projId},${subId},${t.id},-1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
+        <button class="spd-todo-move-btn" onclick="moveTodo(${projId},${subId},${t.id},1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
+      </div>
       <input type="checkbox" class="spd-todo-cb" ${t.done?'checked':''} onchange="toggleSubTodo(${projId},${subId},${t.id})">
       <span class="spd-todo-text${t.done?' done':''}">${esc(t.text)}</span>
       ${prio}${due}${linked}
@@ -5714,6 +5721,21 @@ async function addSubTodo(projId, subId) {
     if (typeof renderTasks === 'function') renderTasks();
   }
 
+  saveProjects();
+  openSubProjectPage(projId, subId);
+}
+
+function moveTodo(projId, subId, todoId, dir) {
+  const p = projects.find(x => x.id === projId);
+  if (!p) return;
+  const s = (p.subs || []).find(x => x.id === subId);
+  if (!s || !s.todos) return;
+  const idx = s.todos.findIndex(x => x.id === todoId);
+  const target = idx + dir;
+  if (idx < 0 || target < 0 || target >= s.todos.length) return;
+  const tmp = s.todos[idx];
+  s.todos[idx] = s.todos[target];
+  s.todos[target] = tmp;
   saveProjects();
   openSubProjectPage(projId, subId);
 }
