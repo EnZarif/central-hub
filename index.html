@@ -418,8 +418,18 @@
   .time-field-ico { font-size: 15px; color: var(--text-3); flex-shrink: 0; }
   .time-field-input { border: none; background: transparent; color: var(--text); font-family: inherit; font-size: 13px; outline: none; width: 100%; color-scheme: dark; }
   .time-field-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
-  /* live Melbourne clock pill */
-  .clock-pill { font-variant-numeric: tabular-nums; }
+  /* live Melbourne clock — cartoon card with inline time | date */
+  .clock-card { display: inline-flex; align-items: center; gap: 14px; background: var(--surface); border: 2px solid var(--teal); box-shadow: 4px 4px 0 var(--teal-bg); border-radius: 16px; padding: 11px 16px; }
+  :root[data-theme="ink"] .clock-card { border-color: var(--border-md); box-shadow: 4px 4px 0 rgba(255,255,255,0.06); }
+  .clock-card-ico { width: 42px; height: 42px; border-radius: 12px; background: var(--teal-bg); color: var(--teal-text); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .clock-card-time { display: flex; align-items: baseline; gap: 5px; }
+  .clock-card-time-val { font-size: 30px; font-weight: 500; letter-spacing: -0.5px; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
+  .clock-card-ampm { font-size: 14px; font-weight: 500; color: var(--teal-text); }
+  .clock-card-divider { width: 1px; height: 36px; background: var(--border-md); flex-shrink: 0; }
+  .clock-card-date { line-height: 1.35; }
+  .clock-card-weekday { font-size: 14.5px; font-weight: 500; color: var(--text); }
+  .clock-card-day { font-size: 12px; color: var(--text-2); }
+  @media (max-width: 480px) { .clock-card { gap: 11px; padding: 10px 13px; } .clock-card-time-val { font-size: 26px; } .clock-card-ico { width: 38px; height: 38px; font-size: 20px; } }
 
   /* TASK CARDS */
   .task { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.15s, opacity 0.2s, transform 0.15s ease; align-items: center; }
@@ -1557,9 +1567,14 @@
           <div class="task-hero-greeting">Hey, Zarif</div>
           <div class="task-hero-sub" id="s-sub">Loading tasks...</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-          <span class="date-pill"><i class="ti ti-calendar"></i><span id="datebadge"></span></span>
-          <span class="date-pill clock-pill" title="Melbourne time"><i class="ti ti-clock"></i><span id="melb-clock"></span></span>
+        <div class="clock-card" title="Melbourne time">
+          <div class="clock-card-ico"><i class="ti ti-clock"></i></div>
+          <div class="clock-card-time"><span class="clock-card-time-val" id="melb-clock-time">--:--</span><span class="clock-card-ampm" id="melb-clock-ampm"></span></div>
+          <div class="clock-card-divider"></div>
+          <div class="clock-card-date">
+            <div class="clock-card-weekday" id="melb-clock-weekday"></div>
+            <div class="clock-card-day" id="melb-clock-day"></div>
+          </div>
         </div>
       </div>
       <div class="dash-grid">
@@ -3128,8 +3143,17 @@ function timeField(id, value, onChangeAttr) {
 }
 // live clock in the Tasks hero
 function tickMelbClock() {
-  const el = document.getElementById('melb-clock');
-  if (el) el.textContent = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s?(am|pm)/i, m => m.trim().toLowerCase());
+  const timeEl = document.getElementById('melb-clock-time');
+  if (!timeEl) return;
+  const hm = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }); // e.g. "6:01 pm"
+  const m = hm.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
+  timeEl.textContent = m ? m[1] : hm;
+  const apEl = document.getElementById('melb-clock-ampm');
+  if (apEl) apEl.textContent = m ? m[2].toUpperCase() : '';
+  const wd = document.getElementById('melb-clock-weekday');
+  if (wd) wd.textContent = melbFmt({ weekday: 'long' });
+  const dy = document.getElementById('melb-clock-day');
+  if (dy) dy.textContent = melbFmt({ day: 'numeric', month: 'long', year: 'numeric' });
 }
 function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
 
@@ -4166,7 +4190,6 @@ function prevWeekRange() {
 }
 
 const dateStr = `${DAY_NAMES[todayDow]}, ${now.getDate()} ${MON_NAMES[now.getMonth()]} ${now.getFullYear()}`;
-document.getElementById('datebadge').textContent = dateStr;
 document.getElementById('datebadge2').textContent = dateStr;
 document.getElementById('datebadge3').textContent = dateStr;
 document.getElementById('datebadge4').textContent = dateStr;
@@ -4174,7 +4197,6 @@ document.getElementById('datebadge5').textContent = dateStr;
 document.getElementById('datebadge6').textContent = dateStr;
 document.getElementById('datebadge7').textContent = dateStr;
 document.getElementById('datebadge8').textContent = dateStr;
-document.getElementById('datebadge').textContent = `${DAY_NAMES[todayDow]}, ${now.getDate()} ${MON_NAMES[now.getMonth()]}  ${now.getFullYear()}`;
 
 const weekRange = prevWeekRange();
 document.getElementById('wpay-body').value = `Hi team,\n\nPlease see the Wpay call data from ${weekRange} below:\n\nKind regards,`;
@@ -6649,6 +6671,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.18.1', type: 'patch', date: '17 Jun 2026', title: 'Bigger clock card', changes: [
+    'Replaced the small clock pill with a cartoon-style card matching the widgets',
+    'Shows a large live time alongside the full weekday and date, split by a divider',
+    'Adapts to every theme accent (teal / forest green / ink mono)',
+  ]},
   { ver: '3.18.0', type: 'minor', date: '17 Jun 2026', title: 'Time system (Melbourne timezone)', changes: [
     'Live Melbourne-time clock in the Tasks header',
     'Tasks can now have an optional "due by" time — set it when adding or editing a task',
