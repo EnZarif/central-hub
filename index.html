@@ -6166,6 +6166,25 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.15.4', type: 'patch', date: '17 Jun 2026', title: 'Checklist item due dates synced to Task Manager', changes: [
+    'Each checklist item now has an inline date picker',
+    'Setting a due date automatically creates a linked task in the Task Manager',
+    'Changing the date updates the existing linked task',
+    'Clearing the date removes the linked task',
+  ]},
+  { ver: '3.15.3', type: 'patch', date: '17 Jun 2026', title: 'Standup: show only final elaborated version', changes: [
+    'When an AI elaboration exists, the card shows only the elaborated text — not the original bullet',
+    'Original bullet text is only visible inside the edit (pencil) mode',
+    'Copy button moved into the action column alongside the other icon buttons',
+    'Separate elaboration box removed as it became redundant',
+  ]},
+  { ver: '3.15.2', type: 'patch', date: '17 Jun 2026', title: 'Standup points: read-only display with inline edit', changes: [
+    'Standup talking points now display as plain read-only text instead of always-editable textareas',
+    'Pencil button switches a point into edit mode inline; Enter or blur commits, Escape cancels',
+  ]},
+  { ver: '3.15.1', type: 'patch', date: '17 Jun 2026', title: 'Checklist item move buttons', changes: [
+    'Up/down arrow buttons added to each checklist item to reorder within a sub-project',
+  ]},
   { ver: '3.15.0', type: 'minor', date: '17 Jun 2026', title: 'Hub filter for Task Manager', changes: [
     'New hub filter bar above the task list: All / Helpdesk / Projects / Personal',
     'All built-in tasks tagged with their hub (helpdesk or projects)',
