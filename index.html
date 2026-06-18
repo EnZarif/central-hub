@@ -4434,11 +4434,14 @@ function generateMessage() {
   const jackOff  = breaks.some(r => r.op.startsWith('Jack')  && r.brk.trim().toUpperCase() === 'OFF');
   if (bellaOff && jackOff) {
     const today = todayInputDate();
-    const cvtsNames = ['CVTS report sent — 9am', 'CVTS report sent — 4pm'];
-    cvtsNames.forEach(name => {
+    const cvtsTasks = [
+      { name: 'CVTS report sent — 9am',  time: '09:00' },
+      { name: 'CVTS report sent — 4pm',  time: '16:00' },
+    ];
+    cvtsTasks.forEach(({ name, time }) => {
       const alreadyExists = customTasks.some(t => t.name === name && t.freq === 'once' && t.date === today);
       if (!alreadyExists) {
-        customTasks.push({ id: 'c' + Date.now() + Math.random(), freq: 'once', priority: 'HIGH', name, days: 'all', assignees: ['Me'], note: 'Auto-created: Bella & Jack both off', custom: true, date: today });
+        customTasks.push({ id: 'c' + Date.now() + Math.random(), freq: 'once', priority: 'HIGH', name, days: 'all', assignees: ['Me'], note: 'Auto-created: Bella & Jack both off', custom: true, date: today, time });
       }
     });
     saveCustomTasks();
