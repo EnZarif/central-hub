@@ -2715,6 +2715,10 @@
           <option value="personal">Personal</option>
         </select>
       </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Description / notes</div>
+        <textarea class="field-input" id="te-note" rows="3" style="resize:vertical; font-family:inherit; font-size:13px; line-height:1.6;"></textarea>
+      </div>
     </div>
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="closeTaskEditModal()">Cancel</button>
@@ -3422,6 +3426,7 @@ function openTaskEdit(id) {
   document.getElementById('te-priority').value = task.priority;
   document.getElementById('te-freq').value = task.freq;
   document.getElementById('te-hub').value = task.hub || 'helpdesk';
+  document.getElementById('te-note').value = task.note || '';
   renderTaskEditDayField(task.freq, task);
   const th = document.getElementById('te-time-holder');
   if (th) th.innerHTML = timeField('te-time', task.time || '');
@@ -3469,6 +3474,7 @@ function saveTaskEdit() {
   override.hub = document.getElementById('te-hub').value;
   const teTime = document.getElementById('te-time');
   override.time = teTime && teTime.value ? teTime.value : '';
+  override.note = document.getElementById('te-note').value.trim();
   taskOverrides[editingTaskId] = { ...(taskOverrides[editingTaskId] || {}), ...override };
   saveTaskOverrides();
   closeTaskEditModal();
