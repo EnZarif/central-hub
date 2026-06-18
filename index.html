@@ -1552,7 +1552,10 @@
           <hr class="notes-divider">
           <div class="notes-records-head">
             <span>Saved records</span>
-            <span id="notes-record-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px;"></span>
+            <span style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+              <span id="notes-record-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px;"></span>
+              <button id="notes-sort-btn" onclick="notesToggleSort()" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border-md);background:var(--surface);color:var(--text-3);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-arrow-down" id="notes-sort-icon"></i><span id="notes-sort-label">Newest</span></button>
+            </span>
           </div>
           <div class="notes-records-list" id="notes-records-list"></div>
         </div>
@@ -7824,7 +7827,15 @@ function elaboratePoint(id, btn) {
 let _notesTimer = null;
 let _notesAiResult = '';
 let _notesRecords = [];
-let _notesEditingId = null; // id of record being edited, null = new record
+let _notesEditingId = null;
+let _notesSortNewest = true;
+
+function notesToggleSort() {
+  _notesSortNewest = !_notesSortNewest;
+  document.getElementById('notes-sort-label').textContent = _notesSortNewest ? 'Newest' : 'Oldest';
+  document.getElementById('notes-sort-icon').className = _notesSortNewest ? 'ti ti-arrow-down' : 'ti ti-arrow-up';
+  renderNotesRecords();
+}
 
 function notesOnInput() {
   const ta = document.getElementById('notes-textarea');
@@ -7874,11 +7885,12 @@ function renderNotesRecords() {
   const countEl = document.getElementById('notes-record-count');
   if (!list) return;
   if (countEl) countEl.textContent = _notesRecords.length ? `${_notesRecords.length} saved` : '';
-  if (!_notesRecords.length) {
+  const sorted = _notesSortNewest ? [..._notesRecords] : [..._notesRecords].reverse();
+  if (!sorted.length) {
     list.innerHTML = '<div class="notes-empty">No saved records yet — write something and hit Save record.</div>';
     return;
   }
-  list.innerHTML = _notesRecords.map((r, i) => {
+  list.innerHTML = sorted.map((r, i) => {
     const dateStr = fmtTs(r.createdAt) + (r.updatedAt ? ' · edited ' + fmtTs(r.updatedAt) : '');
     const preview = r.content.replace(/\n/g,' ').slice(0, 80);
     return `<div class="notes-record" id="nrec-${r.id}">
