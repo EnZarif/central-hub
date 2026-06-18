@@ -533,35 +533,55 @@
   #page-meetings .header h1 i, #page-meetings .card-title i { color: var(--green-text); }
   #page-kpi .header h1 i, #page-kpi .card-title i { color: var(--pink-text); }
   #page-wishlist .header h1 i, #page-wishlist .card-title i { color: var(--purple-text); }
-  #page-weekly-review .header h1 i, #page-weekly-review .card-title i { color: var(--green-text); }
+  #page-weekly-review .header h1 i, #page-weekly-review .card-title i { color: var(--purple-text); }
   #page-end-of-day .header h1 i, #page-end-of-day .card-title i { color: var(--teal-text); }
 
   /* WEEKLY REVIEW */
+  .wr-week-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--purple-bg); border: 1px solid rgba(127,119,221,0.25); border-radius: var(--radius); margin-bottom: 4px; }
+  .wr-week-banner-label { font-size: 13px; font-weight: 600; color: var(--purple-text); flex: 1; }
+  .wr-week-banner-sub { font-size: 11.5px; color: var(--text-3); }
+  .wr-week-days { display: flex; gap: 5px; }
+  .wr-day { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; letter-spacing: 0.03em; background: var(--surface2); color: var(--text-3); border: 1px solid var(--border); }
+  .wr-day.past { background: var(--purple-bg); color: var(--purple-text); border-color: rgba(127,119,221,0.3); }
+  .wr-day.today { background: var(--purple-text); color: #fff; border-color: var(--purple-text); }
+  .wr-already-done { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--green-text); background: rgba(99,153,34,0.1); border: 1px solid rgba(99,153,34,0.2); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 4px; }
   .wr-section { display: flex; flex-direction: column; gap: 6px; }
-  .wr-label { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+  .wr-label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 7px; }
   .wr-label i { font-size: 14px; }
-  .wr-label.wrl-green { color: var(--green-text); }
+  .wr-label.wrl-green  { color: var(--green-text); }
   .wr-label.wrl-coral  { color: var(--coral-text); }
   .wr-label.wrl-blue   { color: var(--teal-text); }
   .wr-label.wrl-purple { color: var(--purple-text); }
-  .wr-textarea { width: 100%; min-height: 90px; resize: vertical; background: var(--surface2); border: 1.5px solid var(--border-md); border-radius: var(--radius); padding: 11px 13px; font-size: 14px; line-height: 1.65; color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
-  .wr-textarea:focus { border-color: var(--green-text); }
+  .wr-hint { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+  .wr-textarea { width: 100%; min-height: 88px; resize: vertical; background: var(--surface2); border: 1.5px solid var(--border-md); border-radius: var(--radius); padding: 11px 13px; font-size: 13.5px; line-height: 1.7; color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
+  .wr-textarea:focus { border-color: var(--purple-text); }
   .wr-textarea::placeholder { color: var(--text-3); }
-  .wr-save-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
-  .wr-save-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 20px; border-radius: 10px; background: var(--green-bg); color: var(--green-text); border: 1.5px solid var(--green-text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
-  .wr-save-btn:hover { opacity: 0.82; }
-  .wr-saved-msg { font-size: 12px; color: var(--green-text); display: none; }
-  .wr-history-list { display: flex; flex-direction: column; gap: 10px; }
-  .wr-entry { background: var(--surface); border: 1px solid var(--border-md); border-radius: 12px; overflow: hidden; }
-  .wr-entry-head { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; }
-  .wr-entry-head:hover { background: var(--surface2); }
-  .wr-entry-date { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .wr-textarea.wr-highlight { border-color: rgba(127,119,221,0.35); background: rgba(127,119,221,0.05); }
+  .wr-textarea.wr-highlight:focus { border-color: var(--purple-text); }
+  .wr-save-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); }
+  .wr-save-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 22px; border-radius: 10px; background: var(--purple-text); color: #fff; border: none; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .wr-save-btn:hover { opacity: 0.85; }
+  .wr-saved-msg { font-size: 12px; color: var(--purple-text); display: none; }
+  .wr-history-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .wr-history-meta { font-size: 11.5px; color: var(--text-3); }
+  .wr-streak { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--amber-text); background: var(--amber-bg); border-radius: 20px; padding: 2px 9px; }
+  .wr-history-list { display: flex; flex-direction: column; gap: 8px; }
+  .wr-entry { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color 0.15s; }
+  .wr-entry:hover { border-color: var(--purple-text); }
+  .wr-entry-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+  .wr-entry-week { font-size: 12.5px; font-weight: 600; color: var(--text); flex: 1; }
   .wr-entry-saved { font-size: 11px; color: var(--text-3); }
-  .wr-entry-body { padding: 12px 14px; border-top: 1px solid var(--border); display: none; flex-direction: column; gap: 12px; }
-  .wr-entry-body.open { display: flex; }
-  .wr-entry-section { font-size: 13px; line-height: 1.6; }
-  .wr-entry-section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 3px; }
-  .wr-entry-del { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 14px; padding: 4px; border-radius: 6px; }
+  .wr-entry-chev { font-size: 13px; color: var(--text-3); transition: transform 0.2s; }
+  .wr-entry.open .wr-entry-chev { transform: rotate(180deg); }
+  .wr-entry-body { padding: 0 14px; border-top: 0; display: none; flex-direction: column; gap: 10px; max-height: 0; overflow: hidden; transition: max-height 0.2s ease; }
+  .wr-entry-body.open { display: flex; padding: 12px 14px; border-top: 1px solid var(--border); max-height: 600px; }
+  .wr-entry-section { font-size: 13px; line-height: 1.65; color: var(--text-2); }
+  .wr-entry-section-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .wr-entry-section-label.wrl-green  { color: var(--green-text); }
+  .wr-entry-section-label.wrl-coral  { color: var(--coral-text); }
+  .wr-entry-section-label.wrl-blue   { color: var(--teal-text); }
+  .wr-entry-section-label.wrl-purple { color: var(--purple-text); }
+  .wr-entry-del { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 14px; padding: 4px; border-radius: 6px; flex-shrink: 0; }
   .wr-entry-del:hover { color: var(--coral-text); background: var(--coral-bg); }
 
   /* END OF DAY */
@@ -1685,36 +1705,45 @@
       </div>
     </div>
     <div class="split-grid" style="align-items:start;">
-      <div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div id="wr-week-banner"></div>
         <div class="card">
           <div class="card-title"><i class="ti ti-pencil" style="font-size:13px"></i> This week's review</div>
-          <div style="display:flex;flex-direction:column;gap:16px;">
+          <div id="wr-already-done-banner"></div>
+          <div style="display:flex;flex-direction:column;gap:18px;margin-top:4px;">
             <div class="wr-section">
               <div class="wr-label wrl-green"><i class="ti ti-thumb-up"></i> What went well?</div>
-              <textarea class="wr-textarea" id="wr-well" placeholder="Wins, positive moments, things you're proud of…"></textarea>
+              <div class="wr-hint">Name specific wins — a task nailed, a conversation that landed, a process that clicked.</div>
+              <textarea class="wr-textarea" id="wr-well" placeholder="e.g. Ran the stand-up smoothly, closed 3 escalations, got positive feedback from the team…"></textarea>
             </div>
             <div class="wr-section">
               <div class="wr-label wrl-coral"><i class="ti ti-refresh-alert"></i> What could be better?</div>
-              <textarea class="wr-textarea" id="wr-better" placeholder="Challenges, frustrations, things to improve…"></textarea>
+              <div class="wr-hint">Be honest — what slipped, what slowed you down, what would you do differently?</div>
+              <textarea class="wr-textarea" id="wr-better" placeholder="e.g. Delayed the weekly report, didn't follow up on Jack's ticket, lost track of the DMG queue…"></textarea>
             </div>
             <div class="wr-section">
               <div class="wr-label wrl-blue"><i class="ti ti-target"></i> Next week's main focus</div>
-              <textarea class="wr-textarea" id="wr-focus" placeholder="The one or two things that matter most next week…" style="min-height:70px;"></textarea>
+              <div class="wr-hint">Pick one or two things. Not a to-do list — the needle-movers.</div>
+              <textarea class="wr-textarea wr-highlight" id="wr-focus" placeholder="e.g. Get the ANZ project to delivered status, run a 1:1 with each TL…" style="min-height:72px;"></textarea>
             </div>
             <div class="wr-section">
-              <div class="wr-label wrl-purple"><i class="ti ti-rocket"></i> One career-goal action</div>
-              <textarea class="wr-textarea" id="wr-career" placeholder="A concrete step toward your next role or goal…" style="min-height:70px;"></textarea>
+              <div class="wr-label wrl-purple"><i class="ti ti-rocket"></i> Career action this week</div>
+              <div class="wr-hint">One concrete step toward your next role — learning, visibility, or relationship.</div>
+              <textarea class="wr-textarea wr-highlight" id="wr-career" placeholder="e.g. Book 30 min with manager to discuss promotion path, finish leadership module 3…" style="min-height:72px;"></textarea>
             </div>
             <div class="wr-save-row">
               <button class="wr-save-btn" onclick="saveWeeklyReview()"><i class="ti ti-device-floppy"></i> Save review</button>
-              <span class="wr-saved-msg" id="wr-saved-msg"><i class="ti ti-check"></i> Saved</span>
+              <span class="wr-saved-msg" id="wr-saved-msg"><i class="ti ti-check"></i> Saved for this week</span>
             </div>
           </div>
         </div>
       </div>
       <div>
         <div class="card">
-          <div class="card-title"><i class="ti ti-history" style="font-size:13px"></i> Past reviews</div>
+          <div class="wr-history-head">
+            <div class="card-title" style="margin:0"><i class="ti ti-history" style="font-size:13px"></i> Past reviews</div>
+            <span id="wr-streak-badge"></span>
+          </div>
           <div class="wr-history-list" id="wr-history-list"><div class="eod-empty">No reviews saved yet.</div></div>
         </div>
       </div>
@@ -3584,7 +3613,7 @@ const PAGES = {
   standup:   { title:'Stand up',      icon:'ti-presentation',     color:'c-pink',   desc:'Draft and elaborate your daily stand up talking points.' },
   wishlist:       { title:'Wishlist',        icon:'ti-sparkles',        color:'c-purple', desc:'Ideas and future features for this project.' },
   insights:       { title:'Insights',        icon:'ti-chart-pie',       color:'c-green',  desc:'At-a-glance productivity dashboard: completions, streak, meetings & AI usage.' },
-  'weekly-review':{ title:'Weekly Review',   icon:'ti-calendar-stats',  color:'c-green',  desc:'Reflect on the week — wins, lessons, next focus, and one career action.' },
+  'weekly-review':{ title:'Weekly Review',   icon:'ti-calendar-stats',  color:'c-purple', desc:'Reflect on the week — wins, lessons, next focus, and one career action.' },
   'end-of-day':   { title:'End of Day',      icon:'ti-moon',            color:'c-teal',   desc:'Close the loop — process your scratchpad, review open tasks, log your day.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
@@ -8015,26 +8044,67 @@ function deleteWeeklyReview(id) {
 
 function toggleWrEntry(id) {
   const body = document.getElementById('wre-body-' + id);
+  const entry = document.getElementById('wre-' + id);
   if (body) body.classList.toggle('open');
+  if (entry) entry.classList.toggle('open');
 }
 
 function renderWeeklyReview() {
+  // --- week progress banner ---
+  const bannerEl = document.getElementById('wr-week-banner');
+  if (bannerEl) {
+    const dow = now.getDay(); // 0=Sun,1=Mon…5=Fri,6=Sat
+    const days = ['M','T','W','T','F'];
+    // Mon=1…Fri=5; map to index 0-4
+    const todayIdx = dow >= 1 && dow <= 5 ? dow - 1 : (dow === 6 ? 5 : 5);
+    const dayPills = days.map((d, i) => {
+      const cls = i < todayIdx ? 'past' : i === todayIdx && dow >= 1 && dow <= 5 ? 'today' : '';
+      return `<div class="wr-day ${cls}">${d}</div>`;
+    }).join('');
+    const weekLabel = getWeekLabel();
+    bannerEl.innerHTML = `<div class="wr-week-banner">
+      <div>
+        <div class="wr-week-banner-label"><i class="ti ti-calendar-week" style="margin-right:6px"></i>${weekLabel}</div>
+        <div class="wr-week-banner-sub">${dow === 0 || dow === 6 ? 'Weekend — great time to reflect before Monday' : dow === 5 ? 'Friday — wrap up the week' : 'Review at end of day Friday for best results'}</div>
+      </div>
+      <div class="wr-week-days">${dayPills}</div>
+    </div>`;
+  }
+
+  // --- already done this week banner ---
+  const alreadyEl = document.getElementById('wr-already-done-banner');
+  if (alreadyEl) {
+    const thisWeek = getWeekLabel();
+    const done = _wrReviews.find(r => r.weekLabel === thisWeek);
+    alreadyEl.innerHTML = done
+      ? `<div class="wr-already-done"><i class="ti ti-circle-check"></i> You've already reviewed this week — saved ${new Date(done.savedAt).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}. Saving again will add a new entry.</div>`
+      : '';
+  }
+
+  // --- streak badge ---
+  const streakEl = document.getElementById('wr-streak-badge');
+  if (streakEl && _wrReviews.length > 0) {
+    streakEl.innerHTML = `<span class="wr-streak"><i class="ti ti-flame"></i> ${_wrReviews.length} review${_wrReviews.length !== 1 ? 's' : ''}</span>`;
+  } else if (streakEl) { streakEl.innerHTML = ''; }
+
+  // --- history list ---
   const el = document.getElementById('wr-history-list');
   if (!el) return;
-  if (!_wrReviews.length) { el.innerHTML = '<div class="eod-empty">No reviews saved yet.</div>'; return; }
+  if (!_wrReviews.length) { el.innerHTML = '<div class="eod-empty">No reviews saved yet — fill in the form and hit Save.</div>'; return; }
   el.innerHTML = _wrReviews.map(r => {
-    const saved = new Date(r.savedAt).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+    const saved = new Date(r.savedAt).toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short', year:'2-digit' });
     const sections = [
-      { label:'What went well', val: r.well,   cls:'wrl-green' },
+      { label:'What went well',  val: r.well,   cls:'wrl-green' },
       { label:'Could be better', val: r.better, cls:'wrl-coral' },
-      { label:'Next week focus',  val: r.focus,  cls:'wrl-blue' },
-      { label:'Career action',    val: r.career, cls:'wrl-purple' },
+      { label:'Next week focus', val: r.focus,  cls:'wrl-blue' },
+      { label:'Career action',   val: r.career, cls:'wrl-purple' },
     ].filter(s => s.val);
-    return `<div class="wr-entry">
+    return `<div class="wr-entry" id="wre-${r.id}">
       <div class="wr-entry-head" onclick="toggleWrEntry(${r.id})">
-        <div class="wr-entry-date">${esc(r.weekLabel)}</div>
+        <div class="wr-entry-week">${esc(r.weekLabel)}</div>
         <div class="wr-entry-saved">${saved}</div>
-        <button class="wr-entry-del" onclick="event.stopPropagation();deleteWeeklyReview(${r.id})"><i class="ti ti-trash"></i></button>
+        <button class="wr-entry-del" onclick="event.stopPropagation();deleteWeeklyReview(${r.id})" title="Delete"><i class="ti ti-trash"></i></button>
+        <i class="ti ti-chevron-down wr-entry-chev"></i>
       </div>
       <div class="wr-entry-body" id="wre-body-${r.id}">
         ${sections.map(s => `<div class="wr-entry-section"><div class="wr-entry-section-label ${s.cls}">${s.label}</div>${esc(s.val)}</div>`).join('')}
