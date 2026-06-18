@@ -5120,7 +5120,7 @@ function updateMtgAnzPanel() {
         : `<div class="mtg-anz-item-none">No outstanding checklist items</div>`;
       return `<div class="mtg-anz-row">
         <div class="mtg-anz-row-body">
-          <div class="mtg-anz-sub-name" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">${esc(sub.title)} · <span style="color:var(--text-3);font-weight:400">${esc(subStatusLabel(sub.status))}</span>${_anzDueChip(sub.dueDate)}</div>
+          <div class="mtg-anz-sub-name" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">${esc(sub.title)}<span class="${subStatusCls(sub.status)}" style="font-size:10.5px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;">${esc(subStatusLabel(sub.status))}</span>${_anzDueChip(sub.dueDate)}</div>
           ${itemHtml}
         </div>
       </div>`;
