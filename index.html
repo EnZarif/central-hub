@@ -1770,12 +1770,11 @@
     <div class="split-grid" style="align-items:start;">
       <div>
         <div class="card">
-          <div class="card-title"><i class="ti ti-pencil" style="font-size:13px"></i> Scratchpad</div>
-          <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">Review what you captured today. Convert anything important to a task, then clear it.</div>
-          <textarea class="eod-scratchpad" id="eod-scratchpad" placeholder="Your scratchpad is empty." oninput="eodSyncNotes()"></textarea>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <button class="wr-save-btn" style="background:var(--surface2);color:var(--text-2);border-color:var(--border-md);" onclick="showPage('widgets')"><i class="ti ti-external-link"></i> Open widgets</button>
-            <button class="wr-save-btn" style="background:var(--coral-bg);color:var(--coral-text);border-color:var(--coral-text);" onclick="eodClearScratchpad()"><i class="ti ti-trash"></i> Clear scratchpad</button>
+          <div class="card-title"><i class="ti ti-pencil" style="font-size:13px"></i> Scratchpad records</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Everything still sitting in your scratchpad — review, convert to a task, or head over to clear it.</div>
+          <div id="eod-notes-list"><div class="eod-empty">No scratchpad records.</div></div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <button class="wr-save-btn" style="background:var(--surface2);color:var(--text-2);border-color:var(--border-md);" onclick="showPage('notes')"><i class="ti ti-external-link"></i> Open scratchpad</button>
           </div>
         </div>
       </div>
@@ -3966,7 +3965,7 @@ function taskHTML(t, showFreqPill) {
   const timePill = t.time
     ? `<span class="time-pill${timeOverdue ? ' tp-overdue' : ''}"><i class="ti ti-clock"></i>${fmtTime(t.time)}</span>`
     : '';
-  const click = t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : `toggle('${t.id}')`;
+  const click = t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : t.id === 18 ? `showPage('end-of-day')` : `toggle('${t.id}')`;
   const delBtn = t.custom ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>` : '';
   const aiBtn = `<button class="task-ai-btn" title="Ask AI about this task" onclick="event.stopPropagation(); openAiModal('task','${t.id}')"><i class="ti ti-sparkles"></i></button>`;
   const editBtn = `<button class="task-edit-btn" onclick="event.stopPropagation(); openTaskEdit('${t.id}')"><i class="ti ti-pencil"></i></button>`;
@@ -8188,10 +8187,28 @@ let _eodLog = [];
 function loadEodLog() { _eodLog = dbGet('zarif_eod_log') || []; }
 function saveEodLog() { dbSet('zarif_eod_log', _eodLog); }
 
+function renderEodNotesList() {
+  const el = document.getElementById('eod-notes-list');
+  if (!el) return;
+  if (!_notesRecords.length) { el.innerHTML = '<div class="eod-empty">No scratchpad records.</div>'; return; }
+  el.innerHTML = _notesRecords.map(r => {
+    const preview = r.content && r.content.length > r.title.length
+      ? r.content.slice(r.title.length).trim().slice(0, 120)
+      : '';
+    return `<div class="eod-log-entry" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="display:flex;align-items:center;gap:8px;width:100%;">
+        <span style="font-size:13px;font-weight:500;color:var(--text);flex:1;">${esc(r.title || 'Untitled')}</span>
+        <span style="font-size:10px;color:var(--text-3);">${r.createdAt ? fmtTs(r.createdAt) : ''}</span>
+        <button class="eod-log-del" onclick="showPage('notes')" title="Go to scratchpad"><i class="ti ti-arrow-up-right"></i></button>
+      </div>
+      ${preview ? `<div style="font-size:12px;color:var(--text-3);line-height:1.5;">${esc(preview)}${r.content.length > 120 ? '…' : ''}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 function initEndOfDay() {
   loadEodLog();
-  const ta = document.getElementById('eod-scratchpad');
-  if (ta) ta.value = dbGet('zarif_notes') || '';
+  renderEodNotesList();
   renderEodTasks();
   renderEodLog();
 }
