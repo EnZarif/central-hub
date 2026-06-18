@@ -7136,6 +7136,30 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.26.0', type: 'minor', date: '18 Jun 2026', title: 'Timestamps across the board', changes: [
+    'Scratchpad records show "18 Jun · 2:34 pm" on every record; edited records show an "edited" timestamp too',
+    'Meeting notes show "Logged [date · time]" below each entry',
+    'Standup talking points show when they were captured',
+    'EOD daily log entries show the exact time the day was closed',
+    'KB facts show their added timestamp in the manage list',
+    'Added shared fmtTs() helper used across all timestamp displays',
+    'KB facts migrated from plain strings to {text, createdAt} objects; old facts migrate automatically',
+  ]},
+  { ver: '3.25.0', type: 'minor', date: '18 Jun 2026', title: 'Weekly Review redesign', changes: [
+    'Switched theme from green to purple throughout — icon, textarea focus, save button, accents',
+    'Week progress banner shows the current week label with M/T/W/T/F day pills (past/today/future states)',
+    '"Already reviewed this week" notice appears if a review has been saved for the current week',
+    'Hint text under each field guides what level of detail to aim for',
+    'Focus and career fields have a subtle purple-tinted background to make them stand out',
+    'History card shows total review count as a flame badge',
+    'Past review entries have a rotating chevron and colored section labels when expanded',
+    'Hub card color updated to purple',
+  ]},
+  { ver: '3.24.0', type: 'minor', date: '18 Jun 2026', title: 'Awaiting Client status', changes: [
+    'Added "Awaiting client" as a status option for both top-level projects and sub-projects',
+    'Styled in blue to distinguish from "Awaiting third-party" (purple) on sub-projects',
+    'Dot indicators, progress bar segments, and status dropdowns all updated',
+  ]},
   { ver: '3.23.6', type: 'patch', date: '18 Jun 2026', title: 'Checklist item auto-deliver', changes: [
     'Ticking a checklist item now automatically sets that item\'s status to Delivered',
     'Unticking reverts the item status back to Active',
