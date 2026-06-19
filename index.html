@@ -305,8 +305,8 @@
   .hub-back i { font-size: 14px; }
   .hub-head h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
   .hub-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
-  #home-greeting { font-size: 34px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.15; display: flex; flex-direction: column; }
-  .home-greeting-name { color: var(--amber-text); font-size: 48px; font-weight: 700; }
+  #home-greeting { font-size: 34px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.15; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+  .home-greeting-name { color: #e87f3e; font-size: 48px; font-weight: 700; }
   #home-date { font-size: 14px; color: color-mix(in srgb, var(--amber-text) 55%, var(--text-2)); margin-top: 6px; }
   .hub-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
   .app-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; display: flex; flex-direction: column; gap: 12px; min-height: 150px; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
@@ -330,8 +330,8 @@
 
   /* ── Home dashboard: ambient particles (all themes) ── */
   .home-particles { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .home-particle { position: absolute; bottom: 0; border-radius: 50%; background: var(--amber-text); animation: homeParticleFloat linear infinite; }
-  @keyframes homeParticleFloat { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 0.55; } 90% { opacity: 0.4; } 100% { transform: translateY(-340px); opacity: 0; } }
+  .home-particle { position: absolute; bottom: 0; border-radius: 50%; background: #fff; animation: homeParticleFloat linear infinite; }
+  @keyframes homeParticleFloat { 0% { transform: translateY(0); opacity: 0; } 8% { opacity: 0.8; } 92% { opacity: 0.5; } 100% { transform: translateY(-100vh); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .home-particle { animation: none; display: none; } }
 
   /* ── COPPER theme: bento home layout (no blob/glow, no mouse tilt) ── */
@@ -4233,8 +4233,8 @@ function ensureHomeParticles() {
     p.style.width = s + 'px';
     p.style.height = s + 'px';
     p.style.left = (5 + Math.random() * 90) + '%';
-    p.style.animationDuration = (6 + Math.random() * 6) + 's';
-    p.style.animationDelay = (Math.random() * 8) + 's';
+    p.style.animationDuration = (9 + Math.random() * 14) + 's';
+    p.style.animationDelay = (Math.random() * 16) + 's';
     wrap.appendChild(p);
   }
 }
@@ -7489,6 +7489,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.29.2', type: 'patch', date: '20 Jun 2026', title: 'Particles now rise the full height of the page', changes: [
+    'Home particles travel the full height of the page and fade out under the top nav, instead of a short drift',
+    'Particles are now white',
+    'Your name in the greeting is orange (the same hex as the hero card), keeping its original (non-italic) font',
+  ]},
   { ver: '3.29.1', type: 'minor', date: '19 Jun 2026', title: 'Home cards become a hub chooser again, top bar trimmed', changes: [
     'Home cards now go Task Manager (hero), Helpdesk, Projects, Personal as quick-launch tiles instead of live task stats',
     'Removed the now-redundant Task Manager/Helpdesk/Projects/Personal links from the top bar — only Home, Widgets, Settings and Theme remain',
