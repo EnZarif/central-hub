@@ -7325,6 +7325,79 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.27.8', type: 'patch', date: '19 Jun 2026', title: 'Theme-aware wallpaper', changes: [
+    'Home page mesh wallpaper now derives its colors from the active theme (--teal, --amber-text, --pink-text, --hero-bg) instead of a fixed palette',
+    'Switching themes in Settings instantly recolors the wallpaper to match',
+  ]},
+  { ver: '3.27.7', type: 'minor', date: '19 Jun 2026', title: 'Interactive mesh gradient wallpaper', changes: [
+    'Home page now has an animated canvas mesh gradient background',
+    'A main blob eases toward the mouse cursor; ambient blobs drift slowly for a "living" feel',
+    'Clicking spawns an expanding ripple that fades out over ~1 second',
+    'Starts/stops automatically based on whether the home page is active, to avoid wasting CPU elsewhere',
+    'App cards got a frosted-glass treatment so text stays readable over the moving background',
+  ]},
+  { ver: '3.27.5', type: 'minor', date: '19 Jun 2026', title: 'Per-project card color picker', changes: [
+    'Project edit modal has a new "Card color" field with 8 preset swatches plus a custom color wheel',
+    'Selected color overrides the type-based border/shadow/gradient on the project card, banner, and sub-project banner',
+    'Leaving it on the default swatch keeps the original type color',
+  ]},
+  { ver: '3.27.4', type: 'minor', date: '19 Jun 2026', title: 'Rotating globe loading screen', changes: [
+    'Replaced the plain ring spinner with a rotating orthographic globe showing real country outlines',
+    'Rendered with d3-geo + world-atlas topojson data, theme-aware (uses --text/--bg)',
+    'Faint dual-speed whirl ring orbits the globe',
+    'Stops rendering as soon as the app finishes loading to save CPU',
+  ]},
+  { ver: '3.27.3', type: 'minor', date: '19 Jun 2026', title: 'Page transitions, modal exits, tap feedback', changes: [
+    'Pages fade and rise in on navigation instead of an instant display:none/block snap',
+    'All modals now animate out on close (scale + fade) instead of disappearing instantly',
+    'Completing a task gives a quick pulse; deleting a custom task slides it out before removing it',
+    'Buttons, checkboxes, nav links, and app cards get a subtle press-down/release on click',
+    'All animations respect prefers-reduced-motion',
+  ]},
+  { ver: '3.27.2', type: 'minor', date: '19 Jun 2026', title: 'Motion animations', changes: [
+    'Added the Motion animation library (CDN)',
+    'Task cards and project cards now stagger in with a fade + rise when the list renders',
+    'Task edit modal, KPI email modal, and project modal scale + fade in on open',
+  ]},
+  { ver: '3.27.1', type: 'patch', date: '19 Jun 2026', title: 'Task edit modal theme fix', changes: [
+    'Fixed the task edit modal showing a hardcoded white background regardless of theme',
+    'Now uses --surface2/--text so it matches the active color theme',
+  ]},
+  { ver: '3.27.0', type: 'minor', date: '19 Jun 2026', title: 'Task description editing', changes: [
+    'Task edit modal has a new "Description / notes" field',
+    'Works for both built-in tasks (via taskOverrides) and custom tasks',
+  ]},
+  { ver: '3.26.9', type: 'patch', date: '19 Jun 2026', title: 'End of Day page improvements', changes: [
+    'Clicking the "End of day" task now navigates straight to the End of Day page',
+    'Scratchpad section on the EOD page now lists live scratchpad records (title, timestamp, preview) instead of a static textarea',
+  ]},
+  { ver: '3.26.8', type: 'patch', date: '19 Jun 2026', title: 'End of day daily task', changes: [
+    'Added "End of day" as a HIGH priority daily task at 4:45 pm',
+  ]},
+  { ver: '3.26.7', type: 'patch', date: '19 Jun 2026', title: 'Clickable ANZ sub-projects', changes: [
+    'Sub-project names in the ANZ WL meeting quick notes panel are now clickable',
+    'Clicking navigates directly to that sub-project\'s page; hover turns purple with a link icon',
+  ]},
+  { ver: '3.26.6', type: 'patch', date: '19 Jun 2026', title: 'Floating overlay scrollbars', changes: [
+    'Replaced default OS scrollbars site-wide with a thin 6px floating pill, inset from the edge',
+    'Muted grey at rest, slightly darker on hover',
+  ]},
+  { ver: '3.26.5', type: 'patch', date: '19 Jun 2026', title: 'Project cards collapsed by default', changes: [
+    'Project cards now load collapsed on first render instead of auto-opening active projects',
+    'Chevron still toggles them open, and they stay open for the rest of the session',
+  ]},
+  { ver: '3.26.4', type: 'patch', date: '19 Jun 2026', title: 'ANZ meeting status color chips', changes: [
+    'Sub-project statuses in the ANZ WL meeting panel are now colored pills matching the sub-project pages',
+    'Reuses the existing sst-* status classes (green = In progress, blue = Planning/Awaiting client, amber = Pending/Due, etc.)',
+  ]},
+  { ver: '3.26.3', type: 'minor', date: '19 Jun 2026', title: 'KPI email Next button', changes: [
+    'KPI operator email modal now shows "X of Y" in the header',
+    'After copying an email, a Next button appears to jump straight to the next operator\'s preview without closing the modal',
+  ]},
+  { ver: '3.26.2', type: 'patch', date: '18 Jun 2026', title: 'Scratchpad sort toggle', changes: [
+    'Added a sort toggle to scratchpad saved records: newest → oldest and vice versa',
+    'Button shows current direction with an arrow icon and label',
+  ]},
   { ver: '3.26.0', type: 'minor', date: '18 Jun 2026', title: 'Timestamps across the board', changes: [
     'Scratchpad records show "18 Jun · 2:34 pm" on every record; edited records show an "edited" timestamp too',
     'Meeting notes show "Logged [date · time]" below each entry',
