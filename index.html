@@ -11,6 +11,8 @@
 <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -155,6 +157,8 @@
   #app-loading { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
   #app-loading .load-spinner { width: 36px; height: 36px; border: 3px solid var(--border-md); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.7s linear infinite; }
   #app-loading p { font-size: 14px; color: var(--text-2); }
+  .globe-loader-wrap { position: relative; width: 96px; height: 96px; }
+  .globe-loader-wrap canvas, .globe-loader-wrap svg { position: absolute; inset: 0; width: 96px; height: 96px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Mobile top bar + drawer scrim (hidden on desktop) */
@@ -1395,7 +1399,20 @@
 </style>
 </head>
 <body>
-<div id="app-loading"><div class="load-spinner"></div><p>Loading your hub…</p></div>
+<div id="app-loading">
+  <div class="globe-loader-wrap">
+    <svg id="globe-whirl" viewBox="0 0 96 96">
+      <circle cx="48" cy="48" r="46" fill="none" stroke="var(--text)" stroke-width="1" stroke-dasharray="19 106" stroke-linecap="round" opacity="0.35">
+        <animateTransform attributeName="transform" type="rotate" from="0 48 48" to="360 48 48" dur="2.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="48" cy="48" r="46" fill="none" stroke="var(--text)" stroke-width="1" stroke-dasharray="7 130" stroke-linecap="round" opacity="0.2">
+        <animateTransform attributeName="transform" type="rotate" from="360 48 48" to="0 48 48" dur="3.6s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+    <canvas id="globe-canvas" width="96" height="96"></canvas>
+  </div>
+  <p>Loading your hub…</p>
+</div>
 
 <div class="app-layout">
 
@@ -2730,6 +2747,65 @@
 </div>
 
 <script>
+// ===== GLOBE LOADER =====
+let _globeLoaderActive = true;
+(async () => {
+  const canvas = document.getElementById('globe-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = 96;
+  const r = size / 2 - 4;
+  const center = [size / 2, size / 2];
+  const rootStyle = getComputedStyle(document.documentElement);
+  const textColor = rootStyle.getPropertyValue('--text').trim() || '#e8ecee';
+  const bgColor = rootStyle.getPropertyValue('--bg').trim() || '#111315';
+
+  let countries = null;
+  try {
+    const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(res => res.json());
+    countries = topojson.feature(world, world.objects.countries);
+  } catch (e) {
+    console.warn('[GlobeLoader] failed to load country data:', e);
+  }
+
+  let rotation = 0;
+  const projection = d3.geoOrthographic().scale(r).translate(center).clipAngle(90);
+  const path = d3.geoPath(projection, ctx);
+  const sphere = { type: 'Sphere' };
+
+  function draw() {
+    if (!_globeLoaderActive) return;
+    ctx.clearRect(0, 0, size, size);
+    projection.rotate([rotation, -18]);
+
+    ctx.beginPath();
+    path(sphere);
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = textColor;
+    ctx.globalAlpha = 0.18;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    if (countries) {
+      ctx.beginPath();
+      path(countries);
+      ctx.fillStyle = textColor;
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = bgColor;
+      ctx.stroke();
+    }
+
+    rotation += 0.5;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
 // ===== SUPABASE =====
 const SUPABASE_URL = 'https://qwceyzswwtyqiozxnlah.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_7iT7MOE7JMGv5Vl0j_13iw_s5tyQTMJ';
@@ -8362,6 +8438,7 @@ function initNotes() {
   // Hide loading overlay and render
   const loadEl = document.getElementById('app-loading');
   if (loadEl) loadEl.style.display = 'none';
+  _globeLoaderActive = false;
 
   loadSettings();
   loadMsgTemplate();
