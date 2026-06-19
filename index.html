@@ -277,14 +277,7 @@
   .nav-sublink { background: none; border: none; cursor: pointer; color: var(--text-2); font-family: inherit; font-size: 13px; text-align: left; padding: 5px 8px; border-radius: 8px; display: flex; align-items: center; gap: 9px; transition: all 0.15s; }
   .nav-sublink:hover { color: var(--text); background: var(--surface2); }
   .nav-sublink.active { color: var(--text); background: var(--surface2); font-weight: 500; }
-  .nav-sub-ico { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-  .nav-sub-ico.c-blue { background: var(--blue-bg); color: var(--blue-text); }
-  .nav-sub-ico.c-teal { background: var(--teal-bg); color: var(--teal-text); }
-  .nav-sub-ico.c-amber { background: var(--amber-bg); color: var(--amber-text); }
-  .nav-sub-ico.c-green { background: var(--green-bg); color: var(--green-text); }
-  .nav-sub-ico.c-coral { background: var(--coral-bg); color: var(--coral-text); }
-  .nav-sub-ico.c-pink { background: var(--pink-bg); color: var(--pink-text); }
-  .nav-sub-ico.c-purple { background: var(--purple-bg); color: var(--purple-text); }
+  .nav-sub-ico { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
   .nav-sub-empty { font-size: 11px; color: var(--text-3); padding: 4px 8px; font-style: italic; }
 
   /* HUB / LANDING */
@@ -309,14 +302,7 @@
   .app-card:hover { border-color: var(--border-md); transform: translateY(-2px); }
   .app-card.soon { cursor: default; opacity: 0.6; }
   .app-card.soon:hover { transform: none; border-color: var(--border); }
-  .app-card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0; }
-  .app-card-icon.c-blue { background: var(--blue-bg); color: var(--blue-text); }
-  .app-card-icon.c-amber { background: var(--amber-bg); color: var(--amber-text); }
-  .app-card-icon.c-pink { background: var(--pink-bg); color: var(--pink-text); }
-  .app-card-icon.c-green { background: var(--green-bg); color: var(--green-text); }
-  .app-card-icon.c-purple { background: var(--purple-bg); color: var(--purple-text); }
-  .app-card-icon.c-coral { background: var(--coral-bg); color: var(--coral-text); }
-  .app-card-icon.c-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .app-card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
   .app-card-title { font-size: 15px; font-weight: 500; color: var(--text); }
   .app-card-desc { font-size: 12px; color: var(--text-3); line-height: 1.55; }
   .app-card-meta { margin-top: auto; font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
@@ -393,11 +379,7 @@
   .dash-stats .statcard:nth-child(2){animation-delay:.10s}
   .dash-stats .statcard:nth-child(3){animation-delay:.15s}
   .dash-stats .statcard:nth-child(4){animation-delay:.20s}
-  .statcard-ico { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
-  .statcard-ico.c-blue { background: var(--blue-bg); color: var(--blue-text); }
-  .statcard-ico.c-green { background: var(--green-bg); color: var(--green-text); }
-  .statcard-ico.c-coral { background: var(--coral-bg); color: var(--coral-text); }
-  .statcard-ico.c-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .statcard-ico { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
   .statcard-n { font-size: 19px; font-weight: 500; color: var(--text); line-height: 1.05; }
   .statcard-l { font-size: 11px; color: var(--text-3); margin-top: 2px; }
   .statcard.clickable { cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; }
@@ -1697,7 +1679,7 @@
   <!-- HELPDESK HUB -->
   <div class="page" id="page-helpdesk">
     <div class="hub-head">
-      <h1><i class="ti ti-headset" style="color:var(--blue-text);"></i> Helpdesk Management</h1>
+      <h1><i class="ti ti-headset" style="color:var(--coral-text);"></i> Helpdesk Management</h1>
       <p>Everything for running the helpdesk day to day.</p>
     </div>
     <div class="hub-grid" id="hub-grid-helpdesk"></div>
@@ -7634,6 +7616,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.28.1', type: 'minor', date: '19 Jun 2026', title: 'Gradient icon badges, no more rainbow categories', changes: [
+    'All icon badges (hub cards, nav sub-links, stat cards) now render as a theme-accent gradient with a white glyph instead of mismatched per-category colors',
+    'Replaced the literal blue Helpdesk icon (and all other blue/green/purple/pink icon variants) so nothing clashes with the active theme — applies across every theme, not just Copper',
+  ]},
   { ver: '3.28.0', type: 'major', date: '19 Jun 2026', title: 'Home page is now a live dashboard', changes: [
     'Home replaces the static 3-card hub chooser with a real dashboard: greeting, date, and nav pills (Home/Tasks/Projects/Personal)',
     'Bento cards now show live data — next due-today task, what\'s in progress, the nearest upcoming task or meeting, and a project with a real completion ring',
