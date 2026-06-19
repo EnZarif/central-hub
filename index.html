@@ -2340,6 +2340,16 @@
         <div id="mtg-time-holder"></div>
       </div>
       <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);"><i class="ti ti-bell" style="font-size:12px;vertical-align:-1px;"></i> Reminder <span style="font-weight:400;">(requires a time above)</span></div>
+        <select class="field-input" id="mtg-remind-mins">
+          <option value="">No reminder</option>
+          <option value="5">5 minutes before</option>
+          <option value="10">10 minutes before</option>
+          <option value="15">15 minutes before</option>
+          <option value="30">30 minutes before</option>
+        </select>
+      </div>
+      <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Notes</div>
         <textarea id="mtg-notes" rows="6" placeholder="What was discussed, action items, follow ups..."></textarea>
       </div>
@@ -2429,6 +2439,25 @@
         </div>
         <div class="ai-hint" id="gemini-key-status"></div>
         <div class="ai-hint">Your key is stored only in this browser and never sent anywhere except Groq's API. Get a free key at <strong>console.groq.com</strong> → API Keys.</div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-notif')">
+        <i class="ti ti-bell"></i> Notifications
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-notif">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Browser notifications</div>
+            <div class="settings-row-desc" id="notif-perm-status">Checking permission…</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <button class="settings-save-btn" onclick="requestNotifPermission()"><i class="ti ti-bell"></i> Enable</button>
+          </div>
+        </div>
+        <div class="ai-hint">Set a reminder time on a task or meeting and you'll get a browser notification when it's due. Notifications only fire while this tab is open.</div>
       </div>
     </div>
 
@@ -2744,6 +2773,10 @@
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due by time <span style="font-weight:400;">(optional)</span></div>
         <div id="te-time-holder"></div>
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);"><i class="ti ti-bell" style="font-size:12px;vertical-align:-1px;"></i> Reminder <span style="font-weight:400;">(notify me at this time)</span></div>
+        <div id="te-reminder-holder"></div>
       </div>
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Hub</div>
@@ -3528,6 +3561,8 @@ function openTaskEdit(id) {
   renderTaskEditDayField(task.freq, task);
   const th = document.getElementById('te-time-holder');
   if (th) th.innerHTML = timeField('te-time', task.time || '');
+  const trh = document.getElementById('te-reminder-holder');
+  if (trh) trh.innerHTML = timeField('te-reminder', task.reminderTime || '');
   document.getElementById('task-edit-modal-overlay').classList.add('active');
 }
 
@@ -3572,9 +3607,12 @@ function saveTaskEdit() {
   override.hub = document.getElementById('te-hub').value;
   const teTime = document.getElementById('te-time');
   override.time = teTime && teTime.value ? teTime.value : '';
+  const teReminder = document.getElementById('te-reminder');
+  override.reminderTime = teReminder && teReminder.value ? teReminder.value : '';
   override.note = document.getElementById('te-note').value.trim();
   taskOverrides[editingTaskId] = { ...(taskOverrides[editingTaskId] || {}), ...override };
   saveTaskOverrides();
+  if (override.reminderTime) requestNotifPermission();
   closeTaskEditModal();
   renderTasks();
 }
@@ -3649,10 +3687,10 @@ function timeField(id, value, onChangeAttr) {
 // live clock in the Tasks hero
 let _dueSoonLastMin = -1;
 function tickMelbClock() {
+  const nowMin = melbNowMinutes();
+  if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); checkReminders(nowMin); }
   const timeEl = document.getElementById('melb-clock-time');
   if (!timeEl) return;
-  const nowMin = melbNowMinutes();
-  if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); }
   const hm = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }); // e.g. "6:01 pm"
   const m = hm.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
   timeEl.textContent = m ? m[1] : hm;
@@ -3662,6 +3700,58 @@ function tickMelbClock() {
   if (wd) wd.textContent = melbFmt({ weekday: 'long' });
   const dy = document.getElementById('melb-clock-day');
   if (dy) dy.textContent = melbFmt({ day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ===== REMINDERS / NOTIFICATIONS =====
+function requestNotifPermission() {
+  if (typeof Notification === 'undefined') { alert('Notifications are not supported in this browser.'); return; }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(updateNotifPermStatus);
+  } else {
+    updateNotifPermStatus();
+  }
+}
+function updateNotifPermStatus() {
+  const el = document.getElementById('notif-perm-status');
+  if (!el) return;
+  if (typeof Notification === 'undefined') { el.textContent = 'Not supported in this browser.'; return; }
+  const labels = { granted: 'Enabled — you\'ll get reminder notifications.', denied: 'Blocked — enable notifications for this site in your browser settings.', default: 'Not enabled yet — click Enable to allow reminders.' };
+  el.textContent = labels[Notification.permission] || '';
+}
+function getFiredReminders() {
+  const key = 'zarif_reminders_fired_' + todayInputDate();
+  let fired = [];
+  try { fired = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) {}
+  return { key, fired };
+}
+function checkReminders(nowMin) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const { key, fired } = getFiredReminders();
+  let changed = false;
+  const todayStr = todayInputDate();
+
+  getTodayTasks().forEach(t => {
+    if (!t.reminderTime || isDone(t.id)) return;
+    const id = 'task-' + t.id;
+    if (fired.includes(id)) return;
+    if (timeToMin(t.reminderTime) === nowMin) {
+      new Notification('Reminder: ' + t.name, { body: t.note || 'Task reminder', tag: id });
+      fired.push(id); changed = true;
+    }
+  });
+
+  (meetings || []).forEach(m => {
+    if (!m.reminderMins || !m.time || m.date !== todayStr) return;
+    const id = 'mtg-' + m.id;
+    if (fired.includes(id)) return;
+    const targetMin = timeToMin(m.time) - m.reminderMins;
+    if (targetMin === nowMin) {
+      new Notification('Upcoming meeting: ' + m.type, { body: m.notes ? m.notes.slice(0, 80) : 'Meeting reminder', tag: id });
+      fired.push(id); changed = true;
+    }
+  });
+
+  if (changed) localStorage.setItem(key, JSON.stringify(fired));
 }
 function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
 
@@ -3855,6 +3945,7 @@ function showPage(p, hub) {
   if (p === 'meetings' && typeof updateMtgAnzPanel === 'function') updateMtgAnzPanel();
   if (p === 'insights' && typeof renderInsights === 'function') renderInsights();
   if (p === 'end-of-day' && typeof initEndOfDay === 'function') initEndOfDay();
+  if (p === 'settings' && typeof updateNotifPermStatus === 'function') updateNotifPermStatus();
   if (p === 'weekly-review' && typeof renderWeeklyReview === 'function') renderWeeklyReview();
   window.scrollTo(0, 0);
 }
@@ -4072,6 +4163,9 @@ function taskHTML(t, showFreqPill) {
   const timePill = t.time
     ? `<span class="time-pill${timeOverdue ? ' tp-overdue' : ''}"><i class="ti ti-clock"></i>${fmtTime(t.time)}</span>`
     : '';
+  const reminderPill = t.reminderTime
+    ? `<span class="time-pill" title="Reminder set"><i class="ti ti-bell"></i>${fmtTime(t.reminderTime)}</span>`
+    : '';
   const click = t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : t.id === 18 ? `showPage('end-of-day')` : `toggle('${t.id}')`;
   const delBtn = t.custom ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>` : '';
   const aiBtn = `<button class="task-ai-btn" title="Ask AI about this task" onclick="event.stopPropagation(); openAiModal('task','${t.id}')"><i class="ti ti-sparkles"></i></button>`;
@@ -4088,7 +4182,7 @@ function taskHTML(t, showFreqPill) {
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
       <div class="trow1"><span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
-      <div class="tmeta">${freqPill}${timePill}${hubBadge}<div class="pills">${pills}</div></div>
+      <div class="tmeta">${freqPill}${timePill}${reminderPill}${hubBadge}<div class="pills">${pills}</div></div>
       ${note}
     </div>
     <div class="task-actions">
@@ -5280,10 +5374,12 @@ function addMeeting() {
   const date = document.getElementById('mtg-date').value;
   const timeEl = document.getElementById('mtg-time');
   const time = timeEl && timeEl.value ? timeEl.value : '';
+  const remindEl = document.getElementById('mtg-remind-mins');
+  const reminderMins = (time && remindEl && remindEl.value) ? parseInt(remindEl.value, 10) : null;
   const notes = document.getElementById('mtg-notes').value.trim();
   if (!type) { alert('Please choose a meeting type.'); return; }
   if (!date || !notes) { alert('Please pick a date and enter some notes.'); return; }
-  const entry = {id: nextMeetingId++, type, date, time, notes, savedAt: new Date().toISOString()};
+  const entry = {id: nextMeetingId++, type, date, time, reminderMins, notes, savedAt: new Date().toISOString()};
   if (type === 'Misc') {
     entry.requester = document.getElementById('mtg-requester').value.trim();
     entry.agenda = document.getElementById('mtg-agenda').value.trim();
@@ -5295,8 +5391,10 @@ function addMeeting() {
   meetings.push(entry);
   saveMeetings();
   logActivity('meeting');
+  if (reminderMins != null) requestNotifPermission();
   document.getElementById('mtg-notes').value = '';
   if (timeEl) timeEl.value = '';
+  if (remindEl) remindEl.value = '';
   dpSetValue('mtg-date', todayInputDate());
   renderMeetings();
 }
@@ -8621,6 +8719,7 @@ function initNotes() {
   updateMtgAnzPanel();
   tickMelbClock();
   setInterval(tickMelbClock, 1000);
+  updateNotifPermStatus();
 })();
 
 // ===== MESH GRADIENT WALLPAPER (home page) =====
