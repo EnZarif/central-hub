@@ -315,28 +315,37 @@
   .hub-grid .app-card:nth-child(6){animation-delay:.28s}
   @media (prefers-reduced-motion: reduce) { .app-card { animation: none; } }
 
-  /* ── Home dashboard: pills, project ring card, new-task button (all themes) ── */
-  .home-pills { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
-  #page-home .hub-pill.active.hp-all { border-color: var(--teal); background: var(--teal-bg); color: var(--teal-text); }
+  /* ── Home dashboard: topbar, project ring card, new-task button, particles (all themes) ── */
+  .home-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; position: relative; z-index: 2; }
+  .home-logo { font-family: 'Fraunces', serif; font-weight: 800; font-size: 19px; color: var(--text); }
+  .home-logo-dot { color: var(--teal); }
+  .home-clock.clock-card { padding: 10px 14px; }
+  .home-clock .clock-card-time-val { font-size: 20px; }
   .home-card-project { flex-direction: row !important; align-items: center; justify-content: space-between; gap: 14px; }
   .home-project-info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .home-card-project .ring { width: 56px; height: 56px; flex-shrink: 0; }
   .home-card-project .ring-hole { width: 42px; height: 42px; font-size: 11px; }
   .home-new-task-btn { position: relative; z-index: 1; margin-top: 18px; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 30px; border: none; background: var(--text); color: var(--bg); cursor: pointer; transition: opacity 0.15s; font-family: inherit; }
   .home-new-task-btn:hover { opacity: 0.85; }
+  .home-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .home-particle { position: absolute; bottom: 0; border-radius: 50%; background: var(--text); animation: homeParticleFloat linear infinite; }
+  @keyframes homeParticleFloat { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 0.55; } 90% { opacity: 0.4; } 100% { transform: translateY(-340px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .home-particle { animation: none; display: none; } }
 
   /* ── COPPER theme: bento home layout, grain + glow, live motion ── */
+  :root[data-theme="copper"] #page-home { border-radius: 0; box-shadow: none; }
   :root[data-theme="copper"] #page-home::before {
     content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.06; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   :root[data-theme="copper"] #page-home::after {
-    content: ''; position: absolute; z-index: 1; pointer-events: none; width: 380px; height: 380px; top: -130px; right: -110px;
-    border-radius: 50%; filter: blur(6px); opacity: 0.4;
+    content: ''; position: absolute; z-index: 1; pointer-events: none; width: 720px; height: 720px; top: -220px; right: -180px;
+    border-radius: 50%; filter: blur(10px); opacity: 0.55;
     background: radial-gradient(circle at 35% 35%, var(--copper-glow-1), var(--copper-glow-2) 55%, transparent 78%);
-    animation: copperPulse 5s ease-in-out infinite;
+    animation: copperPulse 6s ease-in-out infinite;
   }
-  @keyframes copperPulse { 0%,100% { transform: scale(1) translate(0,0); opacity: 0.35; } 50% { transform: scale(1.12) translate(-10px,12px); opacity: 0.5; } }
+  @keyframes copperPulse { 0%,100% { transform: scale(1) translate(0,0); opacity: 0.5; } 50% { transform: scale(1.15) translate(-20px,24px); opacity: 0.7; } }
+  :root[data-theme="copper"] .home-particle { background: var(--copper-glow-2); }
   :root[data-theme="copper"] .hub-grid { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; }
   :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) {
     grid-row: span 2; position: relative; overflow: hidden;
@@ -1547,12 +1556,19 @@
   <!-- HOME LANDING -->
   <div class="page active" id="page-home">
     <canvas id="home-mesh-bg"></canvas>
+    <div class="home-particles" id="home-particles"></div>
     <div class="hub-head">
-      <div class="home-pills">
-        <button class="hub-pill active hp-all" onclick="showPage('home')"><i class="ti ti-home"></i>Home</button>
-        <button class="hub-pill" onclick="showPage('tasks')"><i class="ti ti-list-check"></i>Tasks</button>
-        <button class="hub-pill" onclick="showPage('projects')"><i class="ti ti-folders"></i>Projects</button>
-        <button class="hub-pill" onclick="showPage('personal')"><i class="ti ti-user-heart"></i>Personal</button>
+      <div class="home-topbar">
+        <div class="home-logo">central<span class="home-logo-dot">.</span></div>
+        <div class="clock-card home-clock" title="Melbourne time">
+          <div class="clock-card-ico"><i class="ti ti-clock"></i></div>
+          <div class="clock-card-time"><span class="clock-card-time-val" id="home-clock-time">--:--</span><span class="clock-card-ampm" id="home-clock-ampm"></span></div>
+          <div class="clock-card-divider"></div>
+          <div class="clock-card-date">
+            <div class="clock-card-weekday" id="home-clock-weekday"></div>
+            <div class="clock-card-day" id="home-clock-day"></div>
+          </div>
+        </div>
       </div>
       <h1 id="home-greeting">Good evening, Zarif</h1>
       <p id="home-date">Loading…</p>
@@ -3803,17 +3819,21 @@ let _dueSoonLastMin = -1;
 function tickMelbClock() {
   const nowMin = melbNowMinutes();
   if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); checkReminders(nowMin); }
-  const timeEl = document.getElementById('melb-clock-time');
-  if (!timeEl) return;
   const hm = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }); // e.g. "6:01 pm"
   const m = hm.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
-  timeEl.textContent = m ? m[1] : hm;
-  const apEl = document.getElementById('melb-clock-ampm');
-  if (apEl) apEl.textContent = m ? m[2].toUpperCase() : '';
-  const wd = document.getElementById('melb-clock-weekday');
-  if (wd) wd.textContent = melbFmt({ weekday: 'long' });
-  const dy = document.getElementById('melb-clock-day');
-  if (dy) dy.textContent = melbFmt({ day: 'numeric', month: 'long', year: 'numeric' });
+  const weekday = melbFmt({ weekday: 'long' });
+  const day = melbFmt({ day: 'numeric', month: 'long', year: 'numeric' });
+  ['melb-clock', 'home-clock'].forEach(prefix => {
+    const timeEl = document.getElementById(prefix + '-time');
+    if (!timeEl) return;
+    timeEl.textContent = m ? m[1] : hm;
+    const apEl = document.getElementById(prefix + '-ampm');
+    if (apEl) apEl.textContent = m ? m[2].toUpperCase() : '';
+    const wd = document.getElementById(prefix + '-weekday');
+    if (wd) wd.textContent = weekday;
+    const dy = document.getElementById(prefix + '-day');
+    if (dy) dy.textContent = day;
+  });
 }
 
 // ===== REMINDERS / NOTIFICATIONS =====
@@ -4307,7 +4327,24 @@ function taskHTML(t, showFreqPill) {
   </div>`;
 }
 
+function ensureHomeParticles() {
+  const wrap = document.getElementById('home-particles');
+  if (!wrap || wrap.childElementCount || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('div');
+    p.className = 'home-particle';
+    const s = 2 + Math.random() * 3;
+    p.style.width = s + 'px';
+    p.style.height = s + 'px';
+    p.style.left = (5 + Math.random() * 90) + '%';
+    p.style.animationDuration = (6 + Math.random() * 6) + 's';
+    p.style.animationDelay = (Math.random() * 8) + 's';
+    wrap.appendChild(p);
+  }
+}
+
 function renderHomeDashboard() {
+  ensureHomeParticles();
   const greetEl = document.getElementById('home-greeting');
   const dateEl = document.getElementById('home-date');
   if (greetEl) {
@@ -7616,6 +7653,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.28.4', type: 'minor', date: '19 Jun 2026', title: 'Home hero: clock, particles, bigger glow', changes: [
+    'Replaced the Home nav pills with a wordmark + the Melbourne clock card in the top-right corner',
+    'Copper theme\'s home page no longer renders as a boxed/rounded card — it now bleeds edge-to-edge like the rest of the page',
+    'Added drifting ambient particles rising slowly up the home background',
+    'Copper\'s glow blob is now much larger and pulses more dramatically',
+  ]},
   { ver: '3.28.3', type: 'patch', date: '19 Jun 2026', title: 'Back button goes gold too', changes: [
     'The "Back to Home" pill (and its per-hub variants) now matches the gold treatment used everywhere else, instead of mismatched blue/amber/pink/green per page',
   ]},
