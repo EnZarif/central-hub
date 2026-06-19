@@ -3731,6 +3731,7 @@ function showPage(p, hub) {
   currentPage = p;
   closeMobileNav();
   document.querySelectorAll('.page').forEach(el => el.classList.toggle('active', el.id === 'page-'+p));
+  motionPageTransition('page-' + p);
   if (HUB_PAGES.includes(p)) currentHub = (p === 'home') ? null : p;
   else if (hub) currentHub = hub;
   syncNavActive();
@@ -8413,6 +8414,32 @@ function motionModalOpen(overlayId) {
     { duration: 0.3, easing: [0.2, 0.85, 0.25, 1] });
 }
 
+function motionModalClose(overlayId, removeFn) {
+  if (!_M || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { removeFn(); return; }
+  const overlay = document.getElementById(overlayId);
+  const modal = overlay && overlay.querySelector(':scope > *');
+  if (!modal) { removeFn(); return; }
+  _M.animate(modal, { opacity: [1, 0], scale: [1, 0.95], y: [0, 8] },
+    { duration: 0.18, easing: 'ease-in' }).finished.then(removeFn);
+}
+
+let _motionLastPage = null;
+function motionPageTransition(pageId) {
+  if (!_M) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (_motionLastPage === pageId) return;
+  _motionLastPage = pageId;
+  const el = document.getElementById(pageId);
+  if (!el) return;
+  _M.animate(el, { opacity: [0, 1], y: [10, 0] }, { duration: 0.32, easing: [0.2, 0.85, 0.25, 1] });
+}
+
+function motionListExit(el, onDone) {
+  if (!_M || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { onDone(); return; }
+  _M.animate(el, { opacity: [1, 0], x: [0, 16], scale: [1, 0.97] },
+    { duration: 0.22, easing: 'ease-in' }).finished.then(onDone);
+}
+
 // Hook into renderTasks — animate task items after list is painted
 const _origRenderTasks = renderTasks;
 renderTasks = function() {
@@ -8451,6 +8478,73 @@ openProjModal = function() {
       { duration: 0.3, easing: [0.2, 0.85, 0.25, 1] });
   });
 };
+
+// Modal close — smooth exit instead of an instant snap
+const _origCloseTaskEditModal = closeTaskEditModal;
+closeTaskEditModal = function() {
+  motionModalClose('task-edit-modal-overlay', () => _origCloseTaskEditModal.apply(this, arguments));
+};
+
+const _origKpiOpsModalClose = kpiOpsModalClose;
+kpiOpsModalClose = function() {
+  motionModalClose('kpi-ops-modal-overlay', () => _origKpiOpsModalClose.apply(this, arguments));
+};
+
+const _origCloseAiModal = closeAiModal;
+closeAiModal = function() {
+  motionModalClose('ai-modal-overlay', () => _origCloseAiModal.apply(this, arguments));
+};
+
+const _origSpTaskModalClose = spTaskModalClose;
+spTaskModalClose = function() {
+  motionModalClose('sp-task-modal-overlay', () => _origSpTaskModalClose.apply(this, arguments));
+};
+
+const _origCloseProjModal = closeProjModal;
+closeProjModal = function() {
+  if (!_M || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { _origCloseProjModal.apply(this, arguments); return; }
+  const modal = document.querySelector('#proj-modal > .proj-modal');
+  if (!modal) { _origCloseProjModal.apply(this, arguments); return; }
+  _M.animate(modal, { opacity: [1, 0], scale: [1, 0.95], y: [0, 8] },
+    { duration: 0.18, easing: 'ease-in' }).finished.then(() => _origCloseProjModal.apply(this, arguments));
+};
+
+// Task completion / deletion — animate the row out before it disappears
+const _origToggle = toggle;
+toggle = function(id) {
+  const wasDone = isDone(id);
+  if (!wasDone) {
+    const el = document.querySelector(`.task[onclick*="'${id}'"]`) || document.getElementById('eod-ti-' + id);
+    if (el && _M && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      _M.animate(el, { scale: [1, 1.02, 1] }, { duration: 0.28, easing: [0.2, 0.85, 0.25, 1] });
+    }
+  }
+  _origToggle.apply(this, arguments);
+};
+
+const _origDeleteCustomTask = deleteCustomTask;
+deleteCustomTask = function(id) {
+  const el = document.querySelector(`.task[onclick*="'${id}'"]`);
+  if (el && _M && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    motionListExit(el, () => _origDeleteCustomTask.apply(this, arguments));
+  } else {
+    _origDeleteCustomTask.apply(this, arguments);
+  }
+};
+
+// Button press feedback — subtle tap-down on any clickable control
+document.addEventListener('pointerdown', e => {
+  if (!_M || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const btn = e.target.closest('button, .cb, .statcard.clickable, .nav-btn, .app-card');
+  if (!btn) return;
+  _M.animate(btn, { scale: [1, 0.96] }, { duration: 0.1, easing: 'ease-out' });
+});
+document.addEventListener('pointerup', e => {
+  if (!_M || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const btn = e.target.closest('button, .cb, .statcard.clickable, .nav-btn, .app-card');
+  if (!btn) return;
+  _M.animate(btn, { scale: [0.96, 1] }, { duration: 0.18, easing: [0.2, 0.85, 0.25, 1] });
+});
 </script>
 </body>
 </html>
