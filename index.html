@@ -305,8 +305,8 @@
   .hub-back i { font-size: 14px; }
   .hub-head h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
   .hub-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
-  #home-greeting { font-size: 34px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.15; }
-  .home-greeting-name { color: var(--amber-text); }
+  #home-greeting { font-size: 34px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.15; display: flex; flex-direction: column; }
+  .home-greeting-name { color: var(--amber-text); font-size: 48px; font-weight: 700; }
   #home-date { font-size: 14px; color: color-mix(in srgb, var(--amber-text) 55%, var(--text-2)); margin-top: 6px; }
   .hub-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
   .app-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; display: flex; flex-direction: column; gap: 12px; min-height: 150px; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
@@ -325,14 +325,10 @@
   .hub-grid .app-card:nth-child(5){animation-delay:.23s}
   .hub-grid .app-card:nth-child(6){animation-delay:.28s}
   @media (prefers-reduced-motion: reduce) { .app-card { animation: none; } }
+  /* Home cards sit over the drifting particles — let them show through */
+  #page-home .app-card { background: color-mix(in srgb, var(--surface) 75%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 
-  /* ── Home dashboard: project ring card, new-task button, particles (all themes) ── */
-  .home-card-project { flex-direction: row !important; align-items: center; justify-content: space-between; gap: 14px; }
-  .home-project-info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-  .home-card-project .ring { width: 56px; height: 56px; flex-shrink: 0; }
-  .home-card-project .ring-hole { width: 42px; height: 42px; font-size: 11px; }
-  .home-new-task-btn { position: relative; z-index: 1; margin-top: 18px; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 30px; border: none; background: var(--text); color: var(--bg); cursor: pointer; transition: opacity 0.15s; font-family: inherit; }
-  .home-new-task-btn:hover { opacity: 0.85; }
+  /* ── Home dashboard: ambient particles (all themes) ── */
   .home-particles { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   .home-particle { position: absolute; bottom: 0; border-radius: 50%; background: var(--amber-text); animation: homeParticleFloat linear infinite; }
   @keyframes homeParticleFloat { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 0.55; } 90% { opacity: 0.4; } 100% { transform: translateY(-340px); opacity: 0; } }
@@ -340,9 +336,9 @@
 
   /* ── COPPER theme: bento home layout (no blob/glow, no mouse tilt) ── */
   :root[data-theme="copper"] .hub-grid { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; }
-  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) {
+  :root[data-theme="copper"] #page-home .hub-grid .app-card:nth-child(1) {
     grid-row: span 2; position: relative; overflow: hidden;
-    background: linear-gradient(155deg, var(--copper-glow-1), #b5531f);
+    background: linear-gradient(155deg, color-mix(in srgb, var(--copper-glow-1) 82%, transparent), color-mix(in srgb, #b5531f 82%, transparent));
     border-color: transparent;
   }
   :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-title,
@@ -1486,30 +1482,7 @@
   <div class="nav-logo"><div class="nav-logo-icon"><i class="ti ti-checklist"></i></div><span>Zarif Central Hub</span></div>
   <div class="nav-links">
     <button class="nav-btn active" data-page="home" onclick="showPage('home')"><i class="ti ti-home"></i><span>Home</span></button>
-    <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Task Manager</span></button>
     <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
-    <div class="nav-section-label">Hubs</div>
-    <div class="nav-group" id="nav-group-helpdesk">
-      <div class="nav-group-head">
-        <button class="nav-btn" data-page="helpdesk" onclick="showPage('helpdesk')"><i class="ti ti-headset"></i><span>Helpdesk</span></button>
-        <button class="nav-expand" onclick="toggleNavGroup('helpdesk')" title="Expand"><i class="ti ti-chevron-down"></i></button>
-      </div>
-      <div class="nav-sub" id="nav-sub-helpdesk"></div>
-    </div>
-    <div class="nav-group" id="nav-group-projects">
-      <div class="nav-group-head">
-        <button class="nav-btn" data-page="projects" onclick="showPage('projects')"><i class="ti ti-folders"></i><span>Projects</span></button>
-        <button class="nav-expand" onclick="toggleNavGroup('projects')" title="Expand"><i class="ti ti-chevron-down"></i></button>
-      </div>
-      <div class="nav-sub" id="nav-sub-projects"></div>
-    </div>
-    <div class="nav-group" id="nav-group-personal">
-      <div class="nav-group-head">
-        <button class="nav-btn" data-page="personal" onclick="showPage('personal')"><i class="ti ti-user-heart"></i><span>Personal</span></button>
-        <button class="nav-expand" onclick="toggleNavGroup('personal')" title="Expand"><i class="ti ti-chevron-down"></i></button>
-      </div>
-      <div class="nav-sub" id="nav-sub-personal"></div>
-    </div>
   </div>
   <div class="nav-bottom">
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
@@ -1540,34 +1513,31 @@
       <p id="home-date">Loading…</p>
     </div>
     <div class="hub-grid">
-      <div class="app-card" id="home-card-due" onclick="showPage('tasks')">
-        <div class="app-card-icon c-blue"><i class="ti ti-sun-high"></i></div>
-        <div class="app-card-title">Due today</div>
-        <div class="app-card-desc">Loading…</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open tasks</div>
+      <div class="app-card" id="home-card-tasks" onclick="showPage('tasks')">
+        <div class="app-card-icon c-teal"><i class="ti ti-checklist"></i></div>
+        <div class="app-card-title">Task Manager</div>
+        <div class="app-card-desc">Your daily task dashboard with streaks and progress.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
       </div>
-      <div class="app-card" id="home-card-progress" onclick="showPage('tasks')">
-        <div class="app-card-icon c-amber"><i class="ti ti-progress"></i></div>
-        <div class="app-card-title">In progress</div>
-        <div class="app-card-desc">Loading…</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open tasks</div>
+      <div class="app-card" id="home-card-helpdesk" onclick="showPage('helpdesk')">
+        <div class="app-card-icon c-coral"><i class="ti ti-headset"></i></div>
+        <div class="app-card-title">Helpdesk</div>
+        <div class="app-card-desc">Reports, meetings, templates and your daily stand up.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
       </div>
-      <div class="app-card" id="home-card-upcoming" onclick="showPage('tasks')">
-        <div class="app-card-icon c-pink"><i class="ti ti-calendar-event"></i></div>
-        <div class="app-card-title">Upcoming</div>
-        <div class="app-card-desc">Loading…</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open tasks</div>
+      <div class="app-card" id="home-card-projects" onclick="showPage('projects')">
+        <div class="app-card-icon c-purple"><i class="ti ti-folders"></i></div>
+        <div class="app-card-title">Projects</div>
+        <div class="app-card-desc">Track delivery progress across your active projects.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
       </div>
-      <div class="app-card home-card-project" id="home-card-project" onclick="showPage('projects')">
-        <div class="home-project-info">
-          <div class="app-card-icon c-purple"><i class="ti ti-folder-bolt"></i></div>
-          <div class="app-card-title">Projects</div>
-          <div class="app-card-desc">Loading…</div>
-        </div>
-        <div class="ring" id="home-ring"><div class="ring-hole"><span id="home-ring-pct">0%</span></div></div>
+      <div class="app-card" id="home-card-personal" onclick="showPage('personal')">
+        <div class="app-card-icon c-pink"><i class="ti ti-user-heart"></i></div>
+        <div class="app-card-title">Personal</div>
+        <div class="app-card-desc">Wishlist, insights, weekly review and end-of-day log.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
       </div>
     </div>
-    <button class="home-new-task-btn" onclick="showPage('tasks')"><i class="ti ti-plus"></i> New Task</button>
   </div>
 
   <!-- WIDGETS -->
@@ -4279,68 +4249,11 @@ function renderHomeDashboard() {
     const s = esc((dbGet('zarif_settings') || {}).displayName || 'Zarif');
     greetEl.innerHTML = `<span class="home-greeting-word">Good ${part},</span> <span class="home-greeting-name">${s}</span>`;
   }
-  const todayTasks = getTodayTasks();
-  const undone = todayTasks.filter(t => !isDone(t.id));
   if (dateEl) {
-    const dStr = now.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+    const dStr = now.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+    const undone = getTodayTasks().filter(t => !isDone(t.id));
     dateEl.textContent = `${dStr} — ${undone.length} due today`;
   }
-
-  const dueCard = document.getElementById('home-card-due');
-  if (dueCard) {
-    const desc = dueCard.querySelector('.app-card-desc');
-    if (undone.length) {
-      desc.textContent = undone[0].name;
-      dueCard.dataset.count = undone.length;
-    } else {
-      desc.textContent = todayTasks.length ? 'All done for today!' : 'Nothing scheduled today.';
-      dueCard.dataset.count = '0';
-    }
-  }
-
-  const progCard = document.getElementById('home-card-progress');
-  if (progCard) {
-    const desc = progCard.querySelector('.app-card-desc');
-    if (undone.length > 1) desc.textContent = undone[1].name;
-    else if (undone.length === 1) desc.textContent = 'Just one left — go get it.';
-    else desc.textContent = 'Nothing in progress.';
-  }
-
-  const upCard = document.getElementById('home-card-upcoming');
-  if (upCard) {
-    const desc = upCard.querySelector('.app-card-desc');
-    const today = todayInputDate();
-    const weekEnd = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate()+7));
-    const upcomingTasks = getAllTasks()
-      .filter(t => t.freq === 'date' && t.date && t.date > today && t.date <= weekEnd && !isDone(t.id))
-      .map(t => ({ label: t.name, date: t.date }));
-    const upcomingMtgs = (typeof meetings !== 'undefined' ? meetings : [])
-      .filter(m => m.date && m.date > today && m.date <= weekEnd)
-      .map(m => ({ label: m.type || 'Meeting', date: m.date }));
-    const upcoming = [...upcomingTasks, ...upcomingMtgs].sort((a,b) => a.date.localeCompare(b.date));
-    desc.textContent = upcoming.length ? `${esc(upcoming[0].label)} · ${fmtShortDate(upcoming[0].date)}` : 'Nothing on the horizon.';
-  }
-
-  const projCard = document.getElementById('home-card-project');
-  if (projCard) {
-    const desc = projCard.querySelector('.app-card-desc');
-    const ring = document.getElementById('home-ring');
-    const pctEl = document.getElementById('home-ring-pct');
-    const list = (typeof projects !== 'undefined' ? projects : []);
-    const proj = list.find(p => p.status === 'active' && (p.subs||[]).length) || list[0];
-    if (proj) {
-      const subs = proj.subs || [];
-      const pct = subs.length ? Math.round(subs.filter(s => s.status === 'delivered').length / subs.length * 100) : 0;
-      desc.textContent = proj.title;
-      if (ring) ring.style.background = `conic-gradient(var(--teal) ${pct}%, var(--border-md) 0)`;
-      if (pctEl) pctEl.textContent = pct + '%';
-    } else {
-      desc.textContent = 'No projects yet.';
-      if (ring) ring.style.background = `conic-gradient(var(--border-md) 0%, var(--border-md) 0)`;
-      if (pctEl) pctEl.textContent = '—';
-    }
-  }
-
 }
 
 function renderTasks() {
@@ -7576,6 +7489,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.29.1', type: 'minor', date: '19 Jun 2026', title: 'Home cards become a hub chooser again, top bar trimmed', changes: [
+    'Home cards now go Task Manager (hero), Helpdesk, Projects, Personal as quick-launch tiles instead of live task stats',
+    'Removed the now-redundant Task Manager/Helpdesk/Projects/Personal links from the top bar — only Home, Widgets, Settings and Theme remain',
+    'Home cards are translucent again so the drifting particles show through behind them',
+    'Greeting now breaks onto two lines, with your name in a noticeably larger gold type',
+  ]},
   { ver: '3.29.0', type: 'major', date: '19 Jun 2026', title: 'Sidebar moved to a top bar, calmer home hero', changes: [
     'The left sidebar is gone — navigation now lives in a top bar, with hub dropdowns and a single Melbourne clock in the top-right',
     'Removed the home page\'s animated mesh background, Copper glow blob, and mouse-tilt hover effect on the dashboard cards',
