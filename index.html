@@ -6,6 +6,7 @@
 <title>Zarif Central Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
@@ -104,6 +105,24 @@
     --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
     --hero-bg: #0B1018; --radius: 10px; --radius-lg: 14px;
   }
+  /* ── COPPER: warm charcoal + copper/gold, serif display ── */
+  :root[data-theme="copper"] {
+    --bg: #16100c; --surface: #1e1611; --surface2: rgba(232,127,62,0.07);
+    --border: rgba(232,127,62,0.1); --border-md: rgba(232,127,62,0.22);
+    --text: #f3e8da; --text-2: rgba(243,232,218,0.55); --text-3: rgba(243,232,218,0.3);
+    --teal: #e87f3e; --teal-bg: rgba(232,127,62,0.14); --teal-text: #f0b94a;
+    --amber-bg: rgba(240,185,74,0.16); --amber-text: #f0b94a;
+    --coral-bg: rgba(210,85,40,0.15); --coral-text: #f0997b;
+    --blue-bg: rgba(74,158,232,0.1); --blue-text: #85b7eb;
+    --green-bg: rgba(99,153,34,0.13); --green-text: #97c459;
+    --purple-bg: rgba(127,119,221,0.13); --purple-text: #afa9ec;
+    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ed93b1;
+    --hero-bg: #120d09; --radius: 10px; --radius-lg: 14px;
+    --copper-glow-1: #e87f3e; --copper-glow-2: #f0b94a;
+  }
+  :root[data-theme="copper"] body { font-family: 'Space Grotesk', -apple-system, sans-serif; }
+  :root[data-theme="copper"] .hub-head h1,
+  :root[data-theme="copper"] .app-card-title { font-family: 'Fraunces', serif; font-weight: 800; }
 
   /* ── THEME PICKER (settings) ── */
   .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; width: 100%; }
@@ -309,6 +328,47 @@
   .hub-grid .app-card:nth-child(5){animation-delay:.23s}
   .hub-grid .app-card:nth-child(6){animation-delay:.28s}
   @media (prefers-reduced-motion: reduce) { .app-card { animation: none; } }
+
+  /* ── COPPER theme: bento home layout, grain + glow, live motion ── */
+  :root[data-theme="copper"] #page-home::before {
+    content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="copper"] #page-home::after {
+    content: ''; position: absolute; z-index: 0; pointer-events: none; width: 380px; height: 380px; top: -130px; right: -110px;
+    border-radius: 50%; filter: blur(6px); opacity: 0.4;
+    background: radial-gradient(circle at 35% 35%, var(--copper-glow-1), var(--copper-glow-2) 55%, transparent 78%);
+    animation: copperPulse 5s ease-in-out infinite;
+  }
+  @keyframes copperPulse { 0%,100% { transform: scale(1) translate(0,0); opacity: 0.35; } 50% { transform: scale(1.12) translate(-10px,12px); opacity: 0.5; } }
+  :root[data-theme="copper"] .hub-grid { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; }
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) {
+    grid-row: span 2; position: relative; overflow: hidden;
+    background: linear-gradient(155deg, var(--copper-glow-1), #b5531f);
+    border-color: transparent; transform: rotate(-1.2deg);
+    animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both, copperFloat 6s ease-in-out infinite 0.8s;
+  }
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-title,
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-desc,
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-meta { color: #1c0f06; }
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-icon { background: rgba(28,15,6,0.18); color: #1c0f06; }
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1)::after {
+    content: '01'; position: absolute; bottom: 2px; right: 12px; font-family: 'Fraunces', serif; font-weight: 800;
+    font-size: 84px; color: #1c0f06; opacity: 0.16; line-height: 1; pointer-events: none;
+  }
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(2) { transform: rotate(1deg); }
+  :root[data-theme="copper"] .hub-grid .app-card:nth-child(3) { transform: rotate(-0.8deg); }
+  @keyframes copperFloat { 0%,100% { transform: rotate(-1.2deg) translateY(0); } 50% { transform: rotate(-0.8deg) translateY(-5px); } }
+  :root[data-theme="copper"] .ring { animation: copperRingSpin 12s linear infinite; }
+  :root[data-theme="copper"] .ring-hole { animation: copperRingUnspin 12s linear infinite; }
+  @keyframes copperRingSpin { to { transform: rotate(360deg); } }
+  @keyframes copperRingUnspin { to { transform: rotate(-360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-theme="copper"] #page-home::after,
+    :root[data-theme="copper"] .hub-grid .app-card:nth-child(1),
+    :root[data-theme="copper"] .ring,
+    :root[data-theme="copper"] .ring-hole { animation: none; }
+  }
 
   /* DASHBOARD */
   .dash-grid { display: flex; gap: 16px; align-items: center; }
@@ -2551,6 +2611,16 @@
               </div>
               <div class="tp-name">Slate</div>
             </div>
+            <div class="tp-card" data-theme-id="copper" onclick="pickTheme('copper')">
+              <div class="tp-swatch">
+                <div class="tp-sw-accent" style="background:#e87f3e"></div>
+                <div class="tp-sw-main" style="background:#16100c">
+                  <div class="tp-sw-line" style="background:#e87f3e;width:55%"></div>
+                  <div class="tp-sw-line" style="background:#f3e8da;width:80%"></div>
+                </div>
+              </div>
+              <div class="tp-name">Copper</div>
+            </div>
           </div>
         </div>
         <div class="settings-row">
@@ -2916,7 +2986,7 @@ const DEFAULT_BREAKS = [
 ];
 
 // ===== THEME TOGGLE =====
-const THEMES = ['midnight','ink','forest','aurora','ember','slate'];
+const THEMES = ['midnight','ink','forest','aurora','ember','slate','copper'];
 
 function applyTheme(theme) {
   const t = THEMES.includes(theme) ? theme : 'midnight';
@@ -2927,6 +2997,7 @@ function applyTheme(theme) {
   }
   document.querySelectorAll('.tp-card').forEach(c => c.classList.toggle('tp-active', c.dataset.themeId === t));
   if (typeof meshBgRefreshPalette === 'function') meshBgRefreshPalette();
+  if (typeof setupCopperTilt === 'function') setupCopperTilt(t === 'copper');
 }
 
 function pickTheme(name) {
@@ -2938,6 +3009,41 @@ function toggleTheme() {
   const current = localStorage.getItem('zarif_theme') || 'midnight';
   const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
   pickTheme(next);
+}
+
+let _copperTiltCleanup = null;
+function setupCopperTilt(enable) {
+  if (_copperTiltCleanup) { _copperTiltCleanup(); _copperTiltCleanup = null; }
+  if (!enable) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (typeof Motion === 'undefined' || !Motion.animate) return;
+  const cards = document.querySelectorAll('.hub-grid .app-card');
+  const handlers = [];
+  cards.forEach(card => {
+    const onMove = (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      Motion.animate(card, {
+        transform: `perspective(800px) rotateX(${(-y * 10).toFixed(2)}deg) rotateY(${(x * 10).toFixed(2)}deg) translateZ(8px)`
+      }, { type: 'spring', stiffness: 300, damping: 22 });
+    };
+    const onLeave = () => {
+      Motion.animate(card, {
+        transform: 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px)'
+      }, { type: 'spring', stiffness: 200, damping: 20 });
+    };
+    card.addEventListener('pointermove', onMove);
+    card.addEventListener('pointerleave', onLeave);
+    handlers.push([card, onMove, onLeave]);
+  });
+  _copperTiltCleanup = () => {
+    handlers.forEach(([card, onMove, onLeave]) => {
+      card.removeEventListener('pointermove', onMove);
+      card.removeEventListener('pointerleave', onLeave);
+      card.style.transform = '';
+    });
+  };
 }
 
 applyTheme(localStorage.getItem('zarif_theme') || 'midnight');
@@ -7423,6 +7529,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.27.10', type: 'minor', date: '19 Jun 2026', title: 'Copper theme: bento home + live motion', changes: [
+    'New "Copper" theme — warm charcoal/copper palette with Fraunces serif headings and Space Grotesk body text',
+    'Home page renders as an asymmetric bento grid under Copper, with a gradient hero card, ghost numeral, grain texture, and a pulsing glow blob',
+    'Hero card gently floats and the dashboard progress ring slowly spins (label stays upright) for continuous ambient motion',
+    'Hovering home cards under Copper tilts them in 3D toward the cursor using the Motion library, with spring physics on enter/leave',
+    'All Copper-specific motion respects prefers-reduced-motion',
+  ]},
   { ver: '3.27.8', type: 'patch', date: '19 Jun 2026', title: 'Theme-aware wallpaper', changes: [
     'Home page mesh wallpaper now derives its colors from the active theme (--teal, --amber-text, --pink-text, --hero-bg) instead of a fixed palette',
     'Switching themes in Settings instantly recolors the wallpaper to match',
