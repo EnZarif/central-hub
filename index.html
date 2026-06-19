@@ -252,17 +252,17 @@
   .page-back { font-size: 13px; font-weight: 500; border-radius: 20px; padding: 7px 15px 7px 11px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; transition: all 0.15s; border: 1.5px solid transparent; }
   .page-back i { font-size: 15px; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
   .page-back:hover { opacity: 0.82; transform: translateX(-2px); }
-  /* hub-coloured variants */
-  .page-back.pb-home     { background: var(--teal-bg);   color: var(--teal-text);   border-color: rgba(55,138,221,0.22); }
-  .page-back.pb-home i   { background: rgba(55,138,221,0.18); }
-  .page-back.pb-helpdesk { background: var(--blue-bg);   color: var(--blue-text);   border-color: rgba(55,138,221,0.22); }
-  .page-back.pb-helpdesk i { background: rgba(55,138,221,0.18); }
-  .page-back.pb-projects { background: var(--amber-bg);  color: var(--amber-text);  border-color: rgba(239,159,39,0.22); }
-  .page-back.pb-projects i { background: rgba(239,159,39,0.18); }
-  .page-back.pb-personal { background: var(--pink-bg);   color: var(--pink-text);   border-color: rgba(212,83,126,0.22); }
-  .page-back.pb-personal i { background: rgba(212,83,126,0.18); }
-  .page-back.pb-tasks    { background: var(--green-bg);  color: var(--green-text);  border-color: rgba(99,153,34,0.22); }
-  .page-back.pb-tasks i  { background: rgba(99,153,34,0.18); }
+  /* gold variants (monochrome, tiered — matches sidebar nav icon treatment) */
+  .page-back.pb-home     { background: color-mix(in srgb, var(--amber-text) 16%, transparent); color: var(--amber-text); border-color: color-mix(in srgb, var(--amber-text) 35%, transparent); }
+  .page-back.pb-home i   { background: color-mix(in srgb, var(--amber-text) 30%, transparent); }
+  .page-back.pb-helpdesk { background: color-mix(in srgb, var(--amber-text) 16%, transparent); color: var(--amber-text); border-color: color-mix(in srgb, var(--amber-text) 35%, transparent); }
+  .page-back.pb-helpdesk i { background: color-mix(in srgb, var(--amber-text) 30%, transparent); }
+  .page-back.pb-projects { background: color-mix(in srgb, var(--amber-text) 16%, transparent); color: var(--amber-text); border-color: color-mix(in srgb, var(--amber-text) 35%, transparent); }
+  .page-back.pb-projects i { background: color-mix(in srgb, var(--amber-text) 30%, transparent); }
+  .page-back.pb-personal { background: color-mix(in srgb, var(--amber-text) 16%, transparent); color: var(--amber-text); border-color: color-mix(in srgb, var(--amber-text) 35%, transparent); }
+  .page-back.pb-personal i { background: color-mix(in srgb, var(--amber-text) 30%, transparent); }
+  .page-back.pb-tasks    { background: color-mix(in srgb, var(--amber-text) 16%, transparent); color: var(--amber-text); border-color: color-mix(in srgb, var(--amber-text) 35%, transparent); }
+  .page-back.pb-tasks i  { background: color-mix(in srgb, var(--amber-text) 30%, transparent); }
 
   /* SIDEBAR CASCADE */
   .nav-group { display: flex; flex-direction: column; }
@@ -7616,6 +7616,9 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.28.3', type: 'patch', date: '19 Jun 2026', title: 'Back button goes gold too', changes: [
+    'The "Back to Home" pill (and its per-hub variants) now matches the gold treatment used everywhere else, instead of mismatched blue/amber/pink/green per page',
+  ]},
   { ver: '3.28.2', type: 'minor', date: '19 Jun 2026', title: 'Sidebar icons go monochrome gold', changes: [
     'Left sidebar nav icons (Home, Task Manager, Helpdesk, Projects, Personal, Widgets) now use a single gold tone at tiered opacity instead of mismatched blue/green/purple/pink',
     'The blue Helpdesk icon specifically is now gold, consistent with every other nav icon',
