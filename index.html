@@ -2997,6 +2997,71 @@ function pixoffAgentLabel(r) {
   return parts[parts.length - 1] || r.project_path;
 }
 
+// Nibble: a crying kitten, fist raised, wrapped in a red blanket — sitting on the desk
+function pixoffDrawNibble(ctx, cx, baseY, scale) {
+  ctx.save();
+  ctx.translate(cx, baseY);
+  ctx.scale(scale, scale);
+
+  // body
+  ctx.fillStyle = '#f3eee2';
+  ctx.beginPath();
+  ctx.ellipse(0, -4, 5, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // red blanket wrap
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath();
+  ctx.moveTo(-5, -7);
+  ctx.lineTo(5, -1);
+  ctx.lineTo(4, 2);
+  ctx.lineTo(-6, -4);
+  ctx.closePath();
+  ctx.fill();
+
+  // head
+  ctx.fillStyle = '#f3eee2';
+  ctx.beginPath();
+  ctx.ellipse(0, -11, 4.5, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ears
+  ctx.fillStyle = '#9c9c9c';
+  ctx.beginPath();
+  ctx.moveTo(-4, -14); ctx.lineTo(-6, -19); ctx.lineTo(-1, -15); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(4, -14); ctx.lineTo(6, -19); ctx.lineTo(1, -15); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#e8b4b0';
+  ctx.beginPath();
+  ctx.moveTo(-3.5, -14.5); ctx.lineTo(-4.7, -17.5); ctx.lineTo(-2, -15); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(3.5, -14.5); ctx.lineTo(4.7, -17.5); ctx.lineTo(2, -15); ctx.closePath(); ctx.fill();
+
+  // wailing open mouth
+  ctx.fillStyle = '#5a2a1f';
+  ctx.beginPath();
+  ctx.ellipse(0, -9.5, 2.3, 2.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // scrunched eyes
+  ctx.strokeStyle = '#5a4a3a';
+  ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.moveTo(-3, -12.5); ctx.lineTo(-1.3, -12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3, -12.5); ctx.lineTo(1.3, -12); ctx.stroke();
+
+  // raised fist + arm
+  ctx.strokeStyle = '#f3eee2';
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(8.5, -16); ctx.stroke();
+  ctx.fillStyle = '#f3eee2';
+  ctx.beginPath();
+  ctx.ellipse(9.5, -17.5, 2.4, 2.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function pixoffDraw() {
   const canvas = document.getElementById('pixoff-canvas');
   const listEl = document.getElementById('pixoff-list');
@@ -3057,8 +3122,10 @@ function pixoffDraw() {
     ctx.drawImage(chair, x - chairW / 2, chairTop, chairW, chairH);
     ctx.drawImage(desk, x - deskW / 2, deskTop, deskW, deskH);
     ctx.drawImage(pc, x - pcW / 2, pcBottom - pcH, pcW, pcH);
-    // Each character frame is a full 16x32 body (head+torso+legs), not 16x16
-    ctx.drawImage(charImg, 0, 0, 16, 32, x - charW / 2, charTop, charW, charH);
+    pixoffDrawNibble(ctx, x + deskW / 2 - 14, deskTop + deskH - 8, 1.3);
+    // Row 1 of the sheet is the back-facing pose, so the character appears
+    // to be looking at the monitor instead of out at the viewer
+    ctx.drawImage(charImg, 0, 32, 16, 32, x - charW / 2, charTop, charW, charH);
 
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
