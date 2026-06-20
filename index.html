@@ -265,7 +265,12 @@
   .section-header::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
 
   /* TASKS HERO */
-  .task-hero { background: var(--hero-bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
+  .task-hero { position: relative; overflow: hidden; background: var(--hero-bg); border: 0.5px solid var(--border); border-radius: 22px; padding: 22px; margin-bottom: 18px; box-shadow: 0 30px 60px -35px rgba(0,0,0,0.55); transform-style: preserve-3d; transition: transform 0.2s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  .task-hero-orb { position: absolute; border-radius: 50%; filter: blur(42px); opacity: 0.25; pointer-events: none; z-index: 0; }
+  .task-hero-orb.o1 { width: 220px; height: 220px; background: #4a9ee8; top: -90px; right: -60px; }
+  .task-hero-orb.o2 { width: 170px; height: 170px; background: #e8733a; bottom: -90px; left: 28%; }
+  .task-hero-top, .task-hero .dash-grid, .task-hero #dash-upcoming { position: relative; z-index: 1; }
+  @media (prefers-reduced-motion: reduce) { .task-hero { transition: none; } }
   .task-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
   .task-hero-greeting { font-size: 18px; font-weight: 500; color: var(--text); }
   .task-hero-sub { font-size: 12px; color: var(--text-3); margin-top: 4px; }
@@ -378,7 +383,9 @@
   /* DASHBOARD */
   .dash-grid { display: flex; gap: 16px; align-items: center; }
   .dash-ring { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; animation: taskSlideIn 0.45s cubic-bezier(.2,.85,.25,1) both; }
-  .ring { width: 88px; height: 88px; border-radius: 50%; background: conic-gradient(#185FA5 0%, var(--border-md) 0); display: flex; align-items: center; justify-content: center; transition: background 0.85s cubic-bezier(.2,.85,.25,1); }
+  .ring { width: 88px; height: 88px; border-radius: 50%; background: conic-gradient(#185FA5 0%, var(--border-md) 0); display: flex; align-items: center; justify-content: center; transition: background 0.85s cubic-bezier(.2,.85,.25,1); box-shadow: 0 18px 34px -12px rgba(24,95,165,0.55); animation: heroRingFloat 4.5s ease-in-out infinite; }
+  @keyframes heroRingFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @media (prefers-reduced-motion: reduce) { .ring { animation: none; } }
   .ring-hole { width: 66px; height: 66px; border-radius: 50%; background: var(--hero-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500; color: var(--text); }
   .ring-cap { font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
   .dash-stats { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -390,8 +397,8 @@
   .statcard-ico { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
   .statcard-n { font-size: 19px; font-weight: 500; color: var(--text); line-height: 1.05; }
   .statcard-l { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-  .statcard.clickable { cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; }
-  .statcard.clickable:hover { border-color: var(--border-md); transform: translateY(-1px); }
+  .statcard.clickable { cursor: pointer; transition: border-color 0.2s, transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, box-shadow 0.2s; }
+  .statcard.clickable:hover { border-color: var(--border-md); transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 26px -14px rgba(0,0,0,0.5); }
   .statcard.clickable.active { border-color: #185FA5; background: rgba(55,138,221,0.1); }
   .stat-strip { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
   .stat-strip .statcard { flex: 1; min-width: 130px; }
@@ -399,6 +406,21 @@
   .dash-upcoming:hover { border-color: rgba(55,138,221,0.5); }
   .dash-upcoming i { font-size: 14px; flex-shrink: 0; }
   .dash-upcoming .du-next { color: var(--text-3); margin-left: auto; white-space: nowrap; }
+
+  /* UP NEXT RAIL */
+  .up-next-rail { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 10px; margin-bottom: 4px; }
+  .next-card { flex: 0 0 190px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 14px 16px; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s, border-color 0.15s; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
+  .up-next-rail .next-card:nth-child(1){animation-delay:.04s} .up-next-rail .next-card:nth-child(2){animation-delay:.09s} .up-next-rail .next-card:nth-child(3){animation-delay:.14s} .up-next-rail .next-card:nth-child(4){animation-delay:.19s}
+  .next-card:hover { transform: perspective(700px) rotateX(5deg) rotateY(-5deg) translateY(-5px) scale(1.03); box-shadow: 0 24px 38px -18px rgba(0,0,0,0.55); border-color: var(--border-md); }
+  .next-card-dot { position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; }
+  .next-card-dot.p-high { background: #E05A3A; box-shadow: 0 0 0 4px rgba(224,90,58,0.18); }
+  .next-card-dot.p-medium { background: #185FA5; box-shadow: 0 0 0 4px rgba(24,95,165,0.18); }
+  .next-card-dot.p-low { background: #639922; box-shadow: 0 0 0 4px rgba(99,153,34,0.18); }
+  .next-card-when { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+  .next-card.urgent .next-card-when { color: var(--coral-text); font-weight: 600; }
+  .next-card-name { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 10px; padding-right: 14px; }
+  .next-card-hub { font-size: 10.5px; color: var(--text-2); display: inline-flex; align-items: center; gap: 5px; background: var(--surface2); padding: 3px 9px; border-radius: 7px; }
+  @media (prefers-reduced-motion: reduce) { .next-card { animation: none; transition: none; } .next-card:hover { transform: none; } }
   @media (max-width: 560px) {
     .dash-grid { flex-direction: column; align-items: stretch; }
     .dash-ring { flex-direction: row; justify-content: center; gap: 10px; }
@@ -411,8 +433,9 @@
   /* TABS */
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
   .today-banner i { font-size: 15px; }
-  .tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); margin-bottom: 1.2rem; }
-  .tab { flex: 1; padding: 9px 6px; font-size: 12px; font-weight: 400; border: none; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.15s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .tabs { display: flex; gap: 3px; background: var(--surface2); border-radius: 14px; padding: 4px; margin-bottom: 1.2rem; }
+  .tab { flex: 1; padding: 8px 6px; font-size: 12px; font-weight: 400; border: none; border-radius: 10px; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.2s cubic-bezier(.2,.8,.2,1); font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .tab:hover:not(.active) { color: var(--text-2); }
 
   /* CALENDAR VIEW */
   .cal-wrap { display: flex; flex-direction: column; gap: 16px; }
@@ -460,7 +483,7 @@
   .cal-today-btn { background: none; border: 0.5px solid var(--border-md); border-radius: 8px; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 4px 10px; font-family: inherit; transition: all 0.15s; }
   .cal-today-btn:hover { color: var(--text); border-color: var(--text-3); }
   .tab i { font-size: 13px; }
-  .tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 500; }
+  .tab.active { color: var(--text); background: var(--surface); font-weight: 600; box-shadow: 0 6px 16px -8px rgba(0,0,0,0.5); }
   .tab:hover:not(.active) { color: var(--text-2); }
   /* hub filter bar */
   .hub-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -496,10 +519,12 @@
   .time-pill i { font-size: 11px; }
   .time-pill.tp-overdue { background: var(--coral-bg); color: var(--coral-text); border-color: rgba(210,85,40,0.4); }
   /* due-soon section */
-  .due-soon-section { margin-bottom: 14px; border: 1.5px solid var(--amber-text); border-radius: 14px; overflow: hidden; }
+  .due-soon-section { margin-bottom: 14px; border: 1.5px solid var(--amber-text); border-radius: 14px; overflow: hidden; box-shadow: 0 16px 32px -18px rgba(239,168,0,0.35); }
   :root[data-theme="ink"] .due-soon-section { border-color: var(--amber-text); }
   .due-soon-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--amber-bg); border-bottom: 1px solid rgba(180,120,0,0.15); }
-  .due-soon-header i { font-size: 15px; color: var(--amber-text); }
+  .due-soon-header i { font-size: 15px; color: var(--amber-text); animation: dueSoonPulse 1.6s ease-in-out infinite; }
+  @keyframes dueSoonPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  @media (prefers-reduced-motion: reduce) { .due-soon-header i { animation: none; } }
   .due-soon-header-title { font-size: 13px; font-weight: 600; color: var(--amber-text); flex: 1; }
   .due-soon-header-count { font-size: 11px; font-weight: 500; color: var(--amber-text); opacity: 0.8; background: rgba(180,120,0,0.12); border-radius: 20px; padding: 2px 8px; }
   .due-soon-section .task { border-radius: 0; border-left: none; border-right: none; border-bottom: none; border-top: 1px solid var(--border); margin: 0; }
@@ -523,8 +548,8 @@
   @media (max-width: 480px) { .clock-card { gap: 7px; padding: 9px 10px; } .clock-card-time-val { font-size: 22px; } .clock-card-ico { width: 32px; height: 32px; font-size: 17px; } }
 
   /* TASK CARDS */
-  .task { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.15s, opacity 0.2s, transform 0.15s ease; align-items: center; }
-  .task:hover { border-color: var(--border-md); border-left-width: 3px; transform: translateY(-1px); }
+  .task { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.2s, opacity 0.2s, transform 0.2s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s; align-items: center; }
+  .task:hover { border-color: var(--border-md); border-left-width: 3px; transform: translateY(-2px) scale(1.004); box-shadow: 0 14px 28px -18px rgba(0,0,0,0.55); }
 
   /* STYLE B ANIMATIONS */
   @keyframes taskSlideIn { from { opacity: 0; transform: translateY(11px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -1925,7 +1950,9 @@
     <div class="tasks-layout">
     <div class="tasks-main">
 
-    <div class="task-hero">
+    <div class="task-hero" id="task-hero">
+      <div class="task-hero-orb o1"></div>
+      <div class="task-hero-orb o2"></div>
       <div class="task-hero-top">
         <div>
           <div class="task-hero-greeting">Hey, Zarif</div>
@@ -1958,6 +1985,8 @@
       </div>
       <div id="dash-upcoming" class="dash-upcoming" style="display:none" onclick="switchTab('date')"></div>
     </div>
+
+    <div id="up-next-rail" class="up-next-rail" style="display:none"></div>
 
     <div id="today-banner" style="display:none" class="today-banner">
       <i class="ti ti-calendar-event"></i>
@@ -4072,6 +4101,50 @@ function renderDueSoon() {
   el.innerHTML = html;
 }
 
+function renderUpNextRail() {
+  const el = document.getElementById('up-next-rail');
+  if (!el) return;
+  const nowMin = melbNowMinutes();
+  const tasks = getTodayTasks()
+    .filter(t => !isDone(t.id))
+    .sort((a, b) => {
+      const aMin = a.time ? timeToMin(a.time) : 9999, bMin = b.time ? timeToMin(b.time) : 9999;
+      return (aMin - bMin) || (PO[a.priority] - PO[b.priority]);
+    })
+    .slice(0, 4);
+  if (!tasks.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const hubIcon = { helpdesk: 'ti-headset', projects: 'ti-folders', personal: 'ti-user-heart' };
+  const hubLabel = { helpdesk: 'Helpdesk', projects: 'Projects', personal: 'Personal' };
+  el.innerHTML = tasks.map(t => {
+    let when = 'Due today', urgent = false;
+    if (t.time) {
+      const taskMin = timeToMin(t.time);
+      if (taskMin <= nowMin) { when = 'Overdue · ' + fmtTime(t.time); urgent = true; }
+      else { when = 'Due ' + fmtTime(t.time); urgent = (taskMin - nowMin) <= 60; }
+    }
+    const hub = t.hub || 'helpdesk';
+    return `<div class="next-card${urgent ? ' urgent' : ''}" onclick="switchTab('today')">
+      <div class="next-card-dot p-${(t.priority||'medium').toLowerCase()}"></div>
+      <div class="next-card-when">${esc(when)}</div>
+      <div class="next-card-name">${esc(t.name)}</div>
+      <div class="next-card-hub"><i class="ti ${hubIcon[hub]}"></i> ${hubLabel[hub]}</div>
+    </div>`;
+  }).join('');
+}
+
+(function initHeroTilt() {
+  const hero = document.getElementById('task-hero');
+  if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  hero.addEventListener('mousemove', e => {
+    const r = hero.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width - 0.5) * 4;
+    const y = ((e.clientY - r.top) / r.height - 0.5) * -4;
+    hero.style.transform = `perspective(1000px) rotateY(${x}deg) rotateX(${y}deg)`;
+  });
+  hero.addEventListener('mouseleave', () => { hero.style.transform = ''; });
+})();
+
 function moveTask(id, dir) {
   const all = getAllTasks();
   const task = all.find(t => String(t.id) === String(id));
@@ -4530,6 +4603,7 @@ function animateGhostRing(el, pctEl, targetPct) {
 function renderTasks() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
   renderDueSoon();
+  renderUpNextRail();
   const todayTasks = getTodayTasks();
   const todayTotal = todayTasks.length;
   const todayDone = todayTasks.filter(t => isDone(t.id)).length;
