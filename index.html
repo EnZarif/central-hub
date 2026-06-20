@@ -7898,6 +7898,38 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.32.0', type: 'major', date: '20 Jun 2026', title: 'Sign-in required — your data is now private', changes: [
+    'Added a login screen (email + password via Supabase Auth) in front of the whole app — your tasks, notes and everything else are no longer fetched at all until you sign in',
+    'New Settings → Account section shows who you\'re signed in as, with a Sign out button',
+    'Added a "Forgot password?" link on the sign-in screen',
+    'Requires a one-time Supabase setup (creating your account + tightening database access rules) to actually take effect',
+  ]},
+  { ver: '3.31.2', type: 'patch', date: '20 Jun 2026', title: 'Day Mode shown on the Home page', changes: [
+    'A compact "Working day" / "Day off" pill now sits next to the date on the landing page, matching the Task Manager\'s colours and icons',
+    'Fixed the Personal hub card still describing the removed Weekly Review and End of Day pages',
+  ]},
+  { ver: '3.31.1', type: 'minor', date: '20 Jun 2026', title: 'Scratch Pad split into two separate notes', changes: [
+    'The Widgets "Scratch Pad" (misc, general-purpose notes) and the Personal hub\'s notes are now fully separate — different storage, different ids, nothing shared between them',
+    'Renamed the Personal hub page to "Personal Notes" to avoid confusion with the Scratch Pad widget',
+    'Converting a Personal Notes entry to a task always categorises it as Personal and still uses AI to pull out a date/time if you mentioned one',
+  ]},
+  { ver: '3.31.0', type: 'major', date: '20 Jun 2026', title: 'Day Mode: working day vs day off, auto-detected from VIC public holidays', changes: [
+    'Task Manager now knows whether today is a working day or a day off, based on the day of the week plus a computed Victoria (Australia) public holiday calendar (Easter, Labour Day, King\'s Birthday, Melbourne Cup, Christmas/Boxing Day weekend shifts, etc.)',
+    'On a day off, only Personal tasks show by default — a "Show upcoming work week" toggle brings Helpdesk/Projects tasks back into view without losing the default',
+    'Working days are unchanged — same layout and behaviour as before',
+    'New Settings → Day mode section: shows today\'s detected status + reason, a manual override (resets automatically the next day), and a place to add extra non-working dates (RDOs, Grand Final Friday, etc.)',
+    'Removed the Weekly Review and End of Day pages from the Personal hub',
+    'Added a Personal Scratchpad-style notes page to the Personal hub (later split into "Personal Notes", see 3.31.1)',
+  ]},
+  { ver: '3.30.1', type: 'patch', date: '20 Jun 2026', title: 'Mobile fixes + instant home particles', changes: [
+    'Fixed the "X tasks due in the next 7 days" banner wrapping into a vertical column of single words on narrow phone screens — it now truncates on one line with the detail wrapping below',
+    'Fixed the Task Manager overflowing horizontally on tablet-width screens (760-900px) once the layout collapsed to a single column',
+    'Home page particles now appear instantly on load already mid-rise, instead of waiting several seconds for them to climb up from the bottom',
+  ]},
+  { ver: '3.30.0', type: 'minor', date: '20 Jun 2026', title: 'Amber "Needs Attention", Add Task moved into a modal', changes: [
+    'The "Needs Attention" alert box is now always amber/orange regardless of the active theme, so overdue and upcoming tasks keep standing out',
+    '"Add your own task" moved out of the main column into a button + popup modal in the sidebar',
+  ]},
   { ver: '3.29.9', type: 'minor', date: '20 Jun 2026', title: 'Ghost ring is now a real donut with a % label', changes: [
     'The hero card ring now shows a faint track for the remaining percentage, not just the filled arc, so it reads as an actual progress ring',
     'Added a live percentage number centered in the ring',
