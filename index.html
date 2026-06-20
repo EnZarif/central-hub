@@ -6511,6 +6511,143 @@ function renderNslaPage() {
   if (statusEl) statusEl.textContent = tpl ? `Loaded: ${tpl.name}` : 'No template loaded';
 }
 
+// Columns A-E in "CMS Data" are Excel Table calculated columns (formulas using
+// [#This Row] structured references). When a person pastes data into the table
+// through Excel's UI, Excel automatically copies these formulas down into every
+// new row — that's a UI side-effect, not something stored once in the file. Since
+// we're writing the file directly rather than driving Excel's UI, we have to do
+// that same "copy the formula down" step ourselves: clone the EXACT, unmodified
+// formula text from row 2 into each new row. The formula logic itself is never
+// changed — only its row number changes, exactly as Excel's own paste would do.
+const NSLA_FORMULA_COLS = [1, 2, 3, 4, 5]; // A-E
+
+function nslaFillCmsData(sheetXmlStr, tableXmlStr, dataRows) {
+  const parser = new DOMParser();
+  const sheetDoc = parser.parseFromString(sheetXmlStr, 'application/xml');
+  const tableDoc = parser.parseFromString(tableXmlStr, 'application/xml');
+  const sheetData = sheetDoc.getElementsByTagName('sheetData')[0];
+
+  const tableEl = tableDoc.documentElement;
+  const tref = tableEl.getAttribute('ref');
+  const tm = tref.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+  const maxRow = parseInt(tm[4], 10);
+
+  const numDataRows = dataRows.length;
+  const neededMaxRow = 1 + numDataRows;
+
+  const rowEls = {};
+  Array.from(sheetData.getElementsByTagName('row')).forEach(r => {
+    rowEls[parseInt(r.getAttribute('r'), 10)] = r;
+  });
+
+  // Capture row 2's existing formula cells (A-E) verbatim, to clone into every row
+  const formulaTemplates = {};
+  const row2 = rowEls[2];
+  if (row2) {
+    NSLA_FORMULA_COLS.forEach(colNum => {
+      const ref = colLetter(colNum) + '2';
+      const cell = Array.from(row2.getElementsByTagName('c')).find(c => c.getAttribute('r') === ref);
+      if (cell) formulaTemplates[colNum] = cell;
+    });
+  }
+
+  function writeFormulaCell(rowEl, rowNum, colNum) {
+    const template = formulaTemplates[colNum];
+    if (!template) return;
+    const ref = colLetter(colNum) + rowNum;
+    const existing = Array.from(rowEl.getElementsByTagName('c')).find(c => c.getAttribute('r') === ref);
+    if (existing) rowEl.removeChild(existing);
+    const newC = template.cloneNode(true);
+    newC.setAttribute('r', ref);
+    const f = newC.getElementsByTagName('f')[0];
+    if (f && f.hasAttribute('ref')) f.setAttribute('ref', ref); // single-cell array formula ref (column B)
+    const v = newC.getElementsByTagName('v')[0];
+    if (v) v.textContent = ''; // drop the stale cached result, fullCalcOnLoad recomputes on open
+    insertCellSorted(rowEl, newC, colNum);
+  }
+
+  for (let i = 0; i < numDataRows; i++) {
+    const rowNum = i + 2;
+    let rowEl = rowEls[rowNum];
+    if (!rowEl) {
+      rowEl = sheetDoc.createElementNS(SSML_NS, 'row');
+      rowEl.setAttribute('r', String(rowNum));
+      insertRowSorted(sheetDoc, sheetData, rowEl, rowNum);
+      rowEls[rowNum] = rowEl;
+    }
+
+    NSLA_FORMULA_COLS.forEach(colNum => writeFormulaCell(rowEl, rowNum, colNum));
+
+    const rowVals = dataRows[i];
+    for (let j = 0; j < rowVals.length; j++) {
+      const colNum = NSLA_COL_START + j;
+      const ref = colLetter(colNum) + rowNum;
+      const existing = Array.from(rowEl.getElementsByTagName('c')).find(c => c.getAttribute('r') === ref);
+      const existingStyle = existing ? existing.getAttribute('s') : null;
+      if (existing) rowEl.removeChild(existing);
+
+      const val = rowVals[j];
+      if (val === null || val === undefined || val === '') {
+        if (existingStyle) {
+          const newC = sheetDoc.createElementNS(SSML_NS, 'c');
+          newC.setAttribute('r', ref);
+          newC.setAttribute('s', existingStyle);
+          insertCellSorted(rowEl, newC, colNum);
+        }
+        continue;
+      }
+
+      const newC = sheetDoc.createElementNS(SSML_NS, 'c');
+      newC.setAttribute('r', ref);
+      if (val instanceof Date) {
+        newC.setAttribute('s', existingStyle || '5');
+        const v = sheetDoc.createElementNS(SSML_NS, 'v');
+        v.textContent = String(toExcelSerial(val));
+        newC.appendChild(v);
+      } else if (typeof val === 'number') {
+        if (existingStyle) newC.setAttribute('s', existingStyle);
+        const v = sheetDoc.createElementNS(SSML_NS, 'v');
+        v.textContent = String(val);
+        newC.appendChild(v);
+      } else {
+        if (existingStyle) newC.setAttribute('s', existingStyle);
+        newC.setAttribute('t', 'inlineStr');
+        const is = sheetDoc.createElementNS(SSML_NS, 'is');
+        const t = sheetDoc.createElementNS(SSML_NS, 't');
+        t.textContent = String(val);
+        is.appendChild(t);
+        newC.appendChild(is);
+      }
+      insertCellSorted(rowEl, newC, colNum);
+    }
+  }
+
+  if (neededMaxRow > maxRow) {
+    tableEl.setAttribute('ref', `${tm[1]}${tm[2]}:${tm[3]}${neededMaxRow}`);
+    const af = tableEl.getElementsByTagName('autoFilter')[0];
+    if (af) {
+      const afRef = af.getAttribute('ref');
+      const am = afRef.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+      if (am) af.setAttribute('ref', `${am[1]}${am[2]}:${am[3]}${neededMaxRow}`);
+    }
+  }
+
+  const dim = sheetDoc.getElementsByTagName('dimension')[0];
+  if (dim) {
+    const dm = dim.getAttribute('ref').match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+    if (dm) {
+      const newLastRow = Math.max(parseInt(dm[4], 10), neededMaxRow);
+      dim.setAttribute('ref', `${dm[1]}${dm[2]}:${dm[3]}${newLastRow}`);
+    }
+  }
+
+  const serializer = new XMLSerializer();
+  return {
+    sheetXml: serializer.serializeToString(sheetDoc),
+    tableXml: serializer.serializeToString(tableDoc)
+  };
+}
+
 async function nslaGenerateReport() {
   const statusEl = document.getElementById('nsla-generate-status');
   const tpl = nslaGetTemplate();
@@ -6544,7 +6681,7 @@ async function nslaGenerateReport() {
 
     const sheetXml = decoder.decode(zipData[NSLA_SHEET_FILE]);
     const tableXml = decoder.decode(zipData[NSLA_TABLE_FILE]);
-    const result = fillSheetTable(sheetXml, tableXml, NSLA_COL_START, allRows);
+    const result = nslaFillCmsData(sheetXml, tableXml, allRows);
     zipData[NSLA_SHEET_FILE] = encoder.encode(result.sheetXml);
     zipData[NSLA_TABLE_FILE] = encoder.encode(result.tableXml);
 
@@ -8051,6 +8188,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.1.1', type: 'patch', date: '20 Jun 2026', title: 'NSLA Report: fixed missing formulas on pasted rows', changes: [
+    'Columns A-E in the CMS Data tab are calculated formulas that Excel normally copies down automatically when you paste into the table through its UI — since the report is generated directly, that copy-down step wasn\'t happening, leaving every row past the template\'s original sample rows blank in those columns',
+    'Fixed by copying the exact, unmodified formula from row 2 into every new row (only the row number changes) — same outcome as Excel\'s own paste behavior, the formula logic itself is never touched',
+  ]},
   { ver: '4.1.0', type: 'minor', date: '20 Jun 2026', title: 'New tool: NSLA Report', changes: [
     'Added NSLA Report to the Helpdesk hub, working like KPI Report — upload the NSLA template once, then the two CMS data exports, and download the populated report',
     'The "OPEN reporting" export is always pasted second into the CMS Data tab, regardless of which order you pick the two files in — the tool detects it by filename and reorders automatically',
