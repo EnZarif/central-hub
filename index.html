@@ -122,6 +122,7 @@
   }
   :root[data-theme="copper"] body { font-family: 'Space Grotesk', -apple-system, sans-serif; }
   :root[data-theme="copper"] .hub-head h1,
+  :root[data-theme="copper"] .hub-hero h1,
   :root[data-theme="copper"] .app-card-title { font-family: 'Fraunces', serif; font-weight: 800; }
 
   /* ── THEME PICKER (settings) ── */
@@ -139,20 +140,20 @@
 
   /* TOP NAV */
   .nav { width: 100%; background: var(--surface); border-bottom: 0.5px solid var(--border); position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: row; align-items: center; padding: 9px 18px; z-index: 10; overflow: visible; gap: 18px; }
-  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: var(--text); padding: 0 4px; flex-shrink: 0; }
-  .nav-logo-icon { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; perspective: 120px; }
+  .nav-logo { display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 600; color: var(--text); padding: 0 4px; flex-shrink: 0; }
+  .nav-logo-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; perspective: 170px; }
   .nav-logo-btn { background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
   .nav-logo-btn:hover { opacity: 0.8; }
-  .nav-wordmark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px; color: var(--text); }
+  .nav-wordmark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 30px; color: var(--text); }
   .nav-wordmark-dot { color: #e87f3e; }
-  .nav-cube { width: 16px; height: 16px; position: relative; transform-style: preserve-3d; animation: navCubeSpin 6s linear infinite; }
-  .nav-cube-face { position: absolute; width: 16px; height: 16px; box-sizing: border-box; border: 2.5px solid #3c2415; background: #f0d9a8; animation: navCubeFill 3s ease-in-out infinite; }
-  .nav-cube-front { transform: translateZ(8px); }
-  .nav-cube-back { transform: rotateY(180deg) translateZ(8px); animation-delay: 0.5s; }
-  .nav-cube-right { transform: rotateY(90deg) translateZ(8px); animation-delay: 0.25s; }
-  .nav-cube-left { transform: rotateY(-90deg) translateZ(8px); animation-delay: 0.75s; }
-  .nav-cube-top { transform: rotateX(90deg) translateZ(8px); animation-delay: 0.1s; }
-  .nav-cube-bottom { transform: rotateX(-90deg) translateZ(8px); animation-delay: 0.6s; }
+  .nav-cube { width: 28px; height: 28px; position: relative; transform-style: preserve-3d; animation: navCubeSpin 6s linear infinite; }
+  .nav-cube-face { position: absolute; width: 28px; height: 28px; box-sizing: border-box; border: 3px solid #3c2415; background: #f0d9a8; animation: navCubeFill 3s ease-in-out infinite; }
+  .nav-cube-front { transform: translateZ(14px); }
+  .nav-cube-back { transform: rotateY(180deg) translateZ(14px); animation-delay: 0.5s; }
+  .nav-cube-right { transform: rotateY(90deg) translateZ(14px); animation-delay: 0.25s; }
+  .nav-cube-left { transform: rotateY(-90deg) translateZ(14px); animation-delay: 0.75s; }
+  .nav-cube-top { transform: rotateX(90deg) translateZ(14px); animation-delay: 0.1s; }
+  .nav-cube-bottom { transform: rotateX(-90deg) translateZ(14px); animation-delay: 0.6s; }
   @keyframes navCubeSpin { from { transform: rotateX(-18deg) rotateY(0deg); } to { transform: rotateX(-18deg) rotateY(360deg); } }
   @keyframes navCubeFill { 0%, 60% { background: #f0d9a8; } 85%, 100% { background: #e87f3e; } }
   @media (prefers-reduced-motion: reduce) { .nav-cube { animation: none; } .nav-cube-face { animation: none; background: #f0d9a8; } }
@@ -219,6 +220,7 @@
     .mobile-topbar-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--text); min-width: 0; }
     .mobile-topbar-logo span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mobile-topbar-logo .nav-logo-icon { width: 28px; height: 28px; }
+    .mobile-topbar-logo .nav-wordmark { font-size: 16px; }
 
     /* Drawer: nav reverts to a vertical sidebar layout while it's an overlay */
     .nav { width: 270px; max-width: 84vw; height: 100vh; top: 0; bottom: 0; right: auto; z-index: 70; transform: translateX(-100%);
@@ -320,6 +322,11 @@
   .hub-back i { font-size: 14px; }
   .hub-head h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
   .hub-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+  /* Same card treatment as .task-hero, for hub landing pages (Helpdesk/Projects/Personal) */
+  .hub-hero { background: var(--hero-bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; position: relative; z-index: 1; }
+  .hub-hero h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
+  .hub-hero p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+  body.compact-mode .hub-hero { padding: 14px; }
   #home-greeting { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
   .home-greeting-name { color: #e87f3e; font-size: 48px; font-weight: 800; font-style: italic; letter-spacing: -1px; }
   #home-date { font-size: 14px; color: color-mix(in srgb, var(--amber-text) 55%, var(--text-2)); margin-top: 6px; }
@@ -1681,7 +1688,7 @@
 
   <!-- HELPDESK HUB -->
   <div class="page" id="page-helpdesk">
-    <div class="hub-head">
+    <div class="hub-hero">
       <h1><i class="ti ti-headset" style="color:var(--coral-text);"></i> Helpdesk Management</h1>
       <p>Everything for running the helpdesk day to day.</p>
     </div>
@@ -1734,7 +1741,7 @@
 
   <!-- PERSONAL HUB -->
   <div class="page" id="page-personal">
-    <div class="hub-head">
+    <div class="hub-hero">
       <h1><i class="ti ti-user-heart" style="color:var(--pink-text);"></i> Personal</h1>
       <p>Your own personal space.</p>
     </div>
