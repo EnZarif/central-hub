@@ -14,11 +14,14 @@ const PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
 const POLL_MS = 3000;
 const IDLE_AFTER_MS = 90 * 1000;
 const STALE_AFTER_MS = 15 * 60 * 1000;
+// A tool_use with no matching tool_result yet after this long almost always
+// means it's sitting on a permission prompt rather than just executing.
+const PERMISSION_WAIT_MS = 8 * 1000;
 
 const READ_TOOLS = new Set(['Read', 'Glob', 'Grep']);
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit']);
 
-// sessionId -> { offset, status, lastTool, lastChangeTs, projectPath }
+// sessionId -> { offset, status, lastTool, lastChangeTs, projectPath, pendingToolUse }
 const sessions = new Map();
 
 function findJsonlFiles() {
@@ -50,14 +53,23 @@ function statusFromEntry(entry) {
     const toolUse = entry.message.content.find((c) => c.type === 'tool_use');
     if (toolUse) {
       const name = toolUse.name;
-      if (READ_TOOLS.has(name)) return { status: 'reading', tool: name };
-      if (WRITE_TOOLS.has(name)) return { status: 'typing', tool: name };
-      if (name === 'Bash') return { status: 'running', tool: name };
-      if (name === 'Task') return { status: 'delegating', tool: name };
-      return { status: 'running', tool: name };
+      const ts = entry.timestamp ? Date.parse(entry.timestamp) : Date.now();
+      if (READ_TOOLS.has(name)) return { status: 'reading', tool: name, toolUseId: toolUse.id, ts };
+      if (WRITE_TOOLS.has(name)) return { status: 'typing', tool: name, toolUseId: toolUse.id, ts };
+      if (name === 'Bash') return { status: 'running', tool: name, toolUseId: toolUse.id, ts };
+      if (name === 'Task') return { status: 'delegating', tool: name, toolUseId: toolUse.id, ts };
+      return { status: 'running', tool: name, toolUseId: toolUse.id, ts };
     }
     const hasText = entry.message.content.some((c) => c.type === 'text');
     if (hasText) return { status: 'waiting', tool: null };
+  }
+  return null;
+}
+
+function toolResultIdFromEntry(entry) {
+  if (entry.type === 'user' && Array.isArray(entry.message?.content)) {
+    const result = entry.message.content.find((c) => c.type === 'tool_result');
+    if (result) return result.tool_use_id;
   }
   return null;
 }
@@ -90,6 +102,7 @@ function processFile(filePath, sessionId) {
   let projectPath = prev?.projectPath;
   let status = prev?.status ?? 'idle';
   let lastTool = prev?.lastTool ?? null;
+  let pendingToolUse = prev?.pendingToolUse ?? null;
   let lastChangeTs = now;
 
   for (const line of lines) {
@@ -100,14 +113,24 @@ function processFile(filePath, sessionId) {
       continue;
     }
     if (entry.cwd) projectPath = entry.cwd;
-    if (entry.type === 'user' && entry.message?.role === 'user') {
+
+    const resolvedId = toolResultIdFromEntry(entry);
+    if (resolvedId && pendingToolUse?.id === resolvedId) {
+      pendingToolUse = null;
+      if (status === 'permission') status = 'thinking';
+    }
+
+    if (entry.type === 'user' && entry.message?.role === 'user' && !resolvedId) {
       status = 'thinking';
       lastTool = null;
+      pendingToolUse = null;
     }
+
     const inferred = statusFromEntry(entry);
     if (inferred) {
       status = inferred.status;
       lastTool = inferred.tool;
+      if (inferred.toolUseId) pendingToolUse = { id: inferred.toolUseId, name: inferred.tool, ts: inferred.ts };
     }
   }
 
@@ -117,6 +140,7 @@ function processFile(filePath, sessionId) {
     lastTool,
     lastChangeTs,
     projectPath,
+    pendingToolUse,
   });
 }
 
@@ -128,6 +152,17 @@ function maybeMarkIdle(sessionId, now) {
   }
 }
 
+function maybeMarkAwaitingPermission(sessionId, now) {
+  const s = sessions.get(sessionId);
+  if (!s?.pendingToolUse) return false;
+  if (now - s.pendingToolUse.ts > PERMISSION_WAIT_MS) {
+    s.status = 'permission';
+    s.lastTool = s.pendingToolUse.name;
+    return true;
+  }
+  return false;
+}
+
 async function syncToSupabase() {
   const now = Date.now();
   for (const [sessionId, s] of sessions) {
@@ -136,7 +171,7 @@ async function syncToSupabase() {
       await sb.from('pixel_agents').delete().eq('session_id', sessionId);
       continue;
     }
-    maybeMarkIdle(sessionId, now);
+    if (!maybeMarkAwaitingPermission(sessionId, now)) maybeMarkIdle(sessionId, now);
     const { error } = await sb.from('pixel_agents').upsert({
       session_id: sessionId,
       project_path: s.projectPath ?? null,
