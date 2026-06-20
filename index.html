@@ -314,6 +314,7 @@
 
   /* HUB / LANDING */
   #page-home { position: relative; padding: 4px 0 0; margin-top: -2rem; }
+  :root[data-theme="copper"] #page-home { background: #0a0705; }
   .hub-head { margin-bottom: 1.6rem; position: relative; z-index: 1; }
   .hub-back { font-size: 12px; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; padding: 0; margin-bottom: 10px; transition: color 0.15s; }
   .hub-back:hover { color: var(--text-2); }
@@ -331,7 +332,7 @@
   .app-card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
   .app-card-title { font-size: 15px; font-weight: 500; color: var(--text); }
   .app-card-desc { font-size: 12px; color: color-mix(in srgb, var(--amber-text) 45%, var(--text-3)); line-height: 1.55; }
-  .app-card-meta { margin-top: auto; font-size: 11px; color: var(--amber-text); display: flex; align-items: center; gap: 5px; }
+  .app-card-meta { margin-top: auto; font-size: 11px; font-weight: 700; color: var(--amber-text); display: flex; align-items: center; gap: 5px; }
   .app-card-meta i { font-size: 13px; }
   .hub-grid .app-card:nth-child(1){animation-delay:.03s}
   .hub-grid .app-card:nth-child(2){animation-delay:.08s}
@@ -360,10 +361,7 @@
   :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-desc,
   :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-meta { color: #1c0f06; }
   :root[data-theme="copper"] .hub-grid .app-card:nth-child(1) .app-card-icon { background: rgba(28,15,6,0.18); color: #1c0f06; }
-  :root[data-theme="copper"] .hub-grid .app-card:nth-child(1)::after {
-    content: '01'; position: absolute; bottom: 2px; right: 12px; font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 84px; color: #1c0f06; opacity: 0.16; line-height: 1; pointer-events: none;
-  }
+  .home-hero-ghost-ring { position: absolute; bottom: -16px; right: -16px; width: 130px; height: 130px; border-radius: 50%; pointer-events: none; opacity: 0.18; background: conic-gradient(#1c0f06 0%, transparent 0); -webkit-mask: radial-gradient(circle, transparent 68%, black 70%); mask: radial-gradient(circle, transparent 68%, black 70%); }
   :root[data-theme="copper"] .hub-grid .app-card:nth-child(4) { grid-column: span 2; }
 
   /* DASHBOARD */
@@ -1528,6 +1526,7 @@
     </div>
     <div class="hub-grid">
       <div class="app-card" id="home-card-tasks" onclick="showPage('tasks')">
+        <div class="home-hero-ghost-ring" id="home-hero-ghost-ring"></div>
         <div class="app-card-icon c-teal"><i class="ti ti-checklist"></i></div>
         <div class="app-card-title">Task Manager</div>
         <div class="app-card-desc">Your daily task dashboard with streaks and progress.</div>
@@ -3972,15 +3971,12 @@ function showPage(p, hub) {
   const backLbl = document.getElementById('page-back-label');
   const HUB_BACK_COLOR = { home:'pb-home', helpdesk:'pb-helpdesk', projects:'pb-projects', personal:'pb-personal', tasks:'pb-tasks' };
   const topbar = document.querySelector('.page-topbar');
-  if (topbar) topbar.classList.toggle('topbar-empty', p === 'home');
+  const backHidden = p === 'home' || p === 'projdetail' || TOP_LEVEL.includes(p);
+  if (topbar) topbar.classList.toggle('topbar-empty', backHidden);
   if (back) {
     back.classList.remove('pb-home','pb-helpdesk','pb-projects','pb-personal','pb-tasks');
-    if (p === 'home' || p === 'projdetail') {
+    if (backHidden) {
       back.style.display = 'none';
-    } else if (TOP_LEVEL.includes(p)) {
-      back.style.display = 'inline-flex';
-      backLbl.textContent = 'Home';
-      back.classList.add('pb-home');
     } else {
       back.style.display = 'inline-flex';
       backLbl.textContent = currentHub && HUB_META[currentHub] ? 'Back to ' + HUB_META[currentHub].title : 'Back';
@@ -4270,6 +4266,26 @@ function renderHomeDashboard() {
     const undone = getTodayTasks().filter(t => !isDone(t.id));
     dateEl.textContent = `${dStr} — ${undone.length} due today`;
   }
+  const todayTasks = getTodayTasks();
+  const donePct = todayTasks.length ? Math.round(todayTasks.filter(t => isDone(t.id)).length / todayTasks.length * 100) : 0;
+  animateGhostRing(document.getElementById('home-hero-ghost-ring'), donePct);
+}
+
+function animateGhostRing(el, targetPct) {
+  if (!el) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.style.background = `conic-gradient(#1c0f06 ${targetPct}%, transparent 0)`;
+    return;
+  }
+  const start = performance.now();
+  const duration = 900;
+  function step(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.style.background = `conic-gradient(#1c0f06 ${eased * targetPct}%, transparent 0)`;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 function renderTasks() {
@@ -7505,6 +7521,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '3.29.7', type: 'minor', date: '20 Jun 2026', title: 'Darker home background, live ghost ring, leaner back buttons', changes: [
+    'Home background is darker (between the two darker options shown) so the particles stand out more',
+    'Replaced the decorative "01" on the Task Manager hero card with a faint ring that animates up to today\'s real completion percentage',
+    'The "Open" label on every quick-launch card is now bold',
+    'Removed the "Back to Home" button from primary pages (Tasks, Helpdesk, Projects, Personal, Widgets, Settings) — click the central. logo instead. Back buttons on nested sub-pages are unchanged',
+  ]},
   { ver: '3.29.6', type: 'patch', date: '20 Jun 2026', title: 'Greeting goes back to bold Fraunces', changes: [
     'Reverted the last change — the greeting is back in the bold Fraunces serif, just like before',
     'Added a trailing period after your name, matching the approved reference image',
