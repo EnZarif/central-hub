@@ -3043,26 +3043,30 @@ function pixoffDraw() {
   const agents = _pixoffAgents.slice(0, 6);
   const slotW = 64;
   const startX = (W - slotW * agents.length) / 2;
-  const deskY = 96;
 
   agents.forEach((r, i) => {
     const x = startX + i * slotW + slotW / 2;
     const desk = _pixoffImgs.desk, pc = _pixoffImgs.pc, chair = _pixoffImgs.chair;
     const charImg = _pixoffImgs.char_5;
 
-    ctx.drawImage(chair, x - 8, deskY - 8, 16, 16);
-    ctx.drawImage(desk, x - 24, deskY, 48, 32);
-    ctx.drawImage(pc, x - 8, deskY - 16, 16, 32);
-    // First 16x16 frame of the sprite sheet as a static seated pose
-    ctx.drawImage(charImg, 0, 0, 16, 16, x - 16, deskY - 16, 32, 32);
+    const deskW = 60, deskH = 40, deskTop = 56;
+    const pcW = 20, pcH = 40, pcBottom = deskTop + deskH - 4;
+    const chairW = 20, chairH = 20, chairTop = deskTop + deskH - 6;
+    const charW = 28, charH = 56, charTop = deskTop + deskH + 10;
+
+    ctx.drawImage(chair, x - chairW / 2, chairTop, chairW, chairH);
+    ctx.drawImage(desk, x - deskW / 2, deskTop, deskW, deskH);
+    ctx.drawImage(pc, x - pcW / 2, pcBottom - pcH, pcW, pcH);
+    // Each character frame is a full 16x32 body (head+torso+legs), not 16x16
+    ctx.drawImage(charImg, 0, 0, 16, 32, x - charW / 2, charTop, charW, charH);
 
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(PIXOFF_STATUS_ICON[r.status] || '•', x, deskY - 22);
+    ctx.fillText(PIXOFF_STATUS_ICON[r.status] || '•', x, charTop - 8);
 
     ctx.font = '9px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.fillText(pixoffAgentLabel(r).slice(0, 14), x, deskY + 44);
+    ctx.fillText(pixoffAgentLabel(r).slice(0, 14), x, charTop + charH + 10);
   });
 }
 
