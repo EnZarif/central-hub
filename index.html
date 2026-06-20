@@ -190,6 +190,26 @@
   body.compact-mode .task { padding: 7px 10px; }
   body.compact-mode .task-hero { padding: 14px; }
 
+  /* AUTH GATE */
+  #auth-gate { position: fixed; inset: 0; z-index: 10000; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 20px; }
+  #auth-gate.active { display: flex; }
+  .auth-gate-card { width: 100%; max-width: 360px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 32px 28px; text-align: center; box-shadow: 0 30px 60px -35px rgba(0,0,0,0.6); }
+  .auth-gate-logo { display: flex; align-items: center; justify-content: center; gap: 9px; margin-bottom: 20px; }
+  .auth-gate-logo .nav-logo-icon { width: 32px; height: 32px; }
+  .auth-gate-logo .nav-wordmark { font-size: 19px; font-weight: 600; color: var(--text); }
+  .auth-gate-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .auth-gate-sub { font-size: 12.5px; color: var(--text-3); margin-bottom: 22px; }
+  .auth-gate-form { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .auth-gate-form input { width: 100%; box-sizing: border-box; background: var(--surface2); border: 1.5px solid var(--border-md); border-radius: var(--radius); padding: 10px 13px; font-size: 14px; color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .auth-gate-form input:focus { border-color: var(--teal); }
+  .auth-gate-btn { margin-top: 4px; padding: 10px; border-radius: var(--radius); border: none; background: var(--teal); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .auth-gate-btn:hover { opacity: 0.88; }
+  .auth-gate-btn:disabled { opacity: 0.6; cursor: default; }
+  .auth-gate-error { font-size: 12px; color: var(--coral-text); margin-top: 12px; display: none; }
+  .auth-gate-error.show { display: block; }
+  .auth-gate-forgot { font-size: 12px; color: var(--text-3); margin-top: 16px; display: inline-block; text-decoration: underline; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
+  .auth-gate-forgot:hover { color: var(--text-2); }
+
   /* DB LOADING OVERLAY */
   #app-loading { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
   #app-loading .load-spinner { width: 36px; height: 36px; border: 3px solid var(--border-md); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.7s linear infinite; }
@@ -1484,6 +1504,24 @@
 </style>
 </head>
 <body>
+<div id="auth-gate">
+  <div class="auth-gate-card">
+    <div class="auth-gate-logo">
+      <div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div>
+      <span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span>
+    </div>
+    <div class="auth-gate-title">Sign in</div>
+    <div class="auth-gate-sub">This is Zarif's private dashboard.</div>
+    <form class="auth-gate-form" onsubmit="handleSignIn(event)">
+      <input type="email" id="auth-email" placeholder="Email" autocomplete="username" required>
+      <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit" class="auth-gate-btn" id="auth-signin-btn">Sign in</button>
+    </form>
+    <div class="auth-gate-error" id="auth-error"></div>
+    <button type="button" class="auth-gate-forgot" onclick="handleForgotPassword()">Forgot password?</button>
+  </div>
+</div>
+
 <div id="app-loading">
   <div class="globe-loader-wrap">
     <svg id="globe-whirl" viewBox="0 0 96 96">
@@ -2450,6 +2488,25 @@
             <input type="text" class="settings-input" id="settings-display-name" placeholder="Zarif">
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-account')">
+        <i class="ti ti-lock"></i> Account
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-account">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Signed in as</div>
+            <div class="settings-row-desc" id="account-email">—</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <button class="danger-btn" onclick="signOutApp()"><i class="ti ti-logout"></i> Sign out</button>
+          </div>
+        </div>
+        <div class="ai-hint">This dashboard requires signing in — your data is only accessible to your account, even if someone finds the link.</div>
       </div>
     </div>
 
@@ -9366,7 +9423,7 @@ function initNotes() {
   renderNotesRecords();
 }
 
-(async () => {
+async function initApp() {
   try {
     await dbLoad();
   } catch(e) {
@@ -9445,6 +9502,66 @@ function initNotes() {
   setInterval(tickMelbClock, 1000);
   updateNotifPermStatus();
   initPixoff();
+  renderAccountSettings();
+}
+
+// ===== AUTH GATE =====
+function showAuthGate(show) {
+  const gate = document.getElementById('auth-gate');
+  if (gate) gate.classList.toggle('active', show);
+}
+
+async function handleSignIn(e) {
+  if (e) e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-signin-btn');
+  errEl.classList.remove('show');
+  errEl.style.color = '';
+  if (!email || !password) { errEl.textContent = 'Enter your email and password.'; errEl.classList.add('show'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const { error } = await _sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Sign in';
+  if (error) { errEl.textContent = error.message; errEl.classList.add('show'); return; }
+  showAuthGate(false);
+  const loadEl = document.getElementById('app-loading');
+  if (loadEl) loadEl.style.display = 'flex';
+  initApp();
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  const errEl = document.getElementById('auth-error');
+  if (!email) { errEl.textContent = 'Enter your email above first.'; errEl.classList.add('show'); return; }
+  const { error } = await _sb.auth.resetPasswordForEmail(email);
+  errEl.classList.add('show');
+  errEl.style.color = error ? '' : 'var(--green-text)';
+  errEl.textContent = error ? error.message : 'Password reset email sent — check your inbox.';
+}
+
+async function signOutApp() {
+  if (!confirm('Sign out of this device?')) return;
+  await _sb.auth.signOut();
+  location.reload();
+}
+
+async function renderAccountSettings() {
+  const el = document.getElementById('account-email');
+  if (!el) return;
+  const { data } = await _sb.auth.getUser();
+  el.textContent = data?.user?.email || '—';
+}
+
+(async () => {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    initApp();
+  } else {
+    const loadEl = document.getElementById('app-loading');
+    if (loadEl) loadEl.style.display = 'none';
+    showAuthGate(true);
+  }
 })();
 
 
