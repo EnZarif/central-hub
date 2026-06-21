@@ -166,26 +166,25 @@
   .nav-btn[data-page="home"] i { background: color-mix(in srgb, var(--amber-text) 85%, transparent); color: var(--hero-bg); }
   .nav-btn[data-page="tasks"] i { background: color-mix(in srgb, var(--amber-text) 68%, transparent); color: var(--hero-bg); }
   .nav-btn[data-page="tasks"].active { background: color-mix(in srgb, var(--amber-text) 14%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="widgets"] i { background: color-mix(in srgb, var(--amber-text) 52%, transparent); color: var(--hero-bg); }
-  .nav-btn[data-page="widgets"].active { background: color-mix(in srgb, var(--amber-text) 14%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="widgets"]:hover i { box-shadow: 0 0 12px color-mix(in srgb, var(--amber-text) 55%, transparent); transform: scale(1.08); }
   .nav-btn[data-page="helpdesk"] i { background: color-mix(in srgb, var(--amber-text) 40%, transparent); color: var(--amber-text); }
   .nav-btn[data-page="projects"] i { background: color-mix(in srgb, var(--amber-text) 28%, transparent); color: var(--amber-text); }
   .nav-btn[data-page="personal"] i { background: color-mix(in srgb, var(--amber-text) 18%, transparent); color: var(--amber-text); }
-  /* settings keeps a neutral icon identity (it's a utility action, not a hub) */
-  .nav-btn[data-page="settings"] i { background: var(--surface2); color: var(--text-2); }
-  .nav-btn[data-page="settings"]:hover i { background: var(--border-md); color: var(--text); }
-  /* Widgets + Settings: white label instead of dull grey, turning into the accent colour (text + overlay) on press for tactile feedback */
+  /* Widgets + Settings share one accent identity (teal) end-to-end — icon, label and press overlay all move together instead of Widgets being amber-branded and Settings being flat grey */
   .nav-btn[data-page="widgets"], .nav-btn[data-page="settings"] { color: var(--text); }
+  .nav-btn[data-page="widgets"] i, .nav-btn[data-page="settings"] i { background: color-mix(in srgb, var(--teal) 22%, transparent); color: var(--teal-text); }
+  .nav-btn[data-page="widgets"]:hover i, .nav-btn[data-page="settings"]:hover i { background: color-mix(in srgb, var(--teal) 38%, transparent); color: var(--teal-text); transform: scale(1.08); box-shadow: 0 0 12px color-mix(in srgb, var(--teal) 45%, transparent); }
+  /* page currently open: icon fills solid so it's obvious at a glance which one you're on */
+  .nav-btn[data-page="widgets"].active i, .nav-btn[data-page="settings"].active i { background: var(--teal); color: #fff; box-shadow: 0 0 10px color-mix(in srgb, var(--teal) 55%, transparent); }
+  .nav-btn[data-page="widgets"].active, .nav-btn[data-page="settings"].active { background: color-mix(in srgb, var(--teal) 14%, transparent); box-shadow: inset 3px 0 0 var(--teal); }
+  /* pressed: icon flips to a solid filled accent for an instant, on top of the label/overlay press effect */
   .nav-btn[data-page="widgets"]:active, .nav-btn[data-page="settings"]:active { color: var(--teal); background: var(--teal-bg); }
-  .nav-btn[data-page="widgets"]:active i, .nav-btn[data-page="settings"]:active i { box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 50%, transparent) inset; }
+  .nav-btn[data-page="widgets"]:active i, .nav-btn[data-page="settings"]:active i { background: var(--teal); color: #fff; box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 60%, transparent) inset; }
   /* active: tinted pill + left accent bar (gold, uniform) */
   .nav-btn.active { color: var(--text); font-weight: 500; }
   .nav-btn[data-page="home"].active { background: color-mix(in srgb, var(--amber-text) 14%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
   .nav-btn[data-page="helpdesk"].active { background: color-mix(in srgb, var(--amber-text) 14%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
   .nav-btn[data-page="projects"].active { background: color-mix(in srgb, var(--amber-text) 14%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
   .nav-btn[data-page="personal"].active { background: color-mix(in srgb, var(--amber-text) 14%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="settings"].active { background: var(--surface2); box-shadow: inset 3px 0 0 var(--text-3); }
   .nav-bottom { margin-left: auto; padding-top: 0; border-top: none; display: flex; flex-direction: row; align-items: center; gap: 8px; flex-shrink: 0; }
   .nav-clock { flex-shrink: 0; padding: 8px 11px; gap: 8px; }
   .nav-clock .clock-card-time-val { font-size: 18px; }
@@ -8376,6 +8375,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.6.3', type: 'patch', date: '21 Jun 2026', title: 'Widgets and Settings now share one accent identity', changes: [
+    'Settings\' icon was plain grey while Widgets\' was amber-tinted — both now use the same teal accent, so they read as one consistent pair instead of two different styles',
+    'The icon itself now changes state: a soft teal tint normally, brighter + lifted on hover, fully solid teal with a glow while that page is open, and solid teal again for an instant on press',
+  ]},
   { ver: '4.6.2', type: 'patch', date: '21 Jun 2026', title: 'Widgets/Settings: white label, accent-blue press, no more spinning gear', changes: [
     'Removed the spinning gear animation from Settings — kept everything about the Theme button exactly as is',
     'Widgets and Settings labels are now white instead of dull grey by default',
