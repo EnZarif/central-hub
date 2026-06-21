@@ -1860,32 +1860,7 @@
         <p>Grocery lists, errands, people to call — jot it down, then turn it into a personal task.</p>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-pencil" style="font-size:13px"></i> Personal Notes <span class="notes-saved-badge" id="pnotes-saved-badge" style="margin-left:auto;"><i class="ti ti-check"></i> Saved</span></div>
-      <div class="notes-card">
-        <textarea class="notes-textarea" id="pnotes-textarea" placeholder="Dump your thoughts here — grocery list, things to do, people to call…" oninput="pnotesOnInput()"></textarea>
-        <div class="notes-actions">
-          <button class="notes-ai-btn" id="pnotes-ai-btn" onclick="pnotesElaborate()"><i class="ti ti-sparkles"></i> Elaborate</button>
-          <button class="notes-save-btn" onclick="pnotesSaveRecord()"><i class="ti ti-device-floppy"></i> Save record</button>
-          <span class="notes-char-count" id="pnotes-char-count">0 chars</span>
-        </div>
-        <div class="notes-ai-result" id="pnotes-ai-result"></div>
-        <div class="notes-ai-result-actions" id="pnotes-ai-result-actions" style="display:none">
-          <button onclick="pnotesInsertResult()"><i class="ti ti-corner-down-left"></i> Insert</button>
-          <button onclick="pnotesCopyResult()"><i class="ti ti-copy"></i> Copy</button>
-          <button onclick="pnotesDismissResult()"><i class="ti ti-x"></i> Dismiss</button>
-        </div>
-        <hr class="notes-divider">
-        <div class="notes-records-head">
-          <span>Saved records</span>
-          <span style="display:flex;align-items:center;gap:8px;margin-left:auto;">
-            <span id="pnotes-record-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px;"></span>
-            <button id="pnotes-sort-btn" onclick="pnotesToggleSort()" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border-md);background:var(--surface);color:var(--text-3);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-arrow-down" id="pnotes-sort-icon"></i><span id="pnotes-sort-label">Newest</span></button>
-          </span>
-        </div>
-        <div class="notes-records-list" id="pnotes-records-list"></div>
-      </div>
-    </div>
+    <div id="pnotes-sections"></div>
   </div>
 
   <!-- TASKS PAGE -->
@@ -8353,6 +8328,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.3.0', type: 'minor', date: '21 Jun 2026', title: 'Personal Notes split into To-Do, Grocery and Misc sections', changes: [
+    'The single Personal Notes pile is now three separate sections — To-Do List, Grocery List, and Misc — each with its own draft box, AI Elaborate, save/restore/delete records, and "Task (AI)" conversion',
+    'Existing saved notes and drafts are automatically migrated into the new Misc section the first time you open the page, so nothing is lost',
+  ]},
   { ver: '4.2.0', type: 'minor', date: '20 Jun 2026', title: 'NSLA Report: Overall Summary now pulled from the KPI report', changes: [
     'Added a third input — that day\'s generated KPI report — which fills the Overall Summary box on the NSLA template\'s Summary tab',
     'Pulls Total Inbounds/Outbounds, the Fiserv HD and Merchant Services phone stats totals, "PS Jobs Logged", and the three SLA % stats straight from the KPI report\'s Report tab, no formulas — exact values only',
@@ -9481,67 +9460,107 @@ function notesDismissResult() {
 }
 
 // ===== PERSONAL NOTES (separate entity from the misc Scratch Pad widget) =====
-let _pNotesTimer = null;
-let _pNotesAiResult = '';
-let _pNotesRecords = [];
-let _pNotesEditingId = null;
-let _pNotesSortNewest = true;
+// Split into three independent sections so to-dos, groceries and misc jottings
+// don't pile up in one undifferentiated blob.
+const PNOTES_CATS = [
+  { key: 'todo',     label: 'To-Do List',    icon: 'ti-list-check', placeholder: 'Things to do, errands, people to call…' },
+  { key: 'grocery',  label: 'Grocery List',   icon: 'ti-shopping-cart', placeholder: 'Items to pick up next shop…' },
+  { key: 'misc',     label: 'Misc',           icon: 'ti-notes', placeholder: 'Anything else worth jotting down…' },
+];
+const _pNotesState = {};
+PNOTES_CATS.forEach(c => { _pNotesState[c.key] = { timer: null, aiResult: '', records: [], editingId: null, sortNewest: true }; });
+let _pntTaskCtx = null; // { cat, recordId }
+let _pntParsedDate = '', _pntParsedTime = '';
 
-function pnotesToggleSort() {
-  _pNotesSortNewest = !_pNotesSortNewest;
-  document.getElementById('pnotes-sort-label').textContent = _pNotesSortNewest ? 'Newest' : 'Oldest';
-  document.getElementById('pnotes-sort-icon').className = _pNotesSortNewest ? 'ti ti-arrow-down' : 'ti ti-arrow-up';
-  renderPNotesRecords();
+function pnotesSectionsHtml() {
+  return PNOTES_CATS.map(c => `
+    <div class="card">
+      <div class="card-title"><i class="ti ${c.icon}" style="font-size:13px"></i> ${c.label} <span class="notes-saved-badge" id="pnotes-${c.key}-saved-badge" style="margin-left:auto;"><i class="ti ti-check"></i> Saved</span></div>
+      <div class="notes-card">
+        <textarea class="notes-textarea" id="pnotes-${c.key}-textarea" placeholder="${esc(c.placeholder)}" oninput="pnotesOnInput('${c.key}')"></textarea>
+        <div class="notes-actions">
+          <button class="notes-ai-btn" id="pnotes-${c.key}-ai-btn" onclick="pnotesElaborate('${c.key}')"><i class="ti ti-sparkles"></i> Elaborate</button>
+          <button class="notes-save-btn" onclick="pnotesSaveRecord('${c.key}')"><i class="ti ti-device-floppy"></i> Save record</button>
+          <span class="notes-char-count" id="pnotes-${c.key}-char-count">0 chars</span>
+        </div>
+        <div class="notes-ai-result" id="pnotes-${c.key}-ai-result"></div>
+        <div class="notes-ai-result-actions" id="pnotes-${c.key}-ai-result-actions" style="display:none">
+          <button onclick="pnotesInsertResult('${c.key}')"><i class="ti ti-corner-down-left"></i> Insert</button>
+          <button onclick="pnotesCopyResult('${c.key}')"><i class="ti ti-copy"></i> Copy</button>
+          <button onclick="pnotesDismissResult('${c.key}')"><i class="ti ti-x"></i> Dismiss</button>
+        </div>
+        <hr class="notes-divider">
+        <div class="notes-records-head">
+          <span>Saved records</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+            <span id="pnotes-${c.key}-record-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px;"></span>
+            <button id="pnotes-${c.key}-sort-btn" onclick="pnotesToggleSort('${c.key}')" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border-md);background:var(--surface);color:var(--text-3);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-arrow-down" id="pnotes-${c.key}-sort-icon"></i><span id="pnotes-${c.key}-sort-label">Newest</span></button>
+          </span>
+        </div>
+        <div class="notes-records-list" id="pnotes-${c.key}-records-list"></div>
+      </div>
+    </div>`).join('');
 }
 
-function pnotesOnInput() {
-  const ta = document.getElementById('pnotes-textarea');
-  const cc = document.getElementById('pnotes-char-count');
+function pnotesToggleSort(cat) {
+  const st = _pNotesState[cat];
+  st.sortNewest = !st.sortNewest;
+  document.getElementById(`pnotes-${cat}-sort-label`).textContent = st.sortNewest ? 'Newest' : 'Oldest';
+  document.getElementById(`pnotes-${cat}-sort-icon`).className = st.sortNewest ? 'ti ti-arrow-down' : 'ti ti-arrow-up';
+  renderPNotesRecords(cat);
+}
+
+function pnotesOnInput(cat) {
+  const st = _pNotesState[cat];
+  const ta = document.getElementById(`pnotes-${cat}-textarea`);
+  const cc = document.getElementById(`pnotes-${cat}-char-count`);
   if (cc) cc.textContent = ta.value.length + ' chars';
-  if (!ta.value.trim() && _pNotesEditingId !== null) {
-    _pNotesEditingId = null;
-    const saveBtn = document.querySelector('#page-notes .notes-save-btn');
+  if (!ta.value.trim() && st.editingId !== null) {
+    st.editingId = null;
+    const saveBtn = document.querySelector(`#pnotes-${cat}-textarea`).closest('.notes-card').querySelector('.notes-save-btn');
     if (saveBtn) saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Save record';
   }
-  clearTimeout(_pNotesTimer);
-  _pNotesTimer = setTimeout(() => {
-    dbSet('zarif_personal_notes', ta.value);
-    const badge = document.getElementById('pnotes-saved-badge');
+  clearTimeout(st.timer);
+  st.timer = setTimeout(() => {
+    dbSet(`zarif_personal_notes_${cat}`, ta.value);
+    const badge = document.getElementById(`pnotes-${cat}-saved-badge`);
     if (badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 1800); }
   }, 600);
 }
 
-function pnotesSaveRecord() {
-  const ta = document.getElementById('pnotes-textarea');
+function pnotesSaveRecord(cat) {
+  const st = _pNotesState[cat];
+  const ta = document.getElementById(`pnotes-${cat}-textarea`);
   const content = ta.value.trim();
   if (!content) return;
   const firstLine = content.split('\n')[0].slice(0, 60) || 'Note';
-  if (_pNotesEditingId !== null) {
-    const idx = _pNotesRecords.findIndex(x => x.id === _pNotesEditingId);
+  if (st.editingId !== null) {
+    const idx = st.records.findIndex(x => x.id === st.editingId);
     if (idx !== -1) {
-      _pNotesRecords[idx] = { ..._pNotesRecords[idx], title: firstLine, content, updatedAt: new Date().toISOString() };
+      st.records[idx] = { ...st.records[idx], title: firstLine, content, updatedAt: new Date().toISOString() };
     }
   } else {
-    _pNotesRecords.unshift({ id: Date.now(), title: firstLine, content, createdAt: new Date().toISOString() });
+    st.records.unshift({ id: Date.now(), title: firstLine, content, createdAt: new Date().toISOString() });
   }
-  _pNotesEditingId = null;
-  dbSet('zarif_personal_notes_records', _pNotesRecords);
+  st.editingId = null;
+  dbSet(`zarif_personal_notes_records_${cat}`, st.records);
   ta.value = '';
-  dbSet('zarif_personal_notes', '');
-  pnotesOnInput();
-  renderPNotesRecords();
+  dbSet(`zarif_personal_notes_${cat}`, '');
+  pnotesOnInput(cat);
+  renderPNotesRecords(cat);
   const btn = event.currentTarget;
   const orig = btn.innerHTML;
   btn.innerHTML = '<i class="ti ti-check"></i> Saved!';
   setTimeout(() => btn.innerHTML = orig, 1500);
 }
 
-function renderPNotesRecords() {
-  const list = document.getElementById('pnotes-records-list');
-  const countEl = document.getElementById('pnotes-record-count');
+function renderPNotesRecords(cat) {
+  const st = _pNotesState[cat];
+  const list = document.getElementById(`pnotes-${cat}-records-list`);
+  const countEl = document.getElementById(`pnotes-${cat}-record-count`);
   if (!list) return;
-  if (countEl) countEl.textContent = _pNotesRecords.length ? `${_pNotesRecords.length} saved` : '';
-  const sorted = _pNotesSortNewest ? [..._pNotesRecords] : [..._pNotesRecords].reverse();
+  if (countEl) countEl.textContent = st.records.length ? `${st.records.length} saved` : '';
+  const sorted = st.sortNewest ? [...st.records] : [...st.records].reverse();
   if (!sorted.length) {
     list.innerHTML = '<div class="notes-empty">No saved records yet — write something and hit Save record.</div>';
     return;
@@ -9549,53 +9568,52 @@ function renderPNotesRecords() {
   list.innerHTML = sorted.map((r) => {
     const dateStr = fmtTs(r.createdAt) + (r.updatedAt ? ' · edited ' + fmtTs(r.updatedAt) : '');
     const preview = r.content.replace(/\n/g,' ').slice(0, 80);
-    return `<div class="notes-record" id="pnrec-${r.id}">
-      <div class="notes-record-header" onclick="pnotesToggleRecord(${r.id})">
+    return `<div class="notes-record" id="pnrec-${cat}-${r.id}">
+      <div class="notes-record-header" onclick="pnotesToggleRecord('${cat}', ${r.id})">
         <div class="notes-record-title">${esc(r.title)}</div>
         <div class="notes-record-date">${dateStr}</div>
       </div>
-      <div class="notes-record-preview" id="pnrec-prev-${r.id}">${esc(preview)}${r.content.length > 80 ? '…' : ''}</div>
-      <div class="notes-record-body" id="pnrec-body-${r.id}">${esc(r.content)}
+      <div class="notes-record-preview" id="pnrec-${cat}-prev-${r.id}">${esc(preview)}${r.content.length > 80 ? '…' : ''}</div>
+      <div class="notes-record-body" id="pnrec-${cat}-body-${r.id}">${esc(r.content)}
         <div class="notes-record-actions">
-          <button onclick="pnotesRestoreRecord(${r.id})"><i class="ti ti-corner-up-left"></i> Restore</button>
-          <button class="nra-task" id="pnra-task-${r.id}" onclick="pnotesConvertToTask(${r.id})"><i class="ti ti-sparkles"></i> Task (AI)</button>
-          <button onclick="pnotesDeleteRecord(${r.id})" style="color:var(--coral-text);border-color:var(--coral-text);margin-left:auto;"><i class="ti ti-trash"></i></button>
+          <button onclick="pnotesRestoreRecord('${cat}', ${r.id})"><i class="ti ti-corner-up-left"></i> Restore</button>
+          <button class="nra-task" id="pnra-${cat}-task-${r.id}" onclick="pnotesConvertToTask('${cat}', ${r.id})"><i class="ti ti-sparkles"></i> Task (AI)</button>
+          <button onclick="pnotesDeleteRecord('${cat}', ${r.id})" style="color:var(--coral-text);border-color:var(--coral-text);margin-left:auto;"><i class="ti ti-trash"></i></button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function pnotesToggleRecord(id) {
-  const body = document.getElementById('pnrec-body-' + id);
-  const prev = document.getElementById('pnrec-prev-' + id);
+function pnotesToggleRecord(cat, id) {
+  const body = document.getElementById(`pnrec-${cat}-body-${id}`);
+  const prev = document.getElementById(`pnrec-${cat}-prev-${id}`);
   if (!body) return;
   const open = body.classList.toggle('open');
   if (prev) prev.style.display = open ? 'none' : '';
 }
 
-function pnotesRestoreRecord(id) {
-  const r = _pNotesRecords.find(x => x.id === id);
+function pnotesRestoreRecord(cat, id) {
+  const st = _pNotesState[cat];
+  const r = st.records.find(x => x.id === id);
   if (!r) return;
-  const ta = document.getElementById('pnotes-textarea');
-  if (ta.value.trim() && _pNotesEditingId !== id && !confirm('Replace current draft with this record?')) return;
+  const ta = document.getElementById(`pnotes-${cat}-textarea`);
+  if (ta.value.trim() && st.editingId !== id && !confirm('Replace current draft with this record?')) return;
   ta.value = r.content;
-  _pNotesEditingId = id;
-  pnotesOnInput();
-  const saveBtn = document.querySelector('#page-notes .notes-save-btn');
+  st.editingId = id;
+  pnotesOnInput(cat);
+  const saveBtn = ta.closest('.notes-card').querySelector('.notes-save-btn');
   if (saveBtn) { saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Update record'; }
   window.scrollTo(0, 0);
 }
 
-function pnotesDeleteRecord(id) {
+function pnotesDeleteRecord(cat, id) {
   if (!confirm('Delete this record? This cannot be undone.')) return;
-  _pNotesRecords = _pNotesRecords.filter(x => x.id !== id);
-  dbSet('zarif_personal_notes_records', _pNotesRecords);
-  renderPNotesRecords();
+  const st = _pNotesState[cat];
+  st.records = st.records.filter(x => x.id !== id);
+  dbSet(`zarif_personal_notes_records_${cat}`, st.records);
+  renderPNotesRecords(cat);
 }
-
-let _pntTaskRecordId = null;
-let _pntParsedDate = '', _pntParsedTime = '';
 
 function renderPntDayField() {
   const freq = document.getElementById('pnt-freq').value;
@@ -9609,10 +9627,11 @@ function renderPntDayField() {
   }
 }
 
-async function pnotesConvertToTask(id) {
-  const r = _pNotesRecords.find(x => x.id === id);
+async function pnotesConvertToTask(cat, id) {
+  const st = _pNotesState[cat];
+  const r = st.records.find(x => x.id === id);
   if (!r) return;
-  const btn = document.getElementById('pnra-task-' + id);
+  const btn = document.getElementById(`pnra-${cat}-task-${id}`);
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Thinking…'; }
   _pntParsedDate = ''; _pntParsedTime = '';
   try {
@@ -9622,7 +9641,7 @@ async function pnotesConvertToTask(id) {
     let parsed;
     try { parsed = JSON.parse(raw.trim()); } catch { const m = raw.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; }
     if (!parsed || !parsed.name) throw new Error('bad_parse');
-    _pntTaskRecordId = id;
+    _pntTaskCtx = { cat, recordId: id };
     _pntParsedDate = /^\d{4}-\d{2}-\d{2}$/.test(parsed.date || '') ? parsed.date : '';
     _pntParsedTime = /^\d{1,2}:\d{2}$/.test(parsed.time || '') ? parsed.time : '';
     document.getElementById('pnt-name').value = parsed.name || '';
@@ -9634,7 +9653,7 @@ async function pnotesConvertToTask(id) {
     document.getElementById('pnt-task-modal-overlay').classList.add('active');
   } catch(e) {
     // No key or parse fail — open modal with just the title prefilled
-    _pntTaskRecordId = id;
+    _pntTaskCtx = { cat, recordId: id };
     document.getElementById('pnt-name').value = r.title.slice(0, 80);
     document.getElementById('pnt-priority').value = 'MEDIUM';
     document.getElementById('pnt-freq').value = 'once';
@@ -9649,7 +9668,7 @@ async function pnotesConvertToTask(id) {
 
 function pntTaskModalClose() {
   document.getElementById('pnt-task-modal-overlay').classList.remove('active');
-  _pntTaskRecordId = null;
+  _pntTaskCtx = null;
 }
 
 function pntTaskModalConfirm() {
@@ -9671,19 +9690,20 @@ function pntTaskModalConfirm() {
   saveCustomTasks();
   if (typeof renderTasks === 'function') renderTasks();
   pntTaskModalClose();
-  if (_pntTaskRecordId !== null) {
-    const btn = document.getElementById('pnra-task-' + _pntTaskRecordId);
+  if (_pntTaskCtx) {
+    const btn = document.getElementById(`pnra-${_pntTaskCtx.cat}-task-${_pntTaskCtx.recordId}`);
     if (btn) { const orig = btn.innerHTML; btn.innerHTML = '<i class="ti ti-check"></i> Added!'; setTimeout(() => { btn.innerHTML = orig; }, 1800); }
   }
 }
 
-async function pnotesElaborate() {
-  const ta = document.getElementById('pnotes-textarea');
+async function pnotesElaborate(cat) {
+  const st = _pNotesState[cat];
+  const ta = document.getElementById(`pnotes-${cat}-textarea`);
   const notes = ta.value.trim();
   if (!notes) return;
-  const btn = document.getElementById('pnotes-ai-btn');
-  const resultEl = document.getElementById('pnotes-ai-result');
-  const actionsEl = document.getElementById('pnotes-ai-result-actions');
+  const btn = document.getElementById(`pnotes-${cat}-ai-btn`);
+  const resultEl = document.getElementById(`pnotes-${cat}-ai-result`);
+  const actionsEl = document.getElementById(`pnotes-${cat}-ai-result-actions`);
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2"></i> Thinking…';
   resultEl.classList.remove('visible');
@@ -9692,7 +9712,7 @@ async function pnotesElaborate() {
     const result = await geminiCall(
       `You are a helpful personal assistant. The user has jotted down a personal note below (grocery list, errand, reminder, etc). Expand on it — add useful detail, suggest anything they might be missing, and keep it practical and concise.\n\nNote:\n${notes}`
     );
-    _pNotesAiResult = result;
+    st.aiResult = result;
     resultEl.textContent = result;
     resultEl.classList.add('visible');
     actionsEl.style.display = 'flex';
@@ -9705,17 +9725,19 @@ async function pnotesElaborate() {
   }
 }
 
-function pnotesInsertResult() {
-  if (!_pNotesAiResult) return;
-  const ta = document.getElementById('pnotes-textarea');
-  ta.value = ta.value.trim() + '\n\n--- AI ---\n' + _pNotesAiResult;
-  pnotesOnInput();
-  pnotesDismissResult();
+function pnotesInsertResult(cat) {
+  const st = _pNotesState[cat];
+  if (!st.aiResult) return;
+  const ta = document.getElementById(`pnotes-${cat}-textarea`);
+  ta.value = ta.value.trim() + '\n\n--- AI ---\n' + st.aiResult;
+  pnotesOnInput(cat);
+  pnotesDismissResult(cat);
 }
 
-function pnotesCopyResult() {
-  if (!_pNotesAiResult) return;
-  navigator.clipboard.writeText(_pNotesAiResult).then(() => {
+function pnotesCopyResult(cat) {
+  const st = _pNotesState[cat];
+  if (!st.aiResult) return;
+  navigator.clipboard.writeText(st.aiResult).then(() => {
     const btn = event.currentTarget;
     const orig = btn.innerHTML;
     btn.innerHTML = '<i class="ti ti-check"></i> Copied';
@@ -9723,21 +9745,38 @@ function pnotesCopyResult() {
   });
 }
 
-function pnotesDismissResult() {
-  document.getElementById('pnotes-ai-result').classList.remove('visible');
-  document.getElementById('pnotes-ai-result-actions').style.display = 'none';
-  _pNotesAiResult = '';
+function pnotesDismissResult(cat) {
+  document.getElementById(`pnotes-${cat}-ai-result`).classList.remove('visible');
+  document.getElementById(`pnotes-${cat}-ai-result-actions`).style.display = 'none';
+  _pNotesState[cat].aiResult = '';
 }
 
 function initPNotes() {
-  const ta = document.getElementById('pnotes-textarea');
-  if (!ta) return;
-  const saved = dbGet('zarif_personal_notes') || '';
-  ta.value = saved;
-  const cc = document.getElementById('pnotes-char-count');
-  if (cc) cc.textContent = saved.length + ' chars';
-  _pNotesRecords = dbGet('zarif_personal_notes_records') || [];
-  renderPNotesRecords();
+  const container = document.getElementById('pnotes-sections');
+  if (!container) return;
+  container.innerHTML = pnotesSectionsHtml();
+
+  // One-time migration: the old single-pile "Personal Notes" becomes "Misc"
+  // so nothing previously saved is lost when the page splits into sections.
+  if (!dbGet('zarif_personal_notes_migrated_v2')) {
+    const oldDraft = dbGet('zarif_personal_notes');
+    const oldRecords = dbGet('zarif_personal_notes_records');
+    if (oldDraft) dbSet('zarif_personal_notes_misc', oldDraft);
+    if (oldRecords) dbSet('zarif_personal_notes_records_misc', oldRecords);
+    dbSet('zarif_personal_notes_migrated_v2', true);
+  }
+
+  PNOTES_CATS.forEach(c => {
+    const cat = c.key;
+    const st = _pNotesState[cat];
+    const ta = document.getElementById(`pnotes-${cat}-textarea`);
+    const saved = dbGet(`zarif_personal_notes_${cat}`) || '';
+    ta.value = saved;
+    const cc = document.getElementById(`pnotes-${cat}-char-count`);
+    if (cc) cc.textContent = saved.length + ' chars';
+    st.records = dbGet(`zarif_personal_notes_records_${cat}`) || [];
+    renderPNotesRecords(cat);
+  });
 }
 
 // ===== DAY MODE (working day vs day off — VIC, Australia) =====
