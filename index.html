@@ -386,30 +386,28 @@
   @keyframes homeParticleFloat { 0% { transform: translateY(0); opacity: 0; } 8% { opacity: 0.8; } 92% { opacity: 0.5; } 100% { transform: translateY(-100vh); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .home-particle { animation: none; display: none; } }
 
-  /* ── NAVY theme: bento home layout (no blob/glow, no mouse tilt) ── */
-  :root[data-theme="navy"] .hub-grid { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; }
-  :root[data-theme="navy"] #page-home .hub-grid .app-card:nth-child(1) {
+  /* ── Bento hub layout: the first card in Home/Helpdesk/Personal's grid becomes a bigger "hero"
+     tile spanning 2 rows, with a gradient built from the active theme's own accent colour
+     (--teal) fading into that theme's --hero-bg — was navy-only, now applies to every theme ── */
+  .hub-grid { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; }
+  /* Re-qualified with each page's ID (not just .hub-grid) so this beats the #page-home .app-card
+     translucency override below — a plain .hub-grid selector loses to an ID selector regardless
+     of how many classes it chains, which is why a theme-agnostic generalisation needs this. */
+  #page-home .hub-grid .app-card:nth-child(1),
+  #page-helpdesk .hub-grid .app-card:nth-child(1),
+  #page-personal .hub-grid .app-card:nth-child(1) {
     grid-row: span 2; position: relative; overflow: hidden;
-    background: linear-gradient(155deg, color-mix(in srgb, var(--copper-glow-1) 82%, transparent), color-mix(in srgb, #091420 82%, transparent));
+    background: linear-gradient(155deg, color-mix(in srgb, var(--teal) 70%, transparent), color-mix(in srgb, var(--hero-bg) 92%, transparent));
     border-color: transparent;
   }
-  :root[data-theme="navy"] .hub-grid .app-card:nth-child(1) .app-card-title,
-  :root[data-theme="navy"] .hub-grid .app-card:nth-child(1) .app-card-desc,
-  :root[data-theme="navy"] .hub-grid .app-card:nth-child(1) .app-card-meta { color: #eaf4ff; }
-  :root[data-theme="navy"] .hub-grid .app-card:nth-child(1) .app-card-icon { background: rgba(255,255,255,0.14); color: #eaf4ff; }
+  .hub-grid .app-card:nth-child(1) .app-card-title,
+  .hub-grid .app-card:nth-child(1) .app-card-desc,
+  .hub-grid .app-card:nth-child(1) .app-card-meta { color: var(--text); }
+  .hub-grid .app-card:nth-child(1) .app-card-icon { background: rgba(255,255,255,0.14); color: var(--text); }
   .home-hero-ghost-wrap { position: absolute; bottom: 18px; right: 18px; width: 110px; height: 110px; pointer-events: none; }
-  .home-hero-ghost-ring { position: absolute; inset: 0; border-radius: 50%; opacity: 0.4; background: conic-gradient(#eaf4ff 0%, rgba(255,255,255,0.2) 0); -webkit-mask: radial-gradient(circle, transparent 60%, black 64%); mask: radial-gradient(circle, transparent 60%, black 64%); }
-  .home-hero-ghost-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: #eaf4ff; opacity: 0.5; }
-  :root[data-theme="navy"] #page-home .hub-grid .app-card:nth-child(4) { grid-column: span 2; }
-  /* The text-color override above already applies to nth-child(1) of every .hub-grid (not just
-     Home's) — but only Home ever got the matching gradient background. Give Helpdesk/Personal's
-     first card the same hero treatment so it isn't light text on a near-invisible background. */
-  :root[data-theme="navy"] #page-helpdesk .hub-grid .app-card:nth-child(1),
-  :root[data-theme="navy"] #page-personal .hub-grid .app-card:nth-child(1) {
-    grid-row: span 2; position: relative; overflow: hidden;
-    background: linear-gradient(155deg, color-mix(in srgb, var(--copper-glow-1) 82%, transparent), color-mix(in srgb, #091420 82%, transparent));
-    border-color: transparent;
-  }
+  .home-hero-ghost-ring { position: absolute; inset: 0; border-radius: 50%; opacity: 0.4; background: conic-gradient(var(--text) 0%, rgba(255,255,255,0.2) 0); -webkit-mask: radial-gradient(circle, transparent 60%, black 64%); mask: radial-gradient(circle, transparent 60%, black 64%); }
+  .home-hero-ghost-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--text); opacity: 0.5; }
+  #page-home .hub-grid .app-card:nth-child(4) { grid-column: span 2; }
 
   /* DASHBOARD */
   .dash-grid { display: flex; gap: 16px; align-items: center; }
@@ -8375,6 +8373,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.7.0', type: 'minor', date: '21 Jun 2026', title: 'Bigger hero card + bento layout now applies to every theme', changes: [
+    'The Home/Helpdesk/Personal hub pages\' big "hero" first card (the bigger tile with a gradient background, e.g. Task Manager on Home) was previously a Copper/navy-only effect — it\'s now generated from whichever theme is active, using that theme\'s own accent colour instead of a hardcoded navy blue',
+    'Ambient background particles were already showing on every theme (no change there) — this was specifically about the hero card layout/colour',
+    'Task Manager and Projects pages don\'t use this card-grid layout at all, so they\'re unaffected either way, matching how it already worked',
+    'Fixed a CSS specificity bug hit while generalising this — Home\'s hero card lost its gradient because a plain class selector can\'t out-rank an ID-based selector regardless of how many classes are chained',
+  ]},
   { ver: '4.6.3', type: 'patch', date: '21 Jun 2026', title: 'Widgets and Settings now share one accent identity', changes: [
     'Settings\' icon was plain grey while Widgets\' was amber-tinted — both now use the same teal accent, so they read as one consistent pair instead of two different styles',
     'The icon itself now changes state: a soft teal tint normally, brighter + lifted on hover, fully solid teal with a glow while that page is open, and solid teal again for an instant on press',
