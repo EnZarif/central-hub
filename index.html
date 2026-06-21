@@ -707,8 +707,10 @@
   .proj-filter-btn { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-3); cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .proj-filter-btn:hover { color: var(--text); border-color: var(--text-3); }
   .proj-filter-btn.active { background: var(--amber-bg); border-color: var(--amber-text); color: var(--amber-text); }
-  .proj-add-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 7px 16px; border-radius: 10px; border: 0.5px solid var(--amber-text); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; font-weight: 500; transition: all 0.15s; flex-shrink: 0; }
-  .proj-add-btn:hover { background: var(--amber-text); color: #000; }
+  /* "Accent invert" tier — tinted outline that fills solid on hover/press, shared by Add project, Add sub-project, Save project and the Danger buttons */
+  .proj-add-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 7px 16px; border-radius: 10px; border: 0.5px solid var(--amber-text); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; font-weight: 500; transition: transform 0.15s, background 0.15s, color 0.15s; flex-shrink: 0; }
+  .proj-add-btn:hover { background: var(--amber-text); color: #000; transform: translateY(-1px); }
+  .proj-add-btn:active { transform: translateY(0) scale(0.97); }
   .proj-stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
   .proj-stat { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
   .proj-stat-ico { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
@@ -746,8 +748,9 @@
   .proj-sub-list { display: flex; flex-direction: column; gap: 5px; flex: 1; }
   .proj-sub-add-row { display: flex; gap: 7px; align-items: center; margin-top: 10px; }
   .proj-sub-add-input { flex: 1; font-size: 12px; padding: 6px 10px; border: 0.5px solid var(--border-md); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
-  .proj-sub-add-btn { font-size: 12px; padding: 6px 11px; border-radius: 8px; border: 1.5px solid var(--border-md); background: var(--surface2); color: var(--text-2); cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
-  .proj-sub-add-btn:hover { border-color: var(--text-3); color: var(--text); }
+  .proj-sub-add-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px; border: 0.5px solid var(--amber-text); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; white-space: nowrap; transition: transform 0.15s, background 0.15s, color 0.15s; }
+  .proj-sub-add-btn:hover { background: var(--amber-text); color: #000; transform: translateY(-1px); }
+  .proj-sub-add-btn:active { transform: translateY(0) scale(0.97); }
   .proj-sub-row { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 9px; background: var(--bg); border: 0.5px solid var(--border); transition: border-color 0.15s; }
   .proj-sub-row:hover { border-color: var(--border-md); }
   .proj-sub-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -785,8 +788,9 @@
   .proj-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
   .proj-modal-cancel { font-size: 13px; padding: 8px 16px; border-radius: 9px; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-2); cursor: pointer; font-family: inherit; }
   .proj-modal-cancel:hover { border-color: var(--text-3); color: var(--text); }
-  .proj-modal-save { font-size: 13px; padding: 8px 18px; border-radius: 9px; border: none; background: var(--amber-text); color: #000; cursor: pointer; font-family: inherit; font-weight: 500; }
-  .proj-modal-save:hover { opacity: 0.88; }
+  .proj-modal-save { font-size: 13px; padding: 8px 18px; border-radius: 9px; border: 0.5px solid var(--amber-text); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; font-weight: 600; transition: transform 0.15s, background 0.15s, color 0.15s; }
+  .proj-modal-save:hover { background: var(--amber-text); color: #000; transform: translateY(-1px); }
+  .proj-modal-save:active { transform: translateY(0) scale(0.97); }
   /* sub-project filter inside card */
   .proj-sub-filter-row { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
   .proj-sub-filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--text-3); cursor: pointer; font-family: inherit; transition: all 0.15s; }
@@ -1321,8 +1325,8 @@
   .notes-divider { border: none; border-top: 0.5px solid var(--border-md); margin: 4px 0; flex-shrink: 0; }
   .notes-records-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--text-3); letter-spacing: 0.05em; text-transform: uppercase; flex-shrink: 0; }
   .notes-records-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 220px; flex-shrink: 0; }
-  .notes-record { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; }
-  .notes-record:hover { border-color: #EFA800; }
+  .notes-record { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .notes-record:hover { border-color: var(--teal); background: var(--teal-bg); }
   .notes-record-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .notes-record-title { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .notes-record-date { font-size: 11px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
@@ -8350,6 +8354,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.5.1', type: 'patch', date: '21 Jun 2026', title: 'Record hover fix, full-card click, Projects accent buttons', changes: [
+    'Fixed saved records (Scratch Pad + Personal Notes) showing a hardcoded gold hover glow that clashed with the Copper/navy theme — now uses the theme\'s own accent colour like everywhere else',
+    'Clicking anywhere on a saved record now expands/collapses it — previously only the title row was clickable, so clicking the preview text below it did nothing',
+    'Applied the "tinted outline that fills solid on hover/press" treatment (used by Add project and Sign out) to Save project and Add sub-project, so the submit/add actions in Projects share one consistent accent style',
+  ]},
   { ver: '4.5.0', type: 'minor', date: '21 Jun 2026', title: 'Overhauled the app\'s main action buttons', changes: [
     'Generate buttons (KPI/NSLA/Message/Standup reports, primary actions inside modals) now use a rich gradient with a colour-matched glow shadow and a press/lift animation, instead of a flat single colour',
     'Save buttons (Save record, Settings Save) are now a distinct solid green or blue gradient pill depending on context, so "save" reads differently from "generate" at a glance',
@@ -9331,14 +9340,14 @@ function renderNotesRecords() {
   list.innerHTML = sorted.map((r, i) => {
     const dateStr = fmtTs(r.createdAt) + (r.updatedAt ? ' · edited ' + fmtTs(r.updatedAt) : '');
     const preview = r.content.replace(/\n/g,' ').slice(0, 80);
-    return `<div class="notes-record" id="nrec-${r.id}">
-      <div class="notes-record-header" onclick="notesToggleRecord(${r.id})">
+    return `<div class="notes-record" id="nrec-${r.id}" onclick="notesToggleRecord(${r.id})">
+      <div class="notes-record-header">
         <div class="notes-record-title">${esc(r.title)}</div>
         <div class="notes-record-date">${dateStr}</div>
       </div>
       <div class="notes-record-preview" id="nrec-prev-${r.id}">${esc(preview)}${r.content.length > 80 ? '…' : ''}</div>
       <div class="notes-record-body" id="nrec-body-${r.id}">${esc(r.content)}
-        <div class="notes-record-actions">
+        <div class="notes-record-actions" onclick="event.stopPropagation()">
           <button onclick="notesRestoreRecord(${r.id})"><i class="ti ti-corner-up-left"></i> Restore</button>
           <button class="nra-wishlist" onclick="notesAddToWishlist(${r.id})"><i class="ti ti-sparkles"></i> Wishlist</button>
           <button class="nra-task" id="nra-task-${r.id}" onclick="notesConvertToTask(${r.id})"><i class="ti ti-sparkles"></i> Task (AI)</button>
@@ -9606,14 +9615,14 @@ function renderPNotesRecords(cat) {
   list.innerHTML = sorted.map((r) => {
     const dateStr = fmtTs(r.createdAt) + (r.updatedAt ? ' · edited ' + fmtTs(r.updatedAt) : '');
     const preview = r.content.replace(/\n/g,' ').slice(0, 80);
-    return `<div class="notes-record" id="pnrec-${cat}-${r.id}">
-      <div class="notes-record-header" onclick="pnotesToggleRecord('${cat}', ${r.id})">
+    return `<div class="notes-record" id="pnrec-${cat}-${r.id}" onclick="pnotesToggleRecord('${cat}', ${r.id})">
+      <div class="notes-record-header">
         <div class="notes-record-title">${esc(r.title)}</div>
         <div class="notes-record-date">${dateStr}</div>
       </div>
       <div class="notes-record-preview" id="pnrec-${cat}-prev-${r.id}">${esc(preview)}${r.content.length > 80 ? '…' : ''}</div>
       <div class="notes-record-body" id="pnrec-${cat}-body-${r.id}">${esc(r.content)}
-        <div class="notes-record-actions">
+        <div class="notes-record-actions" onclick="event.stopPropagation()">
           <button onclick="pnotesRestoreRecord('${cat}', ${r.id})"><i class="ti ti-corner-up-left"></i> Restore</button>
           <button class="nra-task" id="pnra-${cat}-task-${r.id}" onclick="pnotesConvertToTask('${cat}', ${r.id})"><i class="ti ti-sparkles"></i> Task (AI)</button>
           <button onclick="pnotesDeleteRecord('${cat}', ${r.id})" style="color:var(--coral-text);border-color:var(--coral-text);margin-left:auto;"><i class="ti ti-trash"></i></button>
