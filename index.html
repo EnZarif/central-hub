@@ -1003,8 +1003,11 @@
   .add-row-btn:hover { background: var(--teal-bg); }
   .del-row-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 5px; font-size: 14px; display: flex; align-items: center; }
   .del-row-btn:hover { color: var(--coral-text); background: var(--coral-bg); }
-  .generate-btn { width: 100%; padding: 11px; font-size: 14px; font-weight: 500; font-family: inherit; background: var(--teal); color: white; border: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; margin-bottom: 16px; }
-  .generate-btn:hover { opacity: 0.88; }
+  /* Primary CTA tier — the one button per page/modal that actually does the main job (generate, save, add, copy result). Rich gradient + colored glow + press feedback marks it as the "main" action, distinct from secondary/utility buttons. */
+  .generate-btn { position: relative; width: 100%; padding: 12px; font-size: 14px; font-weight: 600; font-family: inherit; background: linear-gradient(135deg, color-mix(in srgb, var(--teal) 100%, white 22%), var(--teal) 55%, color-mix(in srgb, var(--teal) 100%, black 18%)); color: white; border: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px color-mix(in srgb, var(--teal) 100%, transparent 65%), inset 0 1px 0 rgba(255,255,255,0.18); transition: transform 0.15s, box-shadow 0.15s, filter 0.15s; margin-bottom: 16px; }
+  .generate-btn:hover { filter: brightness(1.08); box-shadow: 0 6px 20px color-mix(in srgb, var(--teal) 100%, transparent 55%), inset 0 1px 0 rgba(255,255,255,0.22); transform: translateY(-1px); }
+  .generate-btn:active { transform: translateY(0) scale(0.98); }
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
   .output-box { background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 20px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--text); line-height: 1.8; min-height: 120px; }
   .output-box p { margin: 0 0 2px; white-space: pre-wrap; }
   .output-box .gap { margin-bottom: 10px; }
@@ -1136,6 +1139,11 @@
   .kpi-file-input { display: none; }
   .kpi-file-btn { padding: 6px 14px; font-size: 12px; font-weight: 500; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
   .kpi-file-btn:hover { border-color: var(--teal); color: var(--teal); }
+  /* "Upload" tier — only for buttons that actually open a file picker (.kpi-file-btn is reused elsewhere as a plain Cancel/Close button, so this is an additive modifier, not a replacement). Dashed border + icon badge reads as a drop-zone affordance rather than a generic button. */
+  .file-upload-btn { gap: 8px; display: inline-flex; align-items: center; padding: 7px 16px 7px 10px; border: 1.5px dashed var(--teal); background: var(--teal-bg); color: var(--teal-text); font-weight: 600; }
+  .file-upload-btn:hover { border-style: solid; background: var(--teal); color: white; }
+  .file-upload-btn .fu-ico { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--teal); color: white; font-size: 11px; transition: background 0.15s, color 0.15s; }
+  .file-upload-btn:hover .fu-ico { background: white; color: var(--teal); }
   .kpi-template-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: var(--surface2); border-radius: var(--radius); margin-bottom: 16px; }
   .kpi-template-info { font-size: 13px; }
   .kpi-template-info .kpi-tpl-name { font-weight: 500; color: var(--text); }
@@ -1170,10 +1178,13 @@
   .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 2px; background: rgba(255,255,255,0.6); border-radius: 50%; transition: transform 0.2s, background 0.2s; }
   .toggle-switch input:checked + .toggle-slider { background: var(--teal); border-color: var(--teal); }
   .toggle-switch input:checked + .toggle-slider::before { transform: translateX(19px); background: #fff; }
-  .settings-save-btn { padding: 8px 18px; font-size: 13px; font-weight: 500; font-family: inherit; background: #185FA5; color: white; border: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
-  .settings-save-btn:hover { opacity: 0.88; }
-  .danger-btn { padding: 8px 18px; font-size: 13px; font-weight: 500; font-family: inherit; background: transparent; color: var(--coral-text); border: 0.5px solid var(--coral-text); border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
-  .danger-btn:hover { background: var(--coral-bg); }
+  .settings-save-btn { padding: 8px 18px; font-size: 13px; font-weight: 600; font-family: inherit; background: linear-gradient(135deg, #2C7FCB, #185FA5 60%, #0F3F70); color: white; border: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 12px rgba(24,95,165,0.4), inset 0 1px 0 rgba(255,255,255,0.15); transition: transform 0.15s, box-shadow 0.15s, filter 0.15s; }
+  .settings-save-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .settings-save-btn:active { transform: translateY(0) scale(0.97); }
+  /* "Danger" tier — kept deliberately quieter (outline, not filled) so destructive actions never compete visually with primary CTAs; fill only appears as direct feedback on hover/press */
+  .danger-btn { padding: 8px 18px; font-size: 13px; font-weight: 600; font-family: inherit; background: transparent; color: var(--coral-text); border: 1.5px solid var(--coral-text); border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: transform 0.15s, background 0.15s, color 0.15s; }
+  .danger-btn:hover { background: var(--coral-text); color: #1a0500; transform: translateY(-1px); }
+  .danger-btn:active { transform: translateY(0) scale(0.97); }
   .settings-key-row { display: flex; gap: 8px; align-items: center; }
   .settings-key-row input { flex: 1; }
   .ai-hint { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
@@ -1296,8 +1307,10 @@
   .notes-ai-btn i { font-size: 14px; background: linear-gradient(135deg, #B8A6FF, #8FD0FF, #FFB3D1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .notes-ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .notes-ai-btn:disabled::before { opacity: 0.18; }
-  .notes-save-btn { display: flex; align-items: center; gap: 7px; padding: 7px 14px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border-md); border-radius: var(--radius); background: var(--surface2); color: var(--text-2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
-  .notes-save-btn:hover { border-color: #EFA800; color: var(--amber-text); }
+  /* "Save" tier — a solid success-green pill, visually distinct from the blue Generate gradient and the AI halo button, so each main action reads as its own kind of thing at a glance */
+  .notes-save-btn { display: flex; align-items: center; gap: 7px; padding: 7px 16px; font-size: 13px; font-weight: 600; border: none; border-radius: 999px; background: linear-gradient(135deg, color-mix(in srgb, var(--green-text) 100%, white 15%), var(--green-text)); color: #0d1f08; cursor: pointer; font-family: inherit; box-shadow: 0 2px 10px color-mix(in srgb, var(--green-text) 100%, transparent 70%); transition: transform 0.15s, filter 0.15s, box-shadow 0.15s; }
+  .notes-save-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .notes-save-btn:active { transform: translateY(0) scale(0.97); }
   .notes-char-count { font-size: 12px; color: var(--text-3); margin-left: auto; }
   .notes-ai-result { background: var(--surface2); border: 1px solid var(--border-md); border-radius: var(--radius); padding: 14px 16px; font-size: 13.5px; line-height: 1.7; color: var(--text); white-space: pre-wrap; display: none; flex-shrink: 0; }
   .notes-ai-result.visible { display: block; }
@@ -2391,7 +2404,7 @@
           <div class="kpi-tpl-status" id="kpi-tpl-status">No template loaded</div>
         </div>
         <input type="file" id="kpi-template-input" class="kpi-file-input" accept=".xlsx" onchange="kpiSaveTemplate(this.files[0])">
-        <button class="kpi-file-btn" onclick="document.getElementById('kpi-template-input').click()">Upload template</button>
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-template-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload template</button>
       </div>
 
       <div class="card-title"><i class="ti ti-upload" style="font-size:13px;"></i> Daily data exports</div>
@@ -2409,7 +2422,7 @@
           <div class="kpi-tpl-status" id="kpi-ops-status">No file loaded</div>
         </div>
         <input type="file" id="kpi-ops-input" class="kpi-file-input" accept=".xlsx" onchange="kpiOpsLoadFile(this.files[0])">
-        <button class="kpi-file-btn" onclick="document.getElementById('kpi-ops-input').click()">Upload report</button>
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-ops-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload report</button>
       </div>
       <div id="kpi-ops-list"></div>
     </div>
@@ -2432,7 +2445,7 @@
           <div class="kpi-tpl-status" id="nsla-tpl-status">No template loaded</div>
         </div>
         <input type="file" id="nsla-template-input" class="kpi-file-input" accept=".xlsx" onchange="nslaSaveTemplate(this.files[0])">
-        <button class="kpi-file-btn" onclick="document.getElementById('nsla-template-input').click()">Upload template</button>
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('nsla-template-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload template</button>
       </div>
 
       <div class="card-title"><i class="ti ti-upload" style="font-size:13px;"></i> CMS data exports</div>
@@ -2442,7 +2455,7 @@
           <div class="kpi-tpl-status" id="nsla-files-status">No files loaded</div>
         </div>
         <input type="file" id="nsla-files-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" multiple onchange="nslaFilesSelected(this.files)">
-        <button class="kpi-file-btn" onclick="document.getElementById('nsla-files-input').click()">Choose files</button>
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('nsla-files-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Choose files</button>
       </div>
       <div class="ai-hint">Select both exports together (Ctrl/Cmd-click to multi-select) — the file with "OPEN" in its name is always pasted second into the CMS Data tab, no matter which order you pick them in.</div>
 
@@ -2453,7 +2466,7 @@
           <div class="kpi-tpl-status" id="nsla-kpi-status">No file loaded</div>
         </div>
         <input type="file" id="nsla-kpi-input" class="kpi-file-input" accept=".xlsx" onchange="nslaKpiFileSelected(this.files[0])">
-        <button class="kpi-file-btn" onclick="document.getElementById('nsla-kpi-input').click()">Choose file</button>
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('nsla-kpi-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Choose file</button>
       </div>
       <div class="ai-hint">Pulls call totals and SLA % straight from the KPI report's "Report" tab into the NSLA template's Overall Summary box — no formulas, just the exact values.</div>
 
@@ -2480,7 +2493,7 @@
         <div class="settings-key-row">
           <input type="password" class="settings-input" id="settings-gemini-key" placeholder="gsk_... (your Groq API key)" style="width:100%;">
           <button class="settings-save-btn" onclick="saveGeminiKey()"><i class="ti ti-device-floppy"></i> Save</button>
-          <button class="settings-save-btn" onclick="testGeminiKey()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);"><i class="ti ti-plug-connected"></i> Test</button>
+          <button class="settings-save-btn" onclick="testGeminiKey()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-plug-connected"></i> Test</button>
         </div>
         <div class="ai-hint" id="gemini-key-status"></div>
         <div class="ai-hint">Your key is stored only in this browser and never sent anywhere except Groq's API. Get a free key at <strong>console.groq.com</strong> → API Keys.</div>
@@ -2747,7 +2760,7 @@
         <div id="hub-organiser"></div>
         <div style="display:flex; gap:8px; margin-top:14px;">
           <button class="settings-save-btn" onclick="saveHubOrganiser()"><i class="ti ti-device-floppy"></i> Save layout</button>
-          <button class="settings-save-btn" onclick="resetHubOrganiser()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);"><i class="ti ti-refresh"></i> Reset to default</button>
+          <button class="settings-save-btn" onclick="resetHubOrganiser()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-refresh"></i> Reset to default</button>
         </div>
       </div>
     </div>
@@ -6376,7 +6389,7 @@ function renderKpiPage() {
       </div>
       <div class="kpi-upload-status" id="kpi-status-${key}">Not selected</div>
       <input type="file" id="kpi-file-${key}" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="kpiFileSelected('${key}', this.files[0])">
-      <button class="kpi-file-btn" onclick="document.getElementById('kpi-file-${key}').click()">Choose file</button>
+      <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-file-${key}').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Choose file</button>
     </div>`;
   }).join('');
 }
@@ -8337,6 +8350,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.5.0', type: 'minor', date: '21 Jun 2026', title: 'Overhauled the app\'s main action buttons', changes: [
+    'Generate buttons (KPI/NSLA/Message/Standup reports, primary actions inside modals) now use a rich gradient with a colour-matched glow shadow and a press/lift animation, instead of a flat single colour',
+    'Save buttons (Save record, Settings Save) are now a distinct solid green or blue gradient pill depending on context, so "save" reads differently from "generate" at a glance',
+    'File upload/choose-file buttons (KPI/NSLA template and data uploads) now have a dashed border and a small round upload-icon badge that fills solid on hover — reads as a real upload affordance rather than a generic button',
+    'Danger buttons (Sign out, Reset, Clear all) stay deliberately quiet (outline only) so they never visually compete with primary actions, with a clean solid-fill on hover/press instead',
+    'Secondary/utility buttons (Back, copy, nav, calendar arrows, task row actions, etc.) were intentionally left as-is — only the main action buttons per page got the new treatment',
+  ]},
   { ver: '4.4.0', type: 'minor', date: '21 Jun 2026', title: 'Redesigned the "Elaborate" AI button', changes: [
     'Replaced the plain amber-bordered pill with a dark pill that has a soft, animated purple/blue/pink gradient halo glow behind it and a gradient-filled sparkle icon',
     'Fixes a theme bug where the Copper/navy theme showed blue text inside a hardcoded gold border — the new style is a deliberate signature look that no longer depends on per-theme accent tokens, so it now looks identical in every theme',
