@@ -460,8 +460,17 @@
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
   .today-banner i { font-size: 15px; }
   .tabs { display: flex; gap: 3px; background: var(--surface2); border-radius: 14px; padding: 4px; margin-bottom: 1.2rem; }
-  .tab { flex: 1; padding: 8px 6px; font-size: 12px; font-weight: 400; border: none; border-radius: 10px; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.2s cubic-bezier(.2,.8,.2,1); font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .tab:hover:not(.active) { color: var(--text-2); }
+  /* Each tab carries its own accent (--tab-c) so the icon previews in colour on hover and gets a glowing badge when active — gives the bar an illustrated, per-section identity instead of one flat colour for every tab */
+  .tab { flex: 1; padding: 8px 6px; font-size: 12px; font-weight: 400; border: none; border-radius: 10px; background: transparent; cursor: pointer; color: var(--text-3); transition: transform 0.15s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .tab[data-tab="today"]    { --tab-c: var(--teal); }
+  .tab[data-tab="daily"]    { --tab-c: var(--coral-text); }
+  .tab[data-tab="weekly"]   { --tab-c: var(--purple-text); }
+  .tab[data-tab="monthly"]  { --tab-c: var(--pink-text); }
+  .tab[data-tab="date"]     { --tab-c: var(--green-text); }
+  .tab[data-tab="all"]      { --tab-c: var(--blue-text); }
+  .tab[data-tab="calendar"] { --tab-c: var(--amber-text); }
+  .tab:hover:not(.active) { color: var(--tab-c); background: color-mix(in srgb, var(--tab-c) 12%, transparent); }
+  .tab:active { transform: scale(0.96); }
 
   /* CALENDAR VIEW */
   .cal-wrap { display: flex; flex-direction: column; gap: 16px; }
@@ -508,9 +517,10 @@
   .cal-section-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin: 10px 0 4px; padding: 0 2px; }
   .cal-today-btn { background: none; border: 0.5px solid var(--border-md); border-radius: 8px; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 4px 10px; font-family: inherit; transition: all 0.15s; }
   .cal-today-btn:hover { color: var(--text); border-color: var(--text-3); }
-  .tab i { font-size: 13px; }
+  .tab i { font-size: 13px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s, transform 0.2s; }
+  .tab:hover:not(.active) i { background: color-mix(in srgb, var(--tab-c) 18%, transparent); transform: scale(1.08); }
   .tab.active { color: var(--text); background: var(--surface); font-weight: 600; box-shadow: 0 6px 16px -8px rgba(0,0,0,0.5); }
-  .tab:hover:not(.active) { color: var(--text-2); }
+  .tab.active i { color: var(--tab-c); background: color-mix(in srgb, var(--tab-c) 22%, transparent); box-shadow: 0 0 8px color-mix(in srgb, var(--tab-c) 50%, transparent); }
   /* hub filter bar */
   .hub-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .hub-filter-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-right: 2px; white-space: nowrap; }
@@ -8354,6 +8364,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.6.0', type: 'minor', date: '21 Jun 2026', title: 'Illustrated tab bar on the Tasks page', changes: [
+    'Today / Daily / Weekly / Monthly / By date / All / Calendar now each carry their own accent colour (teal, coral, purple, pink, green, blue, amber) instead of one flat grey style for every tab',
+    'Hovering a tab now previews its colour on the icon and tints the background before you click; the active tab\'s icon sits in a small glowing colour badge instead of plain text',
+    'Added a press/tap scale-down on every tab for tactile click feedback',
+    'Colours are pulled from the same theme tokens used everywhere else in the app, so the bar stays correctly themed (including the Copper/navy theme) instead of using hardcoded hex',
+  ]},
   { ver: '4.5.1', type: 'patch', date: '21 Jun 2026', title: 'Record hover fix, full-card click, Projects accent buttons', changes: [
     'Fixed saved records (Scratch Pad + Personal Notes) showing a hardcoded gold hover glow that clashed with the Copper/navy theme — now uses the theme\'s own accent colour like everywhere else',
     'Clicking anywhere on a saved record now expands/collapses it — previously only the title row was clickable, so clicking the preview text below it did nothing',
