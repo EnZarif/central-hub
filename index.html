@@ -572,7 +572,7 @@
   .fp-daily, .fp-weekly, .fp-fortnightly, .fp-monthly, .fp-once { background: rgba(255,255,255,0.05); color: var(--text-3); border: 0.5px solid rgba(255,255,255,0.07); }
   .fp-once { background: var(--coral-bg); color: var(--coral-text); border-color: rgba(210,85,40,0.2); }
   .fp-date { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid rgba(55,138,221,0.25); }
-  .fp-untildone { background: var(--amber-bg,rgba(239,159,39,0.12)); color: var(--amber-text,#ef9f27); border: 0.5px solid rgba(239,159,39,0.25); }
+  .fp-untildone { background: var(--amber-bg,rgba(239,159,39,0.12)); color: var(--amber-text,#ef9f27); border: 0.5px solid color-mix(in srgb, var(--amber-text,#ef9f27) 35%, transparent); }
   .fp-overdue { background: var(--coral-bg); color: var(--coral-text); border: 0.5px solid rgba(210,85,40,0.35); font-weight: 500; }
   /* time pill on task cards */
   .time-pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; background: var(--purple-bg); color: var(--purple-text); border: 0.5px solid rgba(127,119,221,0.25); }
@@ -8401,6 +8401,9 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.8.1', type: 'patch', date: '22 Jun 2026', title: 'Fixed leftover gold border on the "Until done" task pill', changes: [
+    'The "Until done" pill\'s background and text already followed the active theme\'s amber colour, but its border was still hardcoded to a fixed gold — visible as a gold edge around otherwise blue content in the Copper/navy theme. The border now derives from the same theme colour as the rest of the pill.',
+  ]},
   { ver: '4.8.0', type: 'minor', date: '21 Jun 2026', title: 'iPad optimisation', changes: [
     'Fixed the top nav bar silently overflowing on iPad portrait (768-834px) — the full clock+date card squeezed "Widgets" down to a sliver and triggered a horizontal scrollbar. The clock now hides specifically in that width range; the desktop top bar (not the phone hamburger drawer) is kept since there\'s enough room for it otherwise',
     'Task-row icon buttons (checkbox, edit, AI, move up/down, delete) were as small as 15-23px — well under Apple\'s ~44pt touch-target guidance. They now use the same bigger sizing already used on phones, driven by `@media (pointer: coarse)` so it correctly applies on any touch device (iPad in portrait or landscape) rather than just narrow phone screens',
