@@ -5566,8 +5566,36 @@ function parseCsv(text) {
 }
 
 function isNumericCol(headers, rows, colIdx) {
-  if (!rows.length) return false;
-  return rows.every(r => /^-?\d+(\.\d+)?%?$/.test((r[colIdx] || '').trim()));
+  if (/time/i.test(headers[colIdx] || '')) return true;
+  const vals = rows.map(r => (r[colIdx] || '').trim()).filter(v => v !== '');
+  if (!vals.length) return false;
+  return vals.every(v => /^-?\d+(\.\d+)?%?$/.test(v));
+}
+
+function secondsToMmSs(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// Some reports (e.g. DMG) report "...time" columns in raw seconds, and include an
+// extra sub-row keyed by the queue's email address that should show contact counts
+// only — those two time columns get blanked instead of converted for that row.
+function normaliseTimeColumns(headers, rows) {
+  const queueIdx = headers.findIndex(h => h.trim().toLowerCase() === 'queue');
+  const timeIdxs = headers.reduce((acc, h, i) => { if (/time/i.test(h)) acc.push(i); return acc; }, []);
+  if (!timeIdxs.length) return rows;
+  return rows.map(r => {
+    const row = [...r];
+    const isEmailRow = queueIdx >= 0 && /@/.test(row[queueIdx] || '');
+    timeIdxs.forEach(i => {
+      const raw = (row[i] || '').trim();
+      if (isEmailRow) { row[i] = ''; return; }
+      if (raw === '' || !/^\d+$/.test(raw)) return;
+      row[i] = secondsToMmSs(parseInt(raw, 10));
+    });
+    return row;
+  });
 }
 
 function buildCsvTableHtml(headers, rows) {
@@ -5600,6 +5628,7 @@ function handleCallDataCsv(file, key) {
   reader.onload = () => {
     const parsed = parseCsv(reader.result);
     if (!parsed || !parsed.rows.length) return;
+    parsed.rows = normaliseTimeColumns(parsed.headers, parsed.rows);
     callDataCsv[key] = parsed;
     renderCsvPreview(key, parsed.headers, parsed.rows);
   };
@@ -8627,6 +8656,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.10.1', type: 'patch', date: '23 Jun 2026', title: 'DMG call data: handle time formatting and the email sub-row', changes: [
+    'The DMG report\'s "Average handle time" and "Maximum queued time" columns come through in raw seconds — they\'re now auto-converted to mm:ss to match how you format them by hand',
+    'The "datamesh@..." email sub-row has those same two time values blanked out, matching the version you actually send',
+  ]},
   { ver: '4.10.0', type: 'minor', date: '23 Jun 2026', title: 'Upload call data CSVs straight into the Wpay & DMG email templates', changes: [
     'Added an upload zone under the Wpay and DMG cards on the Weekly call data page — drop in (or click to browse for) the weekly "Historical Metrics Report" CSV export',
     'The report is parsed and shown as a bordered preview table (numbers right-aligned, just like the Excel paste you used to do by hand)',
