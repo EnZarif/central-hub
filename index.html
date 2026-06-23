@@ -556,6 +556,10 @@
   .hub-pill.active.hp-helpdesk { border-color: #378ADD; background: rgba(55,138,221,0.12); color: #378ADD; }
   .hub-pill.active.hp-projects { border-color: #EF9F27; background: rgba(239,159,39,0.12); color: #EF9F27; }
   .hub-pill.active.hp-personal { border-color: var(--pink-text); background: var(--pink-bg); color: var(--pink-text); }
+  /* "Check tomorrow's tasks" — sits at the far right of the hub filter row; same tinted-outline-fills-solid family as Add project / Sign out, with its own purple identity */
+  .check-tomorrow-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--purple-text); background: var(--purple-bg); color: var(--purple-text); cursor: pointer; font-family: inherit; transition: transform 0.15s, background 0.15s, color 0.15s; white-space: nowrap; }
+  .check-tomorrow-btn:hover { background: var(--purple-text); color: #000; transform: translateY(-1px); }
+  .check-tomorrow-btn:active { transform: translateY(0) scale(0.97); }
   /* hub badge on each task row */
   .task-hub-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; flex-shrink: 0; }
   .thb-helpdesk { background: rgba(55,138,221,0.12); color: #378ADD; }
@@ -1993,6 +1997,7 @@
       <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
       <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
       <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
+      <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
     </div>
 
     <div class="tabs">
@@ -3012,6 +3017,17 @@
       <button class="kpi-file-btn" onclick="closeTaskEditModal()">Cancel</button>
       <button class="generate-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="saveTaskEdit()"><i class="ti ti-check" style="font-size:15px;"></i> Save</button>
     </div>
+  </div>
+</div>
+
+<!-- "Check tomorrow's tasks" modal — for the nightly prep check: tomorrow's scheduled tasks + every still-incomplete "until done" task -->
+<div class="kpi-modal-overlay" id="tomorrow-modal-overlay" onclick="if(event.target===this)closeTomorrowModal()">
+  <div class="kpi-modal" style="width:520px;">
+    <div class="kpi-modal-header">
+      <strong><i class="ti ti-moon-stars" style="margin-right:6px;color:var(--purple-text);"></i><span id="tomorrow-modal-title">Tomorrow's tasks</span></strong>
+      <button class="icon-btn" onclick="closeTomorrowModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="kpi-modal-preview" id="tomorrow-modal-body" style="background:var(--surface2); color:var(--text); border-color:var(--border-md); max-height:60vh; overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -4929,6 +4945,71 @@ function getTasksForCalDate(dateStr) {
   return getAllTasks()
     .filter(t => isTaskActiveOnDate(t, dateStr))
     .sort((a, b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
+}
+
+// ===== "CHECK TOMORROW'S TASKS" — nightly prep preview =====
+// Read-only: tomorrow's scheduled tasks (via the same isTaskActiveOnDate logic the
+// calendar uses) plus every still-incomplete "until done" task, since those carry
+// over regardless of date and are exactly the kind of thing worth prepping for too.
+function tomorrowDateStr() {
+  const t = new Date(now);
+  t.setDate(t.getDate() + 1);
+  return ymd(t);
+}
+
+function tomorrowPreviewRow(t) {
+  const bCls = t.priority === 'HIGH' ? 'b-high' : t.priority === 'MEDIUM' ? 'b-medium' : 'b-low';
+  const bIcon = t.priority === 'HIGH' ? 'ti-flame' : t.priority === 'MEDIUM' ? 'ti-point' : 'ti-leaf';
+  const bLbl = t.priority[0] + t.priority.slice(1).toLowerCase();
+  const isDated = t.freq === 'date' && t.date;
+  const pillIcon = isDated ? 'ti-calendar-event' : (FREQ_ICONS[t.freq] || 'ti-calendar');
+  const pillLbl = isDated ? fmtShortDate(t.date) : (FREQ_LABELS[t.freq] || t.freq);
+  const pillCls = isDated ? 'fp-date' : 'fp-' + t.freq;
+  const hub = t.hub || 'helpdesk';
+  const hubIcons = {helpdesk:'ti-headset', projects:'ti-folders', personal:'ti-user'};
+  const hubLabels = {helpdesk:'Helpdesk', projects:'Projects', personal:'Personal'};
+  return `<div class="task" style="cursor:default;">
+    <div class="tbody">
+      <div class="trow1"><span class="tname">${esc(t.name)}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
+      <div class="tmeta"><span class="freq-pill ${pillCls}"><i class="ti ${pillIcon}"></i>${pillLbl}</span><span class="task-hub-badge thb-${hub}"><i class="ti ${hubIcons[hub]}" style="font-size:10px;margin-right:3px"></i>${hubLabels[hub]}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderTomorrowModal() {
+  const dateStr = tomorrowDateStr();
+  const tomorrowLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+  const scheduled = getAllTasks()
+    .filter(t => t.freq !== 'untildone' && isTaskActiveOnDate(t, dateStr))
+    .sort((a, b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
+  const untilDone = getAllTasks()
+    .filter(t => t.freq === 'untildone' && !isDone(t.id))
+    .sort((a, b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
+
+  const titleEl = document.getElementById('tomorrow-modal-title');
+  if (titleEl) titleEl.textContent = `Tomorrow — ${tomorrowLabel}`;
+
+  let html = '';
+  html += `<div class="section-header" style="margin-top:0;"><span class="sec-dot" style="background:var(--purple-text);"></span>Scheduled for tomorrow (${scheduled.length})</div>`;
+  html += scheduled.length
+    ? scheduled.map(tomorrowPreviewRow).join('')
+    : `<div class="notes-empty" style="margin-bottom:16px;">Nothing scheduled for tomorrow.</div>`;
+
+  html += `<div class="section-header"><span class="sec-dot" style="background:var(--amber-text);"></span>Still until done (${untilDone.length})</div>`;
+  html += untilDone.length
+    ? untilDone.map(tomorrowPreviewRow).join('')
+    : `<div class="notes-empty">Nothing outstanding — you're all caught up.</div>`;
+
+  document.getElementById('tomorrow-modal-body').innerHTML = html;
+}
+
+function openTomorrowModal() {
+  renderTomorrowModal();
+  document.getElementById('tomorrow-modal-overlay').classList.add('active');
+}
+
+function closeTomorrowModal() {
+  document.getElementById('tomorrow-modal-overlay').classList.remove('active');
 }
 
 function calNav(delta) {
@@ -8401,6 +8482,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.9.0', type: 'minor', date: '23 Jun 2026', title: '"Check tomorrow" — preview tomorrow\'s tasks before you finish for the day', changes: [
+    'Added a "Check tomorrow" button on the Tasks page (top right, next to the Hub filter pills) that opens a read-only preview of what\'s coming up',
+    'Shows every task scheduled for tomorrow (daily/weekly/fortnightly/monthly recurrences, plus any one-off "once"/dated task that lands on that date), grouped separately from every still-incomplete "Until done" task — those carry over regardless of date, so they\'re worth prepping for too',
+    'Pure preview, no editing — doesn\'t affect today\'s task list, completion state, or streaks; just a quick look so you can start prepping at night',
+  ]},
   { ver: '4.8.1', type: 'patch', date: '22 Jun 2026', title: 'Fixed leftover gold border on the "Until done" task pill', changes: [
     'The "Until done" pill\'s background and text already followed the active theme\'s amber colour, but its border was still hardcoded to a fixed gold — visible as a gold edge around otherwise blue content in the Copper/navy theme. The border now derives from the same theme colour as the rest of the pill.',
   ]},
