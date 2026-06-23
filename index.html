@@ -1084,6 +1084,23 @@
   .copy-mini-btn { flex-shrink: 0; width: 42px; height: 42px; font-size: 17px; font-family: inherit; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
   .copy-mini-btn:hover { background: var(--surface2); }
   .copy-mini-btn.copied { color: var(--teal); border-color: var(--teal); background: var(--teal-bg); }
+
+  /* CALL DATA CSV UPLOAD */
+  .csv-upload-zone { border: 1.5px dashed var(--border-md); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; transition: all 0.15s; }
+  .csv-upload-zone.drag-over { border-color: var(--blue-text); background: var(--blue-bg); }
+  .csv-upload-zone-info { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
+  .csv-upload-zone-info i { font-size: 20px; color: var(--blue-text); }
+  .csv-upload-btn { font-size: 12px; font-weight: 500; color: var(--blue-text); background: var(--blue-bg); border: 0.5px solid var(--blue-text); border-radius: var(--radius); padding: 8px 14px; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .csv-upload-btn:hover { background: var(--blue-text); color: #000; }
+  .csv-preview-wrap { margin-top: 14px; }
+  .csv-preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .csv-preview-table th, .csv-preview-table td { border: 1px solid var(--border-md); padding: 6px 10px; }
+  .csv-preview-table th { background: var(--surface2); color: var(--text); text-align: left; font-weight: 600; }
+  .csv-preview-table td { color: var(--text-2); }
+  .csv-preview-table td.csv-num { text-align: right; }
+  .csv-preview-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .csv-clear-btn { font-size: 12px; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: inherit; padding: 8px 4px; }
+  .csv-clear-btn:hover { color: var(--text); }
   .add-point-row { display: flex; gap: 8px; margin-bottom: 14px; }
   .add-point-row input { flex: 1; padding: 8px 10px; font-size: 13px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; }
   .add-point-row input:focus { border-color: var(--teal); }
@@ -2164,6 +2181,14 @@
         <textarea class="copy-field-text" id="wpay-body" rows="6"></textarea>
         <button class="copy-mini-btn" onclick="copyField('wpay-body', this)"><i class="ti ti-copy"></i></button>
       </div>
+
+      <div class="copy-field-label">Call data report</div>
+      <input type="file" id="wpay-csv-input" accept=".csv" style="display:none;" onchange="handleCallDataCsv(this.files[0], 'wpay')">
+      <div class="csv-upload-zone" id="wpay-csv-zone">
+        <div class="csv-upload-zone-info"><i class="ti ti-file-spreadsheet"></i> Upload the Wpay historical metrics report (.csv)</div>
+        <button class="csv-upload-btn" onclick="document.getElementById('wpay-csv-input').click()"><i class="ti ti-upload"></i> Upload CSV</button>
+      </div>
+      <div class="csv-preview-wrap" id="wpay-csv-preview"></div>
     </div>
 
     <!-- DMG -->
@@ -2184,6 +2209,14 @@
         <textarea class="copy-field-text" id="dmg-body" rows="6"></textarea>
         <button class="copy-mini-btn" onclick="copyField('dmg-body', this)"><i class="ti ti-copy"></i></button>
       </div>
+
+      <div class="copy-field-label">Call data report</div>
+      <input type="file" id="dmg-csv-input" accept=".csv" style="display:none;" onchange="handleCallDataCsv(this.files[0], 'dmg')">
+      <div class="csv-upload-zone" id="dmg-csv-zone">
+        <div class="csv-upload-zone-info"><i class="ti ti-file-spreadsheet"></i> Upload the DMG historical metrics report (.csv)</div>
+        <button class="csv-upload-btn" onclick="document.getElementById('dmg-csv-input').click()"><i class="ti ti-upload"></i> Upload CSV</button>
+      </div>
+      <div class="csv-preview-wrap" id="dmg-csv-preview"></div>
     </div>
   </div>
 
@@ -5505,6 +5538,118 @@ function copyField(id, btn) {
   });
 }
 
+// ===== CALL DATA CSV UPLOAD (Wpay / DMG) =====
+// Parses the weekly "Historical Metrics Report" CSV export and renders it as a
+// bordered table matching what Excel pastes into Outlook, so it can be copied
+// straight into the call data email body without retyping the numbers by hand.
+const callDataCsv = {};
+
+function parseCsvLine(line) {
+  const cells = [];
+  let cur = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; continue; }
+    if (ch === ',' && !inQuotes) { cells.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  cells.push(cur.trim());
+  return cells;
+}
+
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (!lines.length) return null;
+  const headers = parseCsvLine(lines[0]);
+  const rows = lines.slice(1).map(parseCsvLine);
+  return { headers, rows };
+}
+
+function isNumericCol(headers, rows, colIdx) {
+  if (!rows.length) return false;
+  return rows.every(r => /^-?\d+(\.\d+)?%?$/.test((r[colIdx] || '').trim()));
+}
+
+function buildCsvTableHtml(headers, rows) {
+  const numericCols = headers.map((_, i) => isNumericCol(headers, rows, i));
+  const headHtml = headers.map(h => `<td><strong>${esc(h)}</strong></td>`).join('');
+  const bodyHtml = rows.map(r => `<tr>${r.map((cell, i) =>
+    `<td${numericCols[i] ? ' align="right"' : ''}>${esc(cell)}</td>`).join('')}</tr>`).join('');
+  return `<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+    <tr>${headHtml}</tr>
+    ${bodyHtml}
+  </table>`;
+}
+
+function renderCsvPreview(key, headers, rows) {
+  const numericCols = headers.map((_, i) => isNumericCol(headers, rows, i));
+  const head = headers.map(h => `<th>${esc(h)}</th>`).join('');
+  const body = rows.map(r => `<tr>${r.map((cell, i) =>
+    `<td class="${numericCols[i] ? 'csv-num' : ''}">${esc(cell)}</td>`).join('')}</tr>`).join('');
+  document.getElementById(`${key}-csv-preview`).innerHTML = `
+    <table class="csv-preview-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+    <div class="csv-preview-actions">
+      <button class="copy-btn" id="${key}-csv-copy-btn" onclick="copyCsvTable('${key}')" style="margin-top:0;flex:1;"><i class="ti ti-copy" style="font-size:15px;"></i> Copy table</button>
+      <button class="csv-clear-btn" onclick="clearCsvTable('${key}')"><i class="ti ti-x"></i> Clear</button>
+    </div>`;
+}
+
+function handleCallDataCsv(file, key) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const parsed = parseCsv(reader.result);
+    if (!parsed || !parsed.rows.length) return;
+    callDataCsv[key] = parsed;
+    renderCsvPreview(key, parsed.headers, parsed.rows);
+  };
+  reader.readAsText(file);
+}
+
+function clearCsvTable(key) {
+  delete callDataCsv[key];
+  document.getElementById(`${key}-csv-preview`).innerHTML = '';
+  document.getElementById(`${key}-csv-input`).value = '';
+}
+
+function copyCsvTable(key) {
+  const data = callDataCsv[key];
+  if (!data) return;
+  const html = buildCsvTableHtml(data.headers, data.rows);
+  const text = [data.headers.join('\t'), ...data.rows.map(r => r.join('\t'))].join('\n');
+  const btn = document.getElementById(`${key}-csv-copy-btn`);
+  const finish = () => {
+    btn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="ti ti-copy" style="font-size:15px;"></i> Copy table';
+      btn.classList.remove('copied');
+    }, 2000);
+  };
+  if (window.ClipboardItem) {
+    const item = new ClipboardItem({
+      'text/html': new Blob([html], {type: 'text/html'}),
+      'text/plain': new Blob([text], {type: 'text/plain'}),
+    });
+    navigator.clipboard.write([item]).then(finish, () => navigator.clipboard.writeText(text).then(finish));
+  } else {
+    navigator.clipboard.writeText(text).then(finish);
+  }
+}
+
+['wpay', 'dmg'].forEach(key => {
+  const zone = document.getElementById(`${key}-csv-zone`);
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleCallDataCsv(file, key);
+  });
+});
+
 function prevWeekRange() {
   const daysSinceMonday = (todayDow + 6) % 7;
   const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
@@ -8482,6 +8627,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.10.0', type: 'minor', date: '23 Jun 2026', title: 'Upload call data CSVs straight into the Wpay & DMG email templates', changes: [
+    'Added an upload zone under the Wpay and DMG cards on the Weekly call data page — drop in (or click to browse for) the weekly "Historical Metrics Report" CSV export',
+    'The report is parsed and shown as a bordered preview table (numbers right-aligned, just like the Excel paste you used to do by hand)',
+    '"Copy table" copies it as a real HTML table, so pasting into the Outlook email body keeps the borders and alignment — no more retyping the numbers manually',
+  ]},
   { ver: '4.9.0', type: 'minor', date: '23 Jun 2026', title: '"Check tomorrow" — preview tomorrow\'s tasks before you finish for the day', changes: [
     'Added a "Check tomorrow" button on the Tasks page (top right, next to the Hub filter pills) that opens a read-only preview of what\'s coming up',
     'Shows every task scheduled for tomorrow (daily/weekly/fortnightly/monthly recurrences, plus any one-off "once"/dated task that lands on that date), grouped separately from every still-incomplete "Until done" task — those carry over regardless of date, so they\'re worth prepping for too',
