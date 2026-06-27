@@ -390,6 +390,11 @@
   .app-card.soon { cursor: default; opacity: 0.6; }
   .app-card.soon:hover { transform: none; border-color: var(--border); }
   .app-card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
+  /* Per-hub identity colour on Home's hub-launcher cards — matches the Hub filter
+     pills on the Tasks page (blue/amber/pink) so the same hub reads the same colour everywhere. */
+  .app-card-icon.c-blue  { background: linear-gradient(155deg, var(--blue-text), color-mix(in srgb, var(--blue-text) 40%, var(--hero-bg))); }
+  .app-card-icon.c-amber { background: linear-gradient(155deg, var(--amber-text), color-mix(in srgb, var(--amber-text) 40%, var(--hero-bg))); }
+  .app-card-icon.c-pink  { background: linear-gradient(155deg, var(--pink-text), color-mix(in srgb, var(--pink-text) 40%, var(--hero-bg))); }
   .app-card-title { font-size: 15px; font-weight: 500; color: var(--text); }
   .app-card-desc { font-size: 12px; color: color-mix(in srgb, var(--amber-text) 45%, var(--text-3)); line-height: 1.55; }
   .app-card-meta { margin-top: auto; font-size: 11px; font-weight: 700; color: var(--amber-text); display: flex; align-items: center; gap: 5px; }
@@ -579,6 +584,11 @@
   .check-tomorrow-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--purple-text); background: var(--purple-bg); color: var(--purple-text); cursor: pointer; font-family: inherit; transition: transform 0.15s, background 0.15s, color 0.15s; white-space: nowrap; }
   .check-tomorrow-btn:hover { background: var(--purple-text); color: #000; transform: translateY(-1px); }
   .check-tomorrow-btn:active { transform: translateY(0) scale(0.97); }
+  .check-tomorrow-btn.active { background: var(--purple-text); color: #000; }
+  .focus-mode-banner { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--purple-text); background: var(--purple-bg); border: 0.5px solid var(--purple-text); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; animation: fadeIn 0.15s ease; }
+  .focus-mode-banner i { font-size: 15px; flex-shrink: 0; }
+  .focus-mode-banner button { margin-left: auto; flex-shrink: 0; font-size: 11.5px; font-weight: 600; padding: 4px 11px; border-radius: 16px; border: 1px solid var(--purple-text); background: transparent; color: var(--purple-text); cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s; }
+  .focus-mode-banner button:hover { background: var(--purple-text); color: #000; }
   /* hub badge on each task row */
   .task-hub-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; flex-shrink: 0; }
   .thb-helpdesk { background: rgba(55,138,221,0.12); color: #378ADD; }
@@ -1711,13 +1721,13 @@
         <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
       </div>
       <div class="app-card" id="home-card-helpdesk" onclick="showPage('helpdesk')">
-        <div class="app-card-icon c-coral"><i class="ti ti-headset"></i></div>
+        <div class="app-card-icon c-blue"><i class="ti ti-headset"></i></div>
         <div class="app-card-title">Helpdesk</div>
         <div class="app-card-desc">Reports, meetings, templates and your daily stand up.</div>
         <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
       </div>
       <div class="app-card" id="home-card-projects" onclick="showPage('projects')">
-        <div class="app-card-icon c-purple"><i class="ti ti-folders"></i></div>
+        <div class="app-card-icon c-amber"><i class="ti ti-folders"></i></div>
         <div class="app-card-title">Projects</div>
         <div class="app-card-desc">Track delivery progress across your active projects.</div>
         <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
@@ -1838,7 +1848,7 @@
   <!-- HELPDESK HUB -->
   <div class="page" id="page-helpdesk">
     <div class="hub-head">
-      <h1><i class="ti ti-headset" style="color:var(--coral-text);"></i> Helpdesk Management</h1>
+      <h1><i class="ti ti-headset" style="color:var(--blue-text);"></i> Helpdesk Management</h1>
       <p>Everything for running the helpdesk day to day.</p>
     </div>
     <div class="hub-grid" id="hub-grid-helpdesk"></div>
@@ -1848,7 +1858,7 @@
   <div class="page" id="page-projects">
     <div class="header">
       <div>
-        <h1><i class="ti ti-folders"></i> Projects</h1>
+        <h1><i class="ti ti-folders" style="color:var(--amber-text);"></i> Projects</h1>
         <p>Major projects, responsibilities, and deliverables</p>
       </div>
     </div>
@@ -2039,6 +2049,7 @@
       <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
       <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
       <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
+      <button class="check-tomorrow-btn" id="focus-mode-btn" onclick="toggleFocusMode()" title="Hide everything except what's next"><i class="ti ti-focus-2"></i> Focus mode</button>
     </div>
 
     <div class="tabs">
@@ -3606,6 +3617,15 @@ function bumpTaskStreak(id, freq) {
 }
 
 let taskHubFilter = 'all';
+const FOCUS_MODE_COUNT = 2;
+let focusMode = false;
+function toggleFocusMode() {
+  focusMode = !focusMode;
+  dbSet('zarif_focus_mode', focusMode);
+  const btn = document.getElementById('focus-mode-btn');
+  if (btn) btn.classList.toggle('active', focusMode);
+  renderTasks();
+}
 
 function setTaskHubFilter(hub) {
   taskHubFilter = hub;
@@ -5136,6 +5156,8 @@ function renderTasks() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
   renderDueSoon();
   renderUpNextRail();
+  const fbtn = document.getElementById('focus-mode-btn');
+  if (fbtn) fbtn.classList.toggle('active', focusMode);
   const todayTasks = getTodayTasks();
   const todayTotal = todayTasks.length;
   const todayDone = todayTasks.filter(t => isDone(t.id)).length;
@@ -5194,6 +5216,25 @@ function renderTasks() {
       : statFilter === 'high' ? 'No high-priority tasks today.'
       : 'No tasks for today.';
     if (!tasks.length) { paintList(`<div class="empty">${emptyMsg}</div>`); return; }
+
+    // Focus mode: hide everything except the next couple of pending tasks —
+    // for when the full grouped list feels like too much.
+    if (focusMode && statFilter === 'all') {
+      const pending = tasks.filter(t => !isDone(t.id));
+      const next = pending.slice().sort((a, b) => {
+        const aMin = a.time ? timeToMin(a.time) : 9999, bMin = b.time ? timeToMin(b.time) : 9999;
+        return (aMin - bMin) || (PO[a.priority] - PO[b.priority]);
+      }).slice(0, FOCUS_MODE_COUNT);
+      const hidden = pending.length - next.length;
+      let fHtml = `<div class="focus-mode-banner"><i class="ti ti-focus-2"></i> Focus mode — showing what's next${hidden > 0 ? `, ${hidden} more hidden` : ''}. <button onclick="toggleFocusMode()">Show all</button></div>`;
+      if (!next.length) {
+        fHtml += `<div class="empty">All done for today — nice work!</div>`;
+      } else {
+        next.forEach(t => { fHtml += taskHTML(t, true); });
+      }
+      paintList(fHtml);
+      return;
+    }
 
     if (statFilter === 'done') {
       // done filter: just show completed
@@ -9040,6 +9081,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.15.0', type: 'minor', date: '27 Jun 2026', title: 'Per-hub accent colours & a Focus mode for the Tasks page', changes: [
+    'Helpdesk, Projects and Personal now each have a consistent identity colour (blue/amber/pink) across the Home launcher cards and hub page headers — matches the colours already used by the Hub filter pills',
+    'Fixed the Home page\'s Helpdesk/Projects launcher icons, which were silently rendering with the same gradient as every other card instead of their intended colour',
+    'New "Focus mode" toggle on the Tasks page — hides everything except the next couple of pending tasks, with a banner showing how many are hidden and a one-click way back to the full list',
+  ]},
   { ver: '4.14.0', type: 'minor', date: '27 Jun 2026', title: 'Daily briefing, task streaks, meeting context capsule, snooze & a searchable activity history', changes: [
     'Home now opens with a one-line daily briefing: tasks left today, anything overdue, job reminders due, and today\'s next meeting',
     '"Needs Attention" on the Tasks page now also surfaces dated tasks and job reminders due today/overdue, not just timed ones',
@@ -10821,6 +10867,7 @@ async function initApp() {
   taskOverrides = dbGet('zarif_task_overrides') || {};
   taskOrder     = dbGet('zarif_task_order')     || {};
   taskStreaks   = dbGet('zarif_task_streaks')   || {};
+  focusMode     = dbGet('zarif_focus_mode')     || false;
   kbFacts       = (dbGet('zarif_kb_facts') || DEFAULT_KB_FACTS.slice()).map(f => typeof f === 'string' ? { text: f, createdAt: null } : f);
   hubLayout     = loadHubLayout();
   pomo          = loadPomo();
