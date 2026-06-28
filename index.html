@@ -1517,6 +1517,13 @@
     .tasks-sidebar { position: static; }
     /* Hero stat cards shrink to fit, no horizontal overflow */
     .statcard { min-width: 0; }
+
+    /* Hub filter row (All/Helpdesk/Projects/Personal + Check tomorrow + Focus mode) was
+       wrapping into a messy 3-line stack with the auto-margin buttons stranded alone —
+       scroll it horizontally instead, same pattern as the .tabs row above. */
+    .hub-filter-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+    .hub-filter-bar > * { flex: 0 0 auto; }
+    .check-tomorrow-btn { margin-left: 0; }
   }
 
   /* Bigger tap targets on any touch input (iPad as well as phone), not just narrow screens — these
@@ -3527,7 +3534,7 @@ const THEMES = ['midnight','ink','forest','aurora','ember','slate','navy'];
 
 function applyTheme(theme) {
   if (theme === 'copper') theme = 'navy'; // old theme name, renamed
-  const t = THEMES.includes(theme) ? theme : 'midnight';
+  const t = THEMES.includes(theme) ? theme : 'navy';
   if (t === 'midnight') {
     document.documentElement.removeAttribute('data-theme');
   } else {
@@ -3542,12 +3549,12 @@ function pickTheme(name) {
 }
 
 function toggleTheme() {
-  const current = localStorage.getItem('zarif_theme') || 'midnight';
+  const current = localStorage.getItem('zarif_theme') || 'navy';
   const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
   pickTheme(next);
 }
 
-applyTheme(localStorage.getItem('zarif_theme') || 'midnight');
+applyTheme(localStorage.getItem('zarif_theme') || 'navy');
 
 const PO = {HIGH:0, MEDIUM:1, LOW:2};
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -9081,6 +9088,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.15.1', type: 'patch', date: '28 Jun 2026', title: 'Mobile/iPad pass on the new features, and Navy is now the default theme', changes: [
+    'The Tasks page Hub filter row (All/Helpdesk/Projects/Personal + Check tomorrow + Focus mode) was wrapping into a messy 3-line stack on phone widths — now scrolls horizontally in one row, same as the tab row above it',
+    'Checked the daily briefing card, streak badges, snooze button, meeting context capsule and the new activity history modal on phone and iPad widths — all render cleanly, no further changes needed there',
+    'Navy is now the pre-selected default theme for anyone who hasn\'t picked one yet (previously Midnight)',
+  ]},
   { ver: '4.15.0', type: 'minor', date: '27 Jun 2026', title: 'Per-hub accent colours & a Focus mode for the Tasks page', changes: [
     'Helpdesk, Projects and Personal now each have a consistent identity colour (blue/amber/pink) across the Home launcher cards and hub page headers — matches the colours already used by the Hub filter pills',
     'Fixed the Home page\'s Helpdesk/Projects launcher icons, which were silently rendering with the same gradient as every other card instead of their intended colour',
@@ -9813,7 +9825,7 @@ function loadSettings() {
   const nameEl = document.getElementById('settings-display-name');
   if (nameEl) nameEl.value = s.displayName || 'Zarif';
 
-  applyTheme(localStorage.getItem('zarif_theme') || 'midnight');
+  applyTheme(localStorage.getItem('zarif_theme') || 'navy');
 
   const sidebarEl = document.getElementById('settings-show-sidebar');
   if (sidebarEl) sidebarEl.checked = s.showSidebar !== false;
