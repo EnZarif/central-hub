@@ -382,7 +382,7 @@
   .hub-head h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
   .hub-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
   #home-greeting { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-  .home-greeting-name { color: #4a9ee8; font-size: 48px; font-weight: 800; font-style: italic; letter-spacing: -1px; }
+  .home-greeting-name { color: var(--teal-text); font-size: 48px; font-weight: 800; font-style: italic; letter-spacing: -1px; }
   #home-date { font-size: 14px; color: color-mix(in srgb, var(--amber-text) 55%, var(--text-2)); margin-top: 6px; }
   .hub-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
   .app-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; display: flex; flex-direction: column; gap: 12px; min-height: 150px; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
@@ -10337,7 +10337,7 @@ function renderWishlist() {
 const CHANGELOG = [
   { ver: '4.19.2', type: 'minor', date: '29 Jun 2026', title: 'Job list completions sync to your tasks, and accent colour now tints your name', changes: [
     'Ticking off an Amtek Job List entry now also drops a completed task into today\'s Task Manager list (counts toward streak/activity history) — unticking removes it again',
-    'Your custom accent colour now also tints the "Zarif" in the "Hey, Zarif" greeting, not just buttons and badges',
+    'Your custom accent colour now also tints the "Zarif" in the "Hey, Zarif" greeting on the Tasks page, and the big "Zarif." on the Home landing page, not just buttons and badges',
   ]},
   { ver: '4.19.1', type: 'patch', date: '29 Jun 2026', title: 'Restyled the Amtek Job List', changes: [
     'Each entry is now its own accent-bar card instead of a plain row, with a bolder job name',
