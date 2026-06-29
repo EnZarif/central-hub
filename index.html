@@ -767,6 +767,21 @@
   .tasks-main, .tasks-sidebar { min-width: 0; }
   @media (max-width: 900px) { .tasks-layout { grid-template-columns: 1fr; } }
   .tasks-sidebar { position: sticky; top: 20px; }
+  .jl-card { padding: 14px 16px; }
+  .jl-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+  .jl-empty { font-size: 12px; color: var(--text-3); padding: 6px 0; }
+  .jl-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+  .jl-item:last-child { border-bottom: none; }
+  .jl-cb { flex-shrink: 0; accent-color: var(--teal); width: 14px; height: 14px; cursor: pointer; }
+  .jl-name { font-size: 12.5px; color: var(--text); flex: 1 1 auto; min-width: 80px; }
+  .jl-name:hover { color: var(--teal-text); text-decoration: underline; }
+  .jl-item.done .jl-name { color: var(--text-3); text-decoration: line-through; }
+  .jl-meta { display: flex; align-items: center; gap: 5px; flex-basis: 100%; flex-wrap: wrap; padding-left: 22px; }
+  .jl-due { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--surface2); color: var(--text-3); }
+  .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
+  .jl-actions { display: flex; gap: 2px; flex-shrink: 0; margin-left: auto; }
+  .jl-icon-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 5px; border-radius: 5px; }
+  .jl-icon-btn:hover { color: var(--text-2); background: var(--surface2); }
   .kb-card { min-height: 150px; display: flex; flex-direction: column; }
   .kb-fact { font-size: 13px; line-height: 1.65; color: var(--text-2); flex: 1; opacity: 1; transition: opacity 0.35s ease; min-height: 60px; }
   .kb-fact.fading { opacity: 0; }
@@ -1338,6 +1353,7 @@
   #task-edit-modal-overlay .kpi-modal-preview,
   #add-task-modal-overlay .kpi-modal-preview,
   #add-jobreminder-modal-overlay .kpi-modal-preview,
+  #add-joblist-modal-overlay .kpi-modal-preview,
   #activity-modal-overlay .kpi-modal-preview,
   #shortcuts-modal-overlay .kpi-modal-preview { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
   .shortcut-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; color: var(--text-2); }
@@ -2217,6 +2233,11 @@
     <div class="tasks-sidebar">
       <button class="add-task-trigger" onclick="openAddTaskModal()"><i class="ti ti-plus"></i> Add your own task</button>
       <button class="add-task-trigger" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i> Amtek Job Reminder</button>
+      <button class="add-task-trigger" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i> Add Amtek Job List</button>
+      <div class="card jl-card">
+        <div class="card-title"><i class="ti ti-list-details"></i> Amtek Job List</div>
+        <div class="jl-list" id="jl-list"></div>
+      </div>
       <div class="card kb-card">
         <div class="card-title"><i class="ti ti-bulb"></i> Knowledge base</div>
         <div class="kb-fact" id="kb-fact"></div>
@@ -3395,6 +3416,40 @@
       <button class="icon-btn" onclick="closeJobReminderDetail()"><i class="ti ti-x"></i></button>
     </div>
     <div class="kpi-modal-preview" id="jrd-body" style="background:var(--surface2); color:var(--text); border-color:var(--border-md);"></div>
+  </div>
+</div>
+
+<!-- Amtek Job List — add/edit -->
+<div class="kpi-modal-overlay" id="add-joblist-modal-overlay">
+  <div class="kpi-modal">
+    <div class="kpi-modal-header">
+      <strong id="jl-modal-title">Amtek Job List</strong>
+      <button class="icon-btn" onclick="closeAddJobListModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="kpi-modal-preview">
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Name</div>
+        <input class="field-input" id="jl-name" placeholder="e.g. June dispatch job list">
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">URL link</div>
+        <input class="field-input" id="jl-url" placeholder="https://...">
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due date</div>
+        <div id="jl-date-holder"></div>
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Link to an ANZ WL sub-project <span style="font-weight:400;color:var(--text-3)">(optional)</span></div>
+        <select class="field-input" id="jl-subproject">
+          <option value="">— None —</option>
+        </select>
+      </div>
+    </div>
+    <div class="kpi-modal-actions">
+      <button class="kpi-file-btn" onclick="closeAddJobListModal()">Cancel</button>
+      <button class="generate-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" id="jl-save-btn" onclick="saveJobList()"><i class="ti ti-plus" style="font-size:15px;"></i> Add to list</button>
+    </div>
   </div>
 </div>
 
@@ -4895,6 +4950,174 @@ function openJobReminderDetail(id) {
 
 function closeJobReminderDetail() {
   document.getElementById('jobreminder-detail-overlay').classList.remove('active');
+}
+
+// ===== AMTEK JOB LIST =====
+// A lightweight link to a list of jobs being actioned by the team — lives only in the
+// Tasks sidebar (never the task list itself). Can optionally be linked to an ANZ WL
+// sub-project: linking adds a checklist item there, and ticking this off delivers it.
+let jobLists = [];
+let editingJobListId = null;
+
+function saveJobLists() { dbSet('zarif_job_lists', jobLists); }
+
+function anzSubProjectOptions() {
+  const opts = [];
+  (projects || []).filter(p => /\banz\b|anzwl/i.test(p.title || '')).forEach(p => {
+    (p.subs || []).forEach(s => {
+      opts.push({ projId: p.id, subId: s.id, label: `${p.title} › ${s.title}${s.status === 'delivered' ? ' (Delivered)' : ''}` });
+    });
+  });
+  return opts;
+}
+
+function fillJlSubProjectSelect(selectedVal) {
+  const sel = document.getElementById('jl-subproject');
+  sel.innerHTML = '<option value="">— None —</option>' + anzSubProjectOptions()
+    .map(o => `<option value="${o.projId}:${o.subId}">${esc(o.label)}</option>`).join('');
+  sel.value = selectedVal || '';
+}
+
+function openAddJobListModal() {
+  editingJobListId = null;
+  document.getElementById('jl-modal-title').textContent = 'Amtek Job List';
+  document.getElementById('jl-save-btn').innerHTML = '<i class="ti ti-plus" style="font-size:15px;"></i> Add to list';
+  document.getElementById('jl-name').value = '';
+  document.getElementById('jl-url').value = '';
+  document.getElementById('jl-date-holder').innerHTML = makeDatePicker('jl-date', '', null, 'Pick a date');
+  fillJlSubProjectSelect('');
+  document.getElementById('add-joblist-modal-overlay').classList.add('active');
+}
+
+function openEditJobList(id) {
+  const j = jobLists.find(x => String(x.id) === String(id));
+  if (!j) return;
+  editingJobListId = id;
+  document.getElementById('jl-modal-title').textContent = 'Edit job list entry';
+  document.getElementById('jl-save-btn').innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Save';
+  document.getElementById('jl-name').value = j.name || '';
+  document.getElementById('jl-url').value = j.url || '';
+  document.getElementById('jl-date-holder').innerHTML = makeDatePicker('jl-date', j.date || '', null, 'Pick a date');
+  fillJlSubProjectSelect((j.projId != null && j.subId != null) ? `${j.projId}:${j.subId}` : '');
+  document.getElementById('add-joblist-modal-overlay').classList.add('active');
+}
+
+function closeAddJobListModal() {
+  document.getElementById('add-joblist-modal-overlay').classList.remove('active');
+}
+
+// add a checklist item to the linked ANZ WL sub-project — deliberately does NOT create
+// a Task Manager task, since this feature is meant to be sidebar-only
+function linkJobListTodo(j) {
+  const p = projects.find(x => x.id === j.projId);
+  if (!p) return;
+  const s = (p.subs || []).find(x => x.id === j.subId);
+  if (!s) return;
+  if (!s.todos) s.todos = [];
+  const item = { id: Date.now(), text: j.name, done: false, status: 'active', dueDate: j.date || '' };
+  s.todos.push(item);
+  j.todoId = item.id;
+  saveProjects();
+}
+
+function removeLinkedTodo(j) {
+  if (!j.todoId || !j.projId || !j.subId) return;
+  const p = projects.find(x => x.id === j.projId);
+  const s = p && (p.subs || []).find(x => x.id === j.subId);
+  if (!s) return;
+  s.todos = (s.todos || []).filter(t => t.id !== j.todoId);
+  saveProjects();
+}
+
+function saveJobList() {
+  const name = document.getElementById('jl-name').value.trim();
+  if (!name) return;
+  const url = document.getElementById('jl-url').value.trim();
+  const dateEl = document.getElementById('jl-date');
+  const date = (dateEl && dateEl.value) ? dateEl.value : '';
+  const subVal = document.getElementById('jl-subproject').value;
+  const [projId, subId] = subVal ? subVal.split(':').map(Number) : [null, null];
+
+  if (editingJobListId) {
+    const j = jobLists.find(x => String(x.id) === String(editingJobListId));
+    if (j) {
+      const linkChanged = j.projId !== projId || j.subId !== subId;
+      if (linkChanged) removeLinkedTodo(j);
+      j.name = name; j.url = url; j.date = date;
+      j.projId = projId || null; j.subId = subId || null;
+      if (projId && subId && (linkChanged || !j.todoId)) linkJobListTodo(j);
+      else if (!projId) j.todoId = null;
+    }
+  } else {
+    const j = { id: 'jl' + Date.now(), name, url, date, done: false, projId: projId || null, subId: subId || null, todoId: null };
+    if (projId && subId) linkJobListTodo(j);
+    jobLists.push(j);
+  }
+  saveJobLists();
+  editingJobListId = null;
+  closeAddJobListModal();
+  renderJobListSidebar();
+}
+
+function toggleJobListDone(id) {
+  const j = jobLists.find(x => String(x.id) === String(id));
+  if (!j) return;
+  j.done = !j.done;
+  if (j.todoId && j.projId && j.subId) {
+    const p = projects.find(x => x.id === j.projId);
+    const s = p && (p.subs || []).find(x => x.id === j.subId);
+    const t = s && (s.todos || []).find(x => x.id === j.todoId);
+    if (t) {
+      t.done = j.done;
+      t.status = j.done ? 'delivered' : 'active';
+      if (j.done && s.todos.length > 0 && s.todos.every(x => x.done)) {
+        s.status = 'delivered';
+        if (!s.deliveredAt) s.deliveredAt = new Date().toISOString();
+      }
+      saveProjects();
+    }
+  }
+  saveJobLists();
+  renderJobListSidebar();
+}
+
+function deleteJobList(id) {
+  const j = jobLists.find(x => String(x.id) === String(id));
+  if (!j) return;
+  if (!confirm(`Remove "${j.name}" from the job list?`)) return;
+  removeLinkedTodo(j);
+  jobLists = jobLists.filter(x => String(x.id) !== String(id));
+  saveJobLists();
+  renderJobListSidebar();
+}
+
+function renderJobListSidebar() {
+  const el = document.getElementById('jl-list');
+  if (!el) return;
+  if (!jobLists.length) {
+    el.innerHTML = '<div class="jl-empty">No job list links yet — add one above.</div>';
+    return;
+  }
+  const sorted = [...jobLists].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
+  el.innerHTML = sorted.map(j => {
+    let linkBadge = '';
+    if (j.projId && j.subId) {
+      const p = projects.find(x => x.id === j.projId);
+      const s = p && (p.subs || []).find(x => x.id === j.subId);
+      if (s) linkBadge = `<span class="jl-link-badge" title="Linked to ${esc(p.title)} › ${esc(s.title)} checklist"><i class="ti ti-link"></i> ${esc(s.title)}</span>`;
+    }
+    const dueChip = j.date ? `<span class="jl-due">${fmtShortDate(j.date)}</span>` : '';
+    const openAttr = j.url ? `onclick="window.open(${jsAttr(j.url)},'_blank')"` : '';
+    return `<div class="jl-item${j.done ? ' done' : ''}">
+      <input type="checkbox" class="jl-cb" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
+      <span class="jl-name"${j.url ? ' style="cursor:pointer"' : ''} ${openAttr} title="${j.url ? 'Open link' : ''}">${esc(j.name)}</span>
+      <div class="jl-meta">${dueChip}${linkBadge}</div>
+      <div class="jl-actions">
+        <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')"><i class="ti ti-pencil"></i></button>
+        <button class="jl-icon-btn" onclick="deleteJobList('${j.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ===== KNOWLEDGE BASE SIDEBAR =====
@@ -10058,6 +10281,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.19.0', type: 'minor', date: '29 Jun 2026', title: 'New: Amtek Job List', changes: [
+    '"Add Amtek Job List" button added to the Tasks page sidebar — links out to a list of jobs being actioned by the team, separate from your task list',
+    'Each entry has a name, a clickable URL link, and an optional due date',
+    'Can optionally be linked to one of your ANZ WL sub-projects — linking adds it as a checklist item there automatically',
+    'A checkbox lets you mark an entry done — if it\'s linked, the matching checklist item is set to Delivered (and back to In progress if you untick it)',
+    'The job list lives as its own card in the sidebar so you can see it and check progress at a glance without opening anything',
+  ]},
   { ver: '4.18.0', type: 'minor', date: '29 Jun 2026', title: 'Custom accent colours, pinning, a Projects board view, high contrast mode, and more Insights cards', changes: [
     'New custom accent colour picker in Settings — override your theme\'s accent with your own colour, independent of the 7 preset themes',
     'High contrast mode (Settings) strips blur/translucency and thickens borders for low-vision use',
@@ -12031,6 +12261,8 @@ async function initApp() {
   projects       = dbGet('zarif_projects')       || [];
   nextProjectId  = projects.reduce((m,p) => Math.max(m, p.id || 0), 0) + 1;
 
+  jobLists       = dbGet('zarif_job_lists')      || [];
+
   // Filter expired once-tasks
   const _before = customTasks.length;
   customTasks = customTasks.filter(t => !(t.freq === 'once' && t.date !== todayInputDate()));
@@ -12062,6 +12294,7 @@ async function initApp() {
   initPNotes();
   renderWishlist();
   renderProjects();
+  renderJobListSidebar();
   renderHomeDashboard();
   const mdh = document.getElementById('mtg-date-holder');
   if (mdh) mdh.innerHTML = makeDatePicker('mtg-date', todayInputDate(), null, 'Pick a date');
