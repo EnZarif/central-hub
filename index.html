@@ -612,21 +612,26 @@
   /* ── Command palette (Ctrl/Cmd+K) ── */
   .cmdk-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: flex-start; justify-content: center; padding: 12vh 20px; }
   .cmdk-overlay.active { display: flex; }
-  .cmdk-box { width: 100%; max-width: 560px; background: var(--surface); border: 1px solid var(--border-md); border-radius: 14px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); overflow: hidden; animation: fadeIn 0.12s ease; }
-  .cmdk-input-row { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
-  .cmdk-input-row i { font-size: 17px; color: var(--text-3); flex-shrink: 0; }
+  .cmdk-box { width: 100%; max-width: 560px; background: color-mix(in srgb, var(--surface) 78%, black 22%); border: 1px solid var(--border-md); border-radius: 14px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7), 0 0 70px -8px color-mix(in srgb, var(--teal) 40%, transparent); overflow: hidden; animation: fadeIn 0.12s ease; }
+  .cmdk-input-row { position: relative; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .cmdk-input-row i { font-size: 17px; color: var(--teal-text); flex-shrink: 0; }
   .cmdk-input-row input { flex: 1; background: none; border: none; outline: none; font-family: inherit; font-size: 15px; color: var(--text); min-width: 0; }
   .cmdk-input-row kbd { flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--text-3); background: var(--surface); border: 1px solid var(--border-md); border-radius: 6px; padding: 2px 7px; }
   .cmdk-results { max-height: 60vh; overflow-y: auto; padding: 6px; }
-  .cmdk-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; color: var(--text-2); }
+  .cmdk-row { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 6px 6px; padding: 9px 12px 9px 14px; border-radius: 8px; background: var(--surface2); overflow: hidden; cursor: pointer; font-size: 13.5px; color: var(--text-2); }
+  .cmdk-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.1s; }
   .cmdk-row i { font-size: 16px; color: var(--text-3); flex-shrink: 0; width: 18px; text-align: center; }
   .cmdk-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-  .cmdk-row-sub { font-size: 10.5px; color: var(--text-3); flex-shrink: 0; text-transform: uppercase; letter-spacing: .04em; }
-  .cmdk-row.sel { background: var(--blue-bg); }
-  .cmdk-row.sel .cmdk-row-label, .cmdk-row.sel i { color: var(--blue-text); }
+  .cmdk-row-sub { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: var(--surface); color: var(--text-3); flex-shrink: 0; text-transform: uppercase; letter-spacing: .04em; }
+  .cmdk-row.sel { background: var(--teal-bg); color: var(--text); box-shadow: 0 0 16px -2px color-mix(in srgb, var(--teal) 50%, transparent); }
+  .cmdk-row.sel::before { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+  .cmdk-row.sel .cmdk-row-label, .cmdk-row.sel i { color: var(--teal-text); }
+  .cmdk-row.sel .cmdk-row-sub { background: var(--teal-bg); color: var(--teal-text); }
   .cmdk-empty { padding: 24px; text-align: center; font-size: 13px; color: var(--text-3); }
+  .cmdk-underline { position: absolute; left: 16px; right: 16px; bottom: -0.5px; height: 2px; overflow: hidden; background: var(--border); }
+  .cmdk-underline::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 35%; background: var(--teal); animation: gsearchGlide 2.2s ease-in-out infinite; }
 
-  /* Global search — accent-bar cards grouped by category, animated accent underline */
+  /* Global search — same accent-aware treatment as the command palette, plus category headers */
   .gsearch-box { border-color: var(--border-md); }
   .gsearch-input-row { position: relative; }
   .gsearch-input-row i:first-child { color: var(--teal-text); }
@@ -637,8 +642,8 @@
   .gsearch-group-label:first-child { padding-top: 6px; }
   .gsearch-row { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 6px 6px; padding: 9px 12px 9px 14px; border-radius: 8px; background: var(--surface2); overflow: hidden; cursor: pointer; font-size: 13px; color: var(--text-2); }
   .gsearch-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.1s; }
-  .gsearch-row.sel { background: var(--teal-bg); color: var(--text); }
-  .gsearch-row.sel::before { background: var(--teal); }
+  .gsearch-row.sel { background: var(--teal-bg); color: var(--text); box-shadow: 0 0 16px -2px color-mix(in srgb, var(--teal) 50%, transparent); }
+  .gsearch-row.sel::before { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
   .gsearch-row i { font-size: 15px; color: var(--text-3); width: 16px; text-align: center; flex-shrink: 0; }
   .gsearch-row.sel i { color: var(--teal-text); }
   .gsearch-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -3536,6 +3541,7 @@
       <i class="ti ti-search"></i>
       <input type="text" id="cmdk-input" placeholder="Jump to a page, task, meeting, or idea..." autocomplete="off" oninput="renderCommandPalette()" onkeydown="cmdkKeyNav(event)">
       <kbd>Esc</kbd>
+      <div class="cmdk-underline"></div>
     </div>
     <div class="cmdk-results" id="cmdk-results"></div>
   </div>
@@ -10592,6 +10598,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.20.3', type: 'patch', date: '29 Jun 2026', title: 'Darker accent-glow search interfaces', changes: [
+    'Global search box is now darker than the page background, with a soft accent-coloured underglow and a brighter glow on the selected row so it pops more',
+    'The Ctrl+K command palette now matches: same darker box, accent underglow, animated accent underline on the input, and accent-bar selected rows — it used to highlight selections in a fixed blue, now it follows your custom accent colour like everything else',
+  ]},
   { ver: '4.20.2', type: 'patch', date: '29 Jun 2026', title: 'Less translucent nav bar and Ctrl+K box', changes: [
     'The Ctrl+K command palette (and the new global search) had a near-transparent background — now solid like every other modal in the app',
     'Nav bar icon circles (Widgets, Search, Settings, Theme) and the active-page highlight pill were quite faint — bumped their opacity up so they read clearly at a glance',
