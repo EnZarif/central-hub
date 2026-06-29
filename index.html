@@ -5069,6 +5069,32 @@ function saveJobList() {
   renderJobListSidebar();
 }
 
+// ticking a job list entry off also drops a completed task into today's Task Manager
+// list, so it shows up in your streak/activity history like any other finished task
+function linkJobListTask(j) {
+  const task = {
+    id: 'jlt' + Date.now() + Math.floor(Math.random() * 1000),
+    freq: 'date', priority: 'MEDIUM', name: j.name,
+    days: 'all', assignees: ['Me'],
+    note: 'Checked off from your Amtek Job List' + (j.url ? ` — ${j.url}` : ''),
+    custom: true, date: todayInputDate(), hub: 'helpdesk',
+  };
+  customTasks.push(task);
+  j.taskId = task.id;
+  saveCustomTasks();
+  toggle(task.id);
+}
+
+function removeLinkedTask(j) {
+  if (!j.taskId) return;
+  delete done[taskKey(j.taskId)];
+  customTasks = customTasks.filter(ct => ct.id !== j.taskId);
+  j.taskId = null;
+  saveCustomTasks();
+  save();
+  if (typeof renderTasks === 'function') renderTasks();
+}
+
 function toggleJobListDone(id) {
   const j = jobLists.find(x => String(x.id) === String(id));
   if (!j) return;
@@ -5087,6 +5113,8 @@ function toggleJobListDone(id) {
       saveProjects();
     }
   }
+  if (j.done) linkJobListTask(j);
+  else removeLinkedTask(j);
   saveJobLists();
   renderJobListSidebar();
 }
@@ -5096,6 +5124,7 @@ function deleteJobList(id) {
   if (!j) return;
   if (!confirm(`Remove "${j.name}" from the job list?`)) return;
   removeLinkedTodo(j);
+  removeLinkedTask(j);
   jobLists = jobLists.filter(x => String(x.id) !== String(id));
   saveJobLists();
   renderJobListSidebar();
@@ -10306,6 +10335,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.19.2', type: 'minor', date: '29 Jun 2026', title: 'Job list completions sync to your tasks, and accent colour now tints your name', changes: [
+    'Ticking off an Amtek Job List entry now also drops a completed task into today\'s Task Manager list (counts toward streak/activity history) — unticking removes it again',
+    'Your custom accent colour now also tints the "Zarif" in the "Hey, Zarif" greeting, not just buttons and badges',
+  ]},
   { ver: '4.19.1', type: 'patch', date: '29 Jun 2026', title: 'Restyled the Amtek Job List', changes: [
     'Each entry is now its own accent-bar card instead of a plain row, with a bolder job name',
     'Checkbox is now a circular gradient-fill control with a soft glow once checked',
@@ -11121,9 +11154,9 @@ function applySettings(s) {
     if (soundEl) s.soundEnabled = soundEl.checked;
   }
 
-  // Display name
+  // Display name — the name itself picks up the custom accent colour (or theme default)
   const greetEl = document.querySelector('.task-hero-greeting');
-  if (greetEl) greetEl.textContent = `Hey, ${s.displayName || 'Zarif'}`;
+  if (greetEl) greetEl.innerHTML = `Hey, <span style="color:var(--teal-text)">${esc(s.displayName || 'Zarif')}</span>`;
 
   // Sidebar visibility
   const sidebar = document.querySelector('.tasks-sidebar');
