@@ -651,6 +651,11 @@
   .task-streak-badge { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; background: rgba(239,168,0,0.14); color: #ef9f27; }
   .task-streak-badge i { font-size: 11px; }
   .task-tag-chip { font-size: 10px; font-weight: 500; padding: 1px 8px; border-radius: 20px; flex-shrink: 0; background: var(--surface2); border: 0.5px solid var(--border-md); color: var(--text-2); }
+  .task-move-btn.pin-active, .icon-btn.pin-active { color: var(--amber-text); }
+  .task-pin-icon { font-size: 12px; color: var(--amber-text); margin-right: 5px; flex-shrink: 0; }
+  .task:focus { outline: none; box-shadow: 0 0 0 2px var(--blue-text); }
+  .task:focus:not(:focus-visible) { box-shadow: none; }
+  .task:focus-visible { box-shadow: 0 0 0 2px var(--blue-text); }
   .mtg-link-chip { font-size: 10.5px; font-weight: 600; padding: 2px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; background: var(--blue-bg); color: var(--blue-text); cursor: pointer; transition: opacity 0.15s; }
   .mtg-link-chip:hover { opacity: 0.8; }
   .mtg-link-chip i { font-size: 11px; }
@@ -834,6 +839,34 @@
   .proj-filter-btn { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-3); cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .proj-filter-btn:hover { color: var(--text); border-color: var(--text-3); }
   .proj-filter-btn.active { background: var(--amber-bg); border-color: var(--amber-text); color: var(--amber-text); }
+  .proj-view-toggle { display: flex; gap: 4px; background: var(--surface); border-radius: 9px; padding: 3px; }
+  .proj-view-btn { width: 30px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 7px; border: none; background: none; color: var(--text-3); cursor: pointer; font-size: 14px; transition: all 0.15s; }
+  .proj-view-btn.active { background: var(--surface2); color: var(--text); }
+  .proj-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
+  @media (max-width: 800px) { .proj-board { grid-template-columns: 1fr; } }
+  .proj-board-col { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px; min-height: 80px; }
+  .proj-board-col-head { font-size: 12.5px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .proj-board-col-head span { font-size: 11px; color: var(--text-3); background: var(--surface2); border-radius: 20px; padding: 1px 8px; }
+  .proj-board-col-body { display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+  .proj-board-card { background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: 10px; padding: 10px 12px; cursor: grab; transition: border-color 0.15s; }
+  .proj-board-card:hover { border-color: var(--blue-text); }
+  .proj-board-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .proj-board-card-meta { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+  .proj-board-bar { height: 4px; border-radius: 3px; background: var(--border-md); margin-top: 8px; overflow: hidden; }
+  .proj-board-bar-fill { height: 100%; background: var(--green-text); }
+  .proj-board-empty { font-size: 11.5px; color: var(--text-3); text-align: center; padding: 14px 0; border: 1px dashed var(--border-md); border-radius: 8px; }
+
+  /* ── High contrast / reduced transparency mode ── */
+  body.high-contrast-mode * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  body.high-contrast-mode .app-card,
+  body.high-contrast-mode .task,
+  body.high-contrast-mode .card,
+  body.high-contrast-mode .statcard,
+  body.high-contrast-mode .kpi-modal,
+  body.high-contrast-mode .widget-card { border-width: 1.5px !important; border-color: var(--text-3) !important; }
+  body.high-contrast-mode #page-home .app-card,
+  body.high-contrast-mode .home-briefing-card { background: var(--surface) !important; }
+  body.high-contrast-mode .tname, body.high-contrast-mode .app-card-title { font-weight: 700; }
   /* "Accent invert" tier — tinted outline that fills solid on hover/press, shared by Add project, Add sub-project, Save project and the Danger buttons */
   .proj-add-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 7px 16px; border-radius: 10px; border: 0.5px solid var(--amber-text); background: var(--amber-bg); color: var(--amber-text); cursor: pointer; font-family: inherit; font-weight: 500; transition: transform 0.15s, background 0.15s, color 0.15s; flex-shrink: 0; }
   .proj-add-btn:hover { background: var(--amber-text); color: #000; transform: translateY(-1px); }
@@ -1353,6 +1386,9 @@
   .ai-modal-prompt { width: 100%; padding: 8px 10px; font-size: 13px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; resize: vertical; min-height: 60px; line-height: 1.5; }
   .ai-modal-prompt:focus { border-color: var(--teal); }
   .ai-modal-result { margin-top: 12px; padding: 12px; font-size: 13px; line-height: 1.65; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); white-space: pre-wrap; color: var(--text-2); min-height: 60px; display: none; }
+  .ai-modal-diff { margin-top: 10px; padding: 12px; font-size: 13px; line-height: 1.65; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); white-space: pre-wrap; color: var(--text-2); }
+  .ai-diff-del { color: #ef4444; text-decoration: line-through; opacity: 0.8; }
+  .ai-diff-add { color: var(--green-text); text-decoration: none; }
   .ai-modal-result.visible { display: block; }
   .ai-modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; flex-wrap: wrap; }
   .task-ai-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 5px; font-size: 14px; display: flex; align-items: center; align-self: flex-start; flex-shrink: 0; transition: all 0.15s; }
@@ -1657,6 +1693,20 @@
   .ins-hero-stat { flex: 1; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 12px; padding: 11px 13px; }
   .ins-hero-stat-n { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
   .ins-hero-stat-l { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+  .ins-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 16px; margin-top: 7px; }
+  .ins-sparkline span { flex: 1; background: rgba(255,255,255,0.45); border-radius: 1px; min-height: 2px; display: block; }
+
+  /* Workload (stacked bar by day, next 7 days) */
+  .wl-chart { display: flex; align-items: flex-end; gap: 10px; height: 130px; padding: 0 4px; }
+  .wl-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .wl-track { width: 100%; max-width: 30px; display: flex; flex-direction: column; border-radius: 4px 4px 2px 2px; overflow: hidden; }
+  .wl-lbl { font-size: 10.5px; color: var(--text-3); margin-top: 6px; }
+  .wl-seg.wl-high { background: #ef4444; }
+  .wl-seg.wl-medium { background: var(--amber-text); }
+  .wl-seg.wl-low { background: var(--green-text); }
+  .widget-drag-handle { cursor: grab; opacity: 0.6; font-size: 14px; margin-right: 4px; flex-shrink: 0; transition: opacity 0.15s; }
+  .widget-drag-handle:hover { opacity: 1; }
+  .widget-drag-handle:active { cursor: grabbing; }
 
   /* Activity feed (transactions style) */
   .ins-feed { display: flex; flex-direction: column; gap: 4px; }
@@ -1829,8 +1879,9 @@
     <div class="widgets-grid">
 
       <!-- POMODORO -->
-      <div class="widget-card pomo-wcard">
+      <div class="widget-card pomo-wcard" data-wid="pomo">
         <div class="wcard-banner pomo-banner">
+          <span class="widget-drag-handle" draggable="true" ondragstart="widgetDragStart(event)" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></span>
           <i class="ti ti-clock-hour-4"></i>
           <div class="wcard-banner-text">
             <div class="wcard-banner-title">Focus Timer</div>
@@ -1871,8 +1922,9 @@
       </div>
 
       <!-- SCRATCH PAD (misc — everything) -->
-      <div class="widget-card notes-wcard">
+      <div class="widget-card notes-wcard" data-wid="notes">
         <div class="wcard-banner notes-banner">
+          <span class="widget-drag-handle" draggable="true" ondragstart="widgetDragStart(event)" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></span>
           <i class="ti ti-pencil"></i>
           <div class="wcard-banner-text">
             <div class="wcard-banner-title">Scratch Pad</div>
@@ -1906,8 +1958,9 @@
       </div>
 
       <!-- PIXEL OFFICE -->
-      <div class="widget-card pixoff-wcard">
+      <div class="widget-card pixoff-wcard" data-wid="pixoff">
         <div class="wcard-banner pixoff-banner">
+          <span class="widget-drag-handle" draggable="true" ondragstart="widgetDragStart(event)" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></span>
           <i class="ti ti-device-gamepad-2"></i>
           <div class="wcard-banner-text">
             <div class="wcard-banner-title">Pixel Office</div>
@@ -1967,6 +2020,10 @@
         <button class="proj-filter-btn" data-pf="active" onclick="setProjFilter('active')">Active</button>
         <button class="proj-filter-btn" data-pf="onhold" onclick="setProjFilter('onhold')">On hold</button>
         <button class="proj-filter-btn" data-pf="delivered" onclick="setProjFilter('delivered')">Delivered</button>
+      </div>
+      <div class="proj-view-toggle">
+        <button class="proj-view-btn active" data-pv="list" onclick="setProjViewMode('list')" title="List view"><i class="ti ti-list"></i></button>
+        <button class="proj-view-btn" data-pv="board" onclick="setProjViewMode('board')" title="Board view"><i class="ti ti-layout-kanban"></i></button>
       </div>
       <button class="proj-add-btn" onclick="openProjModal()"><i class="ti ti-plus" style="font-size:15px"></i> Add project</button>
     </div>
@@ -2897,6 +2954,28 @@
         </div>
         <div class="settings-row">
           <div class="settings-row-info">
+            <div class="settings-row-label">Custom accent colour</div>
+            <div class="settings-row-desc">Override your theme's accent colour with your own — leave at default to use the theme's colour</div>
+          </div>
+          <div class="settings-row-ctrl" style="display:flex; gap:8px; align-items:center;">
+            <input type="color" id="settings-accent-color" value="#378ADD" onchange="applyCustomAccent(this.value); saveCustomAccent(this.value);" style="width:38px; height:32px; border:none; border-radius:8px; cursor:pointer; background:none; padding:0;">
+            <button class="kpi-file-btn" onclick="clearCustomAccent()">Reset</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">High contrast mode</div>
+            <div class="settings-row-desc">Removes blur/translucency and increases border contrast for low-vision use</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-high-contrast" onchange="applySettings()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
             <div class="settings-row-label">Sound effects</div>
             <div class="settings-row-desc">Soft chime when you complete a task or finish your whole day</div>
           </div>
@@ -3045,7 +3124,9 @@
     <div class="ai-modal-context" id="ai-modal-context"></div>
     <textarea class="ai-modal-prompt" id="ai-modal-prompt" placeholder="Add any extra context or instructions (optional)..." rows="3"></textarea>
     <div class="ai-modal-result" id="ai-modal-result"></div>
+    <div class="ai-modal-diff" id="ai-modal-diff" style="display:none;"></div>
     <div class="ai-modal-actions">
+      <button class="kpi-file-btn" id="ai-modal-diff-btn" onclick="toggleAiDiff()" style="display:none;"><i class="ti ti-git-compare" style="font-size:14px;"></i> What changed</button>
       <button class="kpi-file-btn" onclick="closeAiModal()">Cancel</button>
       <button class="icon-btn" id="ai-modal-copy-btn" title="Copy result" onclick="copyAiResult()" style="display:none;"><i class="ti ti-copy"></i></button>
       <button class="generate-btn" id="ai-modal-apply-btn" style="width:auto; margin-bottom:0; padding:8px 18px; display:none;" onclick="applyAiResult()"><i class="ti ti-check" style="font-size:15px;"></i> Apply</button>
@@ -4007,6 +4088,7 @@ function renderInsights() {
   const dayMs = 86400000;
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const t0 = todayStart.getTime();
+  const _cachedRetro = (dbGet('zarif_weekly_retro') || {}).text || '';
 
   // last 7 days of task completions
   const days = [];
@@ -4167,6 +4249,7 @@ function renderInsights() {
             <div class="ins-hero-stat">
               <div class="ins-hero-stat-n">${streak.count || 0}</div>
               <div class="ins-hero-stat-l">Day streak</div>
+              <div class="ins-sparkline" title="Tasks completed, last 7 days">${days.map(d => `<span style="height:${Math.max(10, Math.round(d.tasks / maxBar * 100))}%"></span>`).join('')}</div>
             </div>
             <div class="ins-hero-stat">
               <div class="ins-hero-stat-n">${streak.best || 0}</div>
@@ -4189,6 +4272,18 @@ function renderInsights() {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="ins-card" style="margin-top:16px">
+      <div class="ins-card-head">
+        <div>
+          <div class="ins-card-title">Weekly retrospective</div>
+          <div class="ins-card-sub">AI summary of your last 7 days</div>
+        </div>
+        <button class="kpi-file-btn" id="retro-gen-btn" onclick="generateWeeklyRetro()" style="padding:6px 12px; font-size:12px;"><i class="ti ti-sparkles" style="font-size:13px;"></i> Generate</button>
+      </div>
+      <div class="ai-modal-result${_cachedRetro ? ' visible' : ''}" id="retro-body" style="margin-top:0;">${_cachedRetro ? esc(_cachedRetro) : ''}</div>
+      ${!_cachedRetro ? `<div class="ins-feed-empty">Click Generate for an AI recap of this week's completions, meetings and streak.</div>` : ''}
     </div>
 
     <div class="ins-card" style="margin-top:16px">
@@ -4240,8 +4335,60 @@ function renderInsights() {
       </div>`}
     </div>
 
+    ${renderWorkloadCard()}
     ${renderCalendarHeatmapCard(log)}
     ${renderOnThisDayCard()}`;
+}
+
+// ===== Workload view — stacked HIGH/MED/LOW bar of dated tasks due over the next 7 days =====
+function renderWorkloadCard() {
+  const dayMs = 86400000;
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const dated = getAllTasks().filter(t => t.freq === 'date' && t.date && !isDone(t.id));
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(todayStart.getTime() + i * dayMs);
+    const key = ymd(d);
+    const onDay = dated.filter(t => t.date === key);
+    days.push({
+      label: d.toLocaleDateString('en-AU', { weekday: 'short' }).slice(0, 3),
+      high: onDay.filter(t => t.priority === 'HIGH').length,
+      medium: onDay.filter(t => t.priority === 'MEDIUM').length,
+      low: onDay.filter(t => t.priority === 'LOW').length,
+    });
+  }
+  const max = Math.max(1, ...days.map(d => d.high + d.medium + d.low));
+  const totalDue = days.reduce((s, d) => s + d.high + d.medium + d.low, 0);
+  if (!totalDue) {
+    return `<div class="ins-card" style="margin-top:16px">
+      <div class="ins-card-head"><div><div class="ins-card-title">Workload ahead</div><div class="ins-card-sub">Dated tasks due in the next 7 days, by priority</div></div></div>
+      <div class="ins-feed-empty">Nothing dated coming up — clear week ahead.</div>
+    </div>`;
+  }
+  const cols = days.map(d => {
+    const total = d.high + d.medium + d.low;
+    const h = total ? Math.max(Math.round(total / max * 100), 6) : 3;
+    const segs = total ? `
+      ${d.high ? `<div class="wl-seg wl-high" style="height:${(d.high/total*100).toFixed(1)}%"></div>` : ''}
+      ${d.medium ? `<div class="wl-seg wl-medium" style="height:${(d.medium/total*100).toFixed(1)}%"></div>` : ''}
+      ${d.low ? `<div class="wl-seg wl-low" style="height:${(d.low/total*100).toFixed(1)}%"></div>` : ''}` : '';
+    return `<div class="wl-col">
+      <div class="wl-track" style="height:${h}%" title="${d.label}: ${d.high} high, ${d.medium} medium, ${d.low} low">${segs}</div>
+      <div class="wl-lbl">${d.label}</div>
+    </div>`;
+  }).join('');
+  return `<div class="ins-card" style="margin-top:16px">
+    <div class="ins-card-head">
+      <div><div class="ins-card-title">Workload ahead</div><div class="ins-card-sub">Dated tasks due in the next 7 days, by priority</div></div>
+      <div class="ins-card-sub"><i class="ti ti-stack-2" style="font-size:13px"></i></div>
+    </div>
+    <div class="wl-chart">${cols}</div>
+    <div class="ins-heat-legend" style="justify-content:flex-start">
+      <span class="wl-seg wl-high" style="width:11px;height:11px;display:inline-block;border-radius:2px"></span><span>High</span>
+      <span class="wl-seg wl-medium" style="width:11px;height:11px;display:inline-block;border-radius:2px"></span><span>Medium</span>
+      <span class="wl-seg wl-low" style="width:11px;height:11px;display:inline-block;border-radius:2px"></span><span>Low</span>
+    </div>
+  </div>`;
 }
 
 // ===== 90-day GitHub-style calendar heatmap =====
@@ -4333,6 +4480,22 @@ function closeShortcutsModal() {
   const el = document.getElementById('shortcuts-modal-overlay');
   if (el) el.classList.remove('active');
 }
+// Arrow-key/Space navigation within the task list — #list's children are replaced on every
+// render but #list itself persists, so a single delegated listener survives re-renders.
+(function initTaskListKeyNav() {
+  const list = document.getElementById('list');
+  if (!list) return;
+  list.addEventListener('keydown', e => {
+    const cur = e.target.closest && e.target.closest('.task');
+    if (!cur) return;
+    const all = [...list.querySelectorAll('.task')];
+    const idx = all.indexOf(cur);
+    if (e.key === 'ArrowDown') { e.preventDefault(); const next = all[idx + 1]; if (next) next.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); const prev = all[idx - 1]; if (prev) prev.focus(); }
+    else if (e.key === ' ') { e.preventDefault(); cur.click(); }
+  });
+})();
+
 document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
@@ -5059,7 +5222,14 @@ function checkReminders(nowMin) {
 
   if (changed) localStorage.setItem(key, JSON.stringify(fired));
 }
-function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
+function getTodayTasks() { return getAllTasks().filter(isToday).sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0) || PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id)); }
+function toggleTaskPin(id) {
+  const t = getAllTasks().find(x => String(x.id) === String(id));
+  if (!t) return;
+  taskOverrides[id] = { ...(taskOverrides[id] || {}), pinned: !t.pinned };
+  saveTaskOverrides();
+  renderTasks();
+}
 
 function renderDueSoon() {
   const el = document.getElementById('due-soon-section');
@@ -5149,6 +5319,45 @@ function renderUpNextRail() {
 
 // Hover tilt on launcher/app cards everywhere (Home, Helpdesk, Personal hub grids) —
 // delegated on document since these cards are re-rendered dynamically.
+// ===== Draggable widget reorder (Widgets page) — moves existing DOM nodes via
+// appendChild/insertBefore rather than re-rendering, so live state (Pomodoro timer,
+// Scratch Pad text, Pixel Office canvas) survives a reorder untouched. =====
+let _widgetDragId = null;
+function widgetDragStart(e) {
+  const card = e.target.closest('.widget-card');
+  _widgetDragId = card ? card.dataset.wid : null;
+  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+}
+function initWidgetReorder() {
+  const grid = document.querySelector('.widgets-grid');
+  if (!grid) return;
+  grid.addEventListener('dragover', e => {
+    if (!_widgetDragId) return;
+    e.preventDefault();
+    const card = e.target.closest('.widget-card');
+    if (!card) return;
+    const dragEl = grid.querySelector(`[data-wid="${_widgetDragId}"]`);
+    if (!dragEl || dragEl === card) return;
+    const rect = card.getBoundingClientRect();
+    const before = (e.clientX - rect.left) < rect.width / 2;
+    grid.insertBefore(dragEl, before ? card : card.nextSibling);
+  });
+  grid.addEventListener('drop', e => {
+    if (!_widgetDragId) return;
+    e.preventDefault();
+    const order = [...grid.querySelectorAll('.widget-card')].map(el => el.dataset.wid);
+    dbSet('zarif_widget_order', order);
+    _widgetDragId = null;
+  });
+  const order = dbGet('zarif_widget_order');
+  if (Array.isArray(order)) {
+    order.forEach(wid => {
+      const el = grid.querySelector(`[data-wid="${wid}"]`);
+      if (el) grid.appendChild(el);
+    });
+  }
+}
+
 (function initAppCardTilt() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   let activeCard = null;
@@ -5682,18 +5891,20 @@ function taskHTML(t, showFreqPill) {
   const dragHandle = !bulkSelectMode
     ? `<div class="task-drag-handle" draggable="true" ondragstart="taskDragStart(event,'${t.id}')" onclick="event.stopPropagation()" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></div>`
     : '';
-  return `<div class="task ${pCls}${d?' done':''}${bulkSelected?' bulk-selected':''}" onclick="${rowClick}" ondragover="taskDragOver(event,'${t.id}')" ondrop="taskDrop(event,'${t.id}')">
+  const pinBtn = `<button class="task-move-btn${t.pinned?' pin-active':''}" title="${t.pinned?'Unpin':'Pin to top'}" onclick="event.stopPropagation(); toggleTaskPin('${t.id}')"><i class="ti ti-pin${t.pinned?'-filled':''}"></i></button>`;
+  const pinIcon = t.pinned ? `<i class="ti ti-pin-filled task-pin-icon" title="Pinned"></i>` : '';
+  return `<div class="task ${pCls}${d?' done':''}${bulkSelected?' bulk-selected':''}" tabindex="0" onclick="${rowClick}" ondragover="taskDragOver(event,'${t.id}')" ondrop="taskDrop(event,'${t.id}')">
     ${bulkCb}
     ${dragHandle}
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
-      <div class="trow1"><span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
+      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
       <div class="tmeta">${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${tagChips}<div class="pills">${pills}</div></div>
       ${note}
     </div>
     <div class="task-actions">
       <div class="task-move-col">${upBtn}${downBtn}</div>
-      ${snoozeBtn}${aiBtn}${editBtn}${delBtn}
+      ${pinBtn}${snoozeBtn}${aiBtn}${editBtn}${delBtn}
     </div>
   </div>`;
 }
@@ -7351,6 +7562,14 @@ function deleteMeeting(id) {
   }
 }
 
+function toggleMeetingPin(id) {
+  const m = meetings.find(m => m.id === id);
+  if (!m) return;
+  m.pinned = !m.pinned;
+  saveMeetings();
+  renderMeetings();
+}
+
 function toggleEditMeeting(id) {
   editingMeetingId = editingMeetingId === id ? null : id;
   renderMeetings();
@@ -7405,7 +7624,7 @@ function renderMeetings() {
       if ([m.notes, m.requester, m.agenda, m.attendees].some(f => f && f.toLowerCase().includes(q))) return true;
       return (m.tags || []).some(t => t.toLowerCase().includes(q));
     })
-    .sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+    .sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0) || b.date.localeCompare(a.date) || b.id - a.id);
 
   if (!filtered.length) {
     list.innerHTML = `<div class="standup-empty">${meetings.length ? 'No meeting notes match your search.' : 'No meeting notes saved yet.'}</div>`;
@@ -7484,6 +7703,7 @@ function renderMeetings() {
           ${m.time ? `<span class="time-pill"><i class="ti ti-clock"></i>${fmtTime(m.time)}</span>` : ''}
         </div>
         <div class="meeting-item-actions">
+          <button class="icon-btn${m.pinned?' pin-active':''}" title="${m.pinned?'Unpin':'Pin to top'}" onclick="toggleMeetingPin(${m.id})"><i class="ti ti-pin${m.pinned?'-filled':''}"></i></button>
           <button class="copy-mini-btn" title="Copy notes" onclick="copyTemplateField(${jsAttr(m.notes)}, this)"><i class="ti ti-copy"></i></button>
           <button class="icon-btn" title="Elaborate with AI" onclick="openAiModal('meeting',${m.id})"><i class="ti ti-sparkles"></i></button>
           <button class="icon-btn" title="Edit" onclick="toggleEditMeeting(${m.id})"><i class="ti ti-pencil"></i></button>
@@ -9569,6 +9789,47 @@ function setProjFilter(f) {
   renderProjects();
 }
 
+// ===== Projects: Kanban board view =====
+let projViewMode = 'list';
+function setProjViewMode(mode) {
+  projViewMode = mode;
+  document.querySelectorAll('.proj-view-btn').forEach(b => b.classList.toggle('active', b.dataset.pv === mode));
+  renderProjects();
+}
+let _projBoardDragId = null;
+function projBoardDragStart(id) { _projBoardDragId = id; }
+function projBoardDrop(status) {
+  if (_projBoardDragId == null) return;
+  setProjStatusVal(_projBoardDragId, status);
+  _projBoardDragId = null;
+}
+function renderProjectsBoard(filtered) {
+  const list = document.getElementById('proj-list');
+  if (!list) return;
+  const cols = [
+    { key: 'active', label: 'Active' },
+    { key: 'onhold', label: 'On hold' },
+    { key: 'delivered', label: 'Delivered' },
+  ];
+  list.innerHTML = `<div class="proj-board">${cols.map(c => {
+    const colProjects = filtered.filter(p => p.status === c.key);
+    const cardsHtml = colProjects.map(p => {
+      const subs = p.subs || [];
+      const delivered = subs.filter(s => s.status === 'delivered').length;
+      const pct = subs.length ? Math.round(delivered / subs.length * 100) : 0;
+      return `<div class="proj-board-card" draggable="true" ondragstart="projBoardDragStart(${p.id})" onclick="openOrNavigateProject(${p.id})">
+        <div class="proj-board-card-title">${esc(p.title)}</div>
+        <div class="proj-board-card-meta">${esc(PROJ_TYPE_LABELS[p.type] || p.type)} · ${subs.length} sub${subs.length !== 1 ? 's' : ''}</div>
+        ${subs.length ? `<div class="proj-board-bar"><div class="proj-board-bar-fill" style="width:${pct}%"></div></div>` : ''}
+      </div>`;
+    }).join('') || `<div class="proj-board-empty">Drop here</div>`;
+    return `<div class="proj-board-col" ondragover="event.preventDefault()" ondrop="projBoardDrop('${c.key}')">
+      <div class="proj-board-col-head">${c.label} <span>${colProjects.length}</span></div>
+      <div class="proj-board-col-body">${cardsHtml}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function renderProjects() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
   const total     = projects.length;
@@ -9589,6 +9850,8 @@ function renderProjects() {
     list.innerHTML = `<div class="proj-empty"><i class="ti ti-folders"></i><div class="proj-empty-title">${_projFilter === 'all' ? 'No projects yet' : 'Nothing here'}</div><div style="font-size:13px">Click <strong>+ Add project</strong> to get started.</div></div>`;
     return;
   }
+
+  if (projViewMode === 'board') { renderProjectsBoard(filtered); return; }
 
   // preserve open state; on first render all cards start collapsed
   let openIds;
@@ -9795,6 +10058,16 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.18.0', type: 'minor', date: '29 Jun 2026', title: 'Custom accent colours, pinning, a Projects board view, high contrast mode, and more Insights cards', changes: [
+    'New custom accent colour picker in Settings — override your theme\'s accent with your own colour, independent of the 7 preset themes',
+    'High contrast mode (Settings) strips blur/translucency and thickens borders for low-vision use',
+    'Tasks and meetings can now be pinned to the top of their list',
+    'Projects gets a Board view (List/Board toggle) — drag cards between Active/On hold/Delivered columns to change status',
+    'Insights gets three new cards: a 7-day sparkline on the Day streak stat, a "Workload ahead" stacked bar of dated tasks by priority for the next 7 days, and an AI-generated Weekly retrospective',
+    'The Tasks list now supports full keyboard navigation — arrow keys to move between tasks, Space to toggle done',
+    'AI rewrites of meeting notes now have a "What changed" toggle showing a word-level diff against the original before you apply it',
+    'Widgets (Pomodoro / Scratch Pad / Pixel Office) can now be drag-reordered by their grip handle — live timers and saved text aren\'t disturbed by reordering',
+  ]},
   { ver: '4.17.0', type: 'minor', date: '28 Jun 2026', title: 'Command palette, tags, quick add, bulk actions, drag-to-reorder, and linked meetings', changes: [
     'Press Ctrl/Cmd+K anywhere to open a command palette — jump to any page, task, meeting, or wishlist idea from one search box',
     'Tasks and meetings can now have free-form tags (comma-separated) — shows as small chips, and the Tasks page gets a tag filter dropdown next to the Hub filter',
@@ -10563,6 +10836,13 @@ function loadSettings() {
   const soundEl = document.getElementById('settings-sound-enabled');
   if (soundEl) soundEl.checked = !!s.soundEnabled;
 
+  const hcEl = document.getElementById('settings-high-contrast');
+  if (hcEl) hcEl.checked = !!s.highContrast;
+
+  const accentEl = document.getElementById('settings-accent-color');
+  if (accentEl && s.accentColor) accentEl.value = s.accentColor;
+  applyCustomAccent(s.accentColor || null);
+
   applySettings(s);
 }
 
@@ -10597,6 +10877,37 @@ function applySettings(s) {
 
   // Compact
   document.body.classList.toggle('compact-mode', !!s.compact);
+
+  // High contrast
+  document.body.classList.toggle('high-contrast-mode', !!s.highContrast);
+}
+
+// ===== Custom accent colour ===== overrides the active theme's accent (--teal*) without
+// needing a whole new theme — falls back to the theme default when cleared.
+function applyCustomAccent(hex) {
+  const root = document.documentElement;
+  if (!hex) {
+    root.style.removeProperty('--teal');
+    root.style.removeProperty('--teal-bg');
+    root.style.removeProperty('--teal-text');
+    return;
+  }
+  root.style.setProperty('--teal', hex);
+  root.style.setProperty('--teal-bg', `color-mix(in srgb, ${hex} 13%, transparent)`);
+  root.style.setProperty('--teal-text', `color-mix(in srgb, ${hex} 65%, white)`);
+}
+function saveCustomAccent(hex) {
+  const s = dbGet('zarif_settings') || {};
+  s.accentColor = hex;
+  dbSet('zarif_settings', s);
+}
+function clearCustomAccent() {
+  const s = dbGet('zarif_settings') || {};
+  delete s.accentColor;
+  dbSet('zarif_settings', s);
+  applyCustomAccent(null);
+  const accentEl = document.getElementById('settings-accent-color');
+  if (accentEl) accentEl.value = '#378ADD';
 }
 
 function renderKeyStatus() {
@@ -10645,6 +10956,8 @@ function saveAppSettings() {
   s.compact = compactEl ? compactEl.checked : false;
   const soundEl = document.getElementById('settings-sound-enabled');
   s.soundEnabled = soundEl ? soundEl.checked : false;
+  const hcEl = document.getElementById('settings-high-contrast');
+  s.highContrast = hcEl ? hcEl.checked : false;
   dbSet('zarif_settings', s);
   applySettings(s);
   const btn = event.currentTarget;
@@ -10695,7 +11008,80 @@ async function geminiCall(prompt) {
 }
 
 // ===== AI MODAL =====
+async function generateWeeklyRetro() {
+  const btn = document.getElementById('retro-gen-btn');
+  const body = document.getElementById('retro-body');
+  if (!btn || !body) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="font-size:13px;"></i> Generating...';
+  try {
+    if (!activityLog) activityLog = loadActivity();
+    const weekAgo = Date.now() - 7 * 86400000;
+    const weekLog = activityLog.filter(a => a.t >= weekAgo);
+    const tasksDone = weekLog.filter(a => a.type === 'task').length;
+    const meetingsLogged = weekLog.filter(a => a.type === 'meeting').length;
+    const streak = loadStreak();
+    const summary = `Tasks completed this week: ${tasksDone}. Meetings logged: ${meetingsLogged}. Current day streak: ${streak.count || 0} (best streak: ${streak.best || 0}).`;
+    const prompt = `Write a short, friendly weekly retrospective (3-4 sentences) for someone working a helpdesk/projects job, based on this activity summary. Be specific and encouraging, reference the actual numbers given, no generic filler:\n\n${summary}`;
+    const result = await geminiCall(prompt);
+    body.textContent = result;
+    body.classList.add('visible');
+    dbSet('zarif_weekly_retro', { weekKey: ymd(new Date()), text: result });
+    const hint = body.nextElementSibling;
+    if (hint && hint.classList.contains('ins-feed-empty')) hint.style.display = 'none';
+  } catch (e) {
+    body.textContent = e.message === 'NO_KEY' ? 'No Groq API key set — add one in Settings to use this.' : 'Error: ' + (e.detail || e.message);
+    body.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-sparkles" style="font-size:13px;"></i> Generate';
+  }
+}
+
 let aiModalState = { type: null, id: null, result: '' };
+let _aiModalOriginalText = null;
+
+// ===== Word-level diff ("what changed") for AI rewrites of existing text =====
+function wordDiff(oldText, newText) {
+  const a = (oldText || '').split(/(\s+)/);
+  const b = (newText || '').split(/(\s+)/);
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  let i = 0, j = 0; const out = [];
+  while (i < m && j < n) {
+    if (a[i] === b[j]) { out.push({ t: a[i], type: 'same' }); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push({ t: a[i], type: 'del' }); i++; }
+    else { out.push({ t: b[j], type: 'add' }); j++; }
+  }
+  while (i < m) { out.push({ t: a[i], type: 'del' }); i++; }
+  while (j < n) { out.push({ t: b[j], type: 'add' }); j++; }
+  return out;
+}
+function diffHtml(oldText, newText) {
+  return wordDiff(oldText, newText).map(p => {
+    if (p.type === 'same') return esc(p.t);
+    if (p.type === 'del') return `<del class="ai-diff-del">${esc(p.t)}</del>`;
+    return `<ins class="ai-diff-add">${esc(p.t)}</ins>`;
+  }).join('');
+}
+function toggleAiDiff() {
+  const diffEl = document.getElementById('ai-modal-diff');
+  const diffBtn = document.getElementById('ai-modal-diff-btn');
+  const showing = diffEl.style.display !== 'none';
+  if (showing) {
+    diffEl.style.display = 'none';
+    diffBtn.innerHTML = '<i class="ti ti-git-compare" style="font-size:14px;"></i> What changed';
+  } else {
+    diffEl.innerHTML = diffHtml(_aiModalOriginalText || '', aiModalState.result || '');
+    diffEl.style.display = '';
+    diffBtn.innerHTML = '<i class="ti ti-x" style="font-size:14px;"></i> Hide changes';
+  }
+}
 
 const AI_PROMPTS = {
   task: (name, extra) => `You are a helpful work assistant. A team lead has the task: "${name}". ${extra ? 'Extra context: ' + extra + '.' : ''} Write a short, practical description of how to approach this task — 2-4 sentences, actionable and concise. No fluff.`,
@@ -10763,6 +11149,11 @@ async function runAiModal() {
   resultEl.classList.remove('visible');
   applyBtn.style.display = 'none';
   copyBtn.style.display = 'none';
+  const diffBtn = document.getElementById('ai-modal-diff-btn');
+  const diffEl = document.getElementById('ai-modal-diff');
+  diffBtn.style.display = 'none';
+  diffEl.style.display = 'none';
+  _aiModalOriginalText = null;
 
   try {
     let prompt = '';
@@ -10771,6 +11162,7 @@ async function runAiModal() {
       prompt = AI_PROMPTS.task(task ? task.name : '', extra);
     } else if (type === 'meeting') {
       const m = meetings.find(m => m.id === id);
+      _aiModalOriginalText = m ? m.notes : '';
       prompt = AI_PROMPTS.meeting(m ? m.notes : '', extra);
     } else if (type === 'kb') {
       prompt = AI_PROMPTS.kb(extra);
@@ -10785,6 +11177,9 @@ async function runAiModal() {
     resultEl.classList.add('visible');
     applyBtn.style.display = '';
     copyBtn.style.display = '';
+    if (_aiModalOriginalText != null && _aiModalOriginalText.trim()) {
+      diffBtn.style.display = '';
+    }
   } catch(e) {
     const msg = e.message || '';
     if (msg === 'NO_KEY') {
@@ -11680,6 +12075,7 @@ async function initApp() {
   updateNotifPermStatus();
   initPixoff();
   renderAccountSettings();
+  initWidgetReorder();
 }
 
 // ===== AUTH GATE =====
