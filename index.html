@@ -449,16 +449,17 @@
   /* ── Daily briefing card on Home ── */
   .home-briefing-card { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; margin-bottom: 18px; border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 75%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 0.5px solid var(--border-md); animation: fadeIn 0.2s ease; }
 
-  /* ── "Today's Highlights" spotlight banner — date/weekly/monthly tasks due today,
-     deliberately excludes daily recurring tasks and untildone tasks ── */
-  .th-banner { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 18px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--purple-bg), transparent); border: 0.5px solid var(--purple-bg); animation: fadeIn 0.2s ease; }
-  .th-ico { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--hero-bg); background: linear-gradient(155deg, var(--purple-text), color-mix(in srgb, var(--purple-text) 40%, var(--hero-bg))); }
+  /* ── "Today's Highlights" spotlight banner — date/weekly/monthly tasks booked in for
+     today, deliberately excludes daily recurring tasks and untildone tasks. Colours are
+     keyed to --teal so it follows the active theme and any custom accent colour. ── */
+  .th-banner { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 18px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--teal-bg), transparent); border: 0.5px solid var(--teal-bg); animation: fadeIn 0.2s ease; }
+  .th-ico { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--hero-bg); background: linear-gradient(155deg, var(--teal-text), color-mix(in srgb, var(--teal-text) 40%, var(--hero-bg))); }
   .th-title { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
   .th-sub { font-size: 11.5px; color: var(--text-3); margin-bottom: 10px; }
   .th-list { display: flex; flex-direction: column; gap: 6px; }
   .th-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
   .th-item:hover { color: var(--text); }
-  .th-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple-text); flex-shrink: 0; }
+  .th-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal-text); flex-shrink: 0; }
   .th-name { font-weight: 500; }
   .th-freq { margin-left: auto; font-size: 10px; color: var(--text-3); flex-shrink: 0; }
   .home-briefing-ico { width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--amber-bg); color: var(--amber-text); font-size: 15px; }
@@ -5916,11 +5917,28 @@ function renderUpNextRail() {
   }).join('');
 }
 
-// ===== "Today's Highlights" — date/weekly/monthly tasks due specifically today,
-// deliberately excluding daily recurring tasks and untildone (no fixed schedule) tasks.
+// ===== "Today's Highlights" — date/weekly/monthly tasks specifically "booked in" for
+// today, deliberately excluding daily recurring tasks, untildone tasks, and weekly/monthly
+// tasks with no actual day constraint (weekly "every day" / monthly with no day-range) —
+// those behave like daily tasks and aren't a special "today" item.
 // Shown on the Home landing page and below the Tasks page hero.
+function isHighlightBookedIn(t) {
+  if (t.freq === 'weekly') return Array.isArray(t.days) && t.days.length > 0;
+  if (t.freq === 'monthly') return !!t.dayRange;
+  return true; // date, once, fortnightly always count if they reached isToday()
+}
 function getHighlightTasks() {
-  return getTodayTasks().filter(t => t.freq !== 'daily' && t.freq !== 'untildone' && !isDone(t.id));
+  const tasks = getTodayTasks().filter(t =>
+    t.freq !== 'daily' && t.freq !== 'untildone' && !isDone(t.id) && isHighlightBookedIn(t)
+  );
+  // tier 1: due today (date/once) · tier 2: weekly/fortnightly, or monthly on an exact
+  // single day · tier 3: monthly tasks booked into a broader day-range, not an exact date
+  const tier = t => {
+    if (t.freq === 'date' || t.freq === 'once') return 1;
+    if (t.freq === 'monthly') return (t.dayRange[0] === t.dayRange[1]) ? 2 : 3;
+    return 2; // weekly / fortnightly
+  };
+  return tasks.sort((a, b) => tier(a) - tier(b) || PO[a.priority] - PO[b.priority]);
 }
 function highlightFreqLabel(t) {
   if (t.freq === 'date' || t.freq === 'once') return 'Due today';
@@ -5942,7 +5960,7 @@ function renderHighlightsBanner(containerId) {
     <div class="th-ico"><i class="ti ti-stars"></i></div>
     <div style="flex:1;min-width:0">
       <div class="th-title">Today's Highlights</div>
-      <div class="th-sub">Not your daily tasks — these are scheduled specifically for today</div>
+      <div class="th-sub">Not your daily tasks — these are booked in specifically for today</div>
       <div class="th-list">
         ${tasks.map(t => `<div class="th-item" onclick="showPage('tasks'); switchTab('today');">
           <div class="th-dot"></div><span class="th-name">${esc(t.name)}</span><span class="th-freq">${esc(highlightFreqLabel(t))}</span>
@@ -10708,6 +10726,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.21.1', type: 'patch', date: '30 Jun 2026', title: 'Tightened Today\'s Highlights filtering, ordering, and colours', changes: [
+    'Weekly tasks set to "every day" and monthly tasks with no specific day-range no longer count as a highlight — they behave like daily tasks, not something specifically booked in for today',
+    'Highlights are now ordered: due-today tasks first, then weekly/monthly tasks with an exact day match, then monthly tasks booked into a broader day-range',
+    'Restyled to use the same accent-colour system as the rest of the app instead of a fixed purple — it now matches your theme and custom accent colour',
+  ]},
   { ver: '4.21.0', type: 'minor', date: '30 Jun 2026', title: 'New: Today\'s Highlights', changes: [
     'New "Today\'s Highlights" banner shows specific tasks scheduled for today — dated/one-off tasks due today, and weekly/monthly/fortnightly tasks that land on today specifically',
     'Deliberately excludes daily recurring tasks and untildone tasks, so it only surfaces things that are genuinely special to today, not your usual routine',
