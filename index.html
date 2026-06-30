@@ -448,6 +448,19 @@
 
   /* ── Daily briefing card on Home ── */
   .home-briefing-card { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; margin-bottom: 18px; border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 75%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 0.5px solid var(--border-md); animation: fadeIn 0.2s ease; }
+
+  /* ── "Today's Highlights" spotlight banner — date/weekly/monthly tasks due today,
+     deliberately excludes daily recurring tasks and untildone tasks ── */
+  .th-banner { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 18px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--purple-bg), transparent); border: 0.5px solid var(--purple-bg); animation: fadeIn 0.2s ease; }
+  .th-ico { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--hero-bg); background: linear-gradient(155deg, var(--purple-text), color-mix(in srgb, var(--purple-text) 40%, var(--hero-bg))); }
+  .th-title { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .th-sub { font-size: 11.5px; color: var(--text-3); margin-bottom: 10px; }
+  .th-list { display: flex; flex-direction: column; gap: 6px; }
+  .th-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+  .th-item:hover { color: var(--text); }
+  .th-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple-text); flex-shrink: 0; }
+  .th-name { font-weight: 500; }
+  .th-freq { margin-left: auto; font-size: 10px; color: var(--text-3); flex-shrink: 0; }
   .home-briefing-ico { width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--amber-bg); color: var(--amber-text); font-size: 15px; }
   .home-briefing-text { font-size: 13px; line-height: 1.55; color: var(--text-2); padding-top: 5px; }
   .home-briefing-text b { color: var(--text); font-weight: 600; }
@@ -1903,6 +1916,7 @@
       <p id="home-date">Loading…</p>
     </div>
     <div id="home-briefing"></div>
+    <div id="home-highlights"></div>
     <div class="hub-grid">
       <div class="app-card" id="home-card-tasks" onclick="showPage('tasks')">
         <div class="home-hero-ghost-wrap">
@@ -2233,6 +2247,8 @@
       </div>
       <div id="dash-upcoming" class="dash-upcoming" style="display:none" onclick="switchTab('date')"></div>
     </div>
+
+    <div id="tasks-highlights"></div>
 
     <div id="up-next-rail" class="up-next-rail" style="display:none"></div>
 
@@ -5900,6 +5916,42 @@ function renderUpNextRail() {
   }).join('');
 }
 
+// ===== "Today's Highlights" — date/weekly/monthly tasks due specifically today,
+// deliberately excluding daily recurring tasks and untildone (no fixed schedule) tasks.
+// Shown on the Home landing page and below the Tasks page hero.
+function getHighlightTasks() {
+  return getTodayTasks().filter(t => t.freq !== 'daily' && t.freq !== 'untildone' && !isDone(t.id));
+}
+function highlightFreqLabel(t) {
+  if (t.freq === 'date' || t.freq === 'once') return 'Due today';
+  if (t.freq === 'weekly') return `Weekly · ${DAY_NAMES[todayDow].slice(0, 3)}`;
+  if (t.freq === 'fortnightly') return 'Fortnightly';
+  if (t.freq === 'monthly') {
+    const day = now.getDate();
+    const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+    return `Monthly · ${day}${suffix}`;
+  }
+  return FREQ_LABELS[t.freq] || '';
+}
+function renderHighlightsBanner(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const tasks = getHighlightTasks();
+  if (!tasks.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="th-banner">
+    <div class="th-ico"><i class="ti ti-stars"></i></div>
+    <div style="flex:1;min-width:0">
+      <div class="th-title">Today's Highlights</div>
+      <div class="th-sub">Not your daily tasks — these are scheduled specifically for today</div>
+      <div class="th-list">
+        ${tasks.map(t => `<div class="th-item" onclick="showPage('tasks'); switchTab('today');">
+          <div class="th-dot"></div><span class="th-name">${esc(t.name)}</span><span class="th-freq">${esc(highlightFreqLabel(t))}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
 (function initHeroTilt() {
   const hero = document.getElementById('task-hero');
   if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -6545,6 +6597,7 @@ function renderHomeDashboard() {
   const donePct = todayTasks.length ? Math.round(todayTasks.filter(t => isDone(t.id)).length / todayTasks.length * 100) : 0;
   animateGhostRing(document.getElementById('home-hero-ghost-ring'), document.getElementById('home-hero-ghost-pct'), donePct);
   renderHomeBriefing();
+  renderHighlightsBanner('home-highlights');
 }
 
 // ===== Daily briefing (Home) =====
@@ -6610,6 +6663,7 @@ function renderTasks() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
   renderDueSoon();
   renderUpNextRail();
+  renderHighlightsBanner('tasks-highlights');
   const fbtn = document.getElementById('focus-mode-btn');
   if (fbtn) fbtn.classList.toggle('active', focusMode);
   renderTaskTagFilter();
@@ -10654,6 +10708,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.21.0', type: 'minor', date: '30 Jun 2026', title: 'New: Today\'s Highlights', changes: [
+    'New "Today\'s Highlights" banner shows specific tasks scheduled for today — dated/one-off tasks due today, and weekly/monthly/fortnightly tasks that land on today specifically',
+    'Deliberately excludes daily recurring tasks and untildone tasks, so it only surfaces things that are genuinely special to today, not your usual routine',
+    'Shows on the Home landing page, and again just below the hero card on the Tasks page — so the first thing you see when you open the app each day is "these need doing today"',
+    'Click any item to jump straight to the Tasks page',
+  ]},
   { ver: '4.20.7', type: 'minor', date: '30 Jun 2026', title: 'Snooze for recurring tasks, and reorderable Amtek Job List', changes: [
     'Fixed: recurring tasks (daily/weekly/etc.) with a time that show up in Needs Attention had no snooze button at all — only one-off dated tasks did. They now get a "Dismiss for today" button that clears them from Needs Attention until their next normal occurrence, without marking them done',
     '"Reset today" now also un-dismisses anything snoozed that way, since the day is starting over',
