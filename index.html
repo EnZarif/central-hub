@@ -675,8 +675,8 @@
   .quick-add-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-lg); border: 1px dashed var(--border-md); background: var(--surface); margin-bottom: 14px; }
   .quick-add-bar i:first-child { font-size: 16px; color: var(--amber-text); flex-shrink: 0; }
   .quick-add-bar input { flex: 1; background: none; border: none; outline: none; font-family: inherit; font-size: 13px; color: var(--text); min-width: 0; }
-  .quick-add-bar button { flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; border: none; background: var(--blue-text); color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: opacity 0.15s; }
-  .quick-add-bar button:hover { opacity: 0.85; }
+  .quick-add-bar button { flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--border-md); background: var(--teal-bg); color: var(--teal-text); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: background 0.15s, color 0.15s; }
+  .quick-add-bar button:hover { background: var(--teal); color: #fff; }
 
   /* ── Bulk select + drag-to-reorder ── */
   .bulk-cb { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border-md); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: transparent; transition: all 0.15s; align-self: flex-start; margin-top: 2px; }
@@ -1326,13 +1326,15 @@
   .custom-task-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .custom-task-row .queue-block { flex: 1; min-width: 120px; margin-bottom: 0; }
   .custom-task-row .queue-block:first-child { flex: 2; min-width: 200px; }
-  .task-del-btn, .task-edit-btn, .task-move-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 5px; font-size: 15px; display: flex; align-items: center; align-self: flex-start; flex-shrink: 0; transition: all 0.15s; }
-  .task-del-btn:hover { color: var(--coral-text); background: var(--coral-bg); }
-  .task-edit-btn:hover { color: var(--teal); background: var(--teal-bg); }
-  .task-move-btn:hover { color: var(--text); background: var(--border); }
+  .task-del-btn, .task-edit-btn, .task-move-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 7px; font-size: 15px; display: flex; align-items: center; justify-content: center; align-self: flex-start; flex-shrink: 0; transition: all 0.15s; }
+  .task-del-btn:hover { color: var(--coral-text); background: var(--surface); }
+  .task-edit-btn:hover { color: var(--teal-text); background: var(--surface); }
+  .task-move-btn:hover { color: var(--text); background: var(--surface); }
+  .task-snooze-btn:hover { color: var(--amber-text); }
   .task-move-btn { font-size: 13px; padding: 1px; }
   .task-move-col { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
-  .task-actions { display: flex; gap: 2px; align-items: center; align-self: flex-start; flex-shrink: 0; }
+  .task-actions { display: flex; gap: 1px; align-items: center; align-self: flex-start; flex-shrink: 0; background: var(--surface2); border-radius: 10px; padding: 3px; }
+  .task-actions-divider { width: 1px; height: 14px; background: var(--border-md); margin: 0 3px; flex-shrink: 0; }
   .standup-item { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
   .standup-item-row { display: flex; align-items: flex-start; gap: 8px; }
   .standup-point-display { flex: 1; padding: 7px 10px; font-size: 13.5px; line-height: 1.5; color: var(--text); word-break: break-word; }
@@ -1493,8 +1495,8 @@
   .ai-diff-add { color: var(--green-text); text-decoration: none; }
   .ai-modal-result.visible { display: block; }
   .ai-modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; flex-wrap: wrap; }
-  .task-ai-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 5px; font-size: 14px; display: flex; align-items: center; align-self: flex-start; flex-shrink: 0; transition: all 0.15s; }
-  .task-ai-btn:hover { color: var(--teal); background: var(--teal-bg); }
+  .task-ai-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 7px; font-size: 14px; display: flex; align-items: center; justify-content: center; align-self: flex-start; flex-shrink: 0; transition: all 0.15s; }
+  .task-ai-btn:hover { color: var(--teal-text); background: var(--surface); }
 
   /* HUB ORGANISER */
   .org-page { padding: 11px 0; border-bottom: 0.5px solid var(--border); }
@@ -6782,7 +6784,7 @@ function taskHTML(t, showFreqPill) {
     : '';
   const isDateOnce = t.freq === 'date' || t.freq === 'once';
   const snoozeBtn = (!d && ((isDateOnce && t.date) || t.time))
-    ? `<button class="task-move-btn" title="${isDateOnce ? 'Snooze 1 day' : 'Dismiss for today'}" onclick="event.stopPropagation(); snoozeTask('${t.id}')"><i class="ti ti-clock-pause"></i></button>`
+    ? `<button class="task-move-btn task-snooze-btn" title="${isDateOnce ? 'Snooze 1 day' : 'Dismiss for today'}" onclick="event.stopPropagation(); snoozeTask('${t.id}')"><i class="ti ti-clock-pause"></i></button>`
     : '';
   const tagChips = tagChipsHtml(t.tags);
   const bulkSelected = bulkSelectMode && bulkSelectedIds.has(String(t.id));
@@ -6806,7 +6808,9 @@ function taskHTML(t, showFreqPill) {
     </div>
     <div class="task-actions">
       <div class="task-move-col">${upBtn}${downBtn}</div>
-      ${pinBtn}${snoozeBtn}${aiBtn}${editBtn}${delBtn}
+      ${pinBtn}
+      <div class="task-actions-divider"></div>
+      ${snoozeBtn}${aiBtn}${editBtn}${delBtn}
     </div>
   </div>`;
 }
@@ -11011,6 +11015,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.23.3', type: 'patch', date: '30 Jun 2026', title: 'Restyled the Quick Add button and per-task action icons', changes: [
+    'Quick Add\'s + button is now a tinted teal ghost square that fills solid on hover, matching the rest of the accent-colour system instead of a fixed blue square',
+    'The edit/snooze/AI/pin/move/delete icons beside each task are now grouped into one soft rounded cluster with a divider, instead of floating loosely — snooze highlights amber, edit/AI highlight teal, and delete highlights coral on hover',
+  ]},
   { ver: '4.23.2', type: 'patch', date: '30 Jun 2026', title: 'Moved Quick Add above the Tasks hero card', changes: [
     'The "Quick add" bar on the Tasks page now sits above the hero/stats card instead of below the tabs, so it\'s the first thing you see when you land on the page',
   ]},
