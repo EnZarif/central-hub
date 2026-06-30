@@ -3526,7 +3526,7 @@
       <button class="icon-btn" onclick="closeShortcutsModal()"><i class="ti ti-x"></i></button>
     </div>
     <div class="kpi-modal-preview" style="background:var(--surface2); color:var(--text); border-color:var(--border-md);">
-      <div class="shortcut-row"><kbd>Ctrl K</kbd><span>Open the command palette (jump anywhere)</span></div>
+      <div class="shortcut-row"><kbd>Ctrl K</kbd> <kbd>Ctrl Q</kbd><span>Open the command palette (jump anywhere)</span></div>
       <div class="shortcut-row"><kbd>?</kbd><span>Show this panel</span></div>
       <div class="shortcut-row"><kbd>N</kbd><span>Add a new task (on the Tasks page)</span></div>
       <div class="shortcut-row"><kbd>Esc</kbd><span>Close any open modal or popup</span></div>
@@ -4623,7 +4623,7 @@ function closeShortcutsModal() {
 document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openCommandPalette(); return; }
+  if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'k' || e.key.toLowerCase() === 'q')) { e.preventDefault(); openCommandPalette(); return; }
   if (e.key === 'Escape') {
     closeCommandPalette();
     closeGlobalSearch();
@@ -5047,8 +5047,17 @@ function snoozeTask(id) {
   if (!t) return;
   const baseDate = (taskOverrides[id] && taskOverrides[id].date) || t.date;
   if (!baseDate) return;
-  const [y, m, d] = baseDate.split('-').map(Number);
-  const next = ymd(new Date(y, m - 1, d + 1));
+  // Snoozing always pushes to tomorrow, not baseDate+1 — a task overdue by several
+  // days only needs one click to clear Needs Attention, not one click per overdue day
+  // (which previously left it still in the past, looking like the button did nothing).
+  const today = todayInputDate();
+  let next;
+  if (baseDate < today) {
+    next = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+  } else {
+    const [y, m, d] = baseDate.split('-').map(Number);
+    next = ymd(new Date(y, m - 1, d + 1));
+  }
   if (custom) {
     custom.date = next;
     saveCustomTasks();
@@ -6651,7 +6660,7 @@ function renderTasks() {
     } else {
       // Default today sort: pending timed → pending untimed → completed
       const pendingTimed = tasks.filter(t => !isDone(t.id) && t.time)
-        .sort((a,b) => timeToMin(a.time) - timeToMin(b.time) || PO[a.priority] - PO[b.priority]);
+        .sort((a,b) => timeToMin(a.time) - timeToMin(b.time) || PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
       const pendingUntimed = tasks.filter(t => !isDone(t.id) && !t.time)
         .sort((a,b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
       const completed = tasks.filter(t => isDone(t.id))
@@ -6673,7 +6682,7 @@ function renderTasks() {
   } else if (currentTab === 'date') {
     const today = todayInputDate();
     const dated = getAllTasks().filter(t => t.freq === 'date' && t.date)
-      .sort((a,b) => a.date.localeCompare(b.date) || PO[a.priority]-PO[b.priority]);
+      .sort((a,b) => a.date.localeCompare(b.date) || PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
     if (!dated.length) { paintList('<div class="empty">No dated tasks yet. Add one below with frequency “On a date”.</div>'); return; }
     const groups = [
       { label:'Overdue',          icon:'ti-alert-triangle', test: t => t.date < today && !isDone(t.id) },
@@ -10604,6 +10613,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.20.6', type: 'patch', date: '30 Jun 2026', title: 'Fixed snooze on long-overdue tasks, and up/down reordering for dated tasks/job reminders', changes: [
+    'Fixed: "Snooze 1 day" on a task overdue by several days only pushed it forward by 1 day from its old due date, so it stayed in the past and looked stuck in Needs Attention — it now always jumps to tomorrow',
+    'Fixed: the up/down move buttons did nothing for tasks shown in the "By date" tab or in Today\'s timed "Scheduled" section (including Amtek Job Reminders) — those views were sorting strictly by date/time and ignoring your manual order; they now respect it as a tiebreaker',
+  ]},
+  { ver: '4.20.5', type: 'patch', date: '30 Jun 2026', title: 'Ctrl+Q also opens the command palette', changes: [
+    'Ctrl/Cmd+Q now opens the command palette alongside the existing Ctrl/Cmd+K — both work',
+  ]},
   { ver: '4.20.4', type: 'patch', date: '30 Jun 2026', title: 'Fixed: one-off tasks re-appearing after midnight', changes: [
     'Date-specific and one-off tasks (like "Zac desk setup") were using a day-scoped "done" key that reset at midnight, causing them to reappear as overdue each morning even after being marked complete',
     'They now use a permanent "done" key that persists indefinitely — tick it off once, it stays done',
