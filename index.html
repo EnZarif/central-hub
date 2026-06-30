@@ -821,6 +821,8 @@
   .jl-actions { display: flex; gap: 2px; flex-shrink: 0; margin-left: auto; }
   .jl-icon-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 5px; border-radius: 5px; }
   .jl-icon-btn:hover { color: var(--text-2); background: var(--bg); }
+  .jl-move-col { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
+  .jl-move-col .jl-icon-btn { padding: 1px; font-size: 12px; }
   .jl-archive-toggle { width: 100%; display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-3); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px 2px; font-family: inherit; }
   .jl-archive-toggle:hover { color: var(--text-2); }
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
@@ -3933,6 +3935,8 @@ let customTasks = [];
 let taskOverrides = {};
 let taskOrder = {};
 let taskStreaks = {};
+// day-scoped "dismiss from Needs Attention" flags for recurring tasks snoozed today
+let snoozedToday = {};
 
 const DEFAULT_KB_FACTS = [
   "Tip: Use the 'All' tab to see every task grouped by frequency, regardless of whether it's due today.",
@@ -3953,6 +3957,7 @@ function saveTaskOverrides() { dbSet('zarif_task_overrides', taskOverrides); }
 function saveTaskOrder() { dbSet('zarif_task_order', taskOrder); }
 function getOrder(id) { return taskOrder[id] !== undefined ? taskOrder[id] : 0; }
 function saveTaskStreaks() { dbSet('zarif_task_streaks', taskStreaks); }
+function saveSnoozedToday() { dbSet('zarif_snoozed_today', snoozedToday); }
 
 // Per-task day streaks for daily recurring tasks — separate from the overall
 // "all tasks done today" streak in loadStreak()/updateStreak().
@@ -4889,6 +4894,9 @@ function resetDay() {
   getAllTasks().forEach(t => {
     if (t.freq !== 'date' && t.freq !== 'once') delete done[taskKey(t.id)];
   });
+  // un-dismiss any recurring tasks snoozed earlier today, since the day is restarting
+  Object.keys(snoozedToday).forEach(k => { if (k.startsWith(`${todayKey}_`)) delete snoozedToday[k]; });
+  saveSnoozedToday();
   save();
   renderTasks();
   if (pending.length) {
@@ -5045,6 +5053,15 @@ function snoozeTask(id) {
   const custom = customTasks.find(t => String(t.id) === String(id));
   const t = custom || builtIn;
   if (!t) return;
+  if (t.freq !== 'date' && t.freq !== 'once') {
+    // recurring task (daily/weekly/etc.) — it has no single due date to push, so
+    // dismiss it from Needs Attention for the rest of today instead; it naturally
+    // reappears on its next normal occurrence since this key is scoped to today
+    snoozedToday[`${todayKey}_${id}`] = true;
+    saveSnoozedToday();
+    renderTasks();
+    return;
+  }
   const baseDate = (taskOverrides[id] && taskOverrides[id].date) || t.date;
   if (!baseDate) return;
   // Snoozing always pushes to tomorrow, not baseDate+1 — a task overdue by several
@@ -5391,6 +5408,24 @@ function jlDueChip(dateStr) {
   return `<span class="jl-due ${cls}"><i class="ti ti-calendar-event"></i> ${esc(fmtShortDate(dateStr))}</span>`;
 }
 
+// reorders within the same done/not-done bucket so it matches the visual grouping
+// renderJobListSidebar already applies — archived (collapsed) entries aren't movable
+function moveJobList(id, dir) {
+  const now = Date.now();
+  const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS).map(j => j.id));
+  const target = jobLists.find(j => String(j.id) === String(id));
+  if (!target || archivedIds.has(target.id)) return;
+  const group = jobLists.filter(j => !archivedIds.has(j.id) && j.done === target.done);
+  const idx = group.findIndex(j => String(j.id) === String(id));
+  const swapIdx = idx + dir;
+  if (idx === -1 || swapIdx < 0 || swapIdx >= group.length) return;
+  const realIdxA = jobLists.findIndex(j => String(j.id) === String(group[idx].id));
+  const realIdxB = jobLists.findIndex(j => String(j.id) === String(group[swapIdx].id));
+  [jobLists[realIdxA], jobLists[realIdxB]] = [jobLists[realIdxB], jobLists[realIdxA]];
+  saveJobLists();
+  renderJobListSidebar();
+}
+
 function jlRowHtml(j) {
   let linkBadge = '';
   if (j.projId && j.subId) {
@@ -5413,6 +5448,10 @@ function jlRowHtml(j) {
         <div class="jl-meta">${dueChip}${staleChip}${linkBadge}</div>
       </div>
       <div class="jl-actions">
+        <div class="jl-move-col">
+          <button class="jl-icon-btn" onclick="moveJobList('${j.id}', -1)"><i class="ti ti-chevron-up"></i></button>
+          <button class="jl-icon-btn" onclick="moveJobList('${j.id}', 1)"><i class="ti ti-chevron-down"></i></button>
+        </div>
         <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')"><i class="ti ti-pencil"></i></button>
         <button class="jl-icon-btn" onclick="deleteJobList('${j.id}')"><i class="ti ti-trash"></i></button>
       </div>
@@ -5797,6 +5836,7 @@ function renderDueSoon() {
   // those would otherwise only surface once you scroll the full task list.
   const tasks = getTodayTasks().filter(t => {
     if (isDone(t.id)) return false;
+    if (snoozedToday[`${todayKey}_${t.id}`]) return false;
     if (t.time) {
       const taskMin = timeToMin(t.time);
       return taskMin <= nowMin || (taskMin > nowMin && taskMin - nowMin <= WINDOW);
@@ -6434,8 +6474,9 @@ function taskHTML(t, showFreqPill) {
   const streakBadge = (streakInfo && streakInfo.count >= 2)
     ? `<span class="task-streak-badge" title="${streakInfo.count}-day streak · best ${streakInfo.best}"><i class="ti ti-flame"></i>${streakInfo.count}</span>`
     : '';
-  const snoozeBtn = (!d && (t.freq === 'date' || t.freq === 'once') && t.date)
-    ? `<button class="task-move-btn" title="Snooze 1 day" onclick="event.stopPropagation(); snoozeTask('${t.id}')"><i class="ti ti-clock-pause"></i></button>`
+  const isDateOnce = t.freq === 'date' || t.freq === 'once';
+  const snoozeBtn = (!d && ((isDateOnce && t.date) || t.time))
+    ? `<button class="task-move-btn" title="${isDateOnce ? 'Snooze 1 day' : 'Dismiss for today'}" onclick="event.stopPropagation(); snoozeTask('${t.id}')"><i class="ti ti-clock-pause"></i></button>`
     : '';
   const tagChips = tagChipsHtml(t.tags);
   const bulkSelected = bulkSelectMode && bulkSelectedIds.has(String(t.id));
@@ -10613,6 +10654,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.20.7', type: 'minor', date: '30 Jun 2026', title: 'Snooze for recurring tasks, and reorderable Amtek Job List', changes: [
+    'Fixed: recurring tasks (daily/weekly/etc.) with a time that show up in Needs Attention had no snooze button at all — only one-off dated tasks did. They now get a "Dismiss for today" button that clears them from Needs Attention until their next normal occurrence, without marking them done',
+    '"Reset today" now also un-dismisses anything snoozed that way, since the day is starting over',
+    'Amtek Job List entries in the sidebar now have up/down move buttons, same as the main task list',
+  ]},
   { ver: '4.20.6', type: 'patch', date: '30 Jun 2026', title: 'Fixed snooze on long-overdue tasks, and up/down reordering for dated tasks/job reminders', changes: [
     'Fixed: "Snooze 1 day" on a task overdue by several days only pushed it forward by 1 day from its old due date, so it stayed in the past and looked stuck in Needs Attention — it now always jumps to tomorrow',
     'Fixed: the up/down move buttons did nothing for tasks shown in the "By date" tab or in Today\'s timed "Scheduled" section (including Amtek Job Reminders) — those views were sorting strictly by date/time and ignoring your manual order; they now respect it as a tiebreaker',
@@ -12609,6 +12655,7 @@ async function initApp() {
   taskOverrides = dbGet('zarif_task_overrides') || {};
   taskOrder     = dbGet('zarif_task_order')     || {};
   taskStreaks   = dbGet('zarif_task_streaks')   || {};
+  snoozedToday  = dbGet('zarif_snoozed_today')  || {};
   focusMode     = dbGet('zarif_focus_mode')     || false;
   kbFacts       = (dbGet('zarif_kb_facts') || DEFAULT_KB_FACTS.slice()).map(f => typeof f === 'string' ? { text: f, createdAt: null } : f);
   hubLayout     = loadHubLayout();
