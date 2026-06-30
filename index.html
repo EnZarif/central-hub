@@ -715,6 +715,15 @@
   .freq-group-label:has(.ti-sun) i { color: var(--amber-text); }
   .freq-group-label:has(.ti-calendar-week) i { color: var(--blue-text); }
   .freq-group-label:has(.ti-calendar-month) i { color: var(--purple-text); }
+  /* Timeline rail — "Scheduled" group on the Today tab, timed tasks anchored to a vertical rail */
+  .rail-wrap { display: flex; flex-direction: column; margin-bottom: 4px; }
+  .rail-row { display: flex; gap: 14px; align-items: stretch; }
+  .rail-time-col { width: 50px; flex-shrink: 0; position: relative; display: flex; justify-content: center; padding-top: 12px; }
+  .rail-time-col::before { content: ''; position: absolute; top: 0; bottom: -6px; left: 50%; width: 1.5px; background: var(--border-md); }
+  .rail-row:last-child .rail-time-col::before { bottom: 50%; }
+  .rail-time { font-size: 10.5px; font-weight: 700; color: var(--text-3); background: var(--bg); padding: 2px 4px; position: relative; z-index: 1; }
+  .rail-items { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px; }
+  .rail-items .task { margin-bottom: 0; }
   .freq-pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; display: flex; align-items: center; gap: 3px; }
   .freq-pill i { font-size: 11px; }
   .fp-daily, .fp-weekly, .fp-fortnightly, .fp-monthly, .fp-once { background: rgba(255,255,255,0.05); color: var(--text-3); border: 0.5px solid rgba(255,255,255,0.07); }
@@ -755,8 +764,12 @@
   @media (max-width: 480px) { .clock-card { gap: 7px; padding: 9px 10px; } .clock-card-time-val { font-size: 22px; } .clock-card-ico { width: 32px; height: 32px; font-size: 17px; } }
 
   /* TASK CARDS */
-  .task { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.2s, opacity 0.2s, transform 0.2s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s; align-items: center; }
-  .task:hover { border-color: var(--border-md); border-left-width: 3px; transform: translateY(-2px) scale(1.004); box-shadow: 0 14px 28px -18px rgba(0,0,0,0.55); }
+  .task { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 11px 14px; margin-bottom: 6px; display: flex; gap: 12px; cursor: pointer; transition: border-color 0.2s, opacity 0.2s, transform 0.2s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s; align-items: center; }
+  .task:hover { border-color: var(--border-md); transform: translateY(-2px) scale(1.004); box-shadow: 0 14px 28px -18px rgba(0,0,0,0.55); }
+  .tprio { font-weight: 600; }
+  .tprio.p-high { color: var(--coral-text); }
+  .tprio.p-medium { color: var(--amber-text); }
+  .tprio.p-low { color: var(--green-text); }
 
   /* STYLE B ANIMATIONS */
   @keyframes taskSlideIn { from { opacity: 0; transform: translateY(11px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -781,9 +794,9 @@
     .tasks-animate > *, .tasks-animate .badge i, .cb-pop { animation: none !important; opacity: 1 !important; }
     .task:hover { transform: none; }
   }
-  .task.p-high { border-left-color: #712B13; }
-  .task.p-medium { border-left-color: #633806; }
-  .task.p-low { border-left-color: #27500A; }
+  .task.p-high { background: linear-gradient(120deg, var(--coral-bg), transparent 65%), var(--surface); }
+  .task.p-medium { background: linear-gradient(120deg, var(--amber-bg), transparent 65%), var(--surface); }
+  .task.p-low { background: linear-gradient(120deg, var(--green-bg), transparent 65%), var(--surface); }
   .task.done { opacity: 0.38; }
   .task.done .tname { text-decoration: line-through; }
   .cb { width: 18px; height: 18px; border: 1.5px solid rgba(55,138,221,0.28); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: transparent; cursor: pointer; }
@@ -6740,8 +6753,6 @@ const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', 
 function taskHTML(t, showFreqPill) {
   const d = isDone(t.id);
   const pCls = t.priority==='HIGH'?'p-high':t.priority==='MEDIUM'?'p-medium':'p-low';
-  const bCls = t.priority==='HIGH'?'b-high':t.priority==='MEDIUM'?'b-medium':'b-low';
-  const bIcon = t.priority==='HIGH'?'ti-flame':t.priority==='MEDIUM'?'ti-point':'ti-leaf';
   const bLbl = t.priority[0]+t.priority.slice(1).toLowerCase();
   const pills = t.assignees.map(a=>`<span class="pill${a==='Zarif'?' me':''}">${a}</span>`).join('');
   const note = t.note ? `<div class="tnote"><i class="ti ti-info-circle"></i>${t.note}</div>` : '';
@@ -6802,8 +6813,8 @@ function taskHTML(t, showFreqPill) {
     ${dragHandle}
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
-      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span>${(t.autoEscalated && t.priority === 'HIGH') ? `<i class="ti ti-trending-up task-escalated-icon" title="Auto-escalated from Medium — overdue ${AUTO_ESCALATE_DAYS}+ days"></i>` : ''}</div>
-      <div class="tmeta">${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${tagChips}<div class="pills">${pills}</div></div>
+      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span>${(t.autoEscalated && t.priority === 'HIGH') ? `<i class="ti ti-trending-up task-escalated-icon" title="Auto-escalated from Medium — overdue ${AUTO_ESCALATE_DAYS}+ days"></i>` : ''}</div>
+      <div class="tmeta"><span class="tprio ${pCls}">${bLbl} priority</span>${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${tagChips}<div class="pills">${pills}</div></div>
       ${note}
     </div>
     <div class="task-actions">
@@ -6813,6 +6824,23 @@ function taskHTML(t, showFreqPill) {
       ${snoozeBtn}${aiBtn}${editBtn}${delBtn}
     </div>
   </div>`;
+}
+
+// Timeline rail for the Today tab's "Scheduled" group — groups timed tasks under their
+// time on a vertical rail instead of a flat list, since seeing the gaps between times is
+// the point. Untimed tasks render separately as a normal list (see "Anytime" group).
+function renderTimelineRail(timedTasks) {
+  const groups = [];
+  timedTasks.forEach(t => {
+    const last = groups[groups.length - 1];
+    if (last && last.time === t.time) last.tasks.push(t);
+    else groups.push({ time: t.time, tasks: [t] });
+  });
+  const rows = groups.map(g => `<div class="rail-row">
+    <div class="rail-time-col"><span class="rail-time">${fmtTime(g.time)}</span></div>
+    <div class="rail-items">${g.tasks.map(t => taskHTML(t, true)).join('')}</div>
+  </div>`).join('');
+  return `<div class="rail-wrap">${rows}</div>`;
 }
 
 function ensureHomeParticles() {
@@ -7070,10 +7098,10 @@ function renderTasks() {
 
       if (pendingTimed.length) {
         html += `<div class="freq-group-label"><i class="ti ti-clock"></i>Scheduled</div>`;
-        pendingTimed.forEach(t => { html += taskHTML(t, true); });
+        html += renderTimelineRail(pendingTimed);
       }
       if (pendingUntimed.length) {
-        html += `<div class="freq-group-label"><i class="ti ti-list"></i>To Do</div>`;
+        html += `<div class="freq-group-label"><i class="ti ti-list"></i>Anytime</div>`;
         pendingUntimed.forEach(t => { html += taskHTML(t, true); });
       }
       if (completed.length) {
@@ -11015,6 +11043,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.24.0', type: 'minor', date: '30 Jun 2026', title: 'Task list overhaul: gradient-wash cards and a timeline rail for Today', changes: [
+    'Every task card now uses a subtle priority-coloured gradient wash across the background instead of a left border strip, with the priority shown as bold coloured text in the meta row',
+    'The Today tab\'s "Scheduled" group is now a vertical timeline rail — timed tasks anchor next to their time with a connecting line, instead of a flat stacked list; untimed tasks still collect below in a renamed "Anytime" group',
+    'Other tabs (Daily, Weekly, Monthly, By date, All, Calendar) keep their existing grouped structure, just with the new card styling',
+  ]},
   { ver: '4.23.3', type: 'patch', date: '30 Jun 2026', title: 'Restyled the Quick Add button and per-task action icons', changes: [
     'Quick Add\'s + button is now a tinted teal ghost square that fills solid on hover, matching the rest of the accent-colour system instead of a fixed blue square',
     'The edit/snooze/AI/pin/move/delete icons beside each task are now grouped into one soft rounded cluster with a divider, instead of floating loosely — snooze highlights amber, edit/AI highlight teal, and delete highlights coral on hover',
