@@ -694,6 +694,7 @@
   .task-tag-chip { font-size: 10px; font-weight: 500; padding: 1px 8px; border-radius: 20px; flex-shrink: 0; background: var(--surface2); border: 0.5px solid var(--border-md); color: var(--text-2); }
   .task-move-btn.pin-active, .icon-btn.pin-active { color: var(--amber-text); }
   .task-pin-icon { font-size: 12px; color: var(--amber-text); margin-right: 5px; flex-shrink: 0; }
+  .task-escalated-icon { font-size: 12px; color: var(--coral-text); flex-shrink: 0; }
   .task:focus { outline: none; box-shadow: 0 0 0 2px var(--blue-text); }
   .task:focus:not(:focus-visible) { box-shadow: none; }
   .task:focus-visible { box-shadow: 0 0 0 2px var(--blue-text); }
@@ -4913,6 +4914,7 @@ function resetDay() {
   // un-dismiss any recurring tasks snoozed earlier today, since the day is restarting
   Object.keys(snoozedToday).forEach(k => { if (k.startsWith(`${todayKey}_`)) delete snoozedToday[k]; });
   saveSnoozedToday();
+  autoEscalateOverdueTasks();
   save();
   renderTasks();
   if (pending.length) {
@@ -5093,12 +5095,43 @@ function snoozeTask(id) {
   }
   if (custom) {
     custom.date = next;
+    // the date moved, so the overdue clock restarts — eligible to auto-escalate again later
+    delete custom.autoEscalated;
+    custom.snoozeCount = (custom.snoozeCount || 0) + 1;
+    if (custom.snoozeCount >= 3 && custom.snoozeCount % 3 === 0) {
+      const reason = window.prompt(`This is the ${custom.snoozeCount}${custom.snoozeCount===3?'rd':'th'} time you've snoozed "${custom.name}" — why's it overdue? (optional, just for your own notes)`, '');
+      if (reason && reason.trim()) {
+        custom.overdueReasons = [...(custom.overdueReasons || []), { text: reason.trim(), loggedAt: Date.now() }];
+      }
+    }
     saveCustomTasks();
   } else {
     taskOverrides[id] = { ...(taskOverrides[id] || {}), date: next };
     saveTaskOverrides();
   }
   renderTasks();
+}
+
+// MEDIUM-priority date/once tasks that have sat overdue for 3+ days quietly bump to
+// HIGH so they don't get buried — runs once per session/day, not on every render
+const AUTO_ESCALATE_DAYS = 3;
+function daysOverdue(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const due = new Date(y, m - 1, d);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((today - due) / 86400000);
+}
+function autoEscalateOverdueTasks() {
+  let changed = false;
+  customTasks.forEach(t => {
+    if ((t.freq === 'date' || t.freq === 'once') && t.priority === 'MEDIUM' && t.date
+        && !isDone(t.id) && !t.autoEscalated && daysOverdue(t.date) >= AUTO_ESCALATE_DAYS) {
+      t.priority = 'HIGH';
+      t.autoEscalated = true;
+      changed = true;
+    }
+  });
+  if (changed) saveCustomTasks();
 }
 
 // ===== AMTEK JOB REMINDER =====
@@ -6562,7 +6595,7 @@ function taskHTML(t, showFreqPill) {
     ${dragHandle}
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
-      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
+      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span>${(t.autoEscalated && t.priority === 'HIGH') ? `<i class="ti ti-trending-up task-escalated-icon" title="Auto-escalated from Medium — overdue ${AUTO_ESCALATE_DAYS}+ days"></i>` : ''}</div>
       <div class="tmeta">${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${tagChips}<div class="pills">${pills}</div></div>
       ${note}
     </div>
@@ -10724,6 +10757,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.22.0', type: 'minor', date: '30 Jun 2026', title: 'Smarter overdue handling: auto-escalation and snooze reasons', changes: [
+    'MEDIUM-priority dated tasks overdue 3+ days now quietly bump to HIGH so they don\'t get buried — a small trending-up icon next to the priority badge marks ones that were auto-escalated',
+    'Auto-escalation only happens once per task — manually setting it back to Medium afterward sticks, it won\'t re-escalate itself',
+    'Snoozing the same task 3, 6, 9... times now asks an optional one-line "why is this overdue?" note, just for your own pattern-spotting later — skip it and it won\'t ask again until the next multiple of 3',
+  ]},
   { ver: '4.21.2', type: 'patch', date: '30 Jun 2026', title: 'Polish: Today\'s Highlights copy and layout', changes: [
     'Reworded the subtitle to "Special to today — not part of your regular routine"',
     'Removed the icon tile from the banner for a cleaner look',
@@ -12788,6 +12826,8 @@ async function initApp() {
     }
   });
   if (_doneMigrated) save();
+
+  autoEscalateOverdueTasks();
 
   // Hide loading overlay and render
   const loadEl = document.getElementById('app-loading');
