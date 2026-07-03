@@ -11363,6 +11363,16 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.25.1', type: 'patch', date: '3 Jul 2026', title: 'Nav clock card redesign: three-section layout with inline weather', changes: [
+    'Replaced the ambient gradient-shifting clock with a clean, theme-native card that works across all six colour themes without colour clashes',
+    'Weather moved out of the home page and into the nav clock card — always visible regardless of which page you\'re on',
+    'Card is split into three equal sections (time · date · weather) separated by thin dividers, each centred and symmetrical',
+    'Weather shows the icon and temperature on the first line, description on the second — matching the stacked style of the date section',
+    'Removed the clock icon from the time section to give the time more horizontal space',
+    'Card now expands with flex:1 to fill all remaining nav space to the right of the nav buttons',
+    'Day-progress bar at the bottom of the card tracks how far through the day you are',
+    'Removed weather from the home page greeting area — it now lives exclusively in the nav bar',
+  ]},
   { ver: '4.25.0', type: 'minor', date: '3 Jul 2026', title: 'Five new features: ambient clock, drag-to-reschedule, Cmd+K task actions, smart scheduling, weather', changes: [
     'Ambient nav clock: the Melbourne clock card now shows a gradient background that shifts hue through sunrise → morning → midday → afternoon → dusk → night, with a day-progress bar at the bottom tracking how far through the day you are',
     'Drag-to-reschedule: on the Today tab, drag any task down to the "Drop here to move to Tomorrow" zone to snooze it one day — works with both dated/once tasks (date is pushed) and recurring tasks (dismissed for today)',
