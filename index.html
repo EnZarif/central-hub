@@ -3701,10 +3701,12 @@
       <button class="icon-btn" onclick="closeShortcutsModal()"><i class="ti ti-x"></i></button>
     </div>
     <div class="kpi-modal-preview" style="background:var(--surface2); color:var(--text); border-color:var(--border-md);">
-      <div class="shortcut-row"><kbd>Ctrl K</kbd> <kbd>Ctrl Q</kbd><span>Open the command palette (jump anywhere)</span></div>
+      <div class="shortcut-row"><kbd>Ctrl K</kbd> <kbd>Ctrl Q</kbd> <kbd>F</kbd><span>Open the command palette (jump anywhere)</span></div>
+      <div class="shortcut-row"><kbd>S</kbd><span>Global search — search tasks, job list, meetings, ideas</span></div>
       <div class="shortcut-row"><kbd>A</kbd><span>Quick-capture — type anything, auto-sorted into a task / job list / idea</span></div>
       <div class="shortcut-row"><kbd>?</kbd><span>Show this panel</span></div>
-      <div class="shortcut-row"><kbd>N</kbd><span>Add a new task (on the Tasks page)</span></div>
+      <div class="shortcut-row"><kbd>N</kbd><span>Add a new task (Tasks page only)</span></div>
+      <div class="shortcut-row"><kbd>T</kbd><span>Check Tomorrow — preview tomorrow's tasks (Tasks page only)</span></div>
       <div class="shortcut-row"><kbd>Esc</kbd><span>Close any open modal or popup</span></div>
     </div>
   </div>
@@ -4855,7 +4857,10 @@ document.addEventListener('keydown', e => {
   if (typing) return;
   if (e.key === '?') { e.preventDefault(); toggleShortcutsModal(); return; }
   if (e.key === 'a' || e.key === 'A') { e.preventDefault(); openQuickCapture(); return; }
-  if ((e.key === 'n' || e.key === 'N') && currentPage === 'tasks') { e.preventDefault(); openAddTaskModal(); }
+  if (e.key === 'f' || e.key === 'F') { e.preventDefault(); openCommandPalette(); return; }
+  if (e.key === 's' || e.key === 'S') { e.preventDefault(); openGlobalSearch(); return; }
+  if ((e.key === 'n' || e.key === 'N') && currentPage === 'tasks') { e.preventDefault(); openAddTaskModal(); return; }
+  if ((e.key === 't' || e.key === 'T') && currentPage === 'tasks') { e.preventDefault(); openTomorrowModal(); return; }
 });
 
 // ===== COMMAND PALETTE (Ctrl/Cmd+K) =====
@@ -11370,6 +11375,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.25.3', type: 'patch', date: '3 Jul 2026', title: 'New single-key shortcuts: F, S, T', changes: [
+    'F — opens the command palette (same as Ctrl/Cmd+K and Ctrl/Cmd+Q, now also accessible without modifier keys)',
+    'S — opens global search (content search across tasks, job list, meetings, and ideas)',
+    'T — opens the Check Tomorrow modal (Tasks page only)',
+    'All new shortcuts are listed in the ? shortcuts overlay',
+  ]},
   { ver: '4.25.2', type: 'patch', date: '3 Jul 2026', title: 'Check Tomorrow modal: split into Scheduled / Recurring / Until Done sections', changes: [
     '"Check Tomorrow" modal now shows three distinct sections: Scheduled (one-off dated tasks specific to that day), Recurring (daily/weekly/fortnightly/monthly tasks active that day), and Until Done (outstanding carry-over tasks)',
   ]},
