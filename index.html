@@ -250,7 +250,7 @@
 
   @media (max-width: 760px) {
     /* Mobile: sidebar becomes a slide-out hamburger drawer */
-    body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; }
+    body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; overflow-x: hidden; }
     .wrap { padding: 1.25rem 1rem 3rem; }
 
     /* Top app bar */
@@ -1696,13 +1696,18 @@
     .dash-ring { flex-direction: row; justify-content: center; gap: 12px; }
     .dash-stats { grid-template-columns: 1fr 1fr; }
 
-    /* Bigger, easier tap targets */
-    .task { padding: 13px 14px; gap: 13px; }
+    /* Bigger checkbox, readable name */
+    .task { padding: 13px 14px; gap: 10px; }
     .cb { width: 24px; height: 24px; border-radius: 7px; }
     .cb i { font-size: 14px; }
     .tname { font-size: 14px; }
-    .task-ai-btn, .task-edit-btn, .task-del-btn, .task-move-btn { padding: 7px; font-size: 17px; }
-    .task-move-btn { font-size: 15px; }
+    /* Hide desktop-only reorder controls — they make the action cluster overflow on narrow screens */
+    .task-drag-handle { display: none; }
+    .task-move-col { display: none; }
+    /* Keep action buttons compact on phones — the whole task row is already tappable,
+       so the buttons don't need the enlarged 7px padding that was causing overflow. */
+    .task-ai-btn, .task-edit-btn, .task-del-btn, .task-move-btn { padding: 4px; font-size: 15px; }
+    .task-move-btn { font-size: 13px; }
 
     /* Horizontal-scroll tab row */
     .tabs { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; gap: 2px; }
@@ -1741,13 +1746,10 @@
     .check-tomorrow-btn { margin-left: 0; }
   }
 
-  /* Bigger tap targets on any touch input (iPad as well as phone), not just narrow screens — these
-     task-row icon buttons were as small as 15-23px, well under Apple's ~44pt touch-target guidance.
-     Reuses the same enlarged values as the phone-width block above, just driven by input type
-     instead of width, so a touch-based iPad in landscape/portrait gets them too. Placed after the
-     base .task-del-btn etc. rules earlier in the stylesheet — equal-specificity selectors are won
-     by source order, so this has to come later to actually take effect regardless of media match. */
-  @media (pointer: coarse) {
+  /* Bigger tap targets on iPad-sized touch screens (≥761px) — these task-row icon buttons were as
+     small as 15-23px, well under Apple's ~44pt touch-target guidance. Scoped to min-width: 761px so
+     it doesn't override the compact-phone rules above (phones already get their own handling). */
+  @media (pointer: coarse) and (min-width: 761px) {
     .cb { width: 24px; height: 24px; border-radius: 7px; }
     .cb i { font-size: 14px; }
     .task-ai-btn, .task-edit-btn, .task-del-btn, .task-move-btn { padding: 7px; font-size: 17px; }
