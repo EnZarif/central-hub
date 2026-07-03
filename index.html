@@ -142,7 +142,7 @@
   .tp-sw-main { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 5px 6px; }
   .tp-sw-line { height: 6px; border-radius: 3px; opacity: 0.6; }
   .tp-name { font-size: 11px; font-weight: 500; color: var(--text-2); text-align: center; }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 120px; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 90px; }
   .wrap { padding: 2rem 3rem 4rem; }
 
   /* TOP NAV */
@@ -900,8 +900,7 @@
   .cwc-date { line-height: 1.3; flex: 1; min-width: 0; }
   .cwc-weekday { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; }
   .cwc-day { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
-  .cwc-wx { display: flex; align-items: center; gap: 9px; padding: 8px 13px 10px;
-    border-top: 0.5px solid var(--border); }
+  .cwc-wx { display: flex; align-items: center; gap: 9px; }
   .cwc-wx-icon { font-size: 17px; color: var(--teal-text); flex-shrink: 0; }
   .cwc-wx-temp { font-size: 16px; font-weight: 500; color: var(--text); flex-shrink: 0; }
   .cwc-wx-dot { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
@@ -2009,8 +2008,9 @@
           <div class="cwc-weekday" id="melb-clock-weekday"></div>
           <div class="cwc-day" id="melb-clock-day"></div>
         </div>
+        <div class="cwc-divider" id="nav-clock-wx-divider" style="display:none"></div>
+        <div class="cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
       </div>
-      <div class="cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
       <div class="cwc-bar-track">
         <div class="cwc-bar-fill" id="nav-clock-bar"></div>
       </div>
@@ -7271,10 +7271,14 @@ function renderHomeBriefing() {
 async function renderHomeWeather() {
   const wx = await fetchWeather();
   const navRow = document.getElementById('nav-clock-wx-row');
+  const navDiv = document.getElementById('nav-clock-wx-divider');
   if (navRow) {
-    if (!wx) { navRow.style.display = 'none'; }
-    else {
+    if (!wx) {
+      navRow.style.display = 'none';
+      if (navDiv) navDiv.style.display = 'none';
+    } else {
       navRow.style.display = 'flex';
+      if (navDiv) navDiv.style.display = '';
       navRow.innerHTML = `<i class="ti ${wx.icon} cwc-wx-icon"></i>
         <span class="cwc-wx-temp">${wx.temp}°C</span>
         <span class="cwc-wx-dot">·</span>
