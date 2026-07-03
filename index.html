@@ -2990,7 +2990,9 @@
         <div class="settings-key-row">
           <input type="password" class="settings-input" id="settings-owm-key" placeholder="OpenWeatherMap API key" style="width:100%;">
           <button class="settings-save-btn" onclick="saveWeatherSettings()"><i class="ti ti-device-floppy"></i> Save</button>
+          <button class="settings-save-btn" onclick="testWeatherSettings()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-plug-connected"></i> Test</button>
         </div>
+        <div class="ai-hint" id="weather-key-status"></div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">City</div>
@@ -7186,6 +7188,27 @@ function saveWeatherSettings() {
   _weatherCache = { data: null, bucket: -1, city: '' };
   renderHomeBriefing();
   showToast('<i class="ti ti-cloud-check"></i> Weather settings saved');
+}
+async function testWeatherSettings() {
+  const key = (document.getElementById('settings-owm-key').value || '').trim();
+  const city = (document.getElementById('settings-weather-city').value || '').trim() || 'Melbourne,AU';
+  const statusEl = document.getElementById('weather-key-status');
+  if (!key) { if (statusEl) statusEl.textContent = 'Enter an API key first.'; return; }
+  if (statusEl) statusEl.textContent = 'Testing…';
+  try {
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${encodeURIComponent(key)}&units=metric`);
+    const json = await res.json();
+    if (!res.ok) {
+      const msg = json.message || `HTTP ${res.status}`;
+      if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Error: ${esc(msg)}</span>`;
+    } else {
+      const temp = Math.round(json.main.temp);
+      const desc = json.weather[0].description;
+      if (statusEl) statusEl.innerHTML = `<span style="color:var(--green-text)"><i class="ti ti-check"></i> Connected — ${esc(city)}: ${temp}°C, ${esc(desc)}</span>`;
+    }
+  } catch (e) {
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Network error — ${esc(String(e))}</span>`;
+  }
 }
 async function fetchWeather() {
   const { key, city } = _weatherSettings;
