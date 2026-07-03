@@ -379,16 +379,7 @@
 
   /* HUB / LANDING */
   #page-home { position: relative; padding: 4px 0 0; margin-top: -2rem; }
-  .hub-head { margin-bottom: 1.6rem; position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-  .hub-head-text { min-width: 0; }
-  /* Weather pill — top-right of the Home header */
-  .home-wx-pill { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; padding-top: 2px; }
-  .home-wx-main { font-size: 20px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 7px; line-height: 1; }
-  .home-wx-main i { font-size: 17px; color: var(--teal-text); }
-  .home-wx-desc { font-size: 11.5px; color: var(--text-3); }
-  .home-wx-commute { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
-  .home-wx-commute i { font-size: 11px; }
-  @media (max-width: 480px) { .home-wx-main { font-size: 16px; } }
+  .hub-head { margin-bottom: 1.6rem; position: relative; z-index: 1; }
   .hub-back { font-size: 12px; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; padding: 0; margin-bottom: 10px; transition: color 0.15s; }
   .hub-back:hover { color: var(--text-2); }
   .hub-back i { font-size: 14px; }
@@ -2042,11 +2033,8 @@
   <div class="page active" id="page-home">
     <div class="home-particles" id="home-particles"></div>
     <div class="hub-head">
-      <div class="hub-head-text">
-        <h1 id="home-greeting">Good evening, Zarif</h1>
-        <p id="home-date">Loading…</p>
-      </div>
-      <div id="home-weather-pill"></div>
+      <h1 id="home-greeting">Good evening, Zarif</h1>
+      <p id="home-date">Loading…</p>
     </div>
     <div id="home-briefing"></div>
     <div id="home-highlights"></div>
@@ -7287,24 +7275,6 @@ function renderHomeBriefing() {
 }
 async function renderHomeWeather() {
   const wx = await fetchWeather();
-  // Home page pill
-  const homeEl = document.getElementById('home-weather-pill');
-  if (homeEl) {
-    if (!wx) { homeEl.innerHTML = ''; }
-    else {
-      const nowH = melbNowMinutes() / 60;
-      let commuteHtml = '';
-      if (_weatherSettings.commuteMins > 0 && nowH >= 5.5 && nowH < 10) {
-        commuteHtml = `<div class="home-wx-commute"><i class="ti ti-car"></i>${_weatherSettings.commuteMins} min drive</div>`;
-      }
-      homeEl.innerHTML = `<div class="home-wx-pill">
-        <div class="home-wx-main"><i class="ti ${wx.icon}"></i>${wx.temp}°C</div>
-        <div class="home-wx-desc">${esc(wx.desc)}</div>
-        ${commuteHtml}
-      </div>`;
-    }
-  }
-  // Nav clock weather row
   const navRow = document.getElementById('nav-clock-wx-row');
   if (navRow) {
     if (!wx) { navRow.style.display = 'none'; }
