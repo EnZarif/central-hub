@@ -1746,6 +1746,22 @@
   .pomo-float-btn:hover { background: var(--border-md); }
   @media (max-width: 760px) { .pomo-float { bottom: calc(16px + env(safe-area-inset-bottom)); right: 12px; } body.nav-open .pomo-float { display: none; } }
 
+  /* Mobile-only floating quick-add button (FAB). Hidden on desktop; the "A" shortcut covers it there. */
+  .mobile-fab { display: none; }
+  @media (max-width: 760px) {
+    .mobile-fab { display: flex; align-items: center; justify-content: center; position: fixed;
+      bottom: calc(18px + env(safe-area-inset-bottom)); right: 16px; z-index: 82;
+      width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+      color: #fff; font-size: 26px; -webkit-tap-highlight-color: transparent;
+      background: linear-gradient(150deg, var(--teal), color-mix(in srgb, var(--teal) 55%, #000));
+      box-shadow: 0 8px 22px -4px color-mix(in srgb, var(--teal) 60%, transparent), 0 4px 10px rgba(0,0,0,0.3);
+      transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s; }
+    .mobile-fab:active { transform: scale(0.9); box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--teal) 55%, transparent); }
+    body.nav-open .mobile-fab { display: none; }
+    /* When a Pomodoro timer is running, lift its pill above the FAB so they don't overlap */
+    .pomo-float:not([style*="none"]) { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  }
+
   /* MOBILE COMPONENT TWEAKS (after base rules so they win the cascade) */
   @media (max-width: 760px) {
     .header { margin-bottom: 1.2rem; }
@@ -1804,6 +1820,23 @@
     .hub-filter-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
     .hub-filter-bar > * { flex: 0 0 auto; }
     .check-tomorrow-btn { margin-left: 0; }
+
+    /* Bento hub grid: the desktop 3-column layout with row/col spans leaves big gaps on a
+       phone. Collapse to a single column and drop the hero/wide-card spans so cards stack
+       cleanly with no dead space. */
+    .hub-grid { grid-template-columns: 1fr !important; grid-template-rows: none !important; }
+    #page-home .hub-grid .app-card:nth-child(1),
+    #page-helpdesk .hub-grid .app-card:nth-child(1),
+    #page-personal .hub-grid .app-card:nth-child(1) { grid-row: auto; }
+    #page-home .hub-grid .app-card:nth-child(4) { grid-column: auto; }
+    .app-card { min-height: 0; }
+
+    /* Reduce oversized vertical rhythm on phones so sections don't float apart */
+    .wrap { padding: 1rem 0.9rem 5rem; }
+    .hub-head { margin-bottom: 1.1rem; }
+    .hub-head h1 { font-size: 20px; }
+    .th-banner, .nb-card, .home-briefing-card { margin-bottom: 12px; }
+    .stat-strip .statcard { min-width: calc(50% - 4px); }
   }
 
   /* Bigger tap targets on iPad-sized touch screens (≥761px) — these task-row icon buttons were as
@@ -3339,6 +3372,9 @@
   <span class="pomo-float-mode" id="pomo-float-mode">Focus</span>
   <button class="pomo-float-btn" onclick="event.stopPropagation(); pomoToggle()" title="Pause/resume"><i class="ti ti-player-pause" id="pomo-float-icon"></i></button>
 </div>
+
+<!-- Mobile-only floating quick-add button (same action as the "A" quick-capture shortcut) -->
+<button class="mobile-fab" id="mobile-fab" onclick="openQuickCapture()" aria-label="Quick add"><i class="ti ti-plus"></i></button>
 
 <div class="kpi-modal-overlay" id="kpi-ops-modal-overlay">
   <div class="kpi-modal">
@@ -11369,6 +11405,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.26.0', type: 'minor', date: '3 Jul 2026', title: 'Mobile: floating quick-add button and bento-grid layout fixes', changes: [
+    'New floating quick-add button (FAB) — a round + button fixed to the bottom-right on phones only; tap it to open quick-capture (same as the "A" shortcut on desktop). Hidden entirely on desktop and while the nav drawer is open',
+    'Fixed the Home / Helpdesk / Personal hub cards: the desktop 3-column bento layout (with a tall hero tile and a wide card) no longer carries over to phones, where it left large empty gaps — cards now stack in a single clean column with the hero/wide spans removed',
+    'When a Pomodoro timer is running, its floating pill now lifts above the new quick-add button so they never overlap',
+    'Tightened mobile vertical spacing so Home sections (highlights banner, next-best-task, briefing) sit closer together instead of floating apart',
+    'Extra bottom padding on phone screens so the last item never sits under the floating button',
+  ]},
   { ver: '4.25.4', type: 'patch', date: '3 Jul 2026', title: 'Removed Theme button from nav — use Settings → Appearance instead', changes: [
     'The "Theme" cycle button has been removed from the nav bar — the full visual theme picker in Settings → Appearance already does the same job with swatches for each theme',
   ]},
