@@ -208,11 +208,6 @@
   .nav-clock .clock-card-divider { height: 26px; }
   .nav-clock .clock-card-ico { width: 28px; height: 28px; font-size: 15px; }
   /* "Theme" gets an actual illustrated colour-wheel swatch instead of a flat grey icon, since it literally picks the app's colour theme */
-  .theme-toggle-btn { padding: 8px 10px; font-size: 14px; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, transform 0.15s; white-space: nowrap; }
-  .theme-toggle-btn i { font-size: 16px; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); background: conic-gradient(from 0deg, var(--teal-text), var(--coral-text), var(--green-text), var(--purple-text), var(--pink-text), var(--teal-text)); transition: transform 0.5s cubic-bezier(.2,.8,.2,1), box-shadow 0.2s; }
-  .theme-toggle-btn:hover { color: var(--text); transform: translateY(-1px); }
-  .theme-toggle-btn:hover i { transform: rotate(160deg); box-shadow: 0 0 14px color-mix(in srgb, var(--teal-text) 50%, transparent); }
-  .theme-toggle-btn:active { transform: scale(0.96); }
   body.compact-mode .task { padding: 7px 10px; }
   body.compact-mode .task-hero { padding: 14px; }
 
@@ -286,7 +281,7 @@
     .nav-clock .clock-card-time-val { font-size: 26px; }
     .nav-clock .clock-card-divider { height: 32px; }
     .nav-clock .clock-card-ico { width: 36px; height: 36px; font-size: 19px; }
-    .theme-toggle-btn { width: 100%; }
+
 
     /* Scrim behind drawer */
     .nav-scrim { display: block; position: fixed; inset: 0; z-index: 65; background: rgba(0,0,0,0);
@@ -1996,7 +1991,6 @@
   </div>
   <div class="nav-bottom">
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
-    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cycle theme"><i class="ti ti-palette"></i><span>Theme</span></button>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
         <div class="cwc-section">
@@ -11375,6 +11369,9 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.25.4', type: 'patch', date: '3 Jul 2026', title: 'Removed Theme button from nav — use Settings → Appearance instead', changes: [
+    'The "Theme" cycle button has been removed from the nav bar — the full visual theme picker in Settings → Appearance already does the same job with swatches for each theme',
+  ]},
   { ver: '4.25.3', type: 'patch', date: '3 Jul 2026', title: 'New single-key shortcuts: F, S, T', changes: [
     'F — opens the command palette (same as Ctrl/Cmd+K and Ctrl/Cmd+Q, now also accessible without modifier keys)',
     'S — opens global search (content search across tasks, job list, meetings, and ideas)',
