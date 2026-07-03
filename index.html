@@ -901,11 +901,11 @@
   .cwc-date { flex-direction: column; align-items: center; line-height: 1.3; }
   .cwc-weekday { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; }
   .cwc-day { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
-  .cwc-wx { gap: 9px; flex: 2; }
+  .cwc-wx { flex: 2; flex-direction: column; gap: 2px; }
+  .cwc-wx-main { display: flex; align-items: center; gap: 7px; }
   .cwc-wx-icon { font-size: 17px; color: var(--teal-text); flex-shrink: 0; }
   .cwc-wx-temp { font-size: 16px; font-weight: 500; color: var(--text); flex-shrink: 0; }
-  .cwc-wx-dot { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
-  .cwc-wx-desc { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cwc-wx-desc { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
   .cwc-bar-track { height: 3px; background: rgba(255,255,255,0.05); position: relative; flex-shrink: 0; }
   .cwc-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 0 2px 2px 0;
     background: var(--teal); opacity: 0.55; transition: width 60s linear; }
@@ -7282,10 +7282,7 @@ async function renderHomeWeather() {
     } else {
       navRow.style.display = 'flex';
       if (navDiv) navDiv.style.display = '';
-      navRow.innerHTML = `<i class="ti ${wx.icon} cwc-wx-icon"></i>
-        <span class="cwc-wx-temp">${wx.temp}°C</span>
-        <span class="cwc-wx-dot">·</span>
-        <span class="cwc-wx-desc">${esc(wx.desc)}</span>`;
+      navRow.innerHTML = `<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>`;
     }
   }
 }
