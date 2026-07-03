@@ -891,32 +891,38 @@
   .eod-btn.primary { background: var(--teal); color: #fff; }
   .eod-btn.ghost { background: var(--surface2); color: var(--text-2); border: 1px solid var(--border-md); }
 
-  /* ── Ambient nav clock (option C: expanded gradient fill + day-progress bar) ── */
-  .clock-card.nav-clock {
-    flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden;
-    min-width: 190px; border: none; box-shadow: none; border-radius: 14px;
-    background: var(--surface); transition: background 6s ease;
+  /* ── Nav clock + weather card (Option A) ── */
+  .clock-wx-card {
+    display: flex; flex-direction: column; align-items: stretch;
+    border-radius: 14px; border: 1.5px solid var(--border-md);
+    background: var(--surface2); overflow: hidden; min-width: 240px; flex-shrink: 0;
   }
-  .ambient-clock-inner { display: flex; align-items: center; gap: 9px; padding: 10px 13px 5px; }
-  .ambient-clock-time { display: flex; align-items: baseline; gap: 4px; }
-  .clock-card.nav-clock .clock-card-time-val { font-size: 22px; transition: color 6s ease; }
-  .clock-card.nav-clock .clock-card-ampm { transition: color 6s ease; }
-  .ambient-clock-greeting { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase;
-    color: var(--text-3); padding: 0 13px 7px; font-weight: 600; transition: color 6s ease; }
-  .ambient-clock-progress { height: 3px; background: rgba(255,255,255,0.06); position: relative; flex-shrink: 0; }
-  .ambient-clock-progress-bar { position: absolute; left: 0; top: 0; height: 100%;
-    border-radius: 0 2px 2px 0; transition: width 60s linear, background-color 6s ease; }
-  /* Mobile drawer: horizontal layout, hide progress bar (no vertical room) */
+  .cwc-top { display: flex; align-items: center; gap: 10px; padding: 11px 13px 8px; }
+  .cwc-ico { width: 36px; height: 36px; border-radius: 10px; background: var(--teal-bg);
+    color: var(--teal-text); display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; }
+  .cwc-time { display: flex; align-items: baseline; gap: 3px; flex-shrink: 0; }
+  .cwc-time-val { font-size: 26px; font-weight: 500; letter-spacing: -0.5px; color: var(--text);
+    font-variant-numeric: tabular-nums; line-height: 1; }
+  .cwc-ampm { font-size: 13px; font-weight: 600; color: var(--teal-text); }
+  .cwc-divider { width: 1px; height: 28px; background: var(--border-md); flex-shrink: 0; }
+  .cwc-date { line-height: 1.3; flex: 1; min-width: 0; }
+  .cwc-weekday { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; }
+  .cwc-day { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+  .cwc-wx { display: flex; align-items: center; gap: 9px; padding: 8px 13px 10px;
+    border-top: 0.5px solid var(--border); }
+  .cwc-wx-icon { font-size: 17px; color: var(--teal-text); flex-shrink: 0; }
+  .cwc-wx-temp { font-size: 16px; font-weight: 500; color: var(--text); flex-shrink: 0; }
+  .cwc-wx-dot { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+  .cwc-wx-desc { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cwc-bar-track { height: 3px; background: rgba(255,255,255,0.05); position: relative; flex-shrink: 0; }
+  .cwc-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 0 2px 2px 0;
+    background: var(--teal); opacity: 0.55; transition: width 60s linear; }
   @media (max-width: 760px) {
-    .clock-card.nav-clock { flex-direction: row; align-items: center; min-width: 0; border-radius: 12px; }
-    .ambient-clock-inner { flex: 1; padding: 12px; }
-    .clock-card.nav-clock .clock-card-time-val { font-size: 26px; }
-    .ambient-clock-greeting { padding: 0 12px 0 0; font-size: 10px; flex-shrink: 0; }
-    .ambient-clock-progress { width: 4px; height: auto; align-self: stretch;
-      background: rgba(255,255,255,0.06); border-radius: 0; }
-    .ambient-clock-progress-bar { width: 100% !important; height: auto; top: auto;
-      bottom: 0; border-radius: 0; transition: background-color 6s ease; }
+    .clock-wx-card { min-width: 0; width: 100%; border-radius: 12px; }
+    .cwc-time-val { font-size: 28px; }
   }
+  @media (max-width: 900px) and (min-width: 761px) { .clock-wx-card { display: none; } }
 
   /* ── Drag-to-reschedule drop zone (Today tab) ── */
   .tomorrow-drop-zone { display: none; align-items: center; justify-content: center; gap: 8px;
@@ -2005,20 +2011,22 @@
   <div class="nav-bottom">
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
     <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cycle theme"><i class="ti ti-palette"></i><span>Theme</span></button>
-    <div class="clock-card nav-clock" id="ambient-clock" title="Melbourne time">
-      <div class="ambient-clock-inner">
-        <div class="ambient-clock-time">
-          <span class="clock-card-time-val" id="melb-clock-time">--:--</span>
-          <span class="clock-card-ampm" id="melb-clock-ampm"></span>
+    <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
+      <div class="cwc-top">
+        <div class="cwc-ico"><i class="ti ti-clock"></i></div>
+        <div class="cwc-time">
+          <span class="cwc-time-val" id="melb-clock-time">--:--</span>
+          <span class="cwc-ampm" id="melb-clock-ampm"></span>
         </div>
-        <div class="clock-card-date">
-          <div class="clock-card-weekday" id="melb-clock-weekday"></div>
-          <div class="clock-card-day" id="melb-clock-day"></div>
+        <div class="cwc-divider"></div>
+        <div class="cwc-date">
+          <div class="cwc-weekday" id="melb-clock-weekday"></div>
+          <div class="cwc-day" id="melb-clock-day"></div>
         </div>
       </div>
-      <div class="ambient-clock-greeting" id="ambient-clock-greeting"></div>
-      <div class="ambient-clock-progress">
-        <div class="ambient-clock-progress-bar" id="ambient-clock-bar"></div>
+      <div class="cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
+      <div class="cwc-bar-track">
+        <div class="cwc-bar-fill" id="nav-clock-bar"></div>
       </div>
     </div>
   </div>
@@ -6130,24 +6138,9 @@ function tickMelbClock() {
     const dy = document.getElementById('melb-clock-day');
     if (dy) dy.textContent = day;
   }
-  // Ambient clock — gradient + progress bar (update every tick, CSS transition smooths it)
-  const clockEl = document.getElementById('ambient-clock');
-  if (clockEl) {
-    const pal = _ambientPalette(nowMin);
-    clockEl.style.background = pal.bg;
-    const barEl = document.getElementById('ambient-clock-bar');
-    if (barEl) {
-      const pct = (nowMin / 1440 * 100).toFixed(2);
-      barEl.style.width = pct + '%';
-      barEl.style.backgroundColor = pal.accent;
-    }
-    const greetEl = document.getElementById('ambient-clock-greeting');
-    if (greetEl) { greetEl.textContent = pal.greet; greetEl.style.color = pal.accent; }
-    const tvEl = document.getElementById('melb-clock-time');
-    if (tvEl) tvEl.style.color = pal.accent;
-    const apEl2 = document.getElementById('melb-clock-ampm');
-    if (apEl2) apEl2.style.color = pal.accent;
-  }
+  // Day-progress bar
+  const barEl = document.getElementById('nav-clock-bar');
+  if (barEl) barEl.style.width = (nowMin / 1440 * 100).toFixed(2) + '%';
 }
 
 // ===== END-OF-DAY WRAP TOAST =====
@@ -7293,20 +7286,36 @@ function renderHomeBriefing() {
   </div>`;
 }
 async function renderHomeWeather() {
-  const el = document.getElementById('home-weather-pill');
-  if (!el) return;
   const wx = await fetchWeather();
-  if (!wx) { el.innerHTML = ''; return; }
-  const nowH = melbNowMinutes() / 60;
-  let commuteHtml = '';
-  if (_weatherSettings.commuteMins > 0 && nowH >= 5.5 && nowH < 10) {
-    commuteHtml = `<div class="home-wx-commute"><i class="ti ti-car"></i>${_weatherSettings.commuteMins} min drive</div>`;
+  // Home page pill
+  const homeEl = document.getElementById('home-weather-pill');
+  if (homeEl) {
+    if (!wx) { homeEl.innerHTML = ''; }
+    else {
+      const nowH = melbNowMinutes() / 60;
+      let commuteHtml = '';
+      if (_weatherSettings.commuteMins > 0 && nowH >= 5.5 && nowH < 10) {
+        commuteHtml = `<div class="home-wx-commute"><i class="ti ti-car"></i>${_weatherSettings.commuteMins} min drive</div>`;
+      }
+      homeEl.innerHTML = `<div class="home-wx-pill">
+        <div class="home-wx-main"><i class="ti ${wx.icon}"></i>${wx.temp}°C</div>
+        <div class="home-wx-desc">${esc(wx.desc)}</div>
+        ${commuteHtml}
+      </div>`;
+    }
   }
-  el.innerHTML = `<div class="home-wx-pill">
-    <div class="home-wx-main"><i class="ti ${wx.icon}"></i>${wx.temp}°C</div>
-    <div class="home-wx-desc">${esc(wx.desc)}</div>
-    ${commuteHtml}
-  </div>`;
+  // Nav clock weather row
+  const navRow = document.getElementById('nav-clock-wx-row');
+  if (navRow) {
+    if (!wx) { navRow.style.display = 'none'; }
+    else {
+      navRow.style.display = 'flex';
+      navRow.innerHTML = `<i class="ti ${wx.icon} cwc-wx-icon"></i>
+        <span class="cwc-wx-temp">${wx.temp}°C</span>
+        <span class="cwc-wx-dot">·</span>
+        <span class="cwc-wx-desc">${esc(wx.desc)}</span>`;
+    }
+  }
 }
 
 function animateGhostRing(el, pctEl, targetPct) {
@@ -13500,6 +13509,7 @@ async function initApp() {
 
   loadSettings();
   loadWeatherSettings();
+  renderHomeWeather();
   loadMsgTemplate();
   renderHubs();
   pomoRender();
