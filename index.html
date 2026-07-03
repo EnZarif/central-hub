@@ -865,18 +865,23 @@
   /* End-of-day wrap toast — itemized list with per-item drop + bulk push-to-tomorrow */
   .eod-toast { position: fixed; bottom: 20px; right: 20px; z-index: 201; width: 320px; background: color-mix(in srgb, var(--surface) 85%, black 15%); border: 1px solid var(--border-md); border-radius: 14px; padding: 14px 16px; box-shadow: 0 20px 50px -20px rgba(0,0,0,0.7); opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity 0.2s, transform 0.2s; }
   .eod-toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-  .eod-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .eod-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
   .eod-head i { color: var(--teal-text); }
+  .eod-sub { font-size: 11.5px; color: var(--text-3); margin-bottom: 10px; }
   .eod-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; max-height: 180px; overflow-y: auto; }
   .eod-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); padding: 5px 8px; border-radius: 7px; background: var(--surface2); }
   .eod-item .eod-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal-text); flex-shrink: 0; }
   .eod-item .eod-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .eod-item .eod-x { margin-left: auto; font-size: 11px; color: var(--text-3); cursor: pointer; flex-shrink: 0; }
   .eod-item .eod-x:hover { color: var(--text-2); }
-  .eod-actions { display: flex; gap: 8px; }
-  .eod-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; border: none; font-family: inherit; }
-  .eod-btn.primary { background: var(--teal); color: #fff; }
+  .eod-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .eod-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; border: none; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; }
+  .eod-btn.primary { background: var(--teal); color: #fff; flex: 1; justify-content: center; }
+  .eod-btn.primary i { font-size: 13px; }
   .eod-btn.ghost { background: var(--surface2); color: var(--text-2); border: 1px solid var(--border-md); }
+  .eod-pickdate { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+  .eod-pickdate span { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+  .eod-pickdate input[type="date"] { flex: 1; min-width: 0; font-family: inherit; font-size: 12px; color: var(--text); background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: 8px; padding: 5px 8px; color-scheme: dark; }
 
   /* ── Nav clock + weather card (Option A) ── */
   .clock-wx-card {
@@ -6165,30 +6170,76 @@ function tickMelbClock() {
 }
 
 // ===== END-OF-DAY WRAP TOAST =====
-const EOD_WRAP_MINUTE = 17 * 60; // 5:00pm Melbourne time
+const EOD_WRAP_MINUTE = 16 * 60 + 45; // 4:45pm Melbourne time
 function getEodPendingTasks() {
   return getTodayTasks().filter(t => !isDone(t.id) && !snoozedToday[`${todayKey}_${t.id}`]);
 }
 function checkEodWrap(nowMin) {
   if (nowMin < EOD_WRAP_MINUTE) return;
+  // Task Manager page only — if they're elsewhere at 4:45, it'll surface when they land here
+  if (currentPage !== 'tasks') return;
   if (dbGet('zarif_eod_wrap_shown') === todayInputDate()) return;
-  dbSet('zarif_eod_wrap_shown', todayInputDate());
   const pending = getEodPendingTasks();
   if (!pending.length) return;
+  dbSet('zarif_eod_wrap_shown', todayInputDate()); // mark shown only once it actually appears
   _eodWrapIds = pending.map(t => String(t.id));
   renderEodWrapToast();
+}
+// Snooze a single task to an explicit date (dated/once tasks move; recurring tasks just
+// get dismissed for today since they have no single occurrence to push). No re-render or
+// snooze-reason prompt here — callers batch these and render once.
+function snoozeTaskToDate(id, targetDate) {
+  const builtIn = TASKS.find(t => String(t.id) === String(id));
+  const custom = customTasks.find(t => String(t.id) === String(id));
+  const t = custom || builtIn;
+  if (!t) return;
+  if (t.freq !== 'date' && t.freq !== 'once') {
+    snoozedToday[`${todayKey}_${id}`] = true;
+    return;
+  }
+  if (custom) {
+    custom.date = targetDate;
+    delete custom.autoEscalated;
+    custom.snoozeCount = (custom.snoozeCount || 0) + 1;
+    saveCustomTasks();
+  } else {
+    taskOverrides[id] = { ...(taskOverrides[id] || {}), date: targetDate };
+    saveTaskOverrides();
+  }
+}
+// Next working day: skips weekends and VIC public holidays via getDayMode()
+function nextWorkingDayStr() {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  for (let i = 0; i < 30; i++) {
+    d.setDate(d.getDate() + 1);
+    if (getDayMode(ymd(d)) === 'working') return ymd(d);
+  }
+  return ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+}
+function _eodDateLabel(dstr) {
+  return new Date(dstr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+function eodWrapSnoozeAll(targetDate, label) {
+  const ids = _eodWrapIds.slice();
+  ids.forEach(id => snoozeTaskToDate(id, targetDate));
+  saveSnoozedToday();
+  renderTasks();
+  closeEodWrapToast();
+  showToast(`<i class="ti ti-moon-stars"></i>Snoozed <b>${ids.length}</b> task${ids.length !== 1 ? 's' : ''} to ${label}.`);
+}
+function eodWrapNextWorkingDay() {
+  const d = nextWorkingDayStr();
+  eodWrapSnoozeAll(d, _eodDateLabel(d));
+}
+function eodWrapPickDate(val) {
+  if (!val) return;
+  eodWrapSnoozeAll(val, _eodDateLabel(val));
 }
 let _eodWrapIds = [];
 function eodWrapDrop(id) {
   _eodWrapIds = _eodWrapIds.filter(x => x !== String(id));
   if (!_eodWrapIds.length) { closeEodWrapToast(); return; }
   renderEodWrapToast();
-}
-function eodWrapPushAll() {
-  const ids = _eodWrapIds.slice();
-  ids.forEach(id => snoozeTask(id));
-  closeEodWrapToast();
-  showToast(`<i class="ti ti-moon-stars"></i>Pushed <b>${ids.length}</b> task${ids.length !== 1 ? 's' : ''} to tomorrow.`);
 }
 function closeEodWrapToast() {
   _eodWrapIds = [];
@@ -6209,9 +6260,19 @@ function renderEodWrapToast() {
     if (!t) return '';
     return `<div class="eod-item"><div class="eod-dot"></div><span class="eod-name">${esc(t.name)}</span><span class="eod-x" onclick="eodWrapDrop('${id}')"><i class="ti ti-x"></i></span></div>`;
   }).join('');
+  const tomorrowMin = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+  const nwd = nextWorkingDayStr();
   el.innerHTML = `<div class="eod-head"><i class="ti ti-moon-stars"></i>${doneCount} done · ${_eodWrapIds.length} left today</div>
+    <div class="eod-sub">Wrap up — snooze what's left to another day.</div>
     <div class="eod-list">${items}</div>
-    <div class="eod-actions"><button class="eod-btn primary" onclick="eodWrapPushAll()">Push all to tomorrow</button><button class="eod-btn ghost" onclick="closeEodWrapToast()">Dismiss</button></div>`;
+    <div class="eod-actions">
+      <button class="eod-btn primary" onclick="eodWrapNextWorkingDay()"><i class="ti ti-briefcase"></i> Next working day · ${_eodDateLabel(nwd)}</button>
+      <button class="eod-btn ghost" onclick="closeEodWrapToast()">Dismiss</button>
+    </div>
+    <label class="eod-pickdate">
+      <span>or snooze all to a specific date</span>
+      <input type="date" min="${tomorrowMin}" onchange="eodWrapPickDate(this.value)">
+    </label>`;
   requestAnimationFrame(() => el.classList.add('show'));
 }
 
@@ -6767,6 +6828,8 @@ function showPage(p, hub) {
   if (p === 'meetings' && typeof populateMtgLinkOptions === 'function') populateMtgLinkOptions();
   if (p === 'insights' && typeof renderInsights === 'function') renderInsights();
   if (p === 'settings' && typeof updateNotifPermStatus === 'function') updateNotifPermStatus();
+  // Surface the end-of-day wrap toast on arrival if it's already past 4:45pm
+  if (p === 'tasks' && typeof checkEodWrap === 'function') checkEodWrap(melbNowMinutes());
   window.scrollTo(0, 0);
 }
 
@@ -11406,6 +11469,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.27.0', type: 'minor', date: '3 Jul 2026', title: 'End-of-day wrap: snooze leftovers to the next working day or a specific date', changes: [
+    'The end-of-day wrap toast now appears from 4:45pm (was 5:00pm) and only on the Task Manager page — if you\'re elsewhere at 4:45 it surfaces the moment you land back on Tasks',
+    'It lists everything still incomplete today; remove any you want to keep with the × on each row',
+    'New "Next working day" button snoozes all remaining tasks to the next working day — it skips weekends and Victorian public holidays automatically (and any days you\'ve manually flagged as off)',
+    'New date picker lets you snooze all remaining tasks to a specific date instead',
+    'Replaces the old single "Push all to tomorrow" action, which didn\'t account for weekends/holidays',
+  ]},
   { ver: '4.26.1', type: 'patch', date: '3 Jul 2026', title: 'Fixed the Tasks page being zoomable / horizontally scrollable on mobile', changes: [
     'The Task Manager hero card used transform-style: preserve-3d, which stopped its overflow:hidden from clipping the decorative glow orbs — one orb sat ~60px past the right screen edge on phones, pushing the whole page wider than the viewport and letting you pinch-zoom out. Removed preserve-3d (the cursor-tilt still works via perspective()) so the orbs clip properly',
     'Added html-level horizontal-overflow clipping on mobile as a safety net so no stray-wide element can make a page zoomable again',
