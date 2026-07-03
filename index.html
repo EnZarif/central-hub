@@ -886,21 +886,22 @@
   .clock-wx-card {
     display: flex; flex-direction: column; align-items: stretch;
     border-radius: 14px; border: 1.5px solid var(--border-md);
-    background: var(--surface2); overflow: hidden; min-width: 240px; flex-shrink: 0;
+    background: var(--surface2); overflow: hidden; min-width: 320px; flex-shrink: 0;
   }
-  .cwc-top { display: flex; align-items: center; gap: 10px; padding: 11px 13px 8px; }
+  .cwc-top { display: flex; align-items: center; gap: 0; padding: 11px 13px; }
+  .cwc-section { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; }
   .cwc-ico { width: 36px; height: 36px; border-radius: 10px; background: var(--teal-bg);
     color: var(--teal-text); display: flex; align-items: center; justify-content: center;
     font-size: 18px; flex-shrink: 0; }
-  .cwc-time { display: flex; align-items: baseline; gap: 3px; flex-shrink: 0; }
+  .cwc-time { display: flex; align-items: baseline; gap: 3px; }
   .cwc-time-val { font-size: 26px; font-weight: 500; letter-spacing: -0.5px; color: var(--text);
     font-variant-numeric: tabular-nums; line-height: 1; }
   .cwc-ampm { font-size: 13px; font-weight: 600; color: var(--teal-text); }
-  .cwc-divider { width: 1px; height: 28px; background: var(--border-md); flex-shrink: 0; }
-  .cwc-date { line-height: 1.3; flex: 1; min-width: 0; }
+  .cwc-divider { width: 1px; height: 28px; background: var(--border-md); flex-shrink: 0; margin: 0 4px; }
+  .cwc-date { flex-direction: column; align-items: center; line-height: 1.3; }
   .cwc-weekday { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; }
   .cwc-day { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
-  .cwc-wx { display: flex; align-items: center; gap: 9px; }
+  .cwc-wx { gap: 9px; }
   .cwc-wx-icon { font-size: 17px; color: var(--teal-text); flex-shrink: 0; }
   .cwc-wx-temp { font-size: 16px; font-weight: 500; color: var(--text); flex-shrink: 0; }
   .cwc-wx-dot { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
@@ -1998,18 +1999,20 @@
     <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cycle theme"><i class="ti ti-palette"></i><span>Theme</span></button>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
-        <div class="cwc-ico"><i class="ti ti-clock"></i></div>
-        <div class="cwc-time">
-          <span class="cwc-time-val" id="melb-clock-time">--:--</span>
-          <span class="cwc-ampm" id="melb-clock-ampm"></span>
+        <div class="cwc-section">
+          <div class="cwc-ico"><i class="ti ti-clock"></i></div>
+          <div class="cwc-time">
+            <span class="cwc-time-val" id="melb-clock-time">--:--</span>
+            <span class="cwc-ampm" id="melb-clock-ampm"></span>
+          </div>
         </div>
         <div class="cwc-divider"></div>
-        <div class="cwc-date">
+        <div class="cwc-section cwc-date">
           <div class="cwc-weekday" id="melb-clock-weekday"></div>
           <div class="cwc-day" id="melb-clock-day"></div>
         </div>
         <div class="cwc-divider" id="nav-clock-wx-divider" style="display:none"></div>
-        <div class="cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
+        <div class="cwc-section cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
       </div>
       <div class="cwc-bar-track">
         <div class="cwc-bar-fill" id="nav-clock-bar"></div>
