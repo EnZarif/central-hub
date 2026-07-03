@@ -881,6 +881,70 @@
   .eod-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; border: none; font-family: inherit; }
   .eod-btn.primary { background: var(--teal); color: #fff; }
   .eod-btn.ghost { background: var(--surface2); color: var(--text-2); border: 1px solid var(--border-md); }
+
+  /* ── Ambient nav clock (option C: expanded gradient fill + day-progress bar) ── */
+  .clock-card.nav-clock {
+    flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden;
+    min-width: 190px; border: none; box-shadow: none; border-radius: 14px;
+    background: var(--surface); transition: background 6s ease;
+  }
+  .ambient-clock-inner { display: flex; align-items: center; gap: 9px; padding: 10px 13px 5px; }
+  .ambient-clock-time { display: flex; align-items: baseline; gap: 4px; }
+  .clock-card.nav-clock .clock-card-time-val { font-size: 22px; transition: color 6s ease; }
+  .clock-card.nav-clock .clock-card-ampm { transition: color 6s ease; }
+  .ambient-clock-greeting { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-3); padding: 0 13px 7px; font-weight: 600; transition: color 6s ease; }
+  .ambient-clock-progress { height: 3px; background: rgba(255,255,255,0.06); position: relative; flex-shrink: 0; }
+  .ambient-clock-progress-bar { position: absolute; left: 0; top: 0; height: 100%;
+    border-radius: 0 2px 2px 0; transition: width 60s linear, background-color 6s ease; }
+  /* Mobile drawer: horizontal layout, hide progress bar (no vertical room) */
+  @media (max-width: 760px) {
+    .clock-card.nav-clock { flex-direction: row; align-items: center; min-width: 0; border-radius: 12px; }
+    .ambient-clock-inner { flex: 1; padding: 12px; }
+    .clock-card.nav-clock .clock-card-time-val { font-size: 26px; }
+    .ambient-clock-greeting { padding: 0 12px 0 0; font-size: 10px; flex-shrink: 0; }
+    .ambient-clock-progress { width: 4px; height: auto; align-self: stretch;
+      background: rgba(255,255,255,0.06); border-radius: 0; }
+    .ambient-clock-progress-bar { width: 100% !important; height: auto; top: auto;
+      bottom: 0; border-radius: 0; transition: background-color 6s ease; }
+  }
+
+  /* ── Drag-to-reschedule drop zone (Today tab) ── */
+  .tomorrow-drop-zone { display: none; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 12px; padding: 14px; border-radius: 12px; border: 1.5px dashed var(--teal);
+    color: var(--teal-text); font-size: 12.5px; font-weight: 600; cursor: copy;
+    transition: background 0.15s, border-color 0.15s; }
+  body.is-dragging-task .tomorrow-drop-zone { display: flex; }
+  .tomorrow-drop-zone.dz-over { background: var(--teal-bg); border-style: solid; }
+
+  /* ── Command palette task action chips ── */
+  .cmdk-task-chips { display: flex; gap: 6px; padding: 2px 14px 9px 42px; flex-wrap: wrap; }
+  .cmdk-task-chip { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    background: var(--surface); border: 0.5px solid var(--border-md); color: var(--text-2);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background 0.1s, color 0.1s, border-color 0.1s; }
+  .cmdk-task-chip:hover { background: var(--teal-bg); color: var(--teal-text); border-color: var(--teal); }
+  .cmdk-task-chip.chip-done:hover { background: var(--green-bg); color: var(--green-text); border-color: var(--green-text); }
+  .cmdk-task-chip.chip-snooze:hover { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-text); }
+  .cmdk-task-chip i { font-size: 12px; }
+
+  /* ── Smart scheduling suggestion below quick-add ── */
+  .smart-sched-hint { display: none; align-items: center; gap: 7px; flex-wrap: wrap;
+    padding: 5px 14px 10px; font-size: 11.5px; color: var(--text-3); }
+  .smart-sched-hint.show { display: flex; animation: fadeIn 0.18s ease; }
+  .smart-sched-hint > i { color: var(--amber-text); font-size: 13px; flex-shrink: 0; }
+  .smart-sched-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+    border-radius: 20px; background: var(--surface2); border: 0.5px solid var(--border-md);
+    color: var(--text-2); cursor: pointer; font-size: 11.5px; font-weight: 600;
+    transition: background 0.12s, color 0.12s, border-color 0.12s; }
+  .smart-sched-chip:hover { background: var(--teal-bg); color: var(--teal-text); border-color: var(--teal); }
+  .smart-sched-chip i { font-size: 11px; }
+
+  /* ── Weather line in home briefing ── */
+  .home-briefing-weather { margin-top: 6px; font-size: 12px; color: var(--text-3);
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .home-briefing-weather i { font-size: 13px; }
+  .home-briefing-weather .wx-sep { margin: 0 2px; opacity: 0.4; }
+
   .kb-card { min-height: 150px; display: flex; flex-direction: column; }
   .kb-fact { font-size: 13px; line-height: 1.65; color: var(--text-2); flex: 1; opacity: 1; transition: opacity 0.35s ease; min-height: 60px; }
   .kb-fact.fading { opacity: 0; }
@@ -1932,13 +1996,20 @@
   <div class="nav-bottom">
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
     <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cycle theme"><i class="ti ti-palette"></i><span>Theme</span></button>
-    <div class="clock-card nav-clock" title="Melbourne time">
-      <div class="clock-card-ico"><i class="ti ti-clock"></i></div>
-      <div class="clock-card-time"><span class="clock-card-time-val" id="melb-clock-time">--:--</span><span class="clock-card-ampm" id="melb-clock-ampm"></span></div>
-      <div class="clock-card-divider"></div>
-      <div class="clock-card-date">
-        <div class="clock-card-weekday" id="melb-clock-weekday"></div>
-        <div class="clock-card-day" id="melb-clock-day"></div>
+    <div class="clock-card nav-clock" id="ambient-clock" title="Melbourne time">
+      <div class="ambient-clock-inner">
+        <div class="ambient-clock-time">
+          <span class="clock-card-time-val" id="melb-clock-time">--:--</span>
+          <span class="clock-card-ampm" id="melb-clock-ampm"></span>
+        </div>
+        <div class="clock-card-date">
+          <div class="clock-card-weekday" id="melb-clock-weekday"></div>
+          <div class="clock-card-day" id="melb-clock-day"></div>
+        </div>
+      </div>
+      <div class="ambient-clock-greeting" id="ambient-clock-greeting"></div>
+      <div class="ambient-clock-progress">
+        <div class="ambient-clock-progress-bar" id="ambient-clock-bar"></div>
       </div>
     </div>
   </div>
@@ -2256,8 +2327,13 @@
 
     <div class="quick-add-bar">
       <i class="ti ti-bolt"></i>
-      <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}">
+      <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}" oninput="onQuickAddInput()">
       <button onclick="quickAddTask()" title="Add task"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="smart-sched-hint" id="smart-sched-hint">
+      <i class="ti ti-calendar-event"></i>
+      <span style="color:var(--text-3)">Light days:</span>
+      <span id="smart-sched-chips"></span>
     </div>
 
     <div class="task-hero" id="task-hero">
@@ -2902,6 +2978,38 @@
         </div>
         <div class="ai-hint" id="gemini-key-status"></div>
         <div class="ai-hint">Your key is stored only in this browser and never sent anywhere except Groq's API. Get a free key at <strong>console.groq.com</strong> → API Keys.</div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-weather')">
+        <i class="ti ti-cloud"></i> Weather &amp; Commute
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-weather">
+        <div class="settings-key-row">
+          <input type="password" class="settings-input" id="settings-owm-key" placeholder="OpenWeatherMap API key" style="width:100%;">
+          <button class="settings-save-btn" onclick="saveWeatherSettings()"><i class="ti ti-device-floppy"></i> Save</button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">City</div>
+            <div class="settings-row-desc">e.g. Melbourne,AU</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <input type="text" class="settings-input" id="settings-weather-city" placeholder="Melbourne,AU" style="min-width:150px;">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Commute time</div>
+            <div class="settings-row-desc">Typical drive to work (minutes) — shown in the morning briefing</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <input type="number" class="settings-input" id="settings-commute-mins" placeholder="30" style="width:80px;" min="0" max="300">
+          </div>
+        </div>
+        <div class="ai-hint">Weather refreshes every 30 min. Get a free key at <strong>openweathermap.org</strong> → API keys (Current Weather Data, free tier).</div>
       </div>
     </div>
 
@@ -4779,7 +4887,16 @@ function cmdkGetResults(q) {
   if (q) {
     getAllTasks().forEach(t => {
       if (t.name.toLowerCase().includes(q)) {
-        results.push({ icon: 'ti-checklist', label: t.name, sub: 'Task', action: () => showPage('tasks') });
+        const chips = [];
+        if (!isDone(t.id)) {
+          chips.push({ icon: 'ti-circle-check', label: 'Mark done', cls: 'chip-done', action: () => { toggle(t.id); showToast(`<i class="ti ti-circle-check"></i> Done: <b>${esc(t.name).slice(0,40)}</b>`); } });
+        }
+        const snoozable = (t.freq === 'date' && t.date) || t.freq === 'once' || !!t.time;
+        if (!isDone(t.id) && snoozable) {
+          chips.push({ icon: 'ti-clock-pause', label: 'Snooze', cls: 'chip-snooze', action: () => { snoozeTask(t.id); } });
+        }
+        chips.push({ icon: 'ti-pencil', label: 'Edit', action: () => { showPage('tasks'); setTimeout(() => openTaskEdit(t.id), 80); } });
+        results.push({ icon: 'ti-checklist', label: t.name, sub: 'Task', chips, action: () => showPage('tasks') });
       }
     });
     (meetings || []).forEach(m => {
@@ -4803,13 +4920,27 @@ function renderCommandPalette() {
   _cmdkResults = cmdkGetResults(input.value);
   cmdkSelectedIdx = Math.min(cmdkSelectedIdx, Math.max(0, _cmdkResults.length - 1));
   if (!_cmdkResults.length) { body.innerHTML = `<div class="cmdk-empty">No matches.</div>`; return; }
-  body.innerHTML = _cmdkResults.map((r, i) => `<div class="cmdk-row${i === cmdkSelectedIdx ? ' sel' : ''}" onmousedown="cmdkRun(${i})">
-    <i class="ti ${r.icon}"></i><span class="cmdk-row-label">${esc(r.label)}</span><span class="cmdk-row-sub">${r.sub}</span>
-  </div>`).join('');
+  body.innerHTML = _cmdkResults.map((r, i) => {
+    let html = `<div class="cmdk-row${i === cmdkSelectedIdx ? ' sel' : ''}" onmousedown="cmdkRun(${i})">
+      <i class="ti ${r.icon}"></i><span class="cmdk-row-label">${esc(r.label)}</span><span class="cmdk-row-sub">${r.sub}</span>
+    </div>`;
+    if (r.chips && r.chips.length) {
+      html += `<div class="cmdk-task-chips">` + r.chips.map((c, ci) =>
+        `<span class="cmdk-task-chip ${c.cls||''}" onmousedown="event.stopPropagation();cmdkRunChip(${i},${ci})"><i class="ti ${c.icon}"></i>${c.label}</span>`
+      ).join('') + `</div>`;
+    }
+    return html;
+  }).join('');
 }
 function cmdkRun(i) {
   const r = _cmdkResults[i];
   if (r) r.action();
+  closeCommandPalette();
+}
+function cmdkRunChip(ri, ci) {
+  const r = _cmdkResults[ri];
+  if (!r || !r.chips || !r.chips[ci]) return;
+  r.chips[ci].action();
   closeCommandPalette();
 }
 function cmdkKeyNav(e) {
@@ -5158,6 +5289,8 @@ function quickAddTask() {
   customTasks.push(task);
   saveCustomTasks();
   input.value = '';
+  const hint = document.getElementById('smart-sched-hint');
+  if (hint) hint.classList.remove('show');
   renderTasks();
 }
 
@@ -5953,6 +6086,19 @@ function timeField(id, value, onChangeAttr) {
 }
 // live clock in the Tasks hero
 let _dueSoonLastMin = -1;
+// Time-of-day palette for the ambient clock — background gradient, accent colour, greeting
+function _ambientPalette(nowMin) {
+  const h = nowMin / 60;
+  if (h < 5)  return { bg: 'linear-gradient(135deg,#07080f,#0c0e1c)', accent: '#4455aa', greet: 'Late night' };
+  if (h < 7)  return { bg: 'linear-gradient(135deg,#1a0d06,#2e1208)', accent: '#cc6622', greet: 'Early morning' };
+  if (h < 9)  return { bg: 'linear-gradient(135deg,#2a1508,#1e2838)', accent: '#ee8833', greet: 'Good morning' };
+  if (h < 12) return { bg: 'linear-gradient(135deg,#0d1e30,#142840)', accent: '#4499ee', greet: 'Good morning' };
+  if (h < 14) return { bg: 'linear-gradient(135deg,#081828,#0f2035)', accent: '#55aaff', greet: 'Good afternoon' };
+  if (h < 17) return { bg: 'linear-gradient(135deg,#1e1208,#2a1a05)', accent: '#ddaa44', greet: 'Good afternoon' };
+  if (h < 20) return { bg: 'linear-gradient(135deg,#180a20,#260812)', accent: '#bb44cc', greet: 'Good evening' };
+  if (h < 22) return { bg: 'linear-gradient(135deg,#0a0614,#100818)', accent: '#6644bb', greet: 'Good evening' };
+  return { bg: 'linear-gradient(135deg,#060609,#0a0810)', accent: '#3344aa', greet: 'Good night' };
+}
 function tickMelbClock() {
   const nowMin = melbNowMinutes();
   if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); checkReminders(nowMin); checkEodWrap(nowMin); }
@@ -5969,6 +6115,24 @@ function tickMelbClock() {
     if (wd) wd.textContent = weekday;
     const dy = document.getElementById('melb-clock-day');
     if (dy) dy.textContent = day;
+  }
+  // Ambient clock — gradient + progress bar (update every tick, CSS transition smooths it)
+  const clockEl = document.getElementById('ambient-clock');
+  if (clockEl) {
+    const pal = _ambientPalette(nowMin);
+    clockEl.style.background = pal.bg;
+    const barEl = document.getElementById('ambient-clock-bar');
+    if (barEl) {
+      const pct = (nowMin / 1440 * 100).toFixed(2);
+      barEl.style.width = pct + '%';
+      barEl.style.backgroundColor = pal.accent;
+    }
+    const greetEl = document.getElementById('ambient-clock-greeting');
+    if (greetEl) { greetEl.textContent = pal.greet; greetEl.style.color = pal.accent; }
+    const tvEl = document.getElementById('melb-clock-time');
+    if (tvEl) tvEl.style.color = pal.accent;
+    const apEl2 = document.getElementById('melb-clock-ampm');
+    if (apEl2) apEl2.style.color = pal.accent;
   }
 }
 
@@ -6332,6 +6496,19 @@ function taskDragStart(e, id) {
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', String(id)); } catch (err) {}
   }
+  document.body.classList.add('is-dragging-task');
+}
+function taskDragEnd() {
+  _taskDragId = null;
+  document.body.classList.remove('is-dragging-task');
+}
+function rescheduleToTomorrow(id) {
+  if (id == null) return;
+  const t = getAllTasks().find(x => String(x.id) === String(id));
+  if (!t) return;
+  snoozeTask(id);
+  const name = t ? esc(t.name).slice(0, 40) : 'Task';
+  showToast(`<i class="ti ti-calendar-arrow-right"></i> <b>${name}</b> moved to tomorrow`);
 }
 function taskDragOver(e, overId) {
   if (_taskDragId == null || String(_taskDragId) === String(overId)) return;
@@ -6811,7 +6988,7 @@ function taskHTML(t, showFreqPill) {
     ? `<div class="bulk-cb${bulkSelected ? ' on' : ''}" onclick="event.stopPropagation(); toggleBulkSelect('${t.id}')"><i class="ti ti-check"></i></div>`
     : '';
   const dragHandle = !bulkSelectMode
-    ? `<div class="task-drag-handle" draggable="true" ondragstart="taskDragStart(event,'${t.id}')" onclick="event.stopPropagation()" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></div>`
+    ? `<div class="task-drag-handle" draggable="true" ondragstart="taskDragStart(event,'${t.id}')" ondragend="taskDragEnd()" onclick="event.stopPropagation()" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></div>`
     : '';
   const pinBtn = `<button class="task-move-btn${t.pinned?' pin-active':''}" title="${t.pinned?'Unpin':'Pin to top'}" onclick="event.stopPropagation(); toggleTaskPin('${t.id}')"><i class="ti ti-pin${t.pinned?'-filled':''}"></i></button>`;
   const pinIcon = t.pinned ? `<i class="ti ti-pin-filled task-pin-icon" title="Pinned"></i>` : '';
@@ -6936,6 +7113,105 @@ function getTomorrowPreviewTasks() {
   return getAllTasks().filter(t => isScheduledOn(t, tomorrow));
 }
 
+// ===== Smart scheduling suggestion (quick-add bar) =====
+let _smartSchedTimer = null;
+function onQuickAddInput() {
+  const input = document.getElementById('quick-add-input');
+  const hint = document.getElementById('smart-sched-hint');
+  if (!input || !hint) return;
+  clearTimeout(_smartSchedTimer);
+  const raw = input.value.trim();
+  if (!raw) { hint.classList.remove('show'); return; }
+  _smartSchedTimer = setTimeout(() => {
+    const parsed = parseQuickAdd(raw);
+    if (parsed.date) { hint.classList.remove('show'); return; }
+    const chips = getSmartScheduleSuggestions();
+    if (!chips.length) { hint.classList.remove('show'); return; }
+    const chipsEl = document.getElementById('smart-sched-chips');
+    if (chipsEl) {
+      chipsEl.innerHTML = chips.map(c =>
+        `<span class="smart-sched-chip" onclick="applySmartSchedDate('${c.date}')"><i class="ti ti-calendar-plus"></i>${c.label}&thinsp;·&thinsp;${c.count}</span>`
+      ).join('');
+    }
+    hint.classList.add('show');
+  }, 350);
+}
+function getSmartScheduleSuggestions() {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = [];
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    const count = getAllTasks().filter(t => isScheduledOn(t, d) && !isDone(t.id)).length;
+    const label = new Intl.DateTimeFormat('en-AU', { timeZone: MELB_TZ, weekday: 'short', day: 'numeric' }).format(d);
+    days.push({ date: ymd(d), label, count: count === 0 ? 'free' : `${count} task${count !== 1 ? 's' : ''}` });
+  }
+  // Show the 2 lightest days (fewest tasks), tie-break by soonest
+  return days.sort((a, b) => {
+    const ac = a.count === 'free' ? 0 : parseInt(a.count);
+    const bc = b.count === 'free' ? 0 : parseInt(b.count);
+    return ac !== bc ? ac - bc : 0;
+  }).slice(0, 2);
+}
+function applySmartSchedDate(dateStr) {
+  const input = document.getElementById('quick-add-input');
+  if (!input) return;
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  const dateObj = new Date(y, mo - 1, d);
+  const dayName = new Intl.DateTimeFormat('en-AU', { timeZone: MELB_TZ, weekday: 'long' }).format(dateObj).toLowerCase();
+  input.value = input.value.trim() + ' ' + dayName;
+  input.focus();
+  const hint = document.getElementById('smart-sched-hint');
+  if (hint) hint.classList.remove('show');
+}
+
+// ===== Weather & Commute =====
+let _weatherSettings = { key: '', city: 'Melbourne,AU', commuteMins: 0 };
+let _weatherCache = { data: null, bucket: -1, city: '' };
+
+function loadWeatherSettings() {
+  _weatherSettings = dbGet('zarif_weather_settings') || { key: '', city: 'Melbourne,AU', commuteMins: 0 };
+  const keyEl = document.getElementById('settings-owm-key');
+  const cityEl = document.getElementById('settings-weather-city');
+  const comEl = document.getElementById('settings-commute-mins');
+  if (keyEl) keyEl.value = _weatherSettings.key || '';
+  if (cityEl) cityEl.value = _weatherSettings.city || 'Melbourne,AU';
+  if (comEl) comEl.value = _weatherSettings.commuteMins || '';
+}
+function saveWeatherSettings() {
+  const key = (document.getElementById('settings-owm-key').value || '').trim();
+  const city = (document.getElementById('settings-weather-city').value || '').trim() || 'Melbourne,AU';
+  const commuteMins = parseInt(document.getElementById('settings-commute-mins').value || '0') || 0;
+  _weatherSettings = { key, city, commuteMins };
+  dbSet('zarif_weather_settings', _weatherSettings);
+  _weatherCache = { data: null, bucket: -1, city: '' };
+  renderHomeBriefing();
+  showToast('<i class="ti ti-cloud-check"></i> Weather settings saved');
+}
+async function fetchWeather() {
+  const { key, city } = _weatherSettings;
+  if (!key || !city) return null;
+  const bucket = Math.floor(Date.now() / 1800000); // 30-min buckets
+  if (_weatherCache.data && _weatherCache.bucket === bucket && _weatherCache.city === city) return _weatherCache.data;
+  try {
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${encodeURIComponent(key)}&units=metric`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const result = { temp: Math.round(json.main.temp), desc: json.weather[0].description, icon: _wxIcon(json.weather[0].id) };
+    _weatherCache = { data: result, bucket, city };
+    return result;
+  } catch { return null; }
+}
+function _wxIcon(id) {
+  if (id >= 200 && id < 300) return 'ti-cloud-storm';
+  if (id >= 300 && id < 500) return 'ti-cloud-rain';
+  if (id >= 500 && id < 600) return 'ti-cloud-rain';
+  if (id >= 600 && id < 700) return 'ti-snowflake';
+  if (id >= 700 && id < 800) return 'ti-mist';
+  if (id === 800) return 'ti-sun';
+  if (id > 800 && id < 803) return 'ti-cloud-sun';
+  return 'ti-cloud';
+}
+
 // ===== Daily briefing (Home) =====
 function getDailyBriefing() {
   const todayTasks = getTodayTasks();
@@ -6971,13 +7247,23 @@ function getDailyBriefing() {
   return parts;
 }
 
-function renderHomeBriefing() {
+async function renderHomeBriefing() {
   const el = document.getElementById('home-briefing');
   if (!el) return;
   const parts = getDailyBriefing();
+  let weatherHtml = '';
+  const wx = await fetchWeather();
+  if (wx) {
+    const nowH = melbNowMinutes() / 60;
+    let commuteHtml = '';
+    if (_weatherSettings.commuteMins > 0 && nowH >= 5.5 && nowH < 10) {
+      commuteHtml = `<span class="wx-sep">·</span><i class="ti ti-car"></i> ${_weatherSettings.commuteMins} min drive`;
+    }
+    weatherHtml = `<div class="home-briefing-weather"><i class="ti ${wx.icon}"></i> ${wx.temp}°C, ${wx.desc}${commuteHtml}</div>`;
+  }
   el.innerHTML = `<div class="home-briefing-card">
     <div class="home-briefing-ico"><i class="ti ti-sparkles"></i></div>
-    <div class="home-briefing-text">${parts.join(' ')}</div>
+    <div class="home-briefing-text">${parts.join(' ')}${weatherHtml}</div>
   </div>`;
 }
 
@@ -7115,6 +7401,14 @@ function renderTasks() {
         html += `<div class="freq-group-label" style="opacity:0.5"><i class="ti ti-circle-check"></i>Completed</div>`;
         completed.forEach(t => { html += taskHTML(t, true); });
       }
+      // Drag-to-reschedule drop zone — always rendered on Today tab so it's available
+      // whenever the user is dragging; CSS hides it until body.is-dragging-task is set
+      html += `<div class="tomorrow-drop-zone"
+        ondragover="event.preventDefault(); this.classList.add('dz-over')"
+        ondragleave="this.classList.remove('dz-over')"
+        ondrop="event.preventDefault(); this.classList.remove('dz-over'); document.body.classList.remove('is-dragging-task'); rescheduleToTomorrow(_taskDragId); _taskDragId=null;">
+        <i class="ti ti-calendar-arrow-right"></i> Drop here to move to Tomorrow
+      </div>`;
     }
   } else if (currentTab === 'date') {
     const today = todayInputDate();
@@ -11050,6 +11344,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.25.0', type: 'minor', date: '3 Jul 2026', title: 'Five new features: ambient clock, drag-to-reschedule, Cmd+K task actions, smart scheduling, weather', changes: [
+    'Ambient nav clock: the Melbourne clock card now shows a gradient background that shifts hue through sunrise → morning → midday → afternoon → dusk → night, with a day-progress bar at the bottom tracking how far through the day you are',
+    'Drag-to-reschedule: on the Today tab, drag any task down to the "Drop here to move to Tomorrow" zone to snooze it one day — works with both dated/once tasks (date is pushed) and recurring tasks (dismissed for today)',
+    'Command palette task actions (Cmd+K): searching a task name now shows inline action chips — Mark done, Snooze, Edit — directly in the palette result without needing to open the Tasks page',
+    'Smart scheduling: when you type in the quick-add bar without specifying a date, a hint row appears below showing the 2 lightest upcoming days (fewest tasks already scheduled). Click a chip to append that day to your input',
+    'Weather & commute briefing: add your OpenWeatherMap API key and city in Settings → Weather & Commute; the morning briefing on Home then shows live temperature and conditions, plus your typical commute time between 5:30–10am',
+    'Mobile layout: fixed horizontal overflow on the task manager — drag handles and reorder arrows are now hidden on phones, and action button padding is reduced so the pill cluster no longer pushes content past the viewport edge',
+  ]},
   { ver: '4.24.1', type: 'patch', date: '30 Jun 2026', title: 'Confetti now matches your theme and accent colour', changes: [
     'The 100%-done confetti burst used a fixed set of hardcoded colours before — it now pulls live from the active theme\'s CSS variables, so it matches whichever theme you\'re on and follows your custom accent colour from Settings',
   ]},
@@ -13155,6 +13457,7 @@ async function initApp() {
   _globeLoaderActive = false;
 
   loadSettings();
+  loadWeatherSettings();
   loadMsgTemplate();
   renderHubs();
   pomoRender();
