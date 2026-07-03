@@ -6190,12 +6190,38 @@ function checkEodWrap(nowMin) {
 // real pending tasks. NOTE: actually clicking a snooze action still writes to the live DB.
 function testEodWrap() {
   const pending = getEodPendingTasks();
-  if (!pending.length) {
-    showToast(`<i class="ti ti-moon-stars"></i>Nothing pending today — add or un-complete a task to see the wrap toast.`);
+  if (pending.length) {
+    _eodWrapIds = pending.map(t => String(t.id));
+    renderEodWrapToast();
     return;
   }
-  _eodWrapIds = pending.map(t => String(t.id));
-  renderEodWrapToast();
+  // Nothing genuinely pending today — show a safe DEMO so you can still see the layout and
+  // behaviour. The buttons here don't touch any real tasks.
+  renderEodWrapDemoToast();
+}
+function renderEodWrapDemoToast() {
+  let el = document.getElementById('eod-toast-el');
+  if (!el) { el = document.createElement('div'); el.id = 'eod-toast-el'; el.className = 'eod-toast'; document.body.appendChild(el); }
+  const demo = ['Follow up with vendor', 'Review Q3 report', 'Reply to ANZ email'];
+  const items = demo.map(n => `<div class="eod-item"><div class="eod-dot"></div><span class="eod-name">${esc(n)}</span></div>`).join('');
+  const nwd = nextWorkingDayStr();
+  const tomorrowMin = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+  el.innerHTML = `<div class="eod-head"><i class="ti ti-moon-stars"></i>Demo · ${demo.length} example tasks</div>
+    <div class="eod-sub">This is a preview — no real tasks will be moved.</div>
+    <div class="eod-list">${items}</div>
+    <div class="eod-actions">
+      <button class="eod-btn primary" onclick="eodWrapDemoAction()"><i class="ti ti-briefcase"></i> Next working day · ${_eodDateLabel(nwd)}</button>
+      <button class="eod-btn ghost" onclick="closeEodWrapToast()">Dismiss</button>
+    </div>
+    <label class="eod-pickdate">
+      <span>or snooze all to a specific date</span>
+      <input type="date" min="${tomorrowMin}" onchange="eodWrapDemoAction()">
+    </label>`;
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+function eodWrapDemoAction() {
+  closeEodWrapToast();
+  showToast(`<i class="ti ti-moon-stars"></i>Demo only — no tasks were moved. The real toast appears from 4:45pm with your actual pending tasks.`);
 }
 // Snooze a single task to an explicit date (dated/once tasks move; recurring tasks just
 // get dismissed for today since they have no single occurrence to push). No re-render or
