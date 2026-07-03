@@ -245,7 +245,8 @@
 
   @media (max-width: 760px) {
     /* Mobile: sidebar becomes a slide-out hamburger drawer */
-    body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; overflow-x: hidden; }
+    html { overflow-x: hidden; }
+    body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; overflow-x: hidden; max-width: 100%; }
     .wrap { padding: 1.25rem 1rem 3rem; }
 
     /* Top app bar */
@@ -319,7 +320,7 @@
   .section-header::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
 
   /* TASKS HERO */
-  .task-hero { position: relative; overflow: hidden; background: var(--hero-bg); border: 0.5px solid var(--border); border-radius: 22px; padding: 22px; margin-bottom: 18px; box-shadow: 0 30px 60px -35px rgba(0,0,0,0.55); transform-style: preserve-3d; transition: transform 0.2s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  .task-hero { position: relative; overflow: hidden; background: var(--hero-bg); border: 0.5px solid var(--border); border-radius: 22px; padding: 22px; margin-bottom: 18px; box-shadow: 0 30px 60px -35px rgba(0,0,0,0.55); transition: transform 0.2s cubic-bezier(.2,.8,.2,1); will-change: transform; }
   .task-hero-orb { position: absolute; border-radius: 50%; filter: blur(42px); opacity: 0.25; pointer-events: none; z-index: 0; }
   .task-hero-orb.o1 { width: 220px; height: 220px; background: #4a9ee8; top: -90px; right: -60px; }
   .task-hero-orb.o2 { width: 170px; height: 170px; background: #2a6fb0; bottom: -90px; left: 28%; }
@@ -11405,6 +11406,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.26.1', type: 'patch', date: '3 Jul 2026', title: 'Fixed the Tasks page being zoomable / horizontally scrollable on mobile', changes: [
+    'The Task Manager hero card used transform-style: preserve-3d, which stopped its overflow:hidden from clipping the decorative glow orbs — one orb sat ~60px past the right screen edge on phones, pushing the whole page wider than the viewport and letting you pinch-zoom out. Removed preserve-3d (the cursor-tilt still works via perspective()) so the orbs clip properly',
+    'Added html-level horizontal-overflow clipping on mobile as a safety net so no stray-wide element can make a page zoomable again',
+  ]},
   { ver: '4.26.0', type: 'minor', date: '3 Jul 2026', title: 'Mobile: floating quick-add button and bento-grid layout fixes', changes: [
     'New floating quick-add button (FAB) — a round + button fixed to the bottom-right on phones only; tap it to open quick-capture (same as the "A" shortcut on desktop). Hidden entirely on desktop and while the nav drawer is open',
     'Fixed the Home / Helpdesk / Personal hub cards: the desktop 3-column bento layout (with a tall hero tile and a wide card) no longer carries over to phones, where it left large empty gaps — cards now stack in a single clean column with the hero/wide spans removed',
