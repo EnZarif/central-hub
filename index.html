@@ -6185,6 +6185,18 @@ function checkEodWrap(nowMin) {
   _eodWrapIds = pending.map(t => String(t.id));
   renderEodWrapToast();
 }
+// Manual test trigger — run testEodWrap() in the browser console to force the wrap toast
+// right now, ignoring the 4:45pm gate and the once-per-day "already shown" guard. Uses your
+// real pending tasks. NOTE: actually clicking a snooze action still writes to the live DB.
+function testEodWrap() {
+  const pending = getEodPendingTasks();
+  if (!pending.length) {
+    showToast(`<i class="ti ti-moon-stars"></i>Nothing pending today — add or un-complete a task to see the wrap toast.`);
+    return;
+  }
+  _eodWrapIds = pending.map(t => String(t.id));
+  renderEodWrapToast();
+}
 // Snooze a single task to an explicit date (dated/once tasks move; recurring tasks just
 // get dismissed for today since they have no single occurrence to push). No re-render or
 // snooze-reason prompt here — callers batch these and render once.
