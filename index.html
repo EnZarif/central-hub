@@ -7540,9 +7540,11 @@ function tomorrowPreviewRow(t) {
 function renderTomorrowModal() {
   const dateStr = tomorrowDateStr();
   const tomorrowLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
-  const scheduled = getAllTasks()
+  const allActive = getAllTasks()
     .filter(t => t.freq !== 'untildone' && isTaskActiveOnDate(t, dateStr))
     .sort((a, b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
+  const scheduled = allActive.filter(t => t.freq === 'date' || t.freq === 'once');
+  const recurring = allActive.filter(t => t.freq !== 'date' && t.freq !== 'once');
   const untilDone = getAllTasks()
     .filter(t => t.freq === 'untildone' && !isDone(t.id))
     .sort((a, b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
@@ -7551,12 +7553,17 @@ function renderTomorrowModal() {
   if (titleEl) titleEl.textContent = `Tomorrow — ${tomorrowLabel}`;
 
   let html = '';
-  html += `<div class="section-header" style="margin-top:0;"><span class="sec-dot" style="background:var(--purple-text);"></span>Scheduled for tomorrow (${scheduled.length})</div>`;
+  html += `<div class="section-header" style="margin-top:0;"><span class="sec-dot" style="background:var(--purple-text);"></span>Scheduled (${scheduled.length})</div>`;
   html += scheduled.length
     ? scheduled.map(tomorrowPreviewRow).join('')
-    : `<div class="notes-empty" style="margin-bottom:16px;">Nothing scheduled for tomorrow.</div>`;
+    : `<div class="notes-empty" style="margin-bottom:16px;">No one-off tasks scheduled for tomorrow.</div>`;
 
-  html += `<div class="section-header"><span class="sec-dot" style="background:var(--amber-text);"></span>Still until done (${untilDone.length})</div>`;
+  html += `<div class="section-header"><span class="sec-dot" style="background:var(--teal);"></span>Recurring (${recurring.length})</div>`;
+  html += recurring.length
+    ? recurring.map(tomorrowPreviewRow).join('')
+    : `<div class="notes-empty" style="margin-bottom:16px;">No recurring tasks tomorrow.</div>`;
+
+  html += `<div class="section-header"><span class="sec-dot" style="background:var(--amber-text);"></span>Until done (${untilDone.length})</div>`;
   html += untilDone.length
     ? untilDone.map(tomorrowPreviewRow).join('')
     : `<div class="notes-empty">Nothing outstanding — you're all caught up.</div>`;
@@ -11363,6 +11370,9 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.25.2', type: 'patch', date: '3 Jul 2026', title: 'Check Tomorrow modal: split into Scheduled / Recurring / Until Done sections', changes: [
+    '"Check Tomorrow" modal now shows three distinct sections: Scheduled (one-off dated tasks specific to that day), Recurring (daily/weekly/fortnightly/monthly tasks active that day), and Until Done (outstanding carry-over tasks)',
+  ]},
   { ver: '4.25.1', type: 'patch', date: '3 Jul 2026', title: 'Nav clock card redesign: three-section layout with inline weather', changes: [
     'Replaced the ambient gradient-shifting clock with a clean, theme-native card that works across all six colour themes without colour clashes',
     'Weather moved out of the home page and into the nav clock card — always visible regardless of which page you\'re on',
