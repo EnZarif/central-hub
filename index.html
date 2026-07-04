@@ -1725,6 +1725,48 @@
   .pixoff-agent-row.pixoff-needs-you .pixoff-agent-status { color: #E8733A; font-weight: 600; }
   @keyframes pixoff-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
   .pixoff-hint { font-size: 11.5px; color: var(--text-3); display: none; }
+
+  /* Week at a Glance widget */
+  .waag-wcard { border: 2.5px solid #4A3DB8; box-shadow: 5px 5px 0 rgba(74,61,184,0.4); }
+  .waag-wcard:hover { box-shadow: 7px 7px 0 rgba(74,61,184,0.4); }
+  .waag-banner { background: linear-gradient(135deg, #3B2DB0 0%, #5A4DDB 100%); }
+  .waag-card { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .waag-nav { display: flex; align-items: center; justify-content: space-between; }
+  .waag-nav-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+  .waag-nav-btn { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--border-md); background: var(--surface2); color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: inherit; transition: border-color 0.15s, color 0.15s; }
+  .waag-nav-btn:hover { border-color: var(--text-3); color: var(--text); }
+  .waag-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .waag-col { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 9px; border-radius: 10px; cursor: pointer; transition: background 0.15s, border-color 0.15s; border: 1.5px solid transparent; }
+  .waag-col:hover { background: var(--surface2); border-color: var(--border-md); }
+  .waag-col.is-today { background: var(--teal-bg); border-color: var(--teal); }
+  .waag-col.is-selected { background: rgba(74,61,184,0.12); border-color: rgba(90,77,219,0.4); }
+  .waag-col.is-today.is-selected { background: var(--teal-bg); border-color: var(--teal); }
+  .waag-col-dname { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+  .waag-col.is-today .waag-col-dname { color: var(--teal-text); }
+  .waag-col-num { font-size: 17px; font-weight: 600; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
+  .waag-col.is-today .waag-col-num { color: var(--teal-text); }
+  .waag-count { font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 99px; min-width: 18px; text-align: center; line-height: 1.5; }
+  .waag-count.c-none { color: var(--text-3); }
+  .waag-count.c-low { color: var(--green-text); background: var(--green-bg); }
+  .waag-count.c-mid { color: var(--amber-text); background: var(--amber-bg); }
+  .waag-count.c-busy { color: var(--coral-text); background: var(--coral-bg); }
+  .waag-dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; min-height: 6px; }
+  .waag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .waag-dot.p-HIGH { background: var(--coral-text); }
+  .waag-dot.p-MEDIUM { background: var(--amber-text); }
+  .waag-dot.p-LOW { background: var(--green-text); }
+  .waag-col-off { font-size: 8.5px; color: var(--text-3); letter-spacing: 0.05em; }
+  .waag-detail { border-radius: var(--radius); background: var(--surface2); border: 1px solid var(--border-md); overflow: hidden; display: none; flex-direction: column; }
+  .waag-detail.open { display: flex; }
+  .waag-detail-head { font-size: 11.5px; font-weight: 600; color: var(--text-2); padding: 9px 13px 6px; }
+  .waag-detail-list { display: flex; flex-direction: column; max-height: 160px; overflow-y: auto; }
+  .waag-detail-row { display: flex; align-items: center; gap: 8px; padding: 6px 13px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text); }
+  .waag-detail-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .waag-detail-dot.p-HIGH { background: var(--coral-text); }
+  .waag-detail-dot.p-MEDIUM { background: var(--amber-text); }
+  .waag-detail-dot.p-LOW { background: var(--green-text); }
+  .waag-detail-freq { margin-left: auto; font-size: 10px; color: var(--text-3); white-space: nowrap; padding-left: 8px; }
+  .waag-detail-empty { font-size: 12.5px; color: var(--text-3); text-align: center; padding: 14px; }
   .pixoff-hint.show { display: block; }
   .pixoff-hint code { background: var(--surface2); padding: 1px 5px; border-radius: 5px; }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -2201,6 +2243,27 @@
           <canvas id="pixoff-canvas" width="320" height="180" class="pixoff-canvas"></canvas>
           <div class="pixoff-list" id="pixoff-list"></div>
           <div class="pixoff-hint" id="pixoff-hint">No agents detected — run <code>start.bat</code> locally to track live Claude Code sessions.</div>
+        </div>
+      </div>
+
+      <!-- WEEK AT A GLANCE -->
+      <div class="widget-card waag-wcard" data-wid="waag">
+        <div class="wcard-banner waag-banner">
+          <span class="widget-drag-handle" draggable="true" ondragstart="widgetDragStart(event)" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></span>
+          <i class="ti ti-calendar-week"></i>
+          <div class="wcard-banner-text">
+            <div class="wcard-banner-title">Week at a Glance</div>
+            <div class="wcard-banner-sub">Task load · 7-day preview</div>
+          </div>
+        </div>
+        <div class="wcard-body waag-card" id="waag-card">
+          <div class="waag-nav">
+            <button class="waag-nav-btn" onclick="waagShift(-1)" title="Previous week"><i class="ti ti-chevron-left"></i></button>
+            <span class="waag-nav-label" id="waag-nav-label"></span>
+            <button class="waag-nav-btn" onclick="waagShift(1)" title="Next week"><i class="ti ti-chevron-right"></i></button>
+          </div>
+          <div class="waag-strip" id="waag-strip"></div>
+          <div class="waag-detail" id="waag-detail"></div>
         </div>
       </div>
 
@@ -6284,6 +6347,99 @@ function closeEodWrapToast() {
   const el = document.getElementById('eod-toast-el');
   if (el) { el.classList.remove('show'); setTimeout(() => el.remove(), 250); }
 }
+
+// ===== WEEK AT A GLANCE WIDGET =====
+let _waagWeekOffset = 0;
+let _waagSelectedDate = null;
+
+function waagMondayOf(weekOffset) {
+  const d = new Date(now);
+  const dow = d.getDay();
+  const daysToMon = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + daysToMon + weekOffset * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function waagShift(dir) {
+  _waagWeekOffset += dir;
+  _waagSelectedDate = null;
+  renderWeekAtAGlance();
+}
+
+function waagSelectDay(dateStr) {
+  _waagSelectedDate = _waagSelectedDate === dateStr ? null : dateStr;
+  renderWeekAtAGlance();
+}
+
+function renderWeekAtAGlance() {
+  const strip = document.getElementById('waag-strip');
+  const detail = document.getElementById('waag-detail');
+  const navLabel = document.getElementById('waag-nav-label');
+  if (!strip) return;
+
+  const monday = waagMondayOf(_waagWeekOffset);
+  const todayStr = ymd(now);
+
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  const fmtD = d => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  if (navLabel) navLabel.textContent = `${fmtD(monday)} – ${fmtD(sunday)}`;
+
+  const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  strip.innerHTML = DAY_NAMES.map((dayName, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    const dateStr = ymd(d);
+    const isToday = dateStr === todayStr;
+    const isSelected = dateStr === _waagSelectedDate;
+    const dayMode = getDayMode(dateStr);
+    const tasks = getTasksForCalDate(dateStr);
+    const count = tasks.length;
+
+    let countCls = 'c-none', countVal = '—';
+    if (count > 0 && count <= 3) { countCls = 'c-low'; countVal = count; }
+    else if (count <= 6) { countCls = 'c-mid'; countVal = count; }
+    else if (count > 6) { countCls = 'c-busy'; countVal = count; }
+
+    const dots = tasks.slice(0, 5).map(t => `<span class="waag-dot p-${t.priority}"></span>`).join('');
+    const offLabel = dayMode === 'off' ? `<span class="waag-col-off">off</span>` : '';
+
+    return `<div class="waag-col${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}" onclick="waagSelectDay('${dateStr}')">
+      <span class="waag-col-dname">${dayName}</span>
+      <span class="waag-col-num">${d.getDate()}</span>
+      <span class="waag-count ${countCls}">${countVal}</span>
+      <div class="waag-dots">${dots}</div>
+      ${offLabel}
+    </div>`;
+  }).join('');
+
+  if (_waagSelectedDate) {
+    const d = new Date(_waagSelectedDate + 'T00:00:00');
+    const label = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+    const tasks = getTasksForCalDate(_waagSelectedDate);
+    let rows = '';
+    if (tasks.length === 0) {
+      rows = `<div class="waag-detail-empty">No tasks scheduled</div>`;
+    } else {
+      rows = tasks.map(t => {
+        const freqLabel = (t.freq === 'date' || t.freq === 'once') ? fmtShortDate(t.date) : (FREQ_LABELS[t.freq] || t.freq);
+        return `<div class="waag-detail-row">
+          <span class="waag-detail-dot p-${t.priority}"></span>
+          <span>${esc(t.name)}</span>
+          <span class="waag-detail-freq">${freqLabel}</span>
+        </div>`;
+      }).join('');
+    }
+    detail.innerHTML = `<div class="waag-detail-head">${label}</div><div class="waag-detail-list">${rows}</div>`;
+    detail.classList.add('open');
+  } else {
+    detail.classList.remove('open');
+    detail.innerHTML = '';
+  }
+}
+
 function renderEodWrapToast() {
   let el = document.getElementById('eod-toast-el');
   if (!el) {
@@ -6868,6 +7024,7 @@ function showPage(p, hub) {
   if (p === 'settings' && typeof updateNotifPermStatus === 'function') updateNotifPermStatus();
   // Surface the end-of-day wrap toast on arrival if it's already past 4:45pm
   if (p === 'tasks' && typeof checkEodWrap === 'function') checkEodWrap(melbNowMinutes());
+  if (p === 'widgets' && typeof renderWeekAtAGlance === 'function') renderWeekAtAGlance();
   window.scrollTo(0, 0);
 }
 
@@ -11507,6 +11664,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.28.0', type: 'minor', date: '4 Jul 2026', title: 'New widget: Week at a Glance — see your task load across the full week', changes: [
+    'New "Week at a Glance" widget card in the Widgets page showing Mon–Sun of the current week (or any week via the prev/next arrows)',
+    'Each day shows a task count badge colour-coded by load: green (1–3), amber (4–6), red (7+)',
+    'Priority dots beneath the count give a quick visual of how many HIGH / MEDIUM / LOW tasks are scheduled',
+    'Days flagged as "off" (weekends, VIC public holidays, manual overrides) show a subtle "off" label so you can distinguish rest days at a glance',
+    'Tap or click any day to expand a task list panel showing every task scheduled for that date with priority dots and frequency labels',
+    'Today\'s column is highlighted in the app accent colour; arrow nav lets you browse any past or future week',
+  ]},
   { ver: '4.27.0', type: 'minor', date: '3 Jul 2026', title: 'End-of-day wrap: snooze leftovers to the next working day or a specific date', changes: [
     'The end-of-day wrap toast now appears from 4:45pm (was 5:00pm) and only on the Task Manager page — if you\'re elsewhere at 4:45 it surfaces the moment you land back on Tasks',
     'It lists everything still incomplete today; remove any you want to keep with the × on each row',
@@ -13695,6 +13860,7 @@ async function initApp() {
   setInterval(tickMelbClock, 1000);
   updateNotifPermStatus();
   initPixoff();
+  renderWeekAtAGlance();
   renderAccountSettings();
   initWidgetReorder();
 }
