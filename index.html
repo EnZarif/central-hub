@@ -2502,9 +2502,8 @@
         <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
         <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
         <div id="task-tag-filter-holder"></div>
-        <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
-        <button class="check-tomorrow-btn" id="focus-mode-btn" onclick="toggleFocusMode()" title="Hide everything except what's next"><i class="ti ti-focus-2"></i> Focus mode</button>
         <button class="check-tomorrow-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
+        <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
       </div>
     </div>
     <div id="dash-upcoming" class="dash-upcoming" style="display:none;margin-bottom:12px" onclick="switchTab('date')"></div>
@@ -11690,6 +11689,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.29.1', type: 'patch', date: '4 Jul 2026', title: 'Removed Focus mode button; moved Select left of Check tomorrow', changes: [
+    'Focus mode button removed from the task header — it\'s still accessible via the command palette (F key)',
+    'Select button moved to sit before Check tomorrow, keeping bulk-action controls grouped on the left of the action area',
+  ]},
   { ver: '4.29.0', type: 'minor', date: '4 Jul 2026', title: 'Task Manager: slim header replaces the big hero card', changes: [
     'The large hero card (progress ring + 2×2 stat grid), quick-add bar, day-off banner, and hub filter bar have been unified into a single compact header card with four rows',
     'Row 1: quick-add input — same as before, just moved inside',
