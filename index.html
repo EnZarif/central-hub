@@ -493,7 +493,7 @@
   .statcard.clickable.active { border-color: #185FA5; background: rgba(55,138,221,0.1); }
   .stat-strip { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
   .stat-strip .statcard { flex: 1; min-width: 130px; }
-  .dash-upcoming { margin-top: 14px; padding: 9px 13px; background: var(--blue-bg); border: 0.5px solid rgba(55,138,221,0.22); border-radius: var(--radius); font-size: 12px; color: var(--blue-text); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: border-color 0.15s; }
+  .dash-upcoming { padding: 9px 13px; background: var(--blue-bg); border: 0.5px solid rgba(55,138,221,0.22); border-radius: var(--radius); font-size: 12px; color: var(--blue-text); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: border-color 0.15s; }
   .dash-upcoming:hover { border-color: rgba(55,138,221,0.5); }
   .dash-upcoming i { font-size: 14px; flex-shrink: 0; }
   .dash-upcoming .du-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -513,6 +513,40 @@
     .dash-ring, .statcard { animation: none !important; }
     .ring { transition: none; }
   }
+
+  /* ── SLIM TASK HEADER ── */
+  .slim-header { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 18px; margin-bottom: 12px; overflow: hidden; }
+  .slimh-qa { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); }
+  .slimh-qa > i { color: var(--teal-text); font-size: 15px; flex-shrink: 0; }
+  .slimh-qa input { flex: 1; background: transparent; border: none; outline: none; font-family: inherit; font-size: 13.5px; color: var(--text); min-width: 0; }
+  .slimh-qa input::placeholder { color: var(--text-3); }
+  .slimh-qa-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; border: none; background: var(--teal); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: opacity 0.15s; }
+  .slimh-qa-btn:hover { opacity: 0.82; }
+  /* smart-sched-hint lives inside the header between qa and progress rows */
+  .slim-header .smart-sched-hint { padding: 6px 16px 8px; border-bottom: 1px solid var(--border); }
+  .slimh-progress { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .slimh-ring { width: 28px !important; height: 28px !important; flex-shrink: 0; border-radius: 50%; }
+  .slimh-ring-hole { width: 20px !important; height: 20px !important; border-radius: 50%; background: var(--surface); }
+  .slimh-greeting { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; display: flex; align-items: baseline; gap: 5px; }
+  .slimh-sub { font-size: 11.5px; color: var(--text-3); font-weight: 400; }
+  .slimh-bar-wrap { flex: 1; height: 4px; background: var(--border-md); border-radius: 99px; overflow: hidden; margin: 0 4px; }
+  .slimh-bar-fill { height: 100%; border-radius: 99px; background: var(--teal); width: 0%; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .slimh-pct { font-size: 12px; font-weight: 600; color: var(--teal-text); white-space: nowrap; min-width: 30px; text-align: right; }
+  .slimh-chips { display: flex; align-items: center; gap: 2px; padding: 6px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .slimh-chip { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 20px; border: 1px solid transparent; background: transparent; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+  .slimh-chip:hover { background: var(--surface2); border-color: var(--border-md); }
+  .slimh-chip.active { background: var(--teal-bg); border-color: rgba(55,138,221,0.28); color: var(--teal-text); }
+  .slimh-chip i { font-size: 13px; }
+  .slimh-streak { display: flex; align-items: center; gap: 5px; padding: 5px 10px; font-size: 12px; color: var(--text-2); }
+  .slimh-csep { width: 1px; height: 13px; background: var(--border-md); flex-shrink: 0; margin: 0 1px; }
+  /* day-mode-banner inside slim header chips row — compact inline pill */
+  .slimh-chips .day-mode-banner { margin-bottom: 0; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; margin-left: auto; gap: 6px; flex-wrap: nowrap; }
+  .slimh-chips .day-mode-banner i { font-size: 13px; }
+  .slimh-chips .day-mode-banner .dmb-upcoming-toggle { font-size: 10.5px; }
+  .slimh-chips .day-mode-banner .dmb-settings-link { font-size: 11px; }
+  /* hub filter row inside slim header — no label, no margin */
+  .slim-header .hub-filter-bar { margin-bottom: 0; padding: 8px 12px; border-top: none; }
+  @media (prefers-reduced-motion: reduce) { .slimh-bar-fill { transition: none; } }
 
   /* TABS */
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
@@ -2426,52 +2460,54 @@
     <div class="tasks-layout">
     <div class="tasks-main">
 
-    <div class="quick-add-bar">
-      <i class="ti ti-bolt"></i>
-      <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}" oninput="onQuickAddInput()">
-      <button onclick="quickAddTask()" title="Add task"><i class="ti ti-plus"></i></button>
-    </div>
-    <div class="smart-sched-hint" id="smart-sched-hint">
-      <i class="ti ti-calendar-event"></i>
-      <span style="color:var(--text-3)">Light days:</span>
-      <span id="smart-sched-chips"></span>
-    </div>
-
-    <div class="task-hero" id="task-hero">
-      <div class="task-hero-orb o1"></div>
-      <div class="task-hero-orb o2"></div>
-      <div class="task-hero-top">
-        <div>
-          <div class="task-hero-greeting">Hey, Zarif</div>
-          <div class="task-hero-sub" id="s-sub">Loading tasks...</div>
-        </div>
+    <!-- SLIM TASK HEADER -->
+    <div class="slim-header" id="task-slim-header">
+      <div class="slimh-qa">
+        <i class="ti ti-bolt"></i>
+        <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}" oninput="onQuickAddInput()">
+        <button class="slimh-qa-btn" onclick="quickAddTask()" title="Add task"><i class="ti ti-plus"></i></button>
       </div>
-      <div class="dash-grid">
-        <div class="dash-ring">
-          <div class="ring" id="s-ring"><div class="ring-hole"><span id="s-ring-pct">0%</span></div></div>
-          <div class="ring-cap">complete</div>
-        </div>
-        <div class="dash-stats">
-          <div class="statcard clickable" id="stat-all" onclick="setStatFilter('all')" title="Show all of today's tasks">
-            <div class="statcard-ico c-blue"><i class="ti ti-list-check"></i></div>
-            <div><div class="statcard-n" id="s-total">0</div><div class="statcard-l">Tasks today</div></div>
-          </div>
-          <div class="statcard clickable" id="stat-done" onclick="setStatFilter('done')" title="Show completed tasks">
-            <div class="statcard-ico c-green"><i class="ti ti-circle-check"></i></div>
-            <div><div class="statcard-n" id="s-done">0</div><div class="statcard-l">Completed</div></div>
-          </div>
-          <div class="statcard clickable" id="stat-high" onclick="setStatFilter('high')" title="Show high-priority tasks">
-            <div class="statcard-ico c-coral"><i class="ti ti-flame"></i></div>
-            <div><div class="statcard-n" id="s-high">0</div><div class="statcard-l">High priority</div></div>
-          </div>
-          <div class="statcard">
-            <div class="statcard-ico c-amber"><i class="ti ti-bolt"></i></div>
-            <div><div class="statcard-n" id="s-streak">0</div><div class="statcard-l" id="s-streak-l">Day streak</div></div>
-          </div>
-        </div>
+      <div class="smart-sched-hint" id="smart-sched-hint">
+        <i class="ti ti-calendar-event"></i>
+        <span style="color:var(--text-3)">Light days:</span>
+        <span id="smart-sched-chips"></span>
       </div>
-      <div id="dash-upcoming" class="dash-upcoming" style="display:none" onclick="switchTab('date')"></div>
+      <div class="slimh-progress">
+        <div class="ring slimh-ring" id="s-ring"><div class="ring-hole slimh-ring-hole"><span id="s-ring-pct" style="display:none">0%</span></div></div>
+        <div class="slimh-greeting">Hey, Zarif <span class="slimh-sub" id="s-sub">Loading…</span></div>
+        <div class="slimh-bar-wrap"><div class="slimh-bar-fill" id="s-bar-fill"></div></div>
+        <span class="slimh-pct" id="s-bar-pct">0%</span>
+      </div>
+      <div class="slimh-chips">
+        <button class="slimh-chip" id="stat-all" onclick="setStatFilter('all')" title="Show all of today's tasks">
+          <i class="ti ti-list-check"></i><span id="s-total">0</span>&thinsp;today
+        </button>
+        <span class="slimh-csep"></span>
+        <button class="slimh-chip" id="stat-done" onclick="setStatFilter('done')" title="Show completed tasks">
+          <i class="ti ti-circle-check" style="color:var(--green-text)"></i><span id="s-done">0</span>&thinsp;done
+        </button>
+        <span class="slimh-csep"></span>
+        <button class="slimh-chip" id="stat-high" onclick="setStatFilter('high')" title="Show high-priority tasks">
+          <i class="ti ti-flame" style="color:var(--coral-text)"></i><span id="s-high">0</span>&thinsp;high
+        </button>
+        <span class="slimh-csep"></span>
+        <div class="slimh-streak">
+          <i class="ti ti-bolt" style="color:var(--amber-text)"></i><span id="s-streak">0</span>&thinsp;<span id="s-streak-l">day streak</span>
+        </div>
+        <div id="day-mode-banner" class="day-mode-banner"></div>
+      </div>
+      <div class="hub-filter-bar" id="task-hub-filter-bar">
+        <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
+        <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
+        <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
+        <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
+        <div id="task-tag-filter-holder"></div>
+        <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
+        <button class="check-tomorrow-btn" id="focus-mode-btn" onclick="toggleFocusMode()" title="Hide everything except what's next"><i class="ti ti-focus-2"></i> Focus mode</button>
+        <button class="check-tomorrow-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
+      </div>
     </div>
+    <div id="dash-upcoming" class="dash-upcoming" style="display:none;margin-bottom:12px" onclick="switchTab('date')"></div>
 
     <div id="tasks-highlights"></div>
     <div id="tasks-nextbest"></div>
@@ -2479,20 +2515,6 @@
     <div id="today-banner" style="display:none" class="today-banner">
       <i class="ti ti-calendar-event"></i>
       <span id="banner-text"></span>
-    </div>
-
-    <div id="day-mode-banner" class="day-mode-banner"></div>
-
-    <div class="hub-filter-bar" id="task-hub-filter-bar">
-      <span class="hub-filter-label"><i class="ti ti-filter" style="font-size:12px;margin-right:2px"></i>Hub</span>
-      <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
-      <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
-      <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
-      <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
-      <div id="task-tag-filter-holder"></div>
-      <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
-      <button class="check-tomorrow-btn" id="focus-mode-btn" onclick="toggleFocusMode()" title="Hide everything except what's next"><i class="ti ti-focus-2"></i> Focus mode</button>
-      <button class="check-tomorrow-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
     </div>
 
     <div class="tabs">
@@ -7625,6 +7647,10 @@ function renderTasks() {
   if (ring) ring.style.background = `conic-gradient(#185FA5 ${pct}%, var(--border-md) 0)`;
   const ringPct = document.getElementById('s-ring-pct');
   if (ringPct) ringPct.textContent = pct + '%';
+  const barFill = document.getElementById('s-bar-fill');
+  if (barFill) barFill.style.width = pct + '%';
+  const barPct = document.getElementById('s-bar-pct');
+  if (barPct) barPct.textContent = pct + '%';
 
   const allDone = todayTotal > 0 && todayDone === todayTotal;
   animateCount(document.getElementById('s-streak'), updateStreak(allDone));
@@ -11664,6 +11690,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.29.0', type: 'minor', date: '4 Jul 2026', title: 'Task Manager: slim header replaces the big hero card', changes: [
+    'The large hero card (progress ring + 2×2 stat grid), quick-add bar, day-off banner, and hub filter bar have been unified into a single compact header card with four rows',
+    'Row 1: quick-add input — same as before, just moved inside',
+    'Row 2: small ring arc, greeting, a horizontal progress bar, and the percentage — all in one line',
+    'Row 3: today / done / high-priority / streak as clickable inline chips — tap any to filter the task list; day-off status shows as an inline pill on the right',
+    'Row 4: hub pills (All / Helpdesk / Projects / Personal) and action buttons (Check tomorrow, Focus mode, Select) — same as before, just inside the card',
+    'Tasks are visible roughly 3× sooner on screen (previously ~350px of header before the list; now ~150px)',
+  ]},
   { ver: '4.28.0', type: 'minor', date: '4 Jul 2026', title: 'New widget: Week at a Glance — see your task load across the full week', changes: [
     'New "Week at a Glance" widget card in the Widgets page showing Mon–Sun of the current week (or any week via the prev/next arrows)',
     'Each day shows a task count badge colour-coded by load: green (1–3), amber (4–6), red (7+)',
