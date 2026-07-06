@@ -5948,7 +5948,14 @@ function renderJobListSidebar() {
   const now = Date.now();
   const archived = jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS);
   const active = jobLists.filter(j => !archived.includes(j));
-  const sortedActive = [...active].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
+  const sortedActive = [...active].sort((a, b) => {
+    const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
+    if (doneDiff !== 0) return doneDiff;
+    if (a.date && b.date) return a.date.localeCompare(b.date);
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return 0;
+  });
 
   let html = sortedActive.length
     ? sortedActive.map(jlRowHtml).join('')
