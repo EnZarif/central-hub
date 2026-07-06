@@ -626,6 +626,7 @@
   .hub-pill.active.hp-personal { border-color: var(--pink-text); background: var(--pink-bg); color: var(--pink-text); }
   /* "Check tomorrow's tasks" — sits at the far right of the hub filter row; same tinted-outline-fills-solid family as Add project / Sign out, with its own purple identity */
   .check-tomorrow-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--purple-text); background: var(--purple-bg); color: var(--purple-text); cursor: pointer; font-family: inherit; transition: transform 0.15s, background 0.15s, color 0.15s; white-space: nowrap; }
+  .tab-select-btn { margin-left: 0; margin-right: 6px; padding-right: 10px; border-right: 1px solid var(--border-md); border-radius: 20px; }
   .check-tomorrow-btn:hover { background: var(--purple-text); color: #000; transform: translateY(-1px); }
   .check-tomorrow-btn:active { transform: translateY(0) scale(0.97); }
   .check-tomorrow-btn.active { background: var(--purple-text); color: #000; }
@@ -2502,7 +2503,6 @@
         <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
         <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
         <div id="task-tag-filter-holder"></div>
-        <button class="check-tomorrow-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
         <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
       </div>
     </div>
@@ -2517,6 +2517,7 @@
     </div>
 
     <div class="tabs">
+      <button class="check-tomorrow-btn tab-select-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
       <button class="tab active" data-tab="today" onclick="switchTab('today')"><i class="ti ti-star"></i> Today</button>
       <button class="tab" data-tab="daily" onclick="switchTab('daily')"><i class="ti ti-sun"></i> Daily</button>
       <button class="tab" data-tab="weekly" onclick="switchTab('weekly')"><i class="ti ti-calendar-week"></i> Weekly</button>
