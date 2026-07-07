@@ -1853,6 +1853,36 @@
   .naati-res-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--teal-bg); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .naati-res-text { flex: 1; font-size: 13px; font-weight: 500; }
   .naati-res-sub { font-size: 11.5px; color: var(--text-3); margin-top: 1px; font-weight: 400; }
+  /* Flashcard quiz */
+  .naati-quiz-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .naati-quiz-filter { padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border-md); background: transparent; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: background 0.12s, border-color 0.12s, color 0.12s; }
+  .naati-quiz-filter.active { background: var(--teal-bg); border-color: var(--teal); color: var(--teal-text); }
+  .naati-quiz-dir { display: flex; gap: 6px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .naati-quiz-dir-lbl { font-size: 11.5px; color: var(--text-3); }
+  .naati-quiz-dir-btn { padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border-md); background: transparent; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: background 0.12s, border-color 0.12s, color 0.12s; }
+  .naati-quiz-dir-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .naati-quiz-prog { font-size: 11.5px; color: var(--text-3); margin-bottom: 10px; }
+  .naati-quiz-scene { perspective: 900px; margin-bottom: 12px; cursor: pointer; }
+  .naati-quiz-card { position: relative; min-height: 155px; transform-style: preserve-3d; transition: transform 0.42s ease; }
+  .naati-quiz-card.flipped { transform: rotateY(180deg); }
+  .naati-quiz-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 22px 20px; text-align: center; }
+  .naati-quiz-front { background: var(--surface2); border: 2px solid var(--border-md); }
+  .naati-quiz-back { background: var(--teal-bg); border: 2px solid var(--teal); transform: rotateY(180deg); }
+  .naati-quiz-word { font-size: 21px; font-weight: 700; color: var(--text); }
+  .naati-quiz-bn { font-size: 19px; font-weight: 700; color: var(--teal-text); }
+  .naati-quiz-hint { font-size: 12px; color: var(--text-3); }
+  .naati-quiz-topic-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--surface); color: var(--text-3); border: 1px solid var(--border); }
+  .naati-quiz-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+  .naati-quiz-btn { flex: 1; padding: 9px 0; border-radius: var(--radius); border: none; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.12s, transform 0.1s; }
+  .naati-quiz-btn:active { transform: scale(0.97); }
+  .naati-quiz-btn.nqb-flip { background: var(--surface2); color: var(--text); border: 1px solid var(--border-md); }
+  .naati-quiz-btn.nqb-correct { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-text); }
+  .naati-quiz-btn.nqb-miss { background: var(--coral-bg); color: var(--coral-text); border: 1px solid var(--coral-text); }
+  .naati-quiz-btn.nqb-skip { background: transparent; color: var(--text-3); border: 1px solid var(--border-md); flex: 0; padding: 9px 16px; }
+  .naati-quiz-done { text-align: center; padding: 28px 20px; }
+  .naati-quiz-done-emoji { font-size: 44px; margin-bottom: 10px; }
+  .naati-quiz-done h3 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 6px; }
+  .naati-quiz-done p { font-size: 13px; color: var(--text-3); margin: 0 0 16px; }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Scratchpad → Task modal */
   .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
@@ -2504,7 +2534,7 @@
     <div id="pnotes-sections" class="pnotes-grid"></div>
   </div>
 
-  <!-- LEARNING PAGE -->
+  <!-- LEARNING PAGE (hub) -->
   <div class="page" id="page-learning">
     <div class="header">
       <div>
@@ -2512,41 +2542,59 @@
         <p>Courses, books, tutorials and things you want to learn.</p>
       </div>
     </div>
+    <div class="hub-grid">
+      <div class="app-card" onclick="showPage('naati','learning')">
+        <div class="app-card-icon c-teal"><i class="ti ti-language"></i></div>
+        <div class="app-card-title">Naati CCL</div>
+        <div class="app-card-desc">Bengali exam prep — action plan, vocabulary, flashcard quiz &amp; strategies.</div>
+        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- NAATI CCL SECTION -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-language" style="color:var(--teal-text);font-size:13px;"></i> Naati CCL — Bengali / Bangla</div>
+  <!-- NAATI CCL PAGE -->
+  <div class="page" id="page-naati">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-language" style="color:var(--teal-text);"></i> Naati CCL — Bengali / Bangla</h1>
+        <p>Community Language Credential · Exam 29 July 2026</p>
+      </div>
+    </div>
 
-      <!-- Hero countdown -->
-      <div class="naati-hero" id="naati-hero">
-        <div class="naati-hero-icon">🇦🇺</div>
-        <div class="naati-hero-text">
-          <div class="naati-hero-title">NAATI CCL — Bengali / Bangla</div>
-          <div class="naati-hero-sub">Tuesday 29 July 2026 · Community Language Credential</div>
-          <div class="naati-meta-row">
-            <span class="naati-badge"><i class="ti ti-clock"></i> ~30 minutes</span>
-            <span class="naati-badge"><i class="ti ti-messages"></i> 2 dialogues (~300 words each)</span>
-            <span class="naati-badge"><i class="ti ti-target"></i> Pass: 29/63 pts per segment</span>
-          </div>
+    <!-- Hero countdown -->
+    <div class="naati-hero" style="margin-bottom:16px;">
+      <div class="naati-hero-icon">🇦🇺</div>
+      <div class="naati-hero-text">
+        <div class="naati-hero-title">NAATI CCL — Bengali / Bangla</div>
+        <div class="naati-hero-sub">Tuesday 29 July 2026 · Community Language Credential</div>
+        <div class="naati-meta-row">
+          <span class="naati-badge"><i class="ti ti-clock"></i> ~30 minutes</span>
+          <span class="naati-badge"><i class="ti ti-messages"></i> 2 dialogues (~300 words each)</span>
+          <span class="naati-badge"><i class="ti ti-target"></i> Pass: 29/63 pts per segment</span>
         </div>
-        <div class="naati-countdown" id="naati-countdown">
-          <div class="naati-countdown-n" id="naati-days">—</div>
-          <div class="naati-countdown-l">days left</div>
-        </div>
+      </div>
+      <div class="naati-countdown">
+        <div class="naati-countdown-n" id="naati-days">—</div>
+        <div class="naati-countdown-l">days left</div>
       </div>
     </div>
 
     <!-- Action Plan -->
     <div class="card" style="margin-bottom:16px;">
       <div class="card-title"><i class="ti ti-calendar-check" style="color:var(--teal-text);font-size:13px;"></i> Action Plan</div>
-
       <div id="naati-plan"></div>
+    </div>
+
+    <!-- Flashcard Quiz -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><i class="ti ti-cards" style="color:var(--purple-text);font-size:13px;"></i> Flashcard Quiz</div>
+      <div id="naati-quiz"></div>
     </div>
 
     <!-- Key Vocabulary -->
     <div class="card" style="margin-bottom:16px;">
       <div class="card-title"><i class="ti ti-vocabulary" style="color:var(--amber-text);font-size:13px;"></i> Key Vocabulary by Topic</div>
-      <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">Click a topic to expand. Learn these terms in both directions — English → Bengali and Bengali → English.</p>
+      <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">Click a topic to expand. Learn these terms in both directions.</p>
       <div id="naati-vocab"></div>
     </div>
 
@@ -2567,7 +2615,7 @@
       </div>
       <div class="naati-strat-item">
         <div class="naati-strat-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-number"></i></div>
-        <div class="naati-strat-text"><strong>Handle numbers and dates precisely</strong>Dates, dollar amounts, phone numbers, dosages — these are high-stakes. Write them down immediately. A wrong number can fail a segment.</div>
+        <div class="naati-strat-text"><strong>Handle numbers and dates precisely</strong>Dates, dollar amounts, phone numbers, dosages — high-stakes. Write them down immediately. A wrong number can fail a segment.</div>
       </div>
       <div class="naati-strat-item">
         <div class="naati-strat-icon" style="background:var(--purple-bg);color:var(--purple-text);"><i class="ti ti-refresh"></i></div>
@@ -2579,7 +2627,7 @@
       </div>
       <div class="naati-strat-item">
         <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
-        <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Sleep is the best preparation at that stage — memory consolidation happens during sleep, not last-minute study.</div>
+        <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Memory consolidation happens during sleep — not last-minute study.</div>
       </div>
     </div>
 
@@ -2612,7 +2660,6 @@
         <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
       </div>
     </div>
-
   </div>
 
   <!-- TASKS PAGE -->
@@ -4452,13 +4499,14 @@ function naatiToggle(id) {
   const p = naatiGetProgress();
   p[id] = !p[id];
   dbSet('zarif_naati_progress', p);
-  renderLearning();
+  renderNaatiPage();
 }
 function naatiToggleVocab(topicIdx) {
   const el = document.querySelector(`.naati-vocab-topic[data-ti="${topicIdx}"]`);
   if (el) el.classList.toggle('open');
 }
-function renderLearning() {
+function renderLearning() { /* learning is now a hub page — no dynamic content */ }
+function renderNaatiPage() {
   // Countdown
   const daysEl = document.getElementById('naati-days');
   if (daysEl) {
@@ -4488,7 +4536,7 @@ function renderLearning() {
       </div>`;
     }).join('');
   }
-  // Vocabulary (only render once — preserve open/close state)
+  // Vocabulary (render once — preserve open/close state)
   const vocabEl = document.getElementById('naati-vocab');
   if (vocabEl && !vocabEl.children.length) {
     vocabEl.innerHTML = NAATI_VOCAB.map((topic, i) => `
@@ -4505,6 +4553,107 @@ function renderLearning() {
         </div>
       </div>`).join('');
   }
+  // Quiz — init only on first visit
+  const quizEl = document.getElementById('naati-quiz');
+  if (quizEl && !quizEl.children.length) naatiQuizStart('all', 'en-bn');
+}
+
+// ---- Flashcard Quiz ----
+let _naatiQuiz = { deck: [], idx: 0, flipped: false, direction: 'en-bn', topicFilter: 'all', correct: 0, missed: 0 };
+function naatiQuizBuildDeck() {
+  let cards = [];
+  NAATI_VOCAB.forEach((topic, ti) => {
+    if (_naatiQuiz.topicFilter !== 'all' && _naatiQuiz.topicFilter !== ti) return;
+    topic.terms.forEach(([en, bn]) => cards.push({ en, bn, ti }));
+  });
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  return cards;
+}
+function naatiQuizStart(topicFilter, direction) {
+  if (topicFilter !== undefined) _naatiQuiz.topicFilter = topicFilter;
+  if (direction !== undefined) _naatiQuiz.direction = direction;
+  _naatiQuiz.deck = naatiQuizBuildDeck();
+  _naatiQuiz.idx = 0;
+  _naatiQuiz.flipped = false;
+  _naatiQuiz.correct = 0;
+  _naatiQuiz.missed = 0;
+  naatiQuizRender();
+}
+function naatiQuizSetDir(dir) { naatiQuizStart(_naatiQuiz.topicFilter, dir); }
+function naatiQuizFlip() {
+  _naatiQuiz.flipped = !_naatiQuiz.flipped;
+  const card = document.getElementById('nq-card');
+  if (card) card.classList.toggle('flipped', _naatiQuiz.flipped);
+  const actions = document.getElementById('nq-actions');
+  if (!actions) return;
+  if (_naatiQuiz.flipped) {
+    actions.innerHTML = `<button class="naati-quiz-btn nqb-correct" onclick="naatiQuizMark(true)"><i class="ti ti-check"></i> Got it</button>
+      <button class="naati-quiz-btn nqb-miss" onclick="naatiQuizMark(false)"><i class="ti ti-x"></i> Missed</button>
+      <button class="naati-quiz-btn nqb-skip" onclick="naatiQuizNext()">Skip</button>`;
+  } else {
+    actions.innerHTML = `<button class="naati-quiz-btn nqb-flip" onclick="naatiQuizFlip()"><i class="ti ti-rotate-2"></i> Flip card</button>`;
+  }
+}
+function naatiQuizMark(correct) {
+  if (correct) _naatiQuiz.correct++; else _naatiQuiz.missed++;
+  naatiQuizNext();
+}
+function naatiQuizNext() {
+  _naatiQuiz.idx++;
+  _naatiQuiz.flipped = false;
+  naatiQuizRender();
+}
+function naatiQuizRender() {
+  const el = document.getElementById('naati-quiz');
+  if (!el) return;
+  const q = _naatiQuiz;
+  const totalTerms = NAATI_VOCAB.reduce((s, t) => s + t.terms.length, 0);
+  const filterBtns = `<div class="naati-quiz-filters">
+    <button class="naati-quiz-filter${q.topicFilter==='all'?' active':''}" onclick="naatiQuizStart('all')">All (${totalTerms})</button>
+    ${NAATI_VOCAB.map((t, i) => `<button class="naati-quiz-filter${q.topicFilter===i?' active':''}" onclick="naatiQuizStart(${i})">${t.topic.split(' ').slice(1).join(' ')} (${t.terms.length})</button>`).join('')}
+  </div>`;
+  const dirBtns = `<div class="naati-quiz-dir">
+    <span class="naati-quiz-dir-lbl">Direction:</span>
+    <button class="naati-quiz-dir-btn${q.direction==='en-bn'?' active':''}" onclick="naatiQuizSetDir('en-bn')">English → Bengali</button>
+    <button class="naati-quiz-dir-btn${q.direction==='bn-en'?' active':''}" onclick="naatiQuizSetDir('bn-en')">Bengali → English</button>
+  </div>`;
+  const total = q.deck.length;
+  if (q.idx >= total) {
+    const pct = (q.correct + q.missed) > 0 ? Math.round(q.correct / (q.correct + q.missed) * 100) : 0;
+    const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '💪' : '📚';
+    el.innerHTML = filterBtns + dirBtns + `<div class="naati-quiz-done">
+      <div class="naati-quiz-done-emoji">${emoji}</div>
+      <h3>Session complete!</h3>
+      <p>${q.correct} correct · ${q.missed} missed · ${pct}% accuracy</p>
+      <button class="naati-quiz-btn nqb-flip" style="padding:9px 24px;flex:0;" onclick="naatiQuizStart()"><i class="ti ti-refresh"></i> Restart</button>
+    </div>`;
+    return;
+  }
+  const card = q.deck[q.idx];
+  const front = q.direction === 'en-bn' ? card.en : card.bn;
+  const back  = q.direction === 'en-bn' ? card.bn : card.en;
+  const topicName = NAATI_VOCAB[card.ti].topic.split(' ').slice(1).join(' ');
+  el.innerHTML = filterBtns + dirBtns +
+    `<div class="naati-quiz-prog">Card ${q.idx + 1} of ${total} · ${q.correct} correct · ${q.missed} missed</div>
+    <div class="naati-quiz-scene" onclick="naatiQuizFlip()">
+      <div class="naati-quiz-card" id="nq-card">
+        <div class="naati-quiz-face naati-quiz-front">
+          <span class="naati-quiz-topic-pill">${topicName}</span>
+          <div class="naati-quiz-word">${front}</div>
+          <div class="naati-quiz-hint">tap to reveal →</div>
+        </div>
+        <div class="naati-quiz-face naati-quiz-back">
+          <span class="naati-quiz-topic-pill">${topicName}</span>
+          <div class="naati-quiz-bn">${back}</div>
+        </div>
+      </div>
+    </div>
+    <div class="naati-quiz-actions" id="nq-actions">
+      <button class="naati-quiz-btn nqb-flip" onclick="naatiQuizFlip()"><i class="ti ti-rotate-2"></i> Flip card</button>
+    </div>`;
 }
 
 function initPixoff() {
@@ -7310,12 +7459,14 @@ const PAGES = {
   insights:       { title:'Insights',        icon:'ti-chart-pie',       color:'c-green',  desc:'At-a-glance productivity dashboard: completions, streak, meetings & AI usage.' },
   notes:          { title:'Personal Notes',   icon:'ti-pencil',          color:'c-pink',   desc:'Grocery lists, errands, calls — jot it down and turn it into a personal task. Separate from the Scratch Pad widget.' },
   learning:       { title:'Learning',          icon:'ti-school',           color:'c-teal',   desc:'Courses, books, tutorials and things you want to learn.' },
+  naati:          { title:'Naati CCL',          icon:'ti-language',         color:'c-teal',   desc:'Bengali CCL exam prep — action plan, flashcard quiz, vocabulary and strategies.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
   helpdesk: { title:'Helpdesk Management', icon:'ti-headset' },
   projects: { title:'Projects',            icon:'ti-folders' },
   personal: { title:'Personal',            icon:'ti-user-heart' },
+  learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','nsla','meetings','message','templates','standup'],
@@ -7407,7 +7558,7 @@ function showPage(p, hub) {
   // global back button
   const back = document.getElementById('page-back');
   const backLbl = document.getElementById('page-back-label');
-  const HUB_BACK_COLOR = { home:'pb-home', helpdesk:'pb-helpdesk', projects:'pb-projects', personal:'pb-personal', tasks:'pb-tasks' };
+  const HUB_BACK_COLOR = { home:'pb-home', helpdesk:'pb-helpdesk', projects:'pb-projects', personal:'pb-personal', tasks:'pb-tasks', learning:'pb-home' };
   const topbar = document.querySelector('.page-topbar');
   const backHidden = p === 'home' || p === 'projdetail' || TOP_LEVEL.includes(p);
   if (topbar) topbar.classList.toggle('topbar-empty', backHidden);
@@ -7432,6 +7583,7 @@ function showPage(p, hub) {
   if (p === 'tasks' && typeof checkEodWrap === 'function') checkEodWrap(melbNowMinutes());
   if (p === 'widgets' && typeof renderWeekAtAGlance === 'function') renderWeekAtAGlance();
   if (p === 'learning' && typeof renderLearning === 'function') renderLearning();
+  if (p === 'naati' && typeof renderNaatiPage === 'function') renderNaatiPage();
   window.scrollTo(0, 0);
 }
 
@@ -14285,7 +14437,6 @@ async function initApp() {
   initPixoff();
   renderWeekAtAGlance();
   renderAccountSettings();
-  renderLearning();
   initWidgetReorder();
 }
 
