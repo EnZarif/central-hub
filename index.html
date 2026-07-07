@@ -1900,6 +1900,15 @@
   .naati-plan-toggle:hover { color: var(--text-2); }
   .naati-plan-all-done { text-align: center; padding: 16px 0 8px; font-size: 13px; color: var(--green-text); font-weight: 600; }
   .naati-plan-expanded .naati-plan-week { margin-bottom: 16px; }
+  .naati-tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border-md); border-radius: 12px; padding: 4px; margin-bottom: 10px; }
+  .naati-tab { flex: 1; padding: 8px 4px; border-radius: 9px; border: none; background: transparent; color: var(--text-3); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+  .naati-tab i { font-size: 16px; }
+  .naati-tab.active { background: var(--teal-bg); color: var(--teal-text); }
+  .naati-tab-content { padding: 16px; }
+  .naati-tab-panel { display: none; }
+  .naati-tab-panel.active { display: block; }
+  .naati-tab-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .naati-tab-panel-title { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Scratchpad → Task modal */
   .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
@@ -2188,6 +2197,11 @@
     /* Strategies: tighter */
     .naati-strat-text { font-size: 12.5px; }
     .naati-strat-icon { width: 26px; height: 26px; font-size: 13px; flex-shrink: 0; }
+    /* Naati tab strip: compact on mobile */
+    .naati-tab { font-size: 11px; padding: 7px 2px; gap: 2px; }
+    .naati-tab i { font-size: 15px; }
+    .naati-tab-content { padding: 12px; }
+    .naati-tab-panel-head { flex-wrap: wrap; gap: 8px; }
 
     /* Hub grid on mobile: tighter cards */
     .hub-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2654,15 +2668,19 @@
     </div>
 
     <!-- Hero countdown -->
-    <div class="naati-hero" style="margin-bottom:16px;">
+    <div class="naati-hero" style="margin-bottom:12px;">
       <div class="naati-hero-icon">🇦🇺</div>
       <div class="naati-hero-text">
         <div class="naati-hero-title">NAATI CCL — Bengali / Bangla</div>
         <div class="naati-hero-sub">Tuesday 29 July 2026 · Community Language Credential</div>
         <div class="naati-meta-row">
           <span class="naati-badge"><i class="ti ti-clock"></i> ~30 minutes</span>
-          <span class="naati-badge"><i class="ti ti-messages"></i> 2 dialogues (~300 words each)</span>
-          <span class="naati-badge"><i class="ti ti-target"></i> Pass: 29/63 pts per segment</span>
+          <span class="naati-badge"><i class="ti ti-messages"></i> 2 dialogues</span>
+          <span class="naati-badge"><i class="ti ti-target"></i> Pass: 29/63 pts</span>
+        </div>
+        <div id="naati-hero-progress" style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.22);border-radius:99px;overflow:hidden;"><div id="naati-hero-bar" style="height:100%;background:#fff;border-radius:99px;width:0%;transition:width 0.5s ease;"></div></div>
+          <span id="naati-hero-pct" style="font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.85);white-space:nowrap;"></span>
         </div>
       </div>
       <div class="naati-countdown">
@@ -2671,89 +2689,99 @@
       </div>
     </div>
 
-    <!-- Action Plan -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title">
-        <i class="ti ti-calendar-check" style="color:var(--teal-text);font-size:13px;"></i> Action Plan
-        <button onclick="naatiAddToTasks()" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid var(--teal);background:var(--teal-bg);color:var(--teal-text);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;"><i class="ti ti-checklist"></i> Add to Tasks</button>
-      </div>
-      <div id="naati-plan"></div>
+    <!-- Tab strip -->
+    <div class="naati-tabs">
+      <button class="naati-tab active" data-tab="plan" onclick="naatiSwitchTab('plan')"><i class="ti ti-calendar-check"></i><span>Plan</span></button>
+      <button class="naati-tab" data-tab="quiz" onclick="naatiSwitchTab('quiz')"><i class="ti ti-cards"></i><span>Quiz</span></button>
+      <button class="naati-tab" data-tab="vocab" onclick="naatiSwitchTab('vocab')"><i class="ti ti-vocabulary"></i><span>Vocab</span></button>
+      <button class="naati-tab" data-tab="tips" onclick="naatiSwitchTab('tips')"><i class="ti ti-bulb"></i><span>Tips</span></button>
+      <button class="naati-tab" data-tab="links" onclick="naatiSwitchTab('links')"><i class="ti ti-link"></i><span>Links</span></button>
     </div>
 
-    <!-- Flashcard Quiz -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-cards" style="color:var(--purple-text);font-size:13px;"></i> Flashcard Quiz</div>
-      <div id="naati-quiz"></div>
-    </div>
+    <!-- Tab panels -->
+    <div class="card naati-tab-content">
 
-    <!-- Key Vocabulary -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-vocabulary" style="color:var(--amber-text);font-size:13px;"></i> Key Vocabulary by Topic</div>
-      <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">Click a topic to expand. Learn these terms in both directions.</p>
-      <div id="naati-vocab"></div>
-    </div>
+      <!-- Plan -->
+      <div class="naati-tab-panel active" id="naati-panel-plan">
+        <div class="naati-tab-panel-head">
+          <span class="naati-tab-panel-title"><i class="ti ti-calendar-check" style="color:var(--teal-text);"></i> Action Plan</span>
+          <button onclick="naatiAddToTasks()" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid var(--teal);background:var(--teal-bg);color:var(--teal-text);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;"><i class="ti ti-checklist"></i> Add to Tasks</button>
+        </div>
+        <div id="naati-plan"></div>
+      </div>
 
-    <!-- Strategies -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-bulb" style="color:var(--green-text);font-size:13px;"></i> Exam Strategies</div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-notes"></i></div>
-        <div class="naati-strat-text"><strong>Note-taking: symbols, not words</strong>Use arrows (→), numbers, abbreviations. Never try to write full sentences — you'll miss the next line.</div>
+      <!-- Quiz -->
+      <div class="naati-tab-panel" id="naati-panel-quiz">
+        <div id="naati-quiz"></div>
       </div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-brain"></i></div>
-        <div class="naati-strat-text"><strong>Interpret meaning, not words</strong>The exam scores on meaning transfer, not literal translation. A natural-sounding interpretation scores higher than a word-for-word one that sounds robotic.</div>
-      </div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--green-bg);color:var(--green-text);"><i class="ti ti-microphone"></i></div>
-        <div class="naati-strat-text"><strong>Match register and tone</strong>If the caseworker sounds formal, your Bengali should sound formal. If the client sounds distressed, don't flatten it to a neutral monotone.</div>
-      </div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-number"></i></div>
-        <div class="naati-strat-text"><strong>Handle numbers and dates precisely</strong>Dates, dollar amounts, phone numbers, dosages — high-stakes. Write them down immediately. A wrong number can fail a segment.</div>
-      </div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--purple-bg);color:var(--purple-text);"><i class="ti ti-refresh"></i></div>
-        <div class="naati-strat-text"><strong>Chunk and render</strong>Listen to one full sentence or short exchange, then interpret. Don't start speaking while still hearing — pause, process, then deliver confidently.</div>
-      </div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-player-record"></i></div>
-        <div class="naati-strat-text"><strong>Record yourself weekly</strong>Listening back is uncomfortable but invaluable. You'll catch false starts, filler words, missed terminology, and tone issues you can't notice in the moment.</div>
-      </div>
-      <div class="naati-strat-item">
-        <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
-        <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Memory consolidation happens during sleep — not last-minute study.</div>
-      </div>
-    </div>
 
-    <!-- Resources -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-link" style="color:var(--purple-text);font-size:13px;"></i> Resources</div>
-      <div onclick="window.open('https://www.naati.com.au/become-certified/ccl/','_blank')" class="naati-res-link">
-        <div class="naati-res-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-world"></i></div>
-        <div><div class="naati-res-text">NAATI Official CCL Page</div><div class="naati-res-sub">Exam format, scoring rubric, sample materials — start here</div></div>
-        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+      <!-- Vocab -->
+      <div class="naati-tab-panel" id="naati-panel-vocab">
+        <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">Click a topic to expand. Learn these terms in both directions.</p>
+        <div id="naati-vocab"></div>
       </div>
-      <div onclick="window.open('https://www.youtube.com/results?search_query=NAATI+CCL+Bengali+practice','_blank')" class="naati-res-link">
-        <div class="naati-res-icon" style="background:#ff000022;color:#ff4444;"><i class="ti ti-brand-youtube"></i></div>
-        <div><div class="naati-res-text">YouTube — NAATI CCL Bengali Practice</div><div class="naati-res-sub">Search for mock dialogues, tips, and coaching sessions in Bengali</div></div>
-        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+
+      <!-- Tips -->
+      <div class="naati-tab-panel" id="naati-panel-tips">
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-notes"></i></div>
+          <div class="naati-strat-text"><strong>Note-taking: symbols, not words</strong>Use arrows (→), numbers, abbreviations. Never try to write full sentences — you'll miss the next line.</div>
+        </div>
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-brain"></i></div>
+          <div class="naati-strat-text"><strong>Interpret meaning, not words</strong>The exam scores on meaning transfer, not literal translation. A natural-sounding interpretation scores higher than a word-for-word one that sounds robotic.</div>
+        </div>
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--green-bg);color:var(--green-text);"><i class="ti ti-microphone"></i></div>
+          <div class="naati-strat-text"><strong>Match register and tone</strong>If the caseworker sounds formal, your Bengali should sound formal. If the client sounds distressed, don't flatten it to a neutral monotone.</div>
+        </div>
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-number"></i></div>
+          <div class="naati-strat-text"><strong>Handle numbers and dates precisely</strong>Dates, dollar amounts, phone numbers, dosages — high-stakes. Write them down immediately. A wrong number can fail a segment.</div>
+        </div>
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--purple-bg);color:var(--purple-text);"><i class="ti ti-refresh"></i></div>
+          <div class="naati-strat-text"><strong>Chunk and render</strong>Listen to one full sentence or short exchange, then interpret. Don't start speaking while still hearing — pause, process, then deliver confidently.</div>
+        </div>
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-player-record"></i></div>
+          <div class="naati-strat-text"><strong>Record yourself weekly</strong>Listening back is uncomfortable but invaluable. You'll catch false starts, filler words, missed terminology, and tone issues you can't notice in the moment.</div>
+        </div>
+        <div class="naati-strat-item">
+          <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
+          <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Memory consolidation happens during sleep — not last-minute study.</div>
+        </div>
       </div>
-      <div onclick="window.open('https://naaticcl.com.au/','_blank')" class="naati-res-link">
-        <div class="naati-res-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-school"></i></div>
-        <div><div class="naati-res-text">NAATI CCL Practice Hub</div><div class="naati-res-sub">Third-party practice dialogues and coaching resources</div></div>
-        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+
+      <!-- Links -->
+      <div class="naati-tab-panel" id="naati-panel-links">
+        <div onclick="window.open('https://www.naati.com.au/become-certified/ccl/','_blank')" class="naati-res-link">
+          <div class="naati-res-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-world"></i></div>
+          <div><div class="naati-res-text">NAATI Official CCL Page</div><div class="naati-res-sub">Exam format, scoring rubric, sample materials — start here</div></div>
+          <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+        </div>
+        <div onclick="window.open('https://www.youtube.com/results?search_query=NAATI+CCL+Bengali+practice','_blank')" class="naati-res-link">
+          <div class="naati-res-icon" style="background:#ff000022;color:#ff4444;"><i class="ti ti-brand-youtube"></i></div>
+          <div><div class="naati-res-text">YouTube — NAATI CCL Bengali Practice</div><div class="naati-res-sub">Search for mock dialogues, tips, and coaching sessions in Bengali</div></div>
+          <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+        </div>
+        <div onclick="window.open('https://naaticcl.com.au/','_blank')" class="naati-res-link">
+          <div class="naati-res-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-school"></i></div>
+          <div><div class="naati-res-text">NAATI CCL Practice Hub</div><div class="naati-res-sub">Third-party practice dialogues and coaching resources</div></div>
+          <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+        </div>
+        <div onclick="window.open('https://apps.apple.com/au/app/anki-flashcards/id373493387','_blank')" class="naati-res-link">
+          <div class="naati-res-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-cards"></i></div>
+          <div><div class="naati-res-text">Anki — Spaced Repetition Flashcards</div><div class="naati-res-sub">Create Bengali terminology decks — the fastest way to drill vocab retention</div></div>
+          <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+        </div>
+        <div onclick="window.open('https://www.facebook.com/groups/naaticcl','_blank')" class="naati-res-link">
+          <div class="naati-res-icon" style="background:#1877f222;color:#1877f2;"><i class="ti ti-brand-facebook"></i></div>
+          <div><div class="naati-res-text">NAATI CCL Facebook Group</div><div class="naati-res-sub">Community of CCL candidates — tips, materials, shared experiences</div></div>
+          <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+        </div>
       </div>
-      <div onclick="window.open('https://apps.apple.com/au/app/anki-flashcards/id373493387','_blank')" class="naati-res-link">
-        <div class="naati-res-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-cards"></i></div>
-        <div><div class="naati-res-text">Anki — Spaced Repetition Flashcards</div><div class="naati-res-sub">Create Bengali terminology decks — the fastest way to drill vocab retention</div></div>
-        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
-      </div>
-      <div onclick="window.open('https://www.facebook.com/groups/naaticcl','_blank')" class="naati-res-link">
-        <div class="naati-res-icon" style="background:#1877f222;color:#1877f2;"><i class="ti ti-brand-facebook"></i></div>
-        <div><div class="naati-res-text">NAATI CCL Facebook Group</div><div class="naati-res-sub">Community of CCL candidates — tips, materials, shared experiences</div></div>
-        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
-      </div>
+
     </div>
   </div>
 
@@ -4790,6 +4818,11 @@ function naatiToggleVocab(topicIdx) {
   if (el) el.classList.toggle('open');
 }
 function renderLearning() { /* learning is now a hub page — no dynamic content */ }
+function naatiSwitchTab(tab) {
+  document.querySelectorAll('#page-naati .naati-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('#page-naati .naati-tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === 'naati-panel-' + tab));
+}
+
 function renderNaatiPage() {
   // Countdown
   const daysEl = document.getElementById('naati-days');
@@ -4799,14 +4832,20 @@ function renderNaatiPage() {
     const diff = Math.ceil((examD - todayD) / 86400000);
     daysEl.textContent = diff > 0 ? diff : diff === 0 ? '🎯' : 'Done';
   }
+  // Progress (shared)
+  const p = naatiGetProgress();
+  const allTasks = NAATI_PLAN.flatMap(w => w.tasks);
+  const totalDone = allTasks.filter(t => p[t.id]).length;
+  const totalAll = allTasks.length;
+  const overallPct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
+  // Hero progress bar
+  const heroBar = document.getElementById('naati-hero-bar');
+  const heroPct = document.getElementById('naati-hero-pct');
+  if (heroBar) heroBar.style.width = overallPct + '%';
+  if (heroPct) heroPct.textContent = totalDone + '/' + totalAll + ' · ' + overallPct + '%';
   // Action plan
   const planEl = document.getElementById('naati-plan');
   if (planEl) {
-    const p = naatiGetProgress();
-    const allTasks = NAATI_PLAN.flatMap(w => w.tasks);
-    const totalDone = allTasks.filter(t => p[t.id]).length;
-    const totalAll = allTasks.length;
-    const overallPct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
     const nextTask = allTasks.find(t => !p[t.id]);
     const allDone = !nextTask;
     const expanded = planEl.dataset.expanded === '1';
