@@ -2673,7 +2673,10 @@
 
     <!-- Action Plan -->
     <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-calendar-check" style="color:var(--teal-text);font-size:13px;"></i> Action Plan</div>
+      <div class="card-title">
+        <i class="ti ti-calendar-check" style="color:var(--teal-text);font-size:13px;"></i> Action Plan
+        <button onclick="naatiAddToTasks()" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid var(--teal);background:var(--teal-bg);color:var(--teal-text);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;"><i class="ti ti-checklist"></i> Add to Tasks</button>
+      </div>
       <div id="naati-plan"></div>
     </div>
 
@@ -4742,6 +4745,45 @@ function naatiTogglePlan() {
   const planEl = document.getElementById('naati-plan');
   if (planEl) planEl.dataset.expanded = planEl.dataset.expanded === '1' ? '0' : '1';
   renderNaatiPage();
+}
+function naatiPlanDateToISO(dateStr) {
+  const months = { Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12' };
+  const [mon, day] = dateStr.trim().split(' ');
+  return `2026-${months[mon]}-${String(day).padStart(2,'0')}`;
+}
+function naatiAddToTasks() {
+  const allTasks = NAATI_PLAN.flatMap(w => w.tasks);
+  const highDates = ['2026-07-28','2026-07-29'];
+  let added = 0;
+  allTasks.forEach(t => {
+    const dateISO = naatiPlanDateToISO(t.date);
+    const alreadyExists = customTasks.some(ct => ct.name === t.text && ct.date === dateISO);
+    if (!alreadyExists) {
+      customTasks.push({
+        id: 'naati' + t.id + Date.now(),
+        freq: 'date',
+        date: dateISO,
+        priority: highDates.includes(dateISO) ? 'HIGH' : 'MEDIUM',
+        name: t.text,
+        days: 'all',
+        assignees: ['Me'],
+        note: 'NAATI CCL Bengali prep',
+        custom: true,
+        hub: 'personal',
+        tags: ['naati'],
+      });
+      added++;
+    }
+  });
+  if (added > 0) {
+    saveCustomTasks();
+    showUndoToast(`${added} NAATI task${added !== 1 ? 's' : ''} added to Personal hub`, () => {
+      customTasks = customTasks.filter(ct => !(ct.tags || []).includes('naati'));
+      saveCustomTasks();
+    });
+  } else {
+    showUndoToast('All NAATI tasks are already in your task list');
+  }
 }
 function naatiToggleVocab(topicIdx) {
   const el = document.querySelector(`.naati-vocab-topic[data-ti="${topicIdx}"]`);
