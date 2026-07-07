@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Zarif Central Hub</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Central Hub">
+<meta name="theme-color" content="#111318">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/assets/icon-192.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2132,6 +2138,81 @@
     .ins-kpis { grid-template-columns: 1fr 1fr; }
     .ins-chart { height: 160px; }
     .ins-tod-substats { margin-left: 0; width: 100%; }
+  }
+
+  /* ===== MOBILE OPTIMISATIONS — Naati CCL + general ===== */
+  @media (max-width: 760px) {
+    /* Naati hero: stack vertically, compact countdown */
+    .naati-hero { flex-direction: column; gap: 10px; padding: 14px 14px; }
+    .naati-hero-icon { width: 40px; height: 40px; font-size: 20px; }
+    .naati-hero-title { font-size: 14px; }
+    .naati-hero-sub { font-size: 11.5px; }
+    .naati-countdown { flex-direction: row; align-items: center; gap: 8px; padding: 8px 16px; width: 100%; justify-content: center; }
+    .naati-countdown-n { font-size: 24px; }
+    .naati-countdown-l { font-size: 11px; }
+    .naati-badge { font-size: 11px; padding: 3px 8px; }
+    .naati-meta-row { gap: 4px; }
+
+    /* Plan: week header wraps gracefully */
+    .naati-plan-week-label { font-size: 10.5px; }
+    .naati-task-text { font-size: 12.5px; }
+
+    /* Quiz: smaller filter chips */
+    .naati-quiz-filters { gap: 5px; }
+    .naati-quiz-filter { font-size: 11px; padding: 3px 9px; }
+    .naati-quiz-dir-btn { font-size: 11.5px; padding: 4px 10px; }
+    /* Quiz card: compact */
+    .naati-quiz-card { min-height: 135px; }
+    .naati-quiz-face { padding: 16px 14px; gap: 8px; }
+    .naati-quiz-word { font-size: 18px; }
+    .naati-quiz-bn { font-size: 16px; }
+    .naati-quiz-hint { font-size: 11px; }
+    /* Quiz action buttons: all equal width on mobile */
+    .naati-quiz-btn.nqb-skip { flex: 1; padding: 9px 0; }
+
+    /* Vocabulary table: tighter */
+    .naati-vocab-table td { padding: 6px 10px; font-size: 12px; }
+    .naati-vocab-head-title { font-size: 12.5px; }
+
+    /* Strategies: tighter */
+    .naati-strat-text { font-size: 12.5px; }
+    .naati-strat-icon { width: 26px; height: 26px; font-size: 13px; flex-shrink: 0; }
+
+    /* Hub grid on mobile: tighter cards */
+    .hub-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Tabs: scrollable row, no wrapping */
+    .tabs { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap;
+            scrollbar-width: none; padding-bottom: 2px; gap: 4px; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex-shrink: 0; }
+    .tab-select-btn { flex-shrink: 0; }
+
+    /* Slim header chips: scrollable */
+    .slimh-chips { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+                   scrollbar-width: none; padding-bottom: 8px; }
+    .slimh-chips::-webkit-scrollbar { display: none; }
+    .slimh-chip, .slimh-streak { flex-shrink: 0; }
+    .slimh-csep { flex-shrink: 0; }
+    #day-mode-banner { flex-shrink: 0; }
+
+    /* Hub filter bar: scrollable */
+    .hub-filter-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+                      scrollbar-width: none; }
+    .hub-filter-bar::-webkit-scrollbar { display: none; }
+    .hub-pill, .check-tomorrow-btn { flex-shrink: 0; }
+
+    /* Cards: tighter padding on mobile */
+    .card { padding: 14px 14px; }
+    .card-title { font-size: 12.5px; margin-bottom: 10px; }
+  }
+
+  @media (max-width: 420px) {
+    /* Very small phones: hub grid goes 1-column */
+    .hub-grid { grid-template-columns: 1fr; }
+    .naati-quiz-word { font-size: 16px; }
+    .naati-quiz-bn { font-size: 14px; }
+    .naati-quiz-filter { font-size: 10.5px; padding: 3px 7px; }
   }
 </style>
 </head>

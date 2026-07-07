@@ -1,0 +1,18 @@
+{
+  "name": "Zarif Central Hub",
+  "short_name": "Central Hub",
+  "description": "Personal productivity dashboard — tasks, meetings, learning and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#111318",
+  "background_color": "#111318",
+  "icons": [
+    {
+      "src": "/assets/icon-192.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
