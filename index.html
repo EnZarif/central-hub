@@ -1889,6 +1889,17 @@
   .naati-quiz-done-emoji { font-size: 44px; margin-bottom: 10px; }
   .naati-quiz-done h3 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 6px; }
   .naati-quiz-done p { font-size: 13px; color: var(--text-3); margin: 0 0 16px; }
+  /* Action plan next-task card */
+  .naati-next-task { display: flex; align-items: flex-start; gap: 12px; background: var(--teal-bg); border: 1.5px solid var(--teal); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+  .naati-next-task-icon { width: 32px; height: 32px; border-radius: 9px; background: var(--teal); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .naati-next-task-body { flex: 1; min-width: 0; }
+  .naati-next-task-label { font-size: 10.5px; font-weight: 700; color: var(--teal-text); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .naati-next-task-text { font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.4; }
+  .naati-next-task-date { font-size: 11.5px; color: var(--teal-text); margin-top: 3px; font-weight: 500; }
+  .naati-plan-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); cursor: pointer; padding: 4px 0; background: none; border: none; font-family: inherit; transition: color 0.12s; }
+  .naati-plan-toggle:hover { color: var(--text-2); }
+  .naati-plan-all-done { text-align: center; padding: 16px 0 8px; font-size: 13px; color: var(--green-text); font-weight: 600; }
+  .naati-plan-expanded .naati-plan-week { margin-bottom: 16px; }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Scratchpad → Task modal */
   .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
@@ -4459,6 +4470,7 @@ const NAATI_VOCAB = [
   { topic: '🏥 Medical & Health', color: 'var(--coral-text)', bg: 'var(--coral-bg)', terms: [
     ['Doctor / GP', 'ডাক্তার (daktar)'],
     ['Hospital', 'হাসপাতাল (haspatal)'],
+    ['Nurse', 'নার্স'],
     ['Appointment', 'অ্যাপয়েন্টমেন্ট'],
     ['Prescription', 'প্রেসক্রিপশন'],
     ['Symptoms', 'লক্ষণ (lakkhon)'],
@@ -4467,108 +4479,252 @@ const NAATI_VOCAB = [
     ['Surgery / Operation', 'অপারেশন'],
     ['Blood test', 'রক্ত পরীক্ষা (rokto poriksha)'],
     ['X-ray', 'এক্স-রে'],
+    ['Ultrasound', 'আল্ট্রাসাউন্ড'],
+    ['MRI scan', 'এমআরআই স্ক্যান'],
+    ['Pathology', 'প্যাথলজি'],
     ['Referral', 'রেফারেল'],
     ['Specialist', 'বিশেষজ্ঞ ডাক্তার (bisheshoggyo daktar)'],
     ['Emergency', 'জরুরি অবস্থা (joruri abostha)'],
     ['Ambulance', 'অ্যাম্বুলেন্স'],
     ['Medicare', 'মেডিকেয়ার'],
+    ['Medicare card', 'মেডিকেয়ার কার্ড'],
     ['Health insurance', 'স্বাস্থ্য বীমা (swasthyo bima)'],
     ['Medication / Medicine', 'ওষুধ (oshud)'],
     ['Dosage', 'মাত্রা (matra)'],
+    ['Side effects', 'পার্শ্বপ্রতিক্রিয়া (parshwoprotikriya)'],
     ['Allergy', 'অ্যালার্জি'],
     ['Consent form', 'সম্মতি ফর্ম (shommoti form)'],
+    ['Informed consent', 'অবহিত সম্মতি (obhohit shommoti)'],
+    ['Chronic disease', 'দীর্ঘমেয়াদী রোগ (dirghmeyadi rog)'],
+    ['Diabetes', 'ডায়াবেটিস'],
+    ['Blood pressure', 'রক্তচাপ (rokto chap)'],
+    ['Heart attack', 'হার্ট অ্যাটাক'],
+    ['Stroke', 'স্ট্রোক'],
+    ['Vaccination / Immunisation', 'টিকা (tika)'],
+    ['Waiting list', 'অপেক্ষার তালিকা (opekkhar talika)'],
+    ['Hospital discharge', 'হাসপাতাল থেকে ছাড়া (haspatal theke chara)'],
+    ['Physiotherapy', 'ফিজিওথেরাপি'],
+    ['Chemotherapy', 'কেমোথেরাপি'],
+    ['Palliative care', 'উপশমকারী যত্ন (uposhomkari joton)'],
+    ['Community health centre', 'সামাজিক স্বাস্থ্য কেন্দ্র'],
+    ['After-hours clinic', 'ঘণ্টা-পরবর্তী ক্লিনিক (ghonta-porobôrti clinic)'],
   ]},
   { topic: '🏛 Centrelink & Social Services', color: 'var(--amber-text)', bg: 'var(--amber-bg)', terms: [
     ['Centrelink', 'সেন্টারলিংক'],
     ['Welfare / Social support', 'সামাজিক কল্যাণ (shamajik kolyan)'],
     ['Allowance / Benefit', 'ভাতা (bhata)'],
     ['Pension', 'পেনশন'],
+    ['Aged Pension', 'বৃদ্ধ পেনশন (briddho pension)'],
     ['JobSeeker Payment', 'জব সিকার পেমেন্ট'],
+    ['Youth Allowance', 'যুব ভাতা (jubo bhata)'],
+    ['Carer Payment', 'পরিচর্যা পেমেন্ট'],
     ['Family Tax Benefit', 'পারিবারিক কর সুবিধা'],
     ['Disability Support Pension', 'প্রতিবন্ধী সহায়তা পেনশন'],
+    ['Crisis payment', 'সংকটকালীন পেমেন্ট (shongkotkalin payment)'],
     ['Income', 'আয় (ay)'],
     ['Assets', 'সম্পদ (shompod)'],
+    ['Income statement', 'আয়ের বিবরণী (ayer biboroni)'],
+    ['Tax file number', 'ট্যাক্স ফাইল নম্বর'],
     ['Application form', 'আবেদন ফর্ম (abedon form)'],
     ['Supporting documents', 'সহায়ক নথি (shohayok nothi)'],
+    ['Identity documents', 'পরিচয় নথি (porichoy nothi)'],
     ['Concession card', 'ছাড়পত্র কার্ড (charpotra card)'],
     ['Mutual obligations', 'পারস্পরিক বাধ্যবাধকতা'],
+    ['Reporting requirements', 'রিপোর্টিং প্রয়োজনীয়তা'],
     ['Nominee / Representative', 'মনোনীত ব্যক্তি (mononito byokti)'],
     ['Overpayment', 'অতিরিক্ত প্রদান (otirikto prodan)'],
+    ['Review / Appeal', 'পর্যালোচনা / আপিল (porjalochona / appeal)'],
+    ['Interview', 'সাক্ষাৎকার (sakshatkar)'],
   ]},
   { topic: '🛂 Immigration & Visa', color: 'var(--teal-text)', bg: 'var(--teal-bg)', terms: [
     ['Visa', 'ভিসা'],
     ['Passport', 'পাসপোর্ট'],
     ['Permanent residency', 'স্থায়ী বসবাস (sthayi boshos)'],
     ['Temporary visa', 'অস্থায়ী ভিসা (osthayi visa)'],
+    ['Student visa', 'ছাত্র ভিসা (chhatro visa)'],
+    ['Partner visa', 'পার্টনার ভিসা'],
+    ['Parent visa', 'অভিভাবক ভিসা'],
+    ['Skilled migration', 'দক্ষ অভিবাসন (dokho obhibashon)'],
+    ['Bridging visa', 'ব্রিজিং ভিসা'],
+    ['Visa conditions', 'ভিসার শর্ত (visar shôrto)'],
+    ['Overstay', 'মেয়াদ অতিক্রম (meyad otikhrom)'],
     ['Citizenship', 'নাগরিকত্ব (nagorikotto)'],
     ['Refugee', 'শরণার্থী (shoronarthi)'],
     ['Asylum seeker', 'আশ্রয়প্রার্থী (ashroypratrthi)'],
+    ['Detention centre', 'আটক কেন্দ্র (atok kendra)'],
+    ['Deportation', 'বহিষ্কার (bohishkar)'],
     ['Department of Home Affairs', 'স্বরাষ্ট্র বিভাগ'],
-    ['Work permit', 'কর্মসংস্থান অনুমতি (kormoshshonthan onumoti)'],
+    ['Work permit', 'কর্মসংস্থান অনুমতি'],
     ['Sponsor', 'স্পনসর'],
     ['Migration agent', 'মাইগ্রেশন এজেন্ট'],
-    ['Bridging visa', 'ব্রিজিং ভিসা'],
     ['Character assessment', 'চরিত্র মূল্যায়ন (choritr mullayon)'],
     ['Health check', 'স্বাস্থ্য পরীক্ষা (swasthyo poriksha)'],
-    ['Arrival date', 'আগমনের তারিখ (agomoner tarikho)'],
+    ['Travel document', 'ভ্রমণ নথি (bhromon nothi)'],
+    ['Dependent child', 'আশ্রিত শিশু (ashriot shishu)'],
+    ['Points test', 'পয়েন্ট পরীক্ষা (point poriksha)'],
   ]},
   { topic: '⚖️ Legal & Court', color: 'var(--purple-text)', bg: 'var(--purple-bg)', terms: [
     ['Court', 'আদালত (adalot)'],
-    ['Lawyer / Solicitor', 'আইনজীবী (ainjibi)'],
+    ['Magistrate', 'ম্যাজিস্ট্রেট'],
     ['Judge', 'বিচারক (bicharok)'],
+    ['Lawyer / Solicitor', 'আইনজীবী (ainjibi)'],
     ['Legal aid', 'আইনি সহায়তা (aini shohayota)'],
     ['Statement', 'বিবৃতি (bibhriti)'],
+    ['Affidavit', 'হলফনামা (holofnama)'],
     ['Evidence', 'প্রমাণ (proman)'],
+    ['Witness', 'সাক্ষী (shakshi)'],
     ['Hearing', 'শুনানি (shunani)'],
+    ['Verdict', 'রায় (ray)'],
+    ['Sentence', 'সাজা (shaja)'],
+    ['Charge', 'অভিযোগ (obhiyog)'],
+    ['Conviction', 'দোষী সাব্যস্ত (doshi shabyosto)'],
+    ['Appeal', 'আপিল'],
+    ['Bail', 'জামিন (jamin)'],
+    ['Probation', 'প্রবেশন'],
+    ['Community service order', 'সমাজসেবা আদেশ (shomajsheba adesh)'],
     ['Fine / Penalty', 'জরিমানা (jorimana)'],
     ['Police', 'পুলিশ'],
     ['Domestic violence', 'পারিবারিক সহিংসতা (paribharik shohingshota)'],
     ['Restraining order', 'নিষেধাজ্ঞা (nishedhagya)'],
-    ['Bail', 'জামিন (jamin)'],
-    ['Charge', 'অভিযোগ (obhiyog)'],
-    ['Conviction', 'দোষী সাব্যস্ত (doshi shabyosto)'],
+    ['Power of attorney', 'আইনি মুখত্যার (aini mukhtyar)'],
+    ['Subpoena', 'আদালতের তলব (adalôter tolob)'],
     ['Interpreter oath', 'দোভাষীর শপথ (dobhashir shopath)'],
   ]},
   { topic: '🏠 Housing & Rental', color: 'var(--green-text)', bg: 'var(--green-bg)', terms: [
     ['Rental / Rent', 'ভাড়া (bhara)'],
     ['Lease agreement', 'লিজ চুক্তি (leej chukthi)'],
+    ['Fixed-term lease', 'নির্দিষ্ট মেয়াদী লিজ (nirdishto meyadi leej)'],
+    ['Periodic lease', 'পর্যায়ক্রমিক লিজ'],
     ['Tenant', 'ভাড়াটে (bharate)'],
     ['Landlord', 'বাড়িওয়ালা (bariwala)'],
     ['Real estate agent', 'রিয়েল এস্টেট এজেন্ট'],
-    ['Public housing', 'সরকারি আবাসন (shorkari abasun)'],
+    ['Rental application', 'ভাড়ার আবেদন (bharar abedon)'],
+    ['Reference check', 'রেফারেন্স যাচাই'],
     ['Bond / Security deposit', 'জামানত (jamanat)'],
+    ['Public housing', 'সরকারি আবাসন (shorkari abasun)'],
+    ['Social housing', 'সামাজিক আবাসন (shamajik abasun)'],
     ['Eviction', 'উচ্ছেদ (ucched)'],
-    ['Maintenance / Repairs', 'রক্ষণাবেক্ষণ (rokshonabekhon)'],
-    ['Utility bills', 'ইউটিলিটি বিল'],
     ['Notice to vacate', 'খালি করার নোটিশ (khali korar notice)'],
+    ['Routine inspection', 'নিয়মিত পরিদর্শন (niyomit poridorshon)'],
+    ['Maintenance / Repairs', 'রক্ষণাবেক্ষণ (rokshonabekhon)'],
+    ['Mould / Damp', 'ছত্রাক / স্যাঁতসেঁতে (chotrak / shatsete)'],
+    ['Smoke alarm', 'ধোঁয়া সংকেত (dhoya shongket)'],
+    ['Utility bills', 'ইউটিলিটি বিল'],
+    ['Water rates', 'পানির বিল (panir bill)'],
+    ['Council rates', 'কাউন্সিল কর (council kor)'],
     ['Rental tribunal', 'ভাড়া ট্রাইব্যুনাল'],
   ]},
   { topic: '🧠 Mental Health', color: 'var(--pink-text)', bg: 'var(--pink-bg)', terms: [
     ['Depression', 'বিষণ্নতা (bishhonnota)'],
     ['Anxiety', 'উদ্বেগ (udbeg)'],
     ['Stress', 'মানসিক চাপ (manoshik chap)'],
+    ['PTSD', 'অতীত আঘাতজনিত মানসিক ব্যাধি'],
+    ['Bipolar disorder', 'দ্বিপোলার ব্যাধি (dwipoler byadhi)'],
+    ['Schizophrenia', 'সিজোফ্রেনিয়া'],
+    ['Eating disorder', 'খাদ্যাভ্যাস ব্যাধি (khadyabhyas byadhi)'],
+    ['Substance abuse', 'মাদকাসক্তি (madokashokti)'],
+    ['Addiction', 'আসক্তি (ashokti)'],
     ['Counsellor', 'পরামর্শদাতা (poramorshdata)'],
     ['Psychologist', 'মনোবিজ্ঞানী (monobiggyani)'],
     ['Psychiatrist', 'মনোরোগ বিশেষজ্ঞ (monorog bisheshoggyo)'],
     ['Therapy / Counselling', 'থেরাপি / পরামর্শ'],
+    ['Inpatient treatment', 'ভর্তি রোগীর চিকিৎসা (bhorti rogir chikitsha)'],
     ['Crisis', 'সংকট (shongkot)'],
+    ['Safety plan', 'নিরাপত্তা পরিকল্পনা (nirapotta porikôlpona)'],
     ['Suicide / Self-harm', 'আত্মহত্যা / নিজেকে আঘাত করা'],
+    ['Lifeline (crisis line)', 'লাইফলাইন'],
+    ['Relapse', 'পুনরায় অসুস্থ হওয়া (punoray oshushto howa)'],
     ['Referral to specialist', 'বিশেষজ্ঞের কাছে পাঠানো'],
     ['Mental health plan', 'মানসিক স্বাস্থ্য পরিকল্পনা'],
     ['Medication compliance', 'ওষুধ নিয়মিত খাওয়া'],
+    ['Community support', 'সামাজিক সহায়তা (shamajik shohayota)'],
   ]},
   { topic: '👨‍👩‍👧 Family, Children & Education', color: 'var(--amber-text)', bg: 'var(--amber-bg)', terms: [
     ['School enrolment', 'বিদ্যালয়ে ভর্তি (bidyalay-e bhorti)'],
+    ['School attendance', 'বিদ্যালয়ে উপস্থিতি (bidyalaye uposhthiti)'],
+    ['Principal', 'প্রধান শিক্ষক (prodhan shikkhok)'],
     ['Childcare', 'শিশু যত্ন (shishu joton)'],
-    ['Family court', 'পারিবারিক আদালত (paribharik adalot)'],
+    ['Child protection', 'শিশু সুরক্ষা (shishu shurokkha)'],
+    ['Foster care', 'পালিত পরিবার (palit poribar)'],
+    ['Guardian', 'অভিভাবক (obhibhabak)'],
     ['Custody', 'হেফাজত (hefajot)'],
     ['Child support', 'শিশু সহায়তা (shishu shohayota)'],
-    ['Guardian', 'অভিভাবক (obhibhabak)'],
+    ['Parenting order', 'অভিভাবকত্বের আদেশ (obhibhabokotter adesh)'],
+    ['Family court', 'পারিবারিক আদালত (paribharik adalot)'],
+    ['Family dispute resolution', 'পারিবারিক বিবাদ নিষ্পত্তি'],
+    ['Mediation', 'মধ্যস্থতা (modhyoshthota)'],
     ['Domestic dispute', 'পারিবারিক বিবাদ (paribharik bibad)'],
-    ['Foster care', 'পালিত পরিবার (palit poribar)'],
-    ['Child protection', 'শিশু সুরক্ষা (shishu shurokkha)'],
+    ['Family violence', 'পারিবারিক সহিংসতা (paribharik shohingshota)'],
+    ['Separation', 'বিচ্ছেদ (bicchhod)'],
+    ['Divorce', 'বিবাহবিচ্ছেদ (bibaho-bicchhod)'],
+    ['Birth certificate', 'জন্ম সনদ (jonmo shonod)'],
+    ['Marriage certificate', 'বিবাহ সনদ (bibaho shonod)'],
     ['Report to DHHS', 'সরকারি শিশু কল্যাণে রিপোর্ট'],
     ['Interpreter services', 'দোভাষী সেবা (dobhashi sheba)'],
+    ['Disability support (education)', 'শিক্ষা সহায়তা (shikkha shohayota)'],
+  ]},
+  { topic: '💼 Employment & Workplace', color: 'var(--teal-text)', bg: 'var(--teal-bg)', terms: [
+    ['Employment / Job', 'কর্মসংস্থান / চাকরি (chakri)'],
+    ['Employer', 'নিয়োগকর্তা (niyogokôrta)'],
+    ['Employee', 'কর্মী (kormi)'],
+    ['Full-time / Part-time', 'পূর্ণকালীন / খণ্ডকালীন'],
+    ['Casual employment', 'অনিয়মিত কর্মসংস্থান'],
+    ['Probation period', 'পরীক্ষামূলক সময়কাল (porikhamulok shomoykal)'],
+    ['Payslip', 'বেতন স্লিপ (beton slip)'],
+    ['Minimum wage', 'ন্যূনতম মজুরি (nyunôtôm mojuri)'],
+    ['Annual leave', 'বার্ষিক ছুটি (barshik chuti)'],
+    ['Sick leave', 'অসুস্থতার ছুটি (oshushtotar chuti)'],
+    ['Parental leave', 'পিতামাতার ছুটি (pitamatar chuti)'],
+    ['Redundancy', 'ছাঁটাই (chhatai)'],
+    ['Termination', 'চাকরি বাতিল (chakri batil)'],
+    ['Unfair dismissal', 'অন্যায় বরখাস্ত (onnayo borkhashto)'],
+    ['Workers compensation', 'শ্রমিক ক্ষতিপূরণ (shromik khotiporon)'],
+    ['Workplace injury', 'কর্মক্ষেত্রে আঘাত (kormokhetre aghat)'],
+    ['Workplace harassment', 'কর্মক্ষেত্রে হয়রানি (kormokhetre hoirani)'],
+    ['Fair Work Commission', 'ন্যায্য কাজ কমিশন'],
+    ['Trade union', 'শ্রমিক সংঘ (shromik shongho)'],
+    ['Tax return', 'কর রিটার্ন (kor return)'],
+    ['Superannuation', 'সুপারঅ্যানুয়েশন (retirement fund)'],
+    ['Employment contract', 'কর্মসংস্থান চুক্তি (kormo chukthi)'],
+  ]},
+  { topic: '♿ Disability & NDIS', color: 'var(--purple-text)', bg: 'var(--purple-bg)', terms: [
+    ['NDIS', 'এনডিআইএস (National Disability Insurance Scheme)'],
+    ['Disability', 'প্রতিবন্ধিতা (protibandhita)'],
+    ['Support worker', 'সহায়তা কর্মী (shohayota kormi)'],
+    ['Plan manager', 'পরিকল্পনা ব্যবস্থাপক'],
+    ['Support coordinator', 'সহায়তা সমন্বয়কারী (shohayota shomonnoykari)'],
+    ['NDIS plan', 'এনডিআইএস পরিকল্পনা'],
+    ['Annual review', 'বার্ষিক পর্যালোচনা (barshik porjalochona)'],
+    ['Reasonable and necessary', 'যুক্তিসঙ্গত ও প্রয়োজনীয়'],
+    ['Functional capacity', 'কার্যকরী সক্ষমতা (karyokori shokhomota)'],
+    ['Occupational therapist', 'পেশাগত থেরাপিস্ট'],
+    ['Speech pathologist', 'বাক বিজ্ঞানী (bak biggyani)'],
+    ['Physiotherapist', 'ফিজিওথেরাপিস্ট'],
+    ['Allied health', 'সহযোগী স্বাস্থ্যসেবা'],
+    ['Early intervention', 'প্রারম্ভিক হস্তক্ষেপ (prarombhik hoshtokhep)'],
+    ['Carer', 'পরিচর্যাকারী (poricharja-kari)'],
+    ['Respite care', 'বিশ্রামকালীন পরিচর্যা (bishramkalin poricharja)'],
+    ['Assistive technology', 'সহায়ক প্রযুক্তি (shohayok projukti)'],
+    ['Accommodation support', 'আবাসন সহায়তা (abasun shohayota)'],
+    ['Day program', 'দৈনিক কার্যক্রম (doinik karyokrom)'],
+    ['Independent living', 'স্বাধীন জীবনযাপন (shadheen jibonjapan)'],
+  ]},
+  { topic: '🚗 Transport & Driving', color: 'var(--green-text)', bg: 'var(--green-bg)', terms: [
+    ["Driver's licence", 'ড্রাইভিং লাইসেন্স'],
+    ['Vehicle registration', 'যানবাহন নিবন্ধন (janbahin nibondhan)'],
+    ['Traffic infringement', 'ট্রাফিক লঙ্ঘন (traffic longhon)'],
+    ['Speeding fine', 'দ্রুতগতির জরিমানা (drutogtir jorimana)'],
+    ['Demerit points', 'ডিমেরিট পয়েন্ট'],
+    ['Licence suspension', 'লাইসেন্স স্থগিত (licence sthogit)'],
+    ['Roadworthy certificate', 'সড়কযোগ্য সনদ (shorokjogyo shonod)'],
+    ['Vehicle inspection', 'যানবাহন পরিদর্শন (janbahin poridorshon)'],
+    ['Insurance claim', 'বীমা দাবি (bima dabi)'],
+    ['At-fault accident', 'দায়ী দুর্ঘটনা (dayi durghotona)'],
+    ['Public transport', 'গণপরিবহন (gonporibohon)'],
+    ['Myki / Transport card', 'মাইকি / পরিবহন কার্ড'],
+    ['Road rules', 'সড়ক বিধি (shorok bidhi)'],
+    ['Breath test', 'শ্বাস পরীক্ষা (shwash poriksha)'],
+    ['Drug and alcohol test', 'মাদক ও মদ পরীক্ষা (madok o môd poriksha)'],
   ]},
 ];
 let _naatiProgress = null;
@@ -4580,6 +4736,11 @@ function naatiToggle(id) {
   const p = naatiGetProgress();
   p[id] = !p[id];
   dbSet('zarif_naati_progress', p);
+  renderNaatiPage();
+}
+function naatiTogglePlan() {
+  const planEl = document.getElementById('naati-plan');
+  if (planEl) planEl.dataset.expanded = planEl.dataset.expanded === '1' ? '0' : '1';
   renderNaatiPage();
 }
 function naatiToggleVocab(topicIdx) {
@@ -4600,7 +4761,35 @@ function renderNaatiPage() {
   const planEl = document.getElementById('naati-plan');
   if (planEl) {
     const p = naatiGetProgress();
-    planEl.innerHTML = NAATI_PLAN.map(week => {
+    const allTasks = NAATI_PLAN.flatMap(w => w.tasks);
+    const totalDone = allTasks.filter(t => p[t.id]).length;
+    const totalAll = allTasks.length;
+    const overallPct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
+    const nextTask = allTasks.find(t => !p[t.id]);
+    const allDone = !nextTask;
+    const expanded = planEl.dataset.expanded === '1';
+
+    let nextHtml = '';
+    if (allDone) {
+      nextHtml = `<div class="naati-plan-all-done"><i class="ti ti-trophy"></i> All tasks complete — good luck on the 29th!</div>`;
+    } else {
+      nextHtml = `<div class="naati-next-task" onclick="naatiToggle('${nextTask.id}')" style="cursor:pointer;">
+        <div class="naati-next-task-icon"><i class="ti ti-bolt"></i></div>
+        <div class="naati-next-task-body">
+          <div class="naati-next-task-label">Up next</div>
+          <div class="naati-next-task-text">${nextTask.text}</div>
+          <div class="naati-next-task-date"><i class="ti ti-calendar"></i> ${nextTask.date}</div>
+        </div>
+        <div class="naati-task-cb" style="margin-top:2px;"><i class="ti ti-check"></i></div>
+      </div>`;
+    }
+
+    const progressBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div class="naati-plan-week-bar" style="flex:1;"><div class="naati-plan-week-fill" style="width:${overallPct}%"></div></div>
+      <span class="naati-plan-week-pct">${totalDone}/${totalAll} · ${overallPct}%</span>
+    </div>`;
+
+    const allWeeksHtml = expanded ? `<div class="naati-plan-expanded">${NAATI_PLAN.map(week => {
       const total = week.tasks.length;
       const done = week.tasks.filter(t => p[t.id]).length;
       const pct = total ? Math.round(done / total * 100) : 0;
@@ -4615,7 +4804,14 @@ function renderNaatiPage() {
           <div class="naati-task-text">${t.text}<span class="naati-task-date">${t.date}</span></div>
         </div>`).join('')}
       </div>`;
-    }).join('');
+    }).join('')}</div>` : '';
+
+    const toggleBtn = `<button class="naati-plan-toggle" onclick="naatiTogglePlan()">
+      <i class="ti ti-chevron-${expanded ? 'up' : 'down'}"></i>
+      ${expanded ? 'Collapse plan' : 'Show all ' + totalAll + ' tasks'}
+    </button>`;
+
+    planEl.innerHTML = progressBar + nextHtml + toggleBtn + allWeeksHtml;
   }
   // Vocabulary (render once — preserve open/close state)
   const vocabEl = document.getElementById('naati-vocab');
