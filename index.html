@@ -2455,6 +2455,16 @@
     <div id="pnotes-sections" class="pnotes-grid"></div>
   </div>
 
+  <!-- LEARNING PAGE -->
+  <div class="page" id="page-learning">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-school" style="color:var(--teal-text);"></i> Learning</h1>
+        <p>Courses, books, tutorials and things you want to learn.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- TASKS PAGE -->
   <div class="page" id="page-tasks">
 
@@ -6934,6 +6944,7 @@ const PAGES = {
   wishlist:       { title:'Wishlist',        icon:'ti-sparkles',        color:'c-purple', desc:'Ideas and future features for this project.' },
   insights:       { title:'Insights',        icon:'ti-chart-pie',       color:'c-green',  desc:'At-a-glance productivity dashboard: completions, streak, meetings & AI usage.' },
   notes:          { title:'Personal Notes',   icon:'ti-pencil',          color:'c-pink',   desc:'Grocery lists, errands, calls — jot it down and turn it into a personal task. Separate from the Scratch Pad widget.' },
+  learning:       { title:'Learning',          icon:'ti-school',           color:'c-teal',   desc:'Courses, books, tutorials and things you want to learn.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -6944,7 +6955,7 @@ const HUB_META = {
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','nsla','meetings','message','templates','standup'],
   projects: ['meetings'],
-  personal: ['wishlist','insights','notes'],
+  personal: ['wishlist','insights','notes','learning'],
 };
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -6954,6 +6965,7 @@ function loadHubLayout() {
     const list = Array.isArray(saved[h]) ? saved[h].filter(p => PAGES[p]) : DEFAULT_HUB_LAYOUT[h].slice();
     // Migration: existing saved layouts predate the Scratchpad page — add it to Personal once.
     if (h === 'personal' && !list.includes('notes')) list.push('notes');
+    if (h === 'personal' && !list.includes('learning')) list.push('learning');
     // Migration: existing saved layouts predate the NSLA Report page — add it to Helpdesk once.
     if (h === 'helpdesk' && !list.includes('nsla')) list.push('nsla');
     layout[h] = list;
