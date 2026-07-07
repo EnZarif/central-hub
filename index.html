@@ -1804,6 +1804,55 @@
   .waag-detail-empty { font-size: 12.5px; color: var(--text-3); text-align: center; padding: 14px; }
   .pixoff-hint.show { display: block; }
   .pixoff-hint code { background: var(--surface2); padding: 1px 5px; border-radius: 5px; }
+
+  /* ===== LEARNING / NAATI CCL ===== */
+  .naati-hero { display: flex; align-items: center; gap: 16px; padding: 18px 20px; background: linear-gradient(135deg, #0f4c75 0%, #1b6ca8 100%); border-radius: var(--radius); margin-bottom: 4px; }
+  .naati-hero-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .naati-hero-text { flex: 1; }
+  .naati-hero-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .naati-hero-sub { font-size: 12.5px; color: rgba(255,255,255,0.72); }
+  .naati-countdown { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; background: rgba(255,255,255,0.12); border-radius: 12px; padding: 10px 16px; }
+  .naati-countdown-n { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+  .naati-countdown-l { font-size: 10px; color: rgba(255,255,255,0.65); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .naati-meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .naati-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.85); font-weight: 500; }
+  .naati-plan-week { margin-bottom: 18px; }
+  .naati-plan-week-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .naati-plan-week-label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .naati-plan-week-bar { flex: 1; height: 4px; background: var(--border-md); border-radius: 99px; overflow: hidden; }
+  .naati-plan-week-fill { height: 100%; border-radius: 99px; background: var(--teal); width: 0%; transition: width 0.5s ease; }
+  .naati-plan-week-pct { font-size: 11px; font-weight: 600; color: var(--teal-text); min-width: 28px; text-align: right; }
+  .naati-task { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background 0.12s; user-select: none; }
+  .naati-task:hover { background: var(--surface2); }
+  .naati-task.done .naati-task-text { text-decoration: line-through; color: var(--text-3); }
+  .naati-task-cb { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid var(--border-md); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; background: transparent; transition: background 0.12s, border-color 0.12s, color 0.12s; }
+  .naati-task.done .naati-task-cb { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .naati-task-text { font-size: 13px; color: var(--text); line-height: 1.45; }
+  .naati-task-date { font-size: 11px; color: var(--text-3); font-weight: 500; margin-top: 1px; display: block; }
+  .naati-vocab-topic { margin-bottom: 12px; border: 1px solid var(--border-md); border-radius: var(--radius); overflow: hidden; }
+  .naati-vocab-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; background: var(--surface2); user-select: none; transition: background 0.12s; }
+  .naati-vocab-head:hover { background: var(--border); }
+  .naati-vocab-head-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .naati-vocab-head-count { font-size: 11px; color: var(--text-3); }
+  .naati-vocab-head-chev { font-size: 12px; color: var(--text-3); transition: transform 0.2s; }
+  .naati-vocab-topic.open .naati-vocab-head-chev { transform: rotate(90deg); }
+  .naati-vocab-body { display: none; padding: 4px 0 8px; }
+  .naati-vocab-topic.open .naati-vocab-body { display: block; }
+  .naati-vocab-table { width: 100%; border-collapse: collapse; }
+  .naati-vocab-table tr:nth-child(even) td { background: var(--surface2); }
+  .naati-vocab-table td { padding: 6px 14px; font-size: 12.5px; vertical-align: top; }
+  .naati-vocab-table td:first-child { color: var(--text); font-weight: 500; width: 45%; }
+  .naati-vocab-table td:last-child { color: var(--teal-text); }
+  .naati-strat-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .naati-strat-item:last-child { border-bottom: none; }
+  .naati-strat-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .naati-strat-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .naati-strat-text strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
+  .naati-res-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-md); background: var(--surface2); text-decoration: none; color: var(--text); margin-bottom: 8px; transition: border-color 0.15s, background 0.15s; cursor: pointer; }
+  .naati-res-link:hover { border-color: var(--teal); background: var(--teal-bg); }
+  .naati-res-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--teal-bg); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .naati-res-text { flex: 1; font-size: 13px; font-weight: 500; }
+  .naati-res-sub { font-size: 11.5px; color: var(--text-3); margin-top: 1px; font-weight: 400; }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Scratchpad → Task modal */
   .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
@@ -2464,9 +2513,106 @@
       </div>
     </div>
 
+    <!-- NAATI CCL SECTION -->
     <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><i class="ti ti-language" style="color:var(--teal-text);font-size:13px;"></i> Naati CCL</div>
+      <div class="card-title"><i class="ti ti-language" style="color:var(--teal-text);font-size:13px;"></i> Naati CCL — Bengali / Bangla</div>
+
+      <!-- Hero countdown -->
+      <div class="naati-hero" id="naati-hero">
+        <div class="naati-hero-icon">🇦🇺</div>
+        <div class="naati-hero-text">
+          <div class="naati-hero-title">NAATI CCL — Bengali / Bangla</div>
+          <div class="naati-hero-sub">Tuesday 29 July 2026 · Community Language Credential</div>
+          <div class="naati-meta-row">
+            <span class="naati-badge"><i class="ti ti-clock"></i> ~30 minutes</span>
+            <span class="naati-badge"><i class="ti ti-messages"></i> 2 dialogues (~300 words each)</span>
+            <span class="naati-badge"><i class="ti ti-target"></i> Pass: 29/63 pts per segment</span>
+          </div>
+        </div>
+        <div class="naati-countdown" id="naati-countdown">
+          <div class="naati-countdown-n" id="naati-days">—</div>
+          <div class="naati-countdown-l">days left</div>
+        </div>
+      </div>
     </div>
+
+    <!-- Action Plan -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><i class="ti ti-calendar-check" style="color:var(--teal-text);font-size:13px;"></i> Action Plan</div>
+
+      <div id="naati-plan"></div>
+    </div>
+
+    <!-- Key Vocabulary -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><i class="ti ti-vocabulary" style="color:var(--amber-text);font-size:13px;"></i> Key Vocabulary by Topic</div>
+      <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">Click a topic to expand. Learn these terms in both directions — English → Bengali and Bengali → English.</p>
+      <div id="naati-vocab"></div>
+    </div>
+
+    <!-- Strategies -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><i class="ti ti-bulb" style="color:var(--green-text);font-size:13px;"></i> Exam Strategies</div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-notes"></i></div>
+        <div class="naati-strat-text"><strong>Note-taking: symbols, not words</strong>Use arrows (→), numbers, abbreviations. Never try to write full sentences — you'll miss the next line.</div>
+      </div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-brain"></i></div>
+        <div class="naati-strat-text"><strong>Interpret meaning, not words</strong>The exam scores on meaning transfer, not literal translation. A natural-sounding interpretation scores higher than a word-for-word one that sounds robotic.</div>
+      </div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--green-bg);color:var(--green-text);"><i class="ti ti-microphone"></i></div>
+        <div class="naati-strat-text"><strong>Match register and tone</strong>If the caseworker sounds formal, your Bengali should sound formal. If the client sounds distressed, don't flatten it to a neutral monotone.</div>
+      </div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-number"></i></div>
+        <div class="naati-strat-text"><strong>Handle numbers and dates precisely</strong>Dates, dollar amounts, phone numbers, dosages — these are high-stakes. Write them down immediately. A wrong number can fail a segment.</div>
+      </div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--purple-bg);color:var(--purple-text);"><i class="ti ti-refresh"></i></div>
+        <div class="naati-strat-text"><strong>Chunk and render</strong>Listen to one full sentence or short exchange, then interpret. Don't start speaking while still hearing — pause, process, then deliver confidently.</div>
+      </div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-player-record"></i></div>
+        <div class="naati-strat-text"><strong>Record yourself weekly</strong>Listening back is uncomfortable but invaluable. You'll catch false starts, filler words, missed terminology, and tone issues you can't notice in the moment.</div>
+      </div>
+      <div class="naati-strat-item">
+        <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
+        <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Sleep is the best preparation at that stage — memory consolidation happens during sleep, not last-minute study.</div>
+      </div>
+    </div>
+
+    <!-- Resources -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><i class="ti ti-link" style="color:var(--purple-text);font-size:13px;"></i> Resources</div>
+      <div onclick="window.open('https://www.naati.com.au/become-certified/ccl/','_blank')" class="naati-res-link">
+        <div class="naati-res-icon" style="background:var(--teal-bg);color:var(--teal-text);"><i class="ti ti-world"></i></div>
+        <div><div class="naati-res-text">NAATI Official CCL Page</div><div class="naati-res-sub">Exam format, scoring rubric, sample materials — start here</div></div>
+        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+      </div>
+      <div onclick="window.open('https://www.youtube.com/results?search_query=NAATI+CCL+Bengali+practice','_blank')" class="naati-res-link">
+        <div class="naati-res-icon" style="background:#ff000022;color:#ff4444;"><i class="ti ti-brand-youtube"></i></div>
+        <div><div class="naati-res-text">YouTube — NAATI CCL Bengali Practice</div><div class="naati-res-sub">Search for mock dialogues, tips, and coaching sessions in Bengali</div></div>
+        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+      </div>
+      <div onclick="window.open('https://naaticcl.com.au/','_blank')" class="naati-res-link">
+        <div class="naati-res-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-school"></i></div>
+        <div><div class="naati-res-text">NAATI CCL Practice Hub</div><div class="naati-res-sub">Third-party practice dialogues and coaching resources</div></div>
+        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+      </div>
+      <div onclick="window.open('https://apps.apple.com/au/app/anki-flashcards/id373493387','_blank')" class="naati-res-link">
+        <div class="naati-res-icon" style="background:var(--coral-bg);color:var(--coral-text);"><i class="ti ti-cards"></i></div>
+        <div><div class="naati-res-text">Anki — Spaced Repetition Flashcards</div><div class="naati-res-sub">Create Bengali terminology decks — the fastest way to drill vocab retention</div></div>
+        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+      </div>
+      <div onclick="window.open('https://www.facebook.com/groups/naaticcl','_blank')" class="naati-res-link">
+        <div class="naati-res-icon" style="background:#1877f222;color:#1877f2;"><i class="ti ti-brand-facebook"></i></div>
+        <div><div class="naati-res-text">NAATI CCL Facebook Group</div><div class="naati-res-sub">Community of CCL candidates — tips, materials, shared experiences</div></div>
+        <i class="ti ti-external-link" style="color:var(--text-3);font-size:13px;"></i>
+      </div>
+    </div>
+
   </div>
 
   <!-- TASKS PAGE -->
@@ -4144,6 +4290,221 @@ function pixoffDraw() {
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.fillText(pixoffAgentLabel(r).slice(0, 14), x, charTop + charH + 10);
   });
+}
+
+// ===== LEARNING — NAATI CCL =====
+const NAATI_EXAM_DATE = '2026-07-29';
+const NAATI_PLAN = [
+  { week: 'Week 1 · Jul 7–13 · Foundation', id: 'w1', tasks: [
+    { id: 't01', date: 'Jul 7',  text: 'Read the NAATI CCL official guidelines and mark rubric (naati.com.au)' },
+    { id: 't02', date: 'Jul 8',  text: 'Watch 2+ sample NAATI CCL Bengali dialogue recordings on YouTube' },
+    { id: 't03', date: 'Jul 9',  text: 'Study Medical & Health vocabulary (30+ terms) — both directions' },
+    { id: 't04', date: 'Jul 10', text: 'Study Centrelink & Social Services vocabulary' },
+    { id: 't05', date: 'Jul 11', text: 'Practise note-taking with any spoken Bengali audio — symbols only, no full words' },
+    { id: 't06', date: 'Jul 12', text: 'Study Immigration & Visa vocabulary + attempt 1 practice dialogue' },
+    { id: 't07', date: 'Jul 13', text: 'Review all Week 1 vocab + do 1 full timed mock dialogue' },
+  ]},
+  { week: 'Week 2 · Jul 14–20 · Practice', id: 'w2', tasks: [
+    { id: 't08', date: 'Jul 14', text: 'Study Legal & Court vocabulary' },
+    { id: 't09', date: 'Jul 15', text: 'Study Housing & Rental + Mental Health vocabulary' },
+    { id: 't10', date: 'Jul 16', text: 'Practice 2 full dialogues — Medical and Centrelink topics' },
+    { id: 't11', date: 'Jul 17', text: 'Practice 2 full dialogues — Immigration and Legal topics' },
+    { id: 't12', date: 'Jul 18', text: 'Record yourself interpreting a dialogue — listen back critically' },
+    { id: 't13', date: 'Jul 19', text: 'Address weak spots identified from your recording (vocab gaps, tone, pace)' },
+    { id: 't14', date: 'Jul 20', text: 'Full timed mock exam — 2 dialogues back-to-back, exam conditions' },
+  ]},
+  { week: 'Week 3 · Jul 21–27 · Refinement', id: 'w3', tasks: [
+    { id: 't15', date: 'Jul 21', text: 'Flashcard-style review of all vocabulary topics (Anki or handwritten)' },
+    { id: 't16', date: 'Jul 22', text: '2 practice dialogues — focus on matching register and natural delivery' },
+    { id: 't17', date: 'Jul 23', text: 'Targeted drill: numbers, dates, dollar amounts, dosages — practice handling precision' },
+    { id: 't18', date: 'Jul 24', text: 'Full mock exam #2 — self-score using the NAATI rubric, review errors' },
+    { id: 't19', date: 'Jul 25', text: 'Work on note-taking speed — practise chunking longer sentences' },
+    { id: 't20', date: 'Jul 26', text: 'Light session — 1 dialogue only, focus on confidence and flow' },
+    { id: 't21', date: 'Jul 27', text: 'Rest day — light vocabulary review only, no full practice' },
+  ]},
+  { week: 'Exam Week · Jul 28–29', id: 'w4', tasks: [
+    { id: 't22', date: 'Jul 28', text: 'No new material. Prepare documents, confirm venue, eat well, sleep early.' },
+    { id: 't23', date: 'Jul 29', text: '🎯 EXAM DAY — NAATI CCL Bengali. You\'ve got this.' },
+  ]},
+];
+const NAATI_VOCAB = [
+  { topic: '🏥 Medical & Health', color: 'var(--coral-text)', bg: 'var(--coral-bg)', terms: [
+    ['Doctor / GP', 'ডাক্তার (daktar)'],
+    ['Hospital', 'হাসপাতাল (haspatal)'],
+    ['Appointment', 'অ্যাপয়েন্টমেন্ট'],
+    ['Prescription', 'প্রেসক্রিপশন'],
+    ['Symptoms', 'লক্ষণ (lakkhon)'],
+    ['Diagnosis', 'রোগ নির্ণয় (rog nirnoy)'],
+    ['Treatment', 'চিকিৎসা (chikitsha)'],
+    ['Surgery / Operation', 'অপারেশন'],
+    ['Blood test', 'রক্ত পরীক্ষা (rokto poriksha)'],
+    ['X-ray', 'এক্স-রে'],
+    ['Referral', 'রেফারেল'],
+    ['Specialist', 'বিশেষজ্ঞ ডাক্তার (bisheshoggyo daktar)'],
+    ['Emergency', 'জরুরি অবস্থা (joruri abostha)'],
+    ['Ambulance', 'অ্যাম্বুলেন্স'],
+    ['Medicare', 'মেডিকেয়ার'],
+    ['Health insurance', 'স্বাস্থ্য বীমা (swasthyo bima)'],
+    ['Medication / Medicine', 'ওষুধ (oshud)'],
+    ['Dosage', 'মাত্রা (matra)'],
+    ['Allergy', 'অ্যালার্জি'],
+    ['Consent form', 'সম্মতি ফর্ম (shommoti form)'],
+  ]},
+  { topic: '🏛 Centrelink & Social Services', color: 'var(--amber-text)', bg: 'var(--amber-bg)', terms: [
+    ['Centrelink', 'সেন্টারলিংক'],
+    ['Welfare / Social support', 'সামাজিক কল্যাণ (shamajik kolyan)'],
+    ['Allowance / Benefit', 'ভাতা (bhata)'],
+    ['Pension', 'পেনশন'],
+    ['JobSeeker Payment', 'জব সিকার পেমেন্ট'],
+    ['Family Tax Benefit', 'পারিবারিক কর সুবিধা'],
+    ['Disability Support Pension', 'প্রতিবন্ধী সহায়তা পেনশন'],
+    ['Income', 'আয় (ay)'],
+    ['Assets', 'সম্পদ (shompod)'],
+    ['Application form', 'আবেদন ফর্ম (abedon form)'],
+    ['Supporting documents', 'সহায়ক নথি (shohayok nothi)'],
+    ['Concession card', 'ছাড়পত্র কার্ড (charpotra card)'],
+    ['Mutual obligations', 'পারস্পরিক বাধ্যবাধকতা'],
+    ['Nominee / Representative', 'মনোনীত ব্যক্তি (mononito byokti)'],
+    ['Overpayment', 'অতিরিক্ত প্রদান (otirikto prodan)'],
+  ]},
+  { topic: '🛂 Immigration & Visa', color: 'var(--teal-text)', bg: 'var(--teal-bg)', terms: [
+    ['Visa', 'ভিসা'],
+    ['Passport', 'পাসপোর্ট'],
+    ['Permanent residency', 'স্থায়ী বসবাস (sthayi boshos)'],
+    ['Temporary visa', 'অস্থায়ী ভিসা (osthayi visa)'],
+    ['Citizenship', 'নাগরিকত্ব (nagorikotto)'],
+    ['Refugee', 'শরণার্থী (shoronarthi)'],
+    ['Asylum seeker', 'আশ্রয়প্রার্থী (ashroypratrthi)'],
+    ['Department of Home Affairs', 'স্বরাষ্ট্র বিভাগ'],
+    ['Work permit', 'কর্মসংস্থান অনুমতি (kormoshshonthan onumoti)'],
+    ['Sponsor', 'স্পনসর'],
+    ['Migration agent', 'মাইগ্রেশন এজেন্ট'],
+    ['Bridging visa', 'ব্রিজিং ভিসা'],
+    ['Character assessment', 'চরিত্র মূল্যায়ন (choritr mullayon)'],
+    ['Health check', 'স্বাস্থ্য পরীক্ষা (swasthyo poriksha)'],
+    ['Arrival date', 'আগমনের তারিখ (agomoner tarikho)'],
+  ]},
+  { topic: '⚖️ Legal & Court', color: 'var(--purple-text)', bg: 'var(--purple-bg)', terms: [
+    ['Court', 'আদালত (adalot)'],
+    ['Lawyer / Solicitor', 'আইনজীবী (ainjibi)'],
+    ['Judge', 'বিচারক (bicharok)'],
+    ['Legal aid', 'আইনি সহায়তা (aini shohayota)'],
+    ['Statement', 'বিবৃতি (bibhriti)'],
+    ['Evidence', 'প্রমাণ (proman)'],
+    ['Hearing', 'শুনানি (shunani)'],
+    ['Fine / Penalty', 'জরিমানা (jorimana)'],
+    ['Police', 'পুলিশ'],
+    ['Domestic violence', 'পারিবারিক সহিংসতা (paribharik shohingshota)'],
+    ['Restraining order', 'নিষেধাজ্ঞা (nishedhagya)'],
+    ['Bail', 'জামিন (jamin)'],
+    ['Charge', 'অভিযোগ (obhiyog)'],
+    ['Conviction', 'দোষী সাব্যস্ত (doshi shabyosto)'],
+    ['Interpreter oath', 'দোভাষীর শপথ (dobhashir shopath)'],
+  ]},
+  { topic: '🏠 Housing & Rental', color: 'var(--green-text)', bg: 'var(--green-bg)', terms: [
+    ['Rental / Rent', 'ভাড়া (bhara)'],
+    ['Lease agreement', 'লিজ চুক্তি (leej chukthi)'],
+    ['Tenant', 'ভাড়াটে (bharate)'],
+    ['Landlord', 'বাড়িওয়ালা (bariwala)'],
+    ['Real estate agent', 'রিয়েল এস্টেট এজেন্ট'],
+    ['Public housing', 'সরকারি আবাসন (shorkari abasun)'],
+    ['Bond / Security deposit', 'জামানত (jamanat)'],
+    ['Eviction', 'উচ্ছেদ (ucched)'],
+    ['Maintenance / Repairs', 'রক্ষণাবেক্ষণ (rokshonabekhon)'],
+    ['Utility bills', 'ইউটিলিটি বিল'],
+    ['Notice to vacate', 'খালি করার নোটিশ (khali korar notice)'],
+    ['Rental tribunal', 'ভাড়া ট্রাইব্যুনাল'],
+  ]},
+  { topic: '🧠 Mental Health', color: 'var(--pink-text)', bg: 'var(--pink-bg)', terms: [
+    ['Depression', 'বিষণ্নতা (bishhonnota)'],
+    ['Anxiety', 'উদ্বেগ (udbeg)'],
+    ['Stress', 'মানসিক চাপ (manoshik chap)'],
+    ['Counsellor', 'পরামর্শদাতা (poramorshdata)'],
+    ['Psychologist', 'মনোবিজ্ঞানী (monobiggyani)'],
+    ['Psychiatrist', 'মনোরোগ বিশেষজ্ঞ (monorog bisheshoggyo)'],
+    ['Therapy / Counselling', 'থেরাপি / পরামর্শ'],
+    ['Crisis', 'সংকট (shongkot)'],
+    ['Suicide / Self-harm', 'আত্মহত্যা / নিজেকে আঘাত করা'],
+    ['Referral to specialist', 'বিশেষজ্ঞের কাছে পাঠানো'],
+    ['Mental health plan', 'মানসিক স্বাস্থ্য পরিকল্পনা'],
+    ['Medication compliance', 'ওষুধ নিয়মিত খাওয়া'],
+  ]},
+  { topic: '👨‍👩‍👧 Family, Children & Education', color: 'var(--amber-text)', bg: 'var(--amber-bg)', terms: [
+    ['School enrolment', 'বিদ্যালয়ে ভর্তি (bidyalay-e bhorti)'],
+    ['Childcare', 'শিশু যত্ন (shishu joton)'],
+    ['Family court', 'পারিবারিক আদালত (paribharik adalot)'],
+    ['Custody', 'হেফাজত (hefajot)'],
+    ['Child support', 'শিশু সহায়তা (shishu shohayota)'],
+    ['Guardian', 'অভিভাবক (obhibhabak)'],
+    ['Domestic dispute', 'পারিবারিক বিবাদ (paribharik bibad)'],
+    ['Foster care', 'পালিত পরিবার (palit poribar)'],
+    ['Child protection', 'শিশু সুরক্ষা (shishu shurokkha)'],
+    ['Report to DHHS', 'সরকারি শিশু কল্যাণে রিপোর্ট'],
+    ['Interpreter services', 'দোভাষী সেবা (dobhashi sheba)'],
+  ]},
+];
+let _naatiProgress = null;
+function naatiGetProgress() {
+  if (!_naatiProgress) _naatiProgress = dbGet('zarif_naati_progress') || {};
+  return _naatiProgress;
+}
+function naatiToggle(id) {
+  const p = naatiGetProgress();
+  p[id] = !p[id];
+  dbSet('zarif_naati_progress', p);
+  renderLearning();
+}
+function naatiToggleVocab(topicIdx) {
+  const el = document.querySelector(`.naati-vocab-topic[data-ti="${topicIdx}"]`);
+  if (el) el.classList.toggle('open');
+}
+function renderLearning() {
+  // Countdown
+  const daysEl = document.getElementById('naati-days');
+  if (daysEl) {
+    const examD = new Date(NAATI_EXAM_DATE + 'T00:00:00');
+    const todayD = new Date(ymd(now) + 'T00:00:00');
+    const diff = Math.ceil((examD - todayD) / 86400000);
+    daysEl.textContent = diff > 0 ? diff : diff === 0 ? '🎯' : 'Done';
+  }
+  // Action plan
+  const planEl = document.getElementById('naati-plan');
+  if (planEl) {
+    const p = naatiGetProgress();
+    planEl.innerHTML = NAATI_PLAN.map(week => {
+      const total = week.tasks.length;
+      const done = week.tasks.filter(t => p[t.id]).length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      return `<div class="naati-plan-week">
+        <div class="naati-plan-week-head">
+          <span class="naati-plan-week-label">${week.week}</span>
+          <div class="naati-plan-week-bar"><div class="naati-plan-week-fill" style="width:${pct}%"></div></div>
+          <span class="naati-plan-week-pct">${done}/${total}</span>
+        </div>
+        ${week.tasks.map(t => `<div class="naati-task${p[t.id] ? ' done' : ''}" onclick="naatiToggle('${t.id}')">
+          <div class="naati-task-cb"><i class="ti ti-check"></i></div>
+          <div class="naati-task-text">${t.text}<span class="naati-task-date">${t.date}</span></div>
+        </div>`).join('')}
+      </div>`;
+    }).join('');
+  }
+  // Vocabulary (only render once — preserve open/close state)
+  const vocabEl = document.getElementById('naati-vocab');
+  if (vocabEl && !vocabEl.children.length) {
+    vocabEl.innerHTML = NAATI_VOCAB.map((topic, i) => `
+      <div class="naati-vocab-topic" data-ti="${i}">
+        <div class="naati-vocab-head" onclick="naatiToggleVocab(${i})">
+          <span class="naati-vocab-head-title">${topic.topic}</span>
+          <span class="naati-vocab-head-count">${topic.terms.length} terms</span>
+          <i class="ti ti-chevron-right naati-vocab-head-chev"></i>
+        </div>
+        <div class="naati-vocab-body">
+          <table class="naati-vocab-table">
+            ${topic.terms.map(([en, bn]) => `<tr><td>${en}</td><td>${bn}</td></tr>`).join('')}
+          </table>
+        </div>
+      </div>`).join('');
+  }
 }
 
 function initPixoff() {
@@ -7070,6 +7431,7 @@ function showPage(p, hub) {
   // Surface the end-of-day wrap toast on arrival if it's already past 4:45pm
   if (p === 'tasks' && typeof checkEodWrap === 'function') checkEodWrap(melbNowMinutes());
   if (p === 'widgets' && typeof renderWeekAtAGlance === 'function') renderWeekAtAGlance();
+  if (p === 'learning' && typeof renderLearning === 'function') renderLearning();
   window.scrollTo(0, 0);
 }
 
@@ -13923,6 +14285,7 @@ async function initApp() {
   initPixoff();
   renderWeekAtAGlance();
   renderAccountSettings();
+  renderLearning();
   initWidgetReorder();
 }
 
