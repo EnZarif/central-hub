@@ -1925,15 +1925,19 @@
   .ndlg-scenario { font-size: 13px; color: var(--text-3); font-style: italic; }
   .ndlg-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
   .ndlg-nav .naati-vocab-nav-btn { padding: 9px 14px; font-size: 13px; }
-  .ndlg-thread { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-  .ndlg-turn { border-radius: 12px; padding: 14px 16px; border: 1.5px solid var(--border-md); }
-  .ndlg-turn.ndlg-a { background: var(--surface2); border-color: var(--border-md); }
+  .ndlg-col-header { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1px; margin-bottom: 6px; }
+  .ndlg-col-header span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-3); padding: 0 16px 6px; }
+  .ndlg-col-header span:last-child { border-left: 1px solid var(--border-md); color: var(--teal-text); }
+  .ndlg-thread { display: flex; flex-direction: column; gap: 8px; }
+  .ndlg-turn { border-radius: 12px; padding: 12px 16px; border: 1.5px solid var(--border-md); }
+  .ndlg-turn.ndlg-a { background: var(--surface2); }
   .ndlg-turn.ndlg-b { background: var(--teal-bg); border-color: var(--teal); }
-  .ndlg-role { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 7px; }
+  .ndlg-role { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 8px; }
   .ndlg-turn.ndlg-b .ndlg-role { color: var(--teal-text); }
-  .ndlg-en { font-size: 16px; color: var(--text); line-height: 1.55; font-weight: 500; margin-bottom: 8px; }
-  .ndlg-bn { font-size: 15px; color: var(--teal-text); line-height: 1.65; padding-top: 8px; border-top: 1px solid var(--border); }
-  .ndlg-turn.ndlg-b .ndlg-bn { border-top-color: rgba(55,138,221,0.25); }
+  .ndlg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .ndlg-en { font-size: 15px; color: var(--text); line-height: 1.6; font-weight: 500; padding-right: 14px; border-right: 1px solid var(--border-md); }
+  .ndlg-turn.ndlg-b .ndlg-en { border-right-color: rgba(55,138,221,0.3); }
+  .ndlg-bn { font-size: 14px; color: var(--teal-text); line-height: 1.7; padding-left: 14px; }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Scratchpad → Task modal */
   .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
@@ -2240,9 +2244,14 @@
     .naati-strat-text { font-size: 14px; }
     .naati-res-text { font-size: 14px; }
     .naati-res-sub { font-size: 12px; }
-    .ndlg-en { font-size: 15px; }
-    .ndlg-bn { font-size: 14px; }
     .ndlg-title { font-size: 15px; }
+    .ndlg-col-header { grid-template-columns: 1fr; }
+    .ndlg-col-header span:last-child { display: none; }
+    .ndlg-cols { grid-template-columns: 1fr; gap: 8px; }
+    .ndlg-en { border-right: none; padding-right: 0; border-bottom: 1px solid var(--border-md); padding-bottom: 8px; font-size: 14px; }
+    .ndlg-turn.ndlg-b .ndlg-en { border-bottom-color: rgba(55,138,221,0.3); }
+    .ndlg-bn { padding-left: 0; font-size: 13px; }
+    .ndlg-col-header span:first-child { display: none; }
 
     /* Hub grid on mobile: tighter cards */
     .hub-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -5076,8 +5085,10 @@ function naatiDlgRender() {
     const side = roles.indexOf(t.role) === 0 ? 'a' : 'b';
     return `<div class="ndlg-turn ndlg-${side}">
       <div class="ndlg-role">${t.role}</div>
-      <div class="ndlg-en">${t.en}</div>
-      <div class="ndlg-bn">${t.bn}</div>
+      <div class="ndlg-cols">
+        <div class="ndlg-en">${t.en}</div>
+        <div class="ndlg-bn">${t.bn}</div>
+      </div>
     </div>`;
   }).join('');
   el.innerHTML = catBtns +
@@ -5086,6 +5097,7 @@ function naatiDlgRender() {
       <div class="ndlg-scenario">${dlg.scenario}</div>
     </div>
     ${navRow}
+    <div class="ndlg-col-header"><span>🇦🇺 English</span><span>🇧🇩 Bengali</span></div>
     <div class="ndlg-thread">${turns}</div>
     ${navRow}`;
 }
