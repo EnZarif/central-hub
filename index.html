@@ -1877,6 +1877,54 @@
   .naati-quiz-word { font-size: 26px; font-weight: 700; color: var(--text); }
   .naati-quiz-bn { font-size: 24px; font-weight: 700; color: var(--teal-text); }
   .naati-quiz-hint { font-size: 13px; color: var(--text-3); }
+  /* Quiz mode switcher */
+  .naati-quiz-modes { display: flex; gap: 6px; margin-bottom: 12px; }
+  .naati-quiz-mode-btn { flex: 1; padding: 7px 10px; border-radius: 20px; border: 1px solid var(--border-md); background: transparent; font-size: 12.5px; font-weight: 600; color: var(--text-2); cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: background 0.12s, border-color 0.12s, color 0.12s; }
+  .naati-quiz-mode-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+  /* Weak spots panel */
+  .nq-weakspots { background: var(--surface2); border: 1px solid var(--border-md); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .nq-weak-title { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+  .nq-weak-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .nq-weak-row:last-child { margin-bottom: 0; }
+  .nq-weak-topic { font-size: 12.5px; color: var(--text); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nq-weak-bar-wrap { flex: 1; height: 5px; background: var(--border-md); border-radius: 99px; overflow: hidden; }
+  .nq-weak-bar { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+  .nq-weak-pct { font-size: 11.5px; font-weight: 700; width: 32px; text-align: right; flex-shrink: 0; }
+  .nq-weak-drill { padding: 2px 9px; border-radius: 12px; border: 1px solid var(--border-md); background: transparent; font-size: 11px; color: var(--text-2); cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .nq-weak-drill:hover { background: var(--teal-bg); color: var(--teal-text); border-color: var(--teal); }
+  /* Practice log */
+  .nlog-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .nlog-type-btn { padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border-md); background: transparent; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: background 0.12s, color 0.12s; }
+  .nlog-type-btn.active { background: var(--purple-bg); border-color: var(--purple-text); color: var(--purple-text); }
+  .nlog-conf-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border-md); background: transparent; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s, border-color 0.1s; }
+  .nlog-conf-btn.active { background: var(--amber-bg); border-color: var(--amber-text); }
+  .nlog-notes-input { flex: 1; padding: 7px 11px; border-radius: 8px; border: 1px solid var(--border-md); background: var(--surface2); color: var(--text); font-size: 13px; font-family: inherit; outline: none; min-width: 0; }
+  .nlog-notes-input:focus { border-color: var(--teal); }
+  .nlog-save-btn { padding: 7px 14px; border-radius: 8px; border: none; background: var(--teal); color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .nlog-list { display: flex; flex-direction: column; gap: 6px; }
+  .nlog-entry { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; }
+  .nlog-entry-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  .nlog-entry-emoji { font-size: 20px; flex-shrink: 0; }
+  .nlog-entry-type { font-size: 13px; font-weight: 600; color: var(--text); }
+  .nlog-entry-date { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .nlog-entry-note { font-size: 12px; color: var(--text-3); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nlog-del-btn { padding: 4px 6px; border-radius: 6px; border: none; background: transparent; color: var(--text-3); cursor: pointer; font-size: 13px; opacity: 0.5; }
+  .nlog-del-btn:hover { opacity: 1; color: var(--coral-text); }
+  /* Exam day checklist */
+  .nexam-check { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; transition: background 0.1s; border: 1px solid transparent; margin-bottom: 5px; }
+  .nexam-check:hover { background: var(--surface2); }
+  .nexam-check.done { opacity: 0.6; }
+  .nexam-box { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border-md); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 1px; color: var(--green-text); }
+  .nexam-check.done .nexam-box { background: var(--green-bg); border-color: var(--green-text); }
+  .nexam-text { font-size: 14px; color: var(--text); line-height: 1.45; }
+  /* Register table */
+  .nreg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .nreg-table th { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 10px; text-align: left; border-bottom: 2px solid var(--border-md); }
+  .nreg-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .nreg-table td:first-child { color: var(--text-2); font-weight: 600; white-space: nowrap; }
+  .nreg-table td:nth-child(2) { color: var(--teal-text); }
+  .nreg-table td:nth-child(3) { color: var(--amber-text); }
+  .nreg-table tr:last-child td { border-bottom: none; }
   .naati-quiz-topic-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--surface); color: var(--text-3); border: 1px solid var(--border); }
   .naati-quiz-actions { display: flex; gap: 8px; margin-bottom: 12px; }
   .naati-quiz-btn { flex: 1; padding: 9px 0; border-radius: var(--radius); border: none; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.12s, transform 0.1s; }
@@ -2758,11 +2806,45 @@
           <button onclick="naatiAddToTasks()" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid var(--teal);background:var(--teal-bg);color:var(--teal-text);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;"><i class="ti ti-checklist"></i> Add to Tasks</button>
         </div>
         <div id="naati-plan"></div>
+        <!-- Practice Log -->
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="naati-tab-panel-head" style="margin-bottom:10px;">
+            <span class="naati-tab-panel-title"><i class="ti ti-notebook" style="color:var(--purple-text);"></i> Practice Log</span>
+          </div>
+          <div class="nlog-row" id="nlog-types">
+            <button class="nlog-type-btn active" data-t="Vocab" onclick="naatiLogPickType(this)">Vocab</button>
+            <button class="nlog-type-btn" data-t="Numbers" onclick="naatiLogPickType(this)">Numbers</button>
+            <button class="nlog-type-btn" data-t="Dialogues" onclick="naatiLogPickType(this)">Dialogues</button>
+            <button class="nlog-type-btn" data-t="Full Mock" onclick="naatiLogPickType(this)">Full Mock</button>
+            <button class="nlog-type-btn" data-t="Listening" onclick="naatiLogPickType(this)">Listening</button>
+          </div>
+          <div class="nlog-row" style="align-items:center;">
+            <span style="font-size:12px;color:var(--text-3);white-space:nowrap;">Confidence:</span>
+            <div id="nlog-conf-btns" style="display:flex;gap:4px;">
+              <button class="nlog-conf-btn" data-c="1" onclick="naatiLogPickConf(this)">😓</button>
+              <button class="nlog-conf-btn" data-c="2" onclick="naatiLogPickConf(this)">😕</button>
+              <button class="nlog-conf-btn active" data-c="3" onclick="naatiLogPickConf(this)">😐</button>
+              <button class="nlog-conf-btn" data-c="4" onclick="naatiLogPickConf(this)">🙂</button>
+              <button class="nlog-conf-btn" data-c="5" onclick="naatiLogPickConf(this)">😊</button>
+            </div>
+          </div>
+          <div class="nlog-row">
+            <input class="nlog-notes-input" id="nlog-notes" type="text" placeholder="Quick note (optional)…" />
+            <button class="nlog-save-btn" onclick="naatiLogSave()"><i class="ti ti-plus"></i> Log</button>
+          </div>
+          <div id="naati-log" style="margin-top:10px;"></div>
+        </div>
       </div>
 
       <!-- Quiz -->
       <div class="naati-tab-panel" id="naati-panel-quiz">
+        <div class="naati-quiz-modes">
+          <button class="naati-quiz-mode-btn active" id="nqm-vocab" onclick="naatiQuizModeSwitch('vocab')"><i class="ti ti-cards"></i> Vocabulary</button>
+          <button class="naati-quiz-mode-btn" id="nqm-numbers" onclick="naatiQuizModeSwitch('numbers')"><i class="ti ti-123"></i> Numbers</button>
+        </div>
+        <div id="naati-quiz-weakspots"></div>
         <div id="naati-quiz"></div>
+        <div id="naati-num-drill" style="display:none;"></div>
       </div>
 
       <!-- Vocab -->
@@ -2799,6 +2881,35 @@
         <div class="naati-strat-item">
           <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
           <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Memory consolidation happens during sleep — not last-minute study.</div>
+        </div>
+        <!-- Register & Tone Guide -->
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="naati-tab-panel-head" style="margin-bottom:10px;">
+            <span class="naati-tab-panel-title"><i class="ti ti-message-language" style="color:var(--amber-text);"></i> Register & Tone Guide</span>
+          </div>
+          <p style="font-size:12.5px;color:var(--text-3);margin:0 0 12px;">CCL marks down register mismatches. Match your Bengali to the formality of the speaker.</p>
+          <div style="overflow-x:auto;">
+            <table class="nreg-table">
+              <thead><tr><th>Context</th><th>Formal (official / caseworker)</th><th>Empathetic (distressed client)</th></tr></thead>
+              <tbody>
+                <tr><td>Greeting</td><td>আপনি কি সাহায্য চাইছেন?</td><td>কী হয়েছে, বলুন।</td></tr>
+                <tr><td>Pain / distress</td><td>আপনি কি ব্যথা অনুভব করছেন?</td><td>অনেক কষ্ট হচ্ছে, তাই না?</td></tr>
+                <tr><td>Monthly income</td><td>আপনার মাসিক আয় কত?</td><td>মাসে কত পাচ্ছেন?</td></tr>
+                <tr><td>Legal allegation</td><td>আপনি কি অভিযোগটি বুঝতে পেরেছেন?</td><td>কী বলা হচ্ছে বুঝতে পারছেন?</td></tr>
+                <tr><td>Consent</td><td>আপনি কি সম্মতি দিচ্ছেন?</td><td>ঠিক আছে মনে হচ্ছে?</td></tr>
+                <tr><td>Centrelink claim</td><td>দাবি প্রক্রিয়া করা হবে।</td><td>চিন্তা করবেন না, দেখছি।</td></tr>
+                <tr><td>Medical instruction</td><td>দিনে দুইবার ওষুধ সেবন করুন।</td><td>দিনে দুইবার খেতে হবে।</td></tr>
+                <tr><td>Legal representation</td><td>আপনি কি প্রতিনিধিত্বের অধিকার সম্পর্কে জানেন?</td><td>উকিলের সাহায্য নিতে পারেন।</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Exam Day Checklist -->
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="naati-tab-panel-head" style="margin-bottom:10px;">
+            <span class="naati-tab-panel-title"><i class="ti ti-checklist" style="color:var(--green-text);"></i> Exam Day Checklist</span>
+          </div>
+          <div id="naati-exam-checklist"></div>
         </div>
       </div>
 
@@ -4933,6 +5044,42 @@ const NAATI_DIALOGUES = [
     ]},
   ]},
 ];
+const NAATI_NUMBERS = [
+  { cat:'🔢 Cardinals', en:'15', bn:'পনেরো' },
+  { cat:'🔢 Cardinals', en:'27', bn:'সাতাশ' },
+  { cat:'🔢 Cardinals', en:'43', bn:'তেতাল্লিশ' },
+  { cat:'🔢 Cardinals', en:'68', bn:'আটষট্টি' },
+  { cat:'🔢 Cardinals', en:'100', bn:'একশো' },
+  { cat:'🔢 Cardinals', en:'250', bn:'আড়াইশো' },
+  { cat:'🔢 Cardinals', en:'500', bn:'পাঁচশো' },
+  { cat:'🔢 Cardinals', en:'1,000', bn:'এক হাজার' },
+  { cat:'🔢 Cardinals', en:'5,250', bn:'পাঁচ হাজার আড়াইশো' },
+  { cat:'🔢 Cardinals', en:'12,500', bn:'বারো হাজার পাঁচশো' },
+  { cat:'📅 Dates', en:'29 July', bn:'ঊনত্রিশে জুলাই' },
+  { cat:'📅 Dates', en:'1st of March', bn:'পয়লা মার্চ' },
+  { cat:'📅 Dates', en:'15th of August', bn:'পনেরোই আগস্ট' },
+  { cat:'📅 Dates', en:'Monday 7 July 2026', bn:'সোমবার সাতই জুলাই দুই হাজার ছাব্বিশ' },
+  { cat:'📅 Dates', en:'3rd of October 2025', bn:'তিন তারিখ অক্টোবর দুই হাজার পঁচিশ' },
+  { cat:'🕐 Times', en:'quarter past three', bn:'সোয়া তিনটা' },
+  { cat:'🕐 Times', en:'half past nine', bn:'সাড়ে নয়টা' },
+  { cat:'🕐 Times', en:'twenty to eight', bn:'আটটা বাজতে কুড়ি মিনিট' },
+  { cat:'🕐 Times', en:'ten past eleven am', bn:'সকাল এগারোটা দশ' },
+  { cat:'🕐 Times', en:'quarter to two pm', bn:'দুপুর দুইটা বাজতে পনেরো' },
+  { cat:'💰 Amounts', en:'$45', bn:'পঁয়তাল্লিশ ডলার' },
+  { cat:'💰 Amounts', en:'$250', bn:'আড়াইশো ডলার' },
+  { cat:'💰 Amounts', en:'$1,200 per month', bn:'মাসে এক হাজার দুইশো ডলার' },
+  { cat:'💰 Amounts', en:'$3,500', bn:'তিন হাজার পাঁচশো ডলার' },
+  { cat:'💰 Amounts', en:'$125.50', bn:'একশো পঁচিশ ডলার পঞ্চাশ সেন্ট' },
+  { cat:'💊 Dosages', en:'5mg twice daily', bn:'দিনে দুইবার পাঁচ মিলিগ্রাম' },
+  { cat:'💊 Dosages', en:'10mL three times a day', bn:'দিনে তিনবার দশ মিলিলিটার' },
+  { cat:'💊 Dosages', en:'two tablets every four hours', bn:'প্রতি চার ঘণ্টায় দুটি ট্যাবলেট' },
+  { cat:'💊 Dosages', en:'0.5mg once a week', bn:'সপ্তাহে একবার শূন্য দশমিক পাঁচ মিলিগ্রাম' },
+  { cat:'📞 References', en:'0412 345 678', bn:'শূন্য চার এক দুই — তিন চার পাঁচ — ছয় সাত আট' },
+  { cat:'📞 References', en:'Reference number 47823', bn:'রেফারেন্স নম্বর চার সাত আট দুই তিন' },
+  { cat:'📊 Percentages', en:'35%', bn:'পঁয়ত্রিশ শতাংশ' },
+  { cat:'📊 Percentages', en:'two-thirds', bn:'দুই-তৃতীয়াংশ' },
+  { cat:'📊 Percentages', en:'one in four people', bn:'চারজনের মধ্যে একজন' },
+];
 let _naatiProgress = null;
 function naatiGetProgress() {
   if (!_naatiProgress) _naatiProgress = dbGet('zarif_naati_progress') || {};
@@ -4997,8 +5144,14 @@ function naatiSwitchTab(tab) {
   document.querySelectorAll('#page-naati .naati-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('#page-naati .naati-tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === 'naati-panel-' + tab));
   if (tab === 'vocab' && !_naatiVocab.terms.length) naatiVocabBuild('all');
-  if (tab === 'quiz') { const qEl = document.getElementById('naati-quiz'); if (qEl && !qEl.children.length) naatiQuizStart('all', 'en-bn'); }
+  if (tab === 'quiz') {
+    naatiQuizWeakSpotsRender();
+    const qEl = document.getElementById('naati-quiz');
+    if (qEl && !qEl.children.length) naatiQuizStart('all', 'en-bn');
+  }
   if (tab === 'dialogues') { const dEl = document.getElementById('naati-dialogues'); if (dEl && !dEl.children.length) naatiDlgRender(); }
+  if (tab === 'plan') naatiLogRender();
+  if (tab === 'tips') naatiExamDayRender();
 }
 
 // ---- Vocab browser (swipeable cards) ----
@@ -5171,6 +5324,8 @@ function renderNaatiPage() {
 
     planEl.innerHTML = progressBar + nextHtml + toggleBtn + allWeeksHtml;
   }
+  naatiLogRender();
+  naatiExamDayRender();
 }
 
 // ---- Flashcard Quiz ----
@@ -5214,6 +5369,8 @@ function naatiQuizFlip() {
 }
 function naatiQuizMark(correct) {
   if (correct) _naatiQuiz.correct++; else _naatiQuiz.missed++;
+  const card = _naatiQuiz.deck[_naatiQuiz.idx];
+  if (card) naatiQuizTrackStat(card.ti, correct);
   naatiQuizNext();
 }
 function naatiQuizNext() {
@@ -5269,6 +5426,213 @@ function naatiQuizRender() {
     <div class="naati-quiz-actions" id="nq-actions">
       <button class="naati-quiz-btn nqb-flip" onclick="naatiQuizFlip()"><i class="ti ti-rotate-2"></i> Flip card</button>
     </div>`;
+}
+
+// ---- Quiz mode switcher ----
+let _naatiQuizMode = 'vocab';
+function naatiQuizModeSwitch(mode) {
+  _naatiQuizMode = mode;
+  document.querySelectorAll('#page-naati .naati-quiz-mode-btn').forEach(b => b.classList.toggle('active', b.id === 'nqm-' + mode));
+  const qEl = document.getElementById('naati-quiz');
+  const ndEl = document.getElementById('naati-num-drill');
+  const wsEl = document.getElementById('naati-quiz-weakspots');
+  if (qEl) qEl.style.display = mode === 'vocab' ? '' : 'none';
+  if (ndEl) ndEl.style.display = mode === 'numbers' ? '' : 'none';
+  if (wsEl) wsEl.style.display = mode === 'vocab' ? '' : 'none';
+  if (mode === 'vocab') {
+    naatiQuizWeakSpotsRender();
+    if (qEl && !qEl.children.length) naatiQuizStart('all', 'en-bn');
+  }
+  if (mode === 'numbers') naatiNumDrillBuild('all');
+}
+
+// ---- Numbers drill ----
+const NAATI_NUM_CATS = [...new Set(NAATI_NUMBERS.map(n => n.cat))];
+let _naatiNum = { deck: [], idx: 0, flipped: false, catFilter: 'all', correct: 0, missed: 0 };
+function naatiNumDrillBuild(catFilter) {
+  const deck = catFilter === 'all' ? [...NAATI_NUMBERS] : NAATI_NUMBERS.filter(n => n.cat === catFilter);
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  _naatiNum = { deck, idx: 0, flipped: false, catFilter, correct: 0, missed: 0 };
+  naatiNumDrillRender();
+}
+function naatiNumDrillFlip() {
+  _naatiNum.flipped = !_naatiNum.flipped;
+  const card = document.getElementById('nnd-card');
+  if (card) card.classList.toggle('flipped', _naatiNum.flipped);
+  const actions = document.getElementById('nnd-actions');
+  if (!actions) return;
+  if (_naatiNum.flipped) {
+    actions.innerHTML = `<button class="naati-quiz-btn nqb-correct" onclick="naatiNumDrillMark(true)"><i class="ti ti-check"></i> Got it</button>
+      <button class="naati-quiz-btn nqb-miss" onclick="naatiNumDrillMark(false)"><i class="ti ti-x"></i> Missed</button>
+      <button class="naati-quiz-btn nqb-skip" onclick="naatiNumDrillNext()">Skip</button>`;
+  } else {
+    actions.innerHTML = `<button class="naati-quiz-btn nqb-flip" onclick="naatiNumDrillFlip()"><i class="ti ti-rotate-2"></i> Flip card</button>`;
+  }
+}
+function naatiNumDrillMark(correct) { if (correct) _naatiNum.correct++; else _naatiNum.missed++; naatiNumDrillNext(); }
+function naatiNumDrillNext() { _naatiNum.idx++; _naatiNum.flipped = false; naatiNumDrillRender(); }
+function naatiNumDrillRender() {
+  const el = document.getElementById('naati-num-drill');
+  if (!el) return;
+  const n = _naatiNum;
+  const catBtns = `<div class="naati-quiz-filters">
+    <button class="naati-quiz-filter${n.catFilter==='all'?' active':''}" onclick="naatiNumDrillBuild('all')">All (${NAATI_NUMBERS.length})</button>
+    ${NAATI_NUM_CATS.map(c => `<button class="naati-quiz-filter${n.catFilter===c?' active':''}" onclick="naatiNumDrillBuild(\`${c}\`)">${c} (${NAATI_NUMBERS.filter(x=>x.cat===c).length})</button>`).join('')}
+  </div>`;
+  if (n.idx >= n.deck.length) {
+    const total = n.correct + n.missed;
+    const pct = total > 0 ? Math.round(n.correct / total * 100) : 0;
+    const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '💪' : '📚';
+    el.innerHTML = catBtns + `<div class="naati-quiz-done">
+      <div class="naati-quiz-done-emoji">${emoji}</div>
+      <h3>Numbers drill done!</h3>
+      <p>${n.correct} correct · ${n.missed} missed · ${pct}% accuracy</p>
+      <button class="naati-quiz-btn nqb-flip" style="padding:9px 24px;flex:0;" onclick="naatiNumDrillBuild(_naatiNum.catFilter)"><i class="ti ti-refresh"></i> Restart</button>
+    </div>`;
+    return;
+  }
+  const card = n.deck[n.idx];
+  el.innerHTML = catBtns +
+    `<div class="naati-quiz-prog">Card ${n.idx + 1} of ${n.deck.length} · ${n.correct} correct · ${n.missed} missed</div>
+    <div class="naati-quiz-scene" onclick="naatiNumDrillFlip()">
+      <div class="naati-quiz-card" id="nnd-card">
+        <div class="naati-quiz-face naati-quiz-front">
+          <span class="naati-quiz-topic-pill">${card.cat}</span>
+          <div class="naati-quiz-word" style="font-size:32px;letter-spacing:1px;">${card.en}</div>
+          <div class="naati-quiz-hint">Say it in Bengali → tap to check</div>
+        </div>
+        <div class="naati-quiz-face naati-quiz-back">
+          <span class="naati-quiz-topic-pill">${card.cat}</span>
+          <div class="naati-quiz-bn">${card.bn}</div>
+        </div>
+      </div>
+    </div>
+    <div class="naati-quiz-actions" id="nnd-actions">
+      <button class="naati-quiz-btn nqb-flip" onclick="naatiNumDrillFlip()"><i class="ti ti-rotate-2"></i> Flip card</button>
+    </div>`;
+}
+
+// ---- Quiz weak spots (persisted) ----
+let _naatiQuizStats = null;
+function naatiGetQuizStats() {
+  if (!_naatiQuizStats) _naatiQuizStats = dbGet('zarif_naati_quiz_stats') || {};
+  return _naatiQuizStats;
+}
+function naatiSaveQuizStats() { dbSet('zarif_naati_quiz_stats', _naatiQuizStats); }
+function naatiQuizTrackStat(topicIdx, correct) {
+  const stats = naatiGetQuizStats();
+  if (!stats[topicIdx]) stats[topicIdx] = { correct: 0, missed: 0 };
+  if (correct) stats[topicIdx].correct++; else stats[topicIdx].missed++;
+  naatiSaveQuizStats();
+}
+function naatiQuizWeakSpotsRender() {
+  const el = document.getElementById('naati-quiz-weakspots');
+  if (!el) return;
+  const stats = naatiGetQuizStats();
+  const topicStats = NAATI_VOCAB.map((t, i) => {
+    const s = stats[i] || { correct: 0, missed: 0 };
+    const total = s.correct + s.missed;
+    const pct = total >= 3 ? Math.round(s.correct / total * 100) : null;
+    return { idx: i, topic: t.topic, total, pct };
+  }).filter(t => t.pct !== null).sort((a, b) => a.pct - b.pct);
+  if (!topicStats.length) { el.innerHTML = ''; return; }
+  const weak = topicStats.slice(0, 3);
+  el.innerHTML = `<div class="nq-weakspots">
+    <div class="nq-weak-title"><i class="ti ti-target"></i> Weak areas to focus on</div>
+    ${weak.map(t => {
+      const color = t.pct < 50 ? 'var(--coral-text)' : t.pct < 75 ? 'var(--amber-text)' : 'var(--green-text)';
+      return `<div class="nq-weak-row">
+        <span class="nq-weak-topic">${t.topic}</span>
+        <div class="nq-weak-bar-wrap"><div class="nq-weak-bar" style="width:${t.pct}%;background:${color};"></div></div>
+        <span class="nq-weak-pct" style="color:${color};">${t.pct}%</span>
+        <button class="nq-weak-drill" onclick="naatiQuizStart(${t.idx})">Drill</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ---- Practice log ----
+let _naatiLog = null;
+let _nlogType = 'Vocab';
+let _nlogConf = 3;
+function naatiGetLog() {
+  if (!_naatiLog) _naatiLog = dbGet('zarif_naati_log') || [];
+  return _naatiLog;
+}
+function naatiLogPickType(btn) {
+  _nlogType = btn.dataset.t;
+  document.querySelectorAll('#nlog-types .nlog-type-btn').forEach(b => b.classList.toggle('active', b === btn));
+}
+function naatiLogPickConf(btn) {
+  _nlogConf = parseInt(btn.dataset.c);
+  document.querySelectorAll('#nlog-conf-btns .nlog-conf-btn').forEach(b => b.classList.toggle('active', b === btn));
+}
+function naatiLogSave() {
+  const notes = (document.getElementById('nlog-notes') || {}).value || '';
+  const entry = { id: Date.now(), date: melbFmt(now, { dateStyle: 'medium' }), type: _nlogType, conf: _nlogConf, notes: notes.trim() };
+  const log = naatiGetLog();
+  log.unshift(entry);
+  if (log.length > 50) log.length = 50;
+  dbSet('zarif_naati_log', log);
+  const inp = document.getElementById('nlog-notes');
+  if (inp) inp.value = '';
+  naatiLogRender();
+}
+const NLOG_CONF_EMOJI = { 1:'😓', 2:'😕', 3:'😐', 4:'🙂', 5:'😊' };
+function naatiLogRender() {
+  const el = document.getElementById('naati-log');
+  if (!el) return;
+  const log = naatiGetLog();
+  if (!log.length) {
+    el.innerHTML = '<p style="font-size:12.5px;color:var(--text-3);text-align:center;padding:12px 0;">No sessions logged yet — log your first one above!</p>';
+    return;
+  }
+  el.innerHTML = `<div class="nlog-list">${log.slice(0, 10).map(e => `
+    <div class="nlog-entry">
+      <div class="nlog-entry-left">
+        <span class="nlog-entry-emoji">${NLOG_CONF_EMOJI[e.conf] || '😐'}</span>
+        <div>
+          <div class="nlog-entry-type">${e.type}</div>
+          <div class="nlog-entry-date">${e.date}</div>
+        </div>
+      </div>
+      ${e.notes ? `<div class="nlog-entry-note">${e.notes}</div>` : ''}
+      <button class="nlog-del-btn" onclick="naatiLogDelete(${e.id})" title="Remove"><i class="ti ti-trash"></i></button>
+    </div>`).join('')}
+  </div>${log.length > 10 ? `<div style="font-size:11.5px;color:var(--text-3);text-align:center;padding:6px 0;">+ ${log.length - 10} older entries</div>` : ''}`;
+}
+function naatiLogDelete(id) {
+  _naatiLog = naatiGetLog().filter(e => e.id !== id);
+  dbSet('zarif_naati_log', _naatiLog);
+  naatiLogRender();
+}
+
+// ---- Exam day checklist ----
+const NAATI_EXAM_CHECKS = [
+  { id:'e1', text:'Photo ID ready (passport or driver\'s licence)' },
+  { id:'e2', text:'Confirmation email saved or printed' },
+  { id:'e3', text:'Plan to arrive 15 minutes early' },
+  { id:'e4', text:'Water bottle packed (allowed in most centres)' },
+  { id:'e5', text:'Phone off or on silent — not permitted in the exam room' },
+  { id:'e6', text:'Note paper provided at the centre — bring a pen just in case' },
+  { id:'e7', text:'Test takes approx. 30 min — 2 dialogues (~300 words each)' },
+  { id:'e8', text:'Results released in approximately 4 weeks' },
+];
+function naatiExamDayRender() {
+  const el = document.getElementById('naati-exam-checklist');
+  if (!el) return;
+  const done = dbGet('zarif_naati_exam_checks') || {};
+  el.innerHTML = NAATI_EXAM_CHECKS.map(c => `
+    <label class="nexam-check${done[c.id] ? ' done' : ''}" onclick="naatiExamToggle('${c.id}')">
+      <span class="nexam-box">${done[c.id] ? '<i class="ti ti-check"></i>' : ''}</span>
+      <span class="nexam-text">${c.text}</span>
+    </label>`).join('');
+}
+function naatiExamToggle(id) {
+  const done = dbGet('zarif_naati_exam_checks') || {};
+  done[id] = !done[id];
+  dbSet('zarif_naati_exam_checks', done);
+  naatiExamDayRender();
 }
 
 function initPixoff() {
