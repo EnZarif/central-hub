@@ -5360,7 +5360,8 @@ const MON_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','
 
 const now = new Date();
 const todayDow = now.getDay();
-const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+const todayKey  = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+const monthKey  = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 // Week key: ISO week so weekly tasks stay done Mon→Sun and reset next Monday
 const weekKey = (() => {
   const d = new Date(now); d.setHours(0,0,0,0);
@@ -5495,6 +5496,7 @@ function getAllTasks() {
 function taskKey(id) {
   const task = [...TASKS, ...customTasks].find(t => String(t.id) === String(id));
   if (task && task.freq === 'weekly') return `${weekKey}_${id}`;
+  if (task && task.freq === 'monthly') return `${monthKey}_${id}`;
   // date/once tasks are one-off — use a date-independent key so they stay
   // completed across day boundaries instead of re-appearing the next morning
   if (task && (task.freq === 'date' || task.freq === 'once')) return `perm_${id}`;
