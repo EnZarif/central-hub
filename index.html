@@ -1920,6 +1920,20 @@
   .naati-vocab-nav-btn:hover { background: var(--border-md); }
   .naati-vocab-nav-btn.next { background: var(--teal-bg); color: var(--teal-text); border-color: var(--teal); }
   .naati-vocab-nav-btn.next:hover { background: var(--teal); color: #fff; }
+  .ndlg-header { margin-bottom: 14px; }
+  .ndlg-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .ndlg-scenario { font-size: 13px; color: var(--text-3); font-style: italic; }
+  .ndlg-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .ndlg-nav .naati-vocab-nav-btn { padding: 9px 14px; font-size: 13px; }
+  .ndlg-thread { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .ndlg-turn { border-radius: 12px; padding: 14px 16px; border: 1.5px solid var(--border-md); }
+  .ndlg-turn.ndlg-a { background: var(--surface2); border-color: var(--border-md); }
+  .ndlg-turn.ndlg-b { background: var(--teal-bg); border-color: var(--teal); }
+  .ndlg-role { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 7px; }
+  .ndlg-turn.ndlg-b .ndlg-role { color: var(--teal-text); }
+  .ndlg-en { font-size: 16px; color: var(--text); line-height: 1.55; font-weight: 500; margin-bottom: 8px; }
+  .ndlg-bn { font-size: 15px; color: var(--teal-text); line-height: 1.65; padding-top: 8px; border-top: 1px solid var(--border); }
+  .ndlg-turn.ndlg-b .ndlg-bn { border-top-color: rgba(55,138,221,0.25); }
   .notes-record-actions .nra-task:disabled { opacity: 0.5; cursor: not-allowed; }
   /* Scratchpad → Task modal */
   .sp-task-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
@@ -2226,6 +2240,9 @@
     .naati-strat-text { font-size: 14px; }
     .naati-res-text { font-size: 14px; }
     .naati-res-sub { font-size: 12px; }
+    .ndlg-en { font-size: 15px; }
+    .ndlg-bn { font-size: 14px; }
+    .ndlg-title { font-size: 15px; }
 
     /* Hub grid on mobile: tighter cards */
     .hub-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2719,6 +2736,7 @@
       <button class="naati-tab" data-tab="quiz" onclick="naatiSwitchTab('quiz')"><i class="ti ti-cards"></i><span>Quiz</span></button>
       <button class="naati-tab" data-tab="vocab" onclick="naatiSwitchTab('vocab')"><i class="ti ti-vocabulary"></i><span>Vocab</span></button>
       <button class="naati-tab" data-tab="tips" onclick="naatiSwitchTab('tips')"><i class="ti ti-bulb"></i><span>Tips</span></button>
+      <button class="naati-tab" data-tab="dialogues" onclick="naatiSwitchTab('dialogues')"><i class="ti ti-messages"></i><span>Mock</span></button>
       <button class="naati-tab" data-tab="links" onclick="naatiSwitchTab('links')"><i class="ti ti-link"></i><span>Links</span></button>
     </div>
 
@@ -2774,6 +2792,11 @@
           <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
           <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Memory consolidation happens during sleep — not last-minute study.</div>
         </div>
+      </div>
+
+      <!-- Dialogues -->
+      <div class="naati-tab-panel" id="naati-panel-dialogues">
+        <div id="naati-dialogues"></div>
       </div>
 
       <!-- Links -->
@@ -4781,6 +4804,127 @@ const NAATI_VOCAB = [
     ['Drug and alcohol test', 'মাদক ও মদ পরীক্ষা (madok o môd poriksha)'],
   ]},
 ];
+const NAATI_DIALOGUES = [
+  { category: '🏥 Medical & Health', items: [
+    { title: 'GP Appointment — Persistent Headaches', scenario: 'A patient visits a general practitioner about recurring headaches.', turns: [
+      { role: 'Doctor',  en: 'Good morning. I understand you haven\'t been feeling well. What seems to be the problem?', bn: 'শুভ সকাল। আমি বুঝতে পারছি আপনি ভালো অনুভব করছেন না। কি সমস্যা হয়েছে?' },
+      { role: 'Patient', en: 'I\'ve been having severe headaches for the past week. They usually start in the morning and last for several hours.', bn: 'গত এক সপ্তাহ ধরে আমার তীব্র মাথাব্যথা হচ্ছে। সাধারণত সকালে শুরু হয় এবং কয়েক ঘণ্টা ধরে থাকে।' },
+      { role: 'Doctor',  en: 'I see. Have you taken any medication for the headaches? And have you experienced any nausea or blurred vision?', bn: 'বুঝেছি। আপনি কি মাথাব্যথার জন্য কোনো ওষুধ খেয়েছেন? এবং আপনার কি বমি বমি ভাব বা দৃষ্টি ঝাপসা হওয়ার সমস্যা হয়েছে?' },
+      { role: 'Patient', en: 'I\'ve taken paracetamol but it doesn\'t seem to help much. And yes, sometimes I feel nauseous, especially when the headache is very bad.', bn: 'আমি প্যারাসিটামল খেয়েছি কিন্তু তেমন কাজ হচ্ছে না। হ্যাঁ, কখনো কখনো বমি বমি ভাব হয়, বিশেষত যখন মাথাব্যথা খুব বেশি হয়।' },
+      { role: 'Doctor',  en: 'I\'d like to do a blood pressure check and refer you for some blood tests. I\'m also going to prescribe something stronger for the pain.', bn: 'আমি আপনার রক্তচাপ পরীক্ষা করতে চাই এবং রক্ত পরীক্ষার জন্য রেফার করতে চাই। ব্যথার জন্য আরও শক্তিশালী কিছু প্রেসক্রাইব করব।' },
+      { role: 'Patient', en: 'Thank you, doctor. Should I be worried? Could it be something serious?', bn: 'ধন্যবাদ, ডাক্তার। আমার কি চিন্তিত হওয়া উচিত? এটা কি কোনো গুরুতর কিছু হতে পারে?' },
+    ]},
+    { title: 'Hospital — Post-Surgery Care', scenario: 'A nurse checks on a patient recovering from surgery.', turns: [
+      { role: 'Nurse',   en: 'Good afternoon. I\'m the nurse looking after you today. How are you feeling after the surgery?', bn: 'শুভ অপরাহ্ন। আমি আজ আপনার দায়িত্বে থাকা নার্স। অস্ত্রোপচারের পরে আপনি কেমন অনুভব করছেন?' },
+      { role: 'Patient', en: 'I\'m in quite a lot of pain. The painkillers they gave me this morning have worn off.', bn: 'আমি বেশ যন্ত্রণায় আছি। সকালে যে ব্যথানাশক দেওয়া হয়েছিল তার প্রভাব শেষ হয়ে গেছে।' },
+      { role: 'Nurse',   en: 'I\'ll let the doctor know. On a scale of one to ten, how would you rate your pain right now?', bn: 'আমি ডাক্তারকে জানাব। এক থেকে দশের মধ্যে আপনার ব্যথার মাত্রা কত বলবেন?' },
+      { role: 'Patient', en: 'I\'d say about seven or eight. It\'s quite sharp around the incision site.', bn: 'আমি বলব প্রায় সাত বা আট। কাটার জায়গায় বেশ তীক্ষ্ণ ব্যথা।' },
+      { role: 'Nurse',   en: 'I understand. I\'ll also need to take your blood pressure and temperature. Are you able to eat and drink?', bn: 'বুঝেছি। আমাকে আপনার রক্তচাপ ও তাপমাত্রাও মাপতে হবে। আপনি কি খাওয়া-দাওয়া করতে পারছেন?' },
+      { role: 'Patient', en: 'I had a little water and some soup at lunch. I don\'t have much of an appetite yet.', bn: 'দুপুরে একটু পানি এবং স্যুপ খেয়েছি। এখনো তেমন ক্ষুধা নেই।' },
+    ]},
+    { title: 'Prescription Collection — Pharmacy', scenario: 'A customer asks a pharmacist about a new prescription.', turns: [
+      { role: 'Pharmacist', en: 'Hi there. I can see your doctor has sent through an electronic prescription. Do you have any allergies to medications?', bn: 'হ্যালো। আমি দেখতে পাচ্ছি আপনার ডাক্তার একটি ইলেকট্রনিক প্রেসক্রিপশন পাঠিয়েছেন। আপনার কি কোনো ওষুধে অ্যালার্জি আছে?' },
+      { role: 'Customer',   en: 'Not that I know of. This is the first time I\'ve been prescribed this medication. Can you tell me how to take it?', bn: 'আমার জানামতে নেই। এই ওষুধটি প্রথমবার প্রেসক্রাইব হয়েছে। কীভাবে খেতে হবে বলতে পারবেন?' },
+      { role: 'Pharmacist', en: 'Yes. Take one tablet twice a day — morning and evening — with food. Don\'t take it on an empty stomach as it can cause nausea.', bn: 'হ্যাঁ। দিনে দুবার একটি করে ট্যাবলেট খান — সকালে এবং সন্ধ্যায় — খাবারের সাথে। খালি পেটে খাবেন না কারণ এটি বমি বমি ভাব করতে পারে।' },
+      { role: 'Customer',   en: 'How long do I need to take it for? And can I drink alcohol while I\'m on this medication?', bn: 'কতদিন খেতে হবে? এই ওষুধ খাওয়ার সময় কি মদ্যপান করতে পারব?' },
+      { role: 'Pharmacist', en: 'Your doctor has prescribed a fourteen-day course. I\'d recommend avoiding alcohol while taking this as it may increase the risk of side effects.', bn: 'আপনার ডাক্তার চৌদ্দ দিনের কোর্স প্রেসক্রাইব করেছেন। এটি খাওয়ার সময় মদ্যপান এড়ানোর পরামর্শ দেব কারণ এটি পার্শ্বপ্রতিক্রিয়ার ঝুঁকি বাড়াতে পারে।' },
+    ]},
+  ]},
+  { category: '🏛 Centrelink & Social Services', items: [
+    { title: 'JobSeeker Payment Application', scenario: 'A person who has just lost their job visits Centrelink.', turns: [
+      { role: 'Caseworker', en: 'Good morning. How can I help you today?', bn: 'শুভ সকাল। আমি আপনাকে কীভাবে সাহায্য করতে পারি?' },
+      { role: 'Client',     en: 'I recently lost my job and I need to apply for some financial assistance. I\'m not sure what I\'m eligible for.', bn: 'আমি সম্প্রতি চাকরি হারিয়েছি এবং আর্থিক সহায়তার জন্য আবেদন করতে চাই। আমি জানি না কোনটার জন্য যোগ্য।' },
+      { role: 'Caseworker', en: 'I understand. Can I ask why you left your job and how long you were employed there?', bn: 'বুঝেছি। আমি কি জানতে পারি আপনি কেন চাকরি ছেড়েছেন এবং কতদিন ধরে সেখানে কাজ করতেন?' },
+      { role: 'Client',     en: 'I was made redundant. The company was downsizing and my position was eliminated. I worked there for two years.', bn: 'আমাকে ছাঁটাই করা হয়েছে। কোম্পানি কর্মী কমাচ্ছিল এবং আমার পদটি বাতিল করা হয়েছে। আমি দুই বছর সেখানে কাজ করেছি।' },
+      { role: 'Caseworker', en: 'In that case you may be eligible for JobSeeker Payment. I\'ll need to verify your identity. Do you have two forms of ID with you?', bn: 'সেক্ষেত্রে আপনি জবসিকার পেমেন্টের জন্য যোগ্য হতে পারেন। আমাকে আপনার পরিচয় যাচাই করতে হবে। আপনার কাছে কি দুটি পরিচয়পত্র আছে?' },
+      { role: 'Client',     en: 'Yes, I have my passport and Medicare card. Is there anything else I need to bring next time?', bn: 'হ্যাঁ, আমার কাছে পাসপোর্ট এবং মেডিকেয়ার কার্ড আছে। পরের বার কি আর কিছু আনতে হবে?' },
+    ]},
+    { title: 'Family Tax Benefit Inquiry', scenario: 'A new parent asks Centrelink about family payments.', turns: [
+      { role: 'Caseworker', en: 'I can see from your file that you\'ve recently had a baby. Congratulations. Are you aware of the family payments you may be entitled to?', bn: 'আপনার ফাইল থেকে দেখছি আপনি সম্প্রতি একটি শিশুর জন্ম দিয়েছেন। অভিনন্দন। আপনি কি জানেন কোন পারিবারিক ভাতার অধিকারী হতে পারেন?' },
+      { role: 'Client',     en: 'Not really. My sister mentioned something about Family Tax Benefit but I didn\'t understand it very well.', bn: 'তেমন না। আমার বোন ফ্যামিলি ট্যাক্স বেনিফিটের কথা বলেছিল কিন্তু আমি ভালো বুঝিনি।' },
+      { role: 'Caseworker', en: 'Family Tax Benefit has two parts. Part A depends on the number of children and your family income. Part B is for single-income families or single parents.', bn: 'ফ্যামিলি ট্যাক্স বেনিফিটের দুটি অংশ আছে। অংশ-এ নির্ভর করে সন্তানের সংখ্যা ও পারিবারিক আয়ের উপর। অংশ-বি একক আয়ের পরিবার বা একক অভিভাবকদের জন্য।' },
+      { role: 'Client',     en: 'My husband works full time and I\'m on maternity leave. Will we still qualify?', bn: 'আমার স্বামী পূর্ণকালীন কাজ করেন এবং আমি মাতৃত্বকালীন ছুটিতে আছি। আমরা কি তবুও যোগ্য হব?' },
+      { role: 'Caseworker', en: 'Potentially yes for Part A, depending on your combined income. You may also be eligible for Parental Leave Pay for the first eighteen weeks. I\'ll need to run through the income test with you.', bn: 'সম্ভবত হ্যাঁ, অংশ-এর জন্য, আপনাদের মিলিত আয়ের উপর নির্ভর করে। প্রথম আঠারো সপ্তাহের জন্য প্যারেন্টাল লিভ পেমেন্টের জন্যও যোগ্য হতে পারেন। আমাকে আপনার সাথে আয় পরীক্ষা করে যেতে হবে।' },
+    ]},
+  ]},
+  { category: '🛂 Immigration & Visa', items: [
+    { title: 'Partner Visa — Missing Documents', scenario: 'An immigration officer calls about a pending partner visa application.', turns: [
+      { role: 'Officer', en: 'Good afternoon. I\'m calling regarding your partner visa application. There are some documents we still need to process it.', bn: 'শুভ অপরাহ্ন। আমি আপনার পার্টনার ভিসা আবেদন সম্পর্কে ফোন করছি। আপনার আবেদন প্রক্রিয়া করতে এখনো কিছু নথিপত্র দরকার।' },
+      { role: 'Applicant', en: 'I thought I submitted everything. What\'s missing?', bn: 'আমি ভেবেছিলাম সব জমা দিয়েছি। কী কী নেই?' },
+      { role: 'Officer', en: 'We need a certified copy of your birth certificate and at least twelve months of evidence showing you and your sponsor have a genuine ongoing relationship.', bn: 'আমাদের আপনার জন্ম সনদের একটি প্রত্যয়িত অনুলিপি এবং কমপক্ষে বারো মাসের প্রমাণ দরকার যা দেখায় আপনি ও আপনার স্পন্সর একটি বাস্তব চলমান সম্পর্কে আছেন।' },
+      { role: 'Applicant', en: 'What kind of evidence do you need for the relationship? We\'ve been together for three years.', bn: 'সম্পর্কের জন্য কী ধরনের প্রমাণ দরকার? আমরা তিন বছর ধরে একসাথে আছি।' },
+      { role: 'Officer', en: 'Joint bank statements, shared lease agreements, photographs together, or statutory declarations from people who know you as a couple would all be acceptable.', bn: 'যৌথ ব্যাংক বিবৃতি, যৌথ লিজ চুক্তি, একসাথে তোলা ছবি, বা যারা আপনাদের দম্পতি হিসেবে চেনেন তাদের বিধিবদ্ধ ঘোষণাপত্র সব গ্রহণযোগ্য হবে।' },
+      { role: 'Applicant', en: 'How much time do I have to provide these? I don\'t want my application to lapse.', bn: 'এগুলো দেওয়ার জন্য আমার কতটা সময় আছে? আমি চাই না আমার আবেদনের মেয়াদ শেষ হয়ে যাক।' },
+    ]},
+    { title: 'Citizenship Test Preparation', scenario: 'An officer explains the citizenship test requirements to an applicant.', turns: [
+      { role: 'Officer',    en: 'I can see you\'ve submitted your citizenship application. The next step is the citizenship test. Have you had a chance to look at the study materials?', bn: 'আমি দেখতে পাচ্ছি আপনি নাগরিকত্বের আবেদন জমা দিয়েছেন। পরবর্তী ধাপ হলো নাগরিকত্ব পরীক্ষা। আপনি কি পড়ার উপকরণ দেখার সুযোগ পেয়েছেন?' },
+      { role: 'Applicant', en: 'Yes, I\'ve been reading the booklet. But I\'m a bit confused about the format of the test. Can you explain it to me?', bn: 'হ্যাঁ, আমি বইটি পড়ছি। কিন্তু পরীক্ষার ফরম্যাট নিয়ে একটু বিভ্রান্ত। আপনি কি আমাকে বুঝিয়ে বলতে পারবেন?' },
+      { role: 'Officer',    en: 'The test has twenty multiple-choice questions. You need to answer at least fifteen correctly to pass. It\'s done on a computer and takes about forty-five minutes.', bn: 'পরীক্ষায় বিশটি বহুনির্বাচনী প্রশ্ন থাকে। পাস করতে কমপক্ষে পনেরোটি সঠিক উত্তর দিতে হবে। এটি কম্পিউটারে করা হয় এবং প্রায় পঁয়তাল্লিশ মিনিট সময় লাগে।' },
+      { role: 'Applicant', en: 'What topics does it cover? I want to make sure I focus on the right areas.', bn: 'এতে কোন বিষয়গুলো অন্তর্ভুক্ত থাকে? আমি নিশ্চিত করতে চাই যে সঠিক বিষয়গুলোতে মনোযোগ দিচ্ছি।' },
+      { role: 'Officer',    en: 'The main areas are Australia\'s democratic values and government, Australian history, and the responsibilities and privileges of citizenship. Everything you need is in the study resource book.', bn: 'প্রধান বিষয়গুলো হলো অস্ট্রেলিয়ার গণতান্ত্রিক মূল্যবোধ ও সরকার, অস্ট্রেলিয়ার ইতিহাস, এবং নাগরিকত্বের দায়িত্ব ও সুবিধা। আপনার প্রয়োজনীয় সবকিছু স্টাডি রিসোর্স বইতে আছে।' },
+    ]},
+  ]},
+  { category: '⚖️ Legal & Court', items: [
+    { title: 'Lawyer Consultation — Police Interview', scenario: 'A lawyer prepares their client before a police interview.', turns: [
+      { role: 'Lawyer', en: 'I\'ve reviewed the police report. Before we go in for the interview, I need to understand what happened from your perspective.', bn: 'আমি পুলিশের রিপোর্ট দেখেছি। ইন্টারভিউতে যাওয়ার আগে, আপনার দৃষ্টিকোণ থেকে কী ঘটেছিল তা বুঝতে চাই।' },
+      { role: 'Client', en: 'I was at the shopping centre and a security guard accused me of stealing. But I had receipts for everything I bought.', bn: 'আমি শপিং সেন্টারে ছিলাম এবং একজন নিরাপত্তারক্ষী আমাকে চুরির অভিযোগ করেছে। কিন্তু আমি যা কিনেছিলাম তার সব রসিদ আমার কাছে ছিল।' },
+      { role: 'Lawyer', en: 'Do you still have those receipts?', bn: 'আপনার কাছে কি এখনো সেই রসিদ আছে?' },
+      { role: 'Client', en: 'Yes, I kept them all. I also paid by credit card so there should be a transaction record.', bn: 'হ্যাঁ, আমি সব রেখেছি। আমি ক্রেডিট কার্ডে পেমেন্ট করেছি তাই লেনদেনের রেকর্ড থাকার কথা।' },
+      { role: 'Lawyer', en: 'Good. During the interview, answer only what is asked. Don\'t volunteer extra information. If you\'re unsure about a question, tell me and I\'ll advise you.', bn: 'ভালো। ইন্টারভিউয়ের সময় শুধুমাত্র যা জিজ্ঞেস করা হয় তার উত্তর দিন। অতিরিক্ত তথ্য দেবেন না। কোনো প্রশ্ন নিয়ে অনিশ্চিত থাকলে আমাকে বলুন এবং আমি পরামর্শ দেব।' },
+      { role: 'Client', en: 'I\'m nervous. If they charge me, what could happen?', bn: 'আমি নার্ভাস। যদি তারা আমাকে অভিযুক্ত করে, কী হতে পারে?' },
+    ]},
+    { title: 'Apprehended Violence Order (AVO) Hearing', scenario: 'A legal aid worker explains a court hearing to a client.', turns: [
+      { role: 'Legal Aid', en: 'I\'ve looked at your case. The hearing next Tuesday is for the interim AVO that was taken out against you. Do you understand what an AVO is?', bn: 'আমি আপনার মামলা দেখেছি। আগামী মঙ্গলবারের শুনানি আপনার বিরুদ্ধে নেওয়া অন্তর্বর্তী এভিও-র জন্য। আপনি কি জানেন এভিও কী?' },
+      { role: 'Client',    en: 'Not completely. My neighbour took it out after we had an argument. I didn\'t threaten anyone.', bn: 'পুরোপুরি না। আমাদের ঝগড়ার পরে আমার প্রতিবেশী এটা নিয়েছে। আমি কাউকে হুমকি দিইনি।' },
+      { role: 'Legal Aid', en: 'An AVO is a court order that restricts contact between you and the protected person. If you breach it, even accidentally, it\'s a criminal offence.', bn: 'এভিও হলো একটি আদালতের আদেশ যা আপনার ও সুরক্ষিত ব্যক্তির মধ্যে যোগাযোগ সীমাবদ্ধ করে। যদি আপনি এটি ভঙ্গ করেন, এমনকি ভুলবশত, এটি একটি ফৌজদারি অপরাধ।' },
+      { role: 'Client',    en: 'We live next door. How can I avoid contact? I didn\'t do anything wrong.', bn: 'আমরা পাশাপাশি থাকি। কীভাবে যোগাযোগ এড়াব? আমি কিছু ভুল করিনি।' },
+      { role: 'Legal Aid', en: 'At the hearing, you can contest the AVO or agree to it without admitting the allegations. I\'ll be there to represent you. For now, avoid any contact with your neighbour.', bn: 'শুনানিতে আপনি এভিও-র বিরোধিতা করতে পারেন বা অভিযোগ স্বীকার না করে সম্মত হতে পারেন। আমি আপনার প্রতিনিধিত্ব করতে সেখানে থাকব। এখনকার জন্য, আপনার প্রতিবেশীর সাথে সব যোগাযোগ এড়িয়ে চলুন।' },
+    ]},
+  ]},
+  { category: '🏠 Housing & Rental', items: [
+    { title: 'Rental Application — Employment Gap', scenario: 'A property manager questions an applicant about their rental history.', turns: [
+      { role: 'Property Manager', en: 'Hi, I\'m calling about your rental application for the unit in Clayton. I have a few questions before we can proceed.', bn: 'হ্যালো, আমি ক্লেটনে ইউনিটের জন্য আপনার ভাড়া আবেদন সম্পর্কে ফোন করছি। এগিয়ে যাওয়ার আগে কিছু প্রশ্ন আছে।' },
+      { role: 'Applicant',        en: 'Of course, please go ahead.', bn: 'অবশ্যই, বলুন।' },
+      { role: 'Property Manager', en: 'Your employment history shows you started your current job two months ago. Can you explain the gap before that?', bn: 'আপনার কর্মসংস্থানের ইতিহাস দেখাচ্ছে আপনি দুই মাস আগে বর্তমান চাকরি শুরু করেছেন। এর আগের বিরতি কি ব্যাখ্যা করতে পারবেন?' },
+      { role: 'Applicant',        en: 'I moved from interstate three months ago and it took some time to find work. I now have a permanent full-time position and my income is stable.', bn: 'আমি তিন মাস আগে আন্তঃরাজ্য থেকে এসেছি এবং চাকরি খুঁজে পেতে কিছুটা সময় লেগেছে। এখন আমার একটি স্থায়ী পূর্ণকালীন পদ আছে এবং আমার আয় স্থিতিশীল।' },
+      { role: 'Property Manager', en: 'I see. We also noticed you have a pet. Our property is pets on application. What kind of pet do you have?', bn: 'বুঝেছি। আমরা আরো লক্ষ্য করেছি আপনার একটি পোষা প্রাণী আছে। আমাদের সম্পত্তি আবেদনের ভিত্তিতে পোষা প্রাণী অনুমোদন করে। আপনার কী ধরনের পোষা প্রাণী আছে?' },
+      { role: 'Applicant',        en: 'I have a small dog, a Shih Tzu. He\'s very well-behaved and I can provide a reference from my previous landlord confirming there was never any damage.', bn: 'আমার একটি ছোট কুকুর আছে, একটি শিহ তজু। সে খুব ভালো আচরণের এবং আমি আমার আগের বাড়িওয়ালার রেফারেন্স দিতে পারব যা নিশ্চিত করবে কখনো কোনো ক্ষতি হয়নি।' },
+    ]},
+    { title: 'Noise Complaint — Tenancy Warning', scenario: 'A property manager contacts a tenant about a noise complaint.', turns: [
+      { role: 'Property Manager', en: 'I\'m calling because we received a complaint from your neighbours about noise. This is the second complaint this month.', bn: 'আমি ফোন করছি কারণ আপনার প্রতিবেশীদের কাছ থেকে শব্দের অভিযোগ পেয়েছি। এই মাসে এটা দ্বিতীয় অভিযোগ।' },
+      { role: 'Tenant',           en: 'I\'m very sorry. I\'m not sure what they\'re referring to. We try to keep quiet, especially after ten o\'clock at night.', bn: 'আমি সত্যিই দুঃখিত। আমি নিশ্চিত নই তারা কীসের কথা বলছে। আমরা শান্ত থাকার চেষ্টা করি, বিশেষ করে রাত দশটার পরে।' },
+      { role: 'Property Manager', en: 'The complaint mentions loud music and talking late at night, around eleven or twelve on weekends.', bn: 'অভিযোগে উল্লেখ আছে সপ্তাহান্তে রাত এগারোটা বা বারোটার দিকে জোরে সঙ্গীত ও কথাবার্তার কথা।' },
+      { role: 'Tenant',           en: 'Last weekend we had a small family gathering for my mother\'s birthday. But it finished by ten-thirty and we kept the volume down.', bn: 'গত সপ্তাহান্তে আমার মায়ের জন্মদিনের জন্য একটি ছোট পারিবারিক সমাবেশ ছিল। কিন্তু সাড়ে দশটার মধ্যে শেষ হয়েছিল এবং আমরা আওয়াজ কম রেখেছিলাম।' },
+      { role: 'Property Manager', en: 'I understand, but under your tenancy agreement you must avoid unreasonable noise that disturbs neighbours. If we receive another complaint, we may need to issue a formal notice to remedy.', bn: 'বুঝেছি, কিন্তু আপনার ভাড়া চুক্তি অনুযায়ী প্রতিবেশীদের বিরক্ত করে এমন অযৌক্তিক শব্দ এড়াতে হবে। আরেকটি অভিযোগ পেলে আমাদের আনুষ্ঠানিক নোটিশ দিতে হতে পারে।' },
+    ]},
+  ]},
+  { category: '🧠 Mental Health', items: [
+    { title: 'First Counseling Session', scenario: 'A client attends their first mental health counseling appointment.', turns: [
+      { role: 'Counselor', en: 'Thank you for coming in today. I know it can be difficult to take this first step. How are you feeling right now?', bn: 'আজ আসার জন্য ধন্যবাদ। আমি জানি প্রথম পদক্ষেপ নেওয়া কঠিন হতে পারে। আপনি এই মুহূর্তে কেমন অনুভব করছেন?' },
+      { role: 'Client',    en: 'Honestly, quite anxious. I\'ve never spoken to anyone like this before. In my culture we don\'t really talk about mental health.', bn: 'সত্যি বলতে, বেশ উদ্বিগ্ন। আমি আগে কখনো এভাবে কারো সাথে কথা বলিনি। আমাদের সংস্কৃতিতে আমরা সাধারণত মানসিক স্বাস্থ্য নিয়ে কথা বলি না।' },
+      { role: 'Counselor', en: 'I completely understand. Everything you share here is confidential. What brings you to see me today?', bn: 'আমি পুরোপুরি বুঝতে পারছি। আপনি এখানে যা শেয়ার করবেন তা সম্পূর্ণ গোপনীয়। আজ আপনি কী কারণে আমার কাছে এসেছেন?' },
+      { role: 'Client',    en: 'I\'ve been feeling very low and can\'t sleep properly. Since losing my job six months ago I just feel hopeless about everything.', bn: 'আমি খুব মনমরা অনুভব করছি এবং ঠিকমতো ঘুম হচ্ছে না। ছয় মাস আগে চাকরি হারানোর পর থেকে সবকিছু নিয়ে হতাশ লাগছে।' },
+      { role: 'Counselor', en: 'That sounds really hard. Have you had any thoughts of harming yourself or of suicide?', bn: 'সেটা সত্যিই কঠিন শোনাচ্ছে। আপনার কি নিজেকে আঘাত করার বা আত্মহত্যার কোনো চিন্তা এসেছে?' },
+      { role: 'Client',    en: 'No, nothing like that. But some days I just don\'t want to get out of bed. I feel like a burden to my family.', bn: 'না, সেরকম কিছু না। কিন্তু কোনো কোনো দিন বিছানা থেকে উঠতেই ইচ্ছে করে না। মনে হয় পরিবারের জন্য বোঝা হয়ে গেছি।' },
+    ]},
+    { title: 'Mental Health Care Plan — GP Review', scenario: 'A GP discusses a mental health care plan with a patient.', turns: [
+      { role: 'Doctor',  en: 'I\'ve been reviewing your case notes and I think it would be helpful for you to see a psychologist. Have you seen one before?', bn: 'আমি আপনার কেস নোট পর্যালোচনা করেছি এবং মনে করছি একজন মনোবিজ্ঞানীর সাথে দেখা করা আপনার জন্য সহায়ক হবে। আপনি কি আগে কখনো কারো সাথে দেখা করেছেন?' },
+      { role: 'Patient', en: 'No, I haven\'t. Will Medicare cover it? I\'m worried about the cost.', bn: 'না, করিনি। মেডিকেয়ার কি এটা কভার করবে? আমি খরচ নিয়ে চিন্তিত।' },
+      { role: 'Doctor',  en: 'Under a Mental Health Care Plan I can refer you for up to ten sessions with a psychologist that are covered by Medicare. You may pay a gap fee depending on the provider.', bn: 'মেন্টাল হেলথ কেয়ার প্ল্যানের আওতায় আমি আপনাকে মেডিকেয়ার দ্বারা আচ্ছাদিত একজন মনোবিজ্ঞানীর সাথে দশটি পর্যন্ত সেশনের জন্য রেফার করতে পারি। প্রদানকারীর উপর নির্ভর করে একটি গ্যাপ ফি দিতে হতে পারে।' },
+      { role: 'Patient', en: 'That sounds manageable. What do I need to do to get the plan set up?', bn: 'এটা সামলানোযোগ্য মনে হচ্ছে। পরিকল্পনা চালু করতে আমাকে কী করতে হবে?' },
+      { role: 'Doctor',  en: 'I\'ll complete the plan today during our appointment. Then I\'ll give you a referral letter to take to the psychologist of your choice. The plan is valid for twelve months and we\'ll review it every few sessions.', bn: 'আমি আজকের অ্যাপয়েন্টমেন্টের সময় পরিকল্পনা সম্পন্ন করব। তারপর আপনার পছন্দের মনোবিজ্ঞানীর কাছে নিয়ে যাওয়ার জন্য একটি রেফারেল লেটার দেব। পরিকল্পনাটি বারো মাস বৈধ এবং প্রতি কয়েকটি সেশনে আমরা এটি পর্যালোচনা করব।' },
+    ]},
+  ]},
+  { category: '👨‍👩‍👧 Family & Children', items: [
+    { title: 'Child Support Assessment', scenario: 'A parent contacts Services Australia about child support after separation.', turns: [
+      { role: 'Officer', en: 'Thank you for calling. Can I confirm you\'re calling about a new child support assessment following a separation?', bn: 'ফোন করার জন্য ধন্যবাদ। আমি কি নিশ্চিত করতে পারি যে আপনি বিচ্ছেদের পরে একটি নতুন শিশু সহায়তা মূল্যায়ন সম্পর্কে ফোন করছেন?' },
+      { role: 'Parent', en: 'Yes. My partner and I separated last month. We have two children and I\'m not sure how the payments work.', bn: 'হ্যাঁ। আমি এবং আমার সঙ্গী গত মাসে আলাদা হয়েছি। আমাদের দুটি সন্তান আছে এবং পেমেন্ট কীভাবে কাজ করে তা আমি নিশ্চিত নই।' },
+      { role: 'Officer', en: 'Child support is calculated based on both parents\' incomes, the number of children, and how much care time each parent provides. Do you and your former partner have a parenting plan in place?', bn: 'শিশু সহায়তা উভয় অভিভাবকের আয়, সন্তানের সংখ্যা এবং প্রতিটি অভিভাবক কতটুকু যত্নের সময় দেন তার উপর ভিত্তি করে গণনা করা হয়। আপনার এবং আপনার সাবেক সঙ্গীর কি কোনো অভিভাবকত্ব পরিকল্পনা আছে?' },
+      { role: 'Parent', en: 'Not officially. We\'ve agreed the children will live with me most of the time and see their father on weekends.', bn: 'আনুষ্ঠানিকভাবে না। আমরা সম্মত হয়েছি সন্তানরা বেশিরভাগ সময় আমার সাথে থাকবে এবং সপ্তাহান্তে তাদের বাবার সাথে দেখা করবে।' },
+      { role: 'Officer', en: 'I\'d recommend formalising that with a parenting plan or court order, as it affects the assessment. I can lodge a formal assessment today if you have your and your former partner\'s tax file numbers and income details.', bn: 'আমি এটি একটি অভিভাবকত্ব পরিকল্পনা বা আদালতের আদেশ দিয়ে আনুষ্ঠানিক করার পরামর্শ দেব, কারণ এটি মূল্যায়নকে প্রভাবিত করে। আপনার এবং আপনার সাবেক সঙ্গীর ট্যাক্স ফাইল নম্বর ও আয়ের বিবরণ থাকলে আমি আজই একটি আনুষ্ঠানিক মূল্যায়ন দাখিল করতে পারি।' },
+    ]},
+  ]},
+];
 let _naatiProgress = null;
 function naatiGetProgress() {
   if (!_naatiProgress) _naatiProgress = dbGet('zarif_naati_progress') || {};
@@ -4846,6 +4990,7 @@ function naatiSwitchTab(tab) {
   document.querySelectorAll('#page-naati .naati-tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === 'naati-panel-' + tab));
   if (tab === 'vocab' && !_naatiVocab.terms.length) naatiVocabBuild('all');
   if (tab === 'quiz') { const qEl = document.getElementById('naati-quiz'); if (qEl && !qEl.children.length) naatiQuizStart('all', 'en-bn'); }
+  if (tab === 'dialogues') { const dEl = document.getElementById('naati-dialogues'); if (dEl && !dEl.children.length) naatiDlgRender(); }
 }
 
 // ---- Vocab browser (swipeable cards) ----
@@ -4897,6 +5042,52 @@ function naatiVocabRender() {
       <button class="naati-vocab-nav-btn" onclick="naatiVocabNav(-1)"><i class="ti ti-arrow-left"></i> Prev</button>
       <button class="naati-vocab-nav-btn next" onclick="naatiVocabNav(1)">Next <i class="ti ti-arrow-right"></i></button>
     </div>`;
+}
+
+// ---- Dialogue browser ----
+let _naatiDlg = { catIdx: 0, dlgIdx: 0 };
+function naatiDlgSetCat(catIdx) {
+  _naatiDlg.catIdx = catIdx;
+  _naatiDlg.dlgIdx = 0;
+  naatiDlgRender();
+}
+function naatiDlgNav(dir) {
+  const items = NAATI_DIALOGUES[_naatiDlg.catIdx].items;
+  _naatiDlg.dlgIdx = (_naatiDlg.dlgIdx + dir + items.length) % items.length;
+  naatiDlgRender();
+}
+function naatiDlgRender() {
+  const el = document.getElementById('naati-dialogues');
+  if (!el) return;
+  const { catIdx, dlgIdx } = _naatiDlg;
+  const catBtns = `<div class="naati-vocab-filters">${NAATI_DIALOGUES.map((c, i) =>
+    `<button class="naati-quiz-filter${i === catIdx ? ' active' : ''}" onclick="naatiDlgSetCat(${i})">${c.category}</button>`
+  ).join('')}</div>`;
+  const cat = NAATI_DIALOGUES[catIdx];
+  const dlg = cat.items[dlgIdx];
+  const navRow = cat.items.length > 1
+    ? `<div class="ndlg-nav">
+        <button class="naati-vocab-nav-btn" onclick="naatiDlgNav(-1)"><i class="ti ti-arrow-left"></i> Prev</button>
+        <span class="naati-vocab-counter" style="margin:0;">${dlgIdx + 1} / ${cat.items.length}</span>
+        <button class="naati-vocab-nav-btn next" onclick="naatiDlgNav(1)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>` : '';
+  const roles = [...new Set(dlg.turns.map(t => t.role))];
+  const turns = dlg.turns.map(t => {
+    const side = roles.indexOf(t.role) === 0 ? 'a' : 'b';
+    return `<div class="ndlg-turn ndlg-${side}">
+      <div class="ndlg-role">${t.role}</div>
+      <div class="ndlg-en">${t.en}</div>
+      <div class="ndlg-bn">${t.bn}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = catBtns +
+    `<div class="ndlg-header">
+      <div class="ndlg-title">${dlg.title}</div>
+      <div class="ndlg-scenario">${dlg.scenario}</div>
+    </div>
+    ${navRow}
+    <div class="ndlg-thread">${turns}</div>
+    ${navRow}`;
 }
 
 function renderNaatiPage() {
