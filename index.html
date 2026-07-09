@@ -1924,6 +1924,36 @@
   .ndlg-speak-btn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; border: none; background: transparent; color: var(--text-3); cursor: pointer; font-size: 13px; margin-left: 6px; vertical-align: middle; opacity: 0.6; transition: opacity 0.12s, color 0.12s, background 0.12s; flex-shrink: 0; }
   .ndlg-speak-btn:hover { opacity: 1; color: var(--teal-text); background: var(--teal-bg); }
   .ndlg-turn.ndlg-speaking { background: var(--amber-bg) !important; border-color: var(--amber-text) !important; box-shadow: 0 0 0 2px var(--amber-text); transition: background 0.25s, box-shadow 0.25s; }
+  /* Keyword highlights in dialogues */
+  mark.ndlg-kw { border-radius: 3px; padding: 0 2px; font-style: normal; }
+  mark.ndlg-kw-num { background: rgba(255,180,0,0.28); color: var(--amber-text); }
+  mark.ndlg-kw-date { background: rgba(56,189,248,0.18); color: var(--teal-text); }
+  mark.ndlg-kw-name { background: rgba(167,139,250,0.2); color: var(--purple-text); }
+  .ndlg-kw-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border-md); background: transparent; font-size: 11.5px; font-weight: 600; color: var(--text-3); cursor: pointer; font-family: inherit; transition: background 0.12s, color 0.12s, border-color 0.12s; }
+  .ndlg-kw-toggle.on { background: rgba(255,180,0,0.18); border-color: var(--amber-text); color: var(--amber-text); }
+  /* Note-taking strategy section */
+  .nnote-cycle { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border-md); border-radius: 10px; overflow: hidden; }
+  .nnote-cycle-step { flex: 1; padding: 12px 10px; text-align: center; background: var(--surface2); border-right: 1px solid var(--border-md); }
+  .nnote-cycle-step:last-child { border-right: none; }
+  .nnote-cycle-num { width: 24px; height: 24px; border-radius: 50%; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; }
+  .nnote-cycle-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .nnote-cycle-sub { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+  .nnote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .nnote-box { border: 1px solid var(--border-md); border-radius: 9px; padding: 12px 13px; background: var(--surface2); }
+  .nnote-box-title { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .nnote-box ul { margin: 0; padding: 0 0 0 14px; }
+  .nnote-box li { font-size: 12.5px; color: var(--text); line-height: 1.6; }
+  .nnote-box li.strike { color: var(--text-3); text-decoration: line-through; }
+  .nnote-sym-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 14px; }
+  .nnote-sym-table th { font-size: 10.5px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; padding: 5px 8px; text-align: left; border-bottom: 2px solid var(--border-md); }
+  .nnote-sym-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .nnote-sym-table td:first-child { font-family: monospace; font-size: 14px; font-weight: 700; color: var(--amber-text); width: 60px; }
+  .nnote-sym-table tr:last-child td { border-bottom: none; }
+  .nnote-tip { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; background: var(--teal-bg); border: 1px solid var(--teal); margin-bottom: 8px; }
+  .nnote-tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .nnote-tip-text { font-size: 13px; color: var(--teal-text); line-height: 1.5; }
+  .nnote-tip-text strong { font-weight: 700; display: block; margin-bottom: 2px; }
+  @media (max-width: 760px) { .nnote-grid { grid-template-columns: 1fr; } .nnote-cycle { flex-direction: column; } .nnote-cycle-step { border-right: none; border-bottom: 1px solid var(--border-md); } .nnote-cycle-step:last-child { border-bottom: none; } }
   /* Register table */
   .nreg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .nreg-table th { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 10px; text-align: left; border-bottom: 2px solid var(--border-md); }
@@ -2888,6 +2918,88 @@
         <div class="naati-strat-item">
           <div class="naati-strat-icon" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-sleep"></i></div>
           <div class="naati-strat-text"><strong>Rest the night before</strong>No cramming on July 28. Memory consolidation happens during sleep — not last-minute study.</div>
+        </div>
+        <!-- Note-taking Strategy -->
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="naati-tab-panel-head" style="margin-bottom:12px;">
+            <span class="naati-tab-panel-title"><i class="ti ti-notes" style="color:var(--teal-text);"></i> Note-taking Game Plan</span>
+          </div>
+          <!-- The cycle -->
+          <div class="nnote-cycle">
+            <div class="nnote-cycle-step">
+              <div class="nnote-cycle-num" style="background:var(--teal-bg);color:var(--teal-text);">1</div>
+              <div class="nnote-cycle-label">HEAR</div>
+              <div class="nnote-cycle-sub">Listen to the full sentence without writing. Do not start mid-turn.</div>
+            </div>
+            <div class="nnote-cycle-step">
+              <div class="nnote-cycle-num" style="background:var(--amber-bg);color:var(--amber-text);">2</div>
+              <div class="nnote-cycle-label">NOTE</div>
+              <div class="nnote-cycle-sub">Jot only what you cannot reconstruct: numbers, names, codes, dates.</div>
+            </div>
+            <div class="nnote-cycle-step">
+              <div class="nnote-cycle-num" style="background:var(--green-bg);color:var(--green-text);">3</div>
+              <div class="nnote-cycle-label">SPEAK</div>
+              <div class="nnote-cycle-sub">Deliver naturally from memory + notes. Don't read, interpret.</div>
+            </div>
+          </div>
+          <!-- Must / Never -->
+          <div class="nnote-grid">
+            <div class="nnote-box" style="border-color:var(--green-text);">
+              <div class="nnote-box-title" style="color:var(--green-text);"><i class="ti ti-circle-check"></i> Always write down</div>
+              <ul>
+                <li>All numbers — amounts, dosages, dates, times</li>
+                <li>Phone &amp; reference numbers</li>
+                <li>Proper names — people, places, organisations</li>
+                <li>Diagnosis or medication name</li>
+                <li>Visa type, court charge, legal status</li>
+                <li>Deadlines and appointment dates</li>
+                <li>Payment types and Centrelink codes</li>
+              </ul>
+            </div>
+            <div class="nnote-box" style="border-color:var(--coral-text);">
+              <div class="nnote-box-title" style="color:var(--coral-text);"><i class="ti ti-circle-x"></i> Never waste time writing</div>
+              <ul>
+                <li class="strike">Conjunctions, filler words</li>
+                <li class="strike">Articles (the, a, an)</li>
+                <li class="strike">Full sentences</li>
+                <li class="strike">Emotions or tone</li>
+                <li class="strike">Routine vocab you already know</li>
+                <li class="strike">Verb tenses (remember them)</li>
+              </ul>
+            </div>
+          </div>
+          <!-- Symbol cheat sheet -->
+          <div class="naati-tab-panel-head" style="margin-bottom:8px;margin-top:4px;">
+            <span style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;">Symbol cheat sheet</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="nnote-sym-table">
+              <thead><tr><th>Symbol</th><th>Meaning</th><th>Symbol</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td>→</td><td>leads to / because</td><td>Rx</td><td>medication / prescription</td></tr>
+                <tr><td>↑ / ↓</td><td>increase / decrease</td><td>Dx</td><td>diagnosis</td></tr>
+                <tr><td>$</td><td>dollar amount</td><td>CL</td><td>Centrelink</td></tr>
+                <tr><td>#</td><td>reference / case number</td><td>appt</td><td>appointment</td></tr>
+                <tr><td>w/</td><td>with</td><td>MED</td><td>Medicare</td></tr>
+                <tr><td>x2 / x3</td><td>twice / three times</td><td>imm</td><td>immigration / visa</td></tr>
+                <tr><td>/d</td><td>per day</td><td>✓ / ✗</td><td>approved / denied</td></tr>
+                <tr><td>@</td><td>at / location</td><td>dob</td><td>date of birth</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Smart habits -->
+          <div class="nnote-tip">
+            <div class="nnote-tip-icon">💡</div>
+            <div class="nnote-tip-text"><strong>Circle every number immediately.</strong>Numbers are the most penalised errors in CCL. The moment you hear a dollar amount, dosage, date, or reference number — write it and circle it before anything else.</div>
+          </div>
+          <div class="nnote-tip" style="background:var(--amber-bg);border-color:var(--amber-text);">
+            <div class="nnote-tip-icon">⚡</div>
+            <div class="nnote-tip-text" style="color:var(--amber-text);"><strong>Draw a dash — between speakers.</strong>When the speaker changes, put a dash on a new line. This keeps your notes in order and prevents you confusing who said what during delivery.</div>
+          </div>
+          <div class="nnote-tip" style="background:var(--purple-bg);border-color:var(--purple-text);">
+            <div class="nnote-tip-icon">🎯</div>
+            <div class="nnote-tip-text" style="color:var(--purple-text);"><strong>If you miss something, keep going.</strong>Freezing to recover a missed word costs you the next sentence too. Skip it, note what you caught, and reconstruct from context during delivery.</div>
+          </div>
         </div>
         <!-- Register & Tone Guide -->
         <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
@@ -5212,6 +5324,72 @@ function naatiVocabRender() {
     </div>`;
 }
 
+// ---- Dialogue keyword highlighter ----
+let _ndlgKwOn = true;
+const _NDLG_KW_PATTERNS = [
+  // Dollar amounts
+  { re: /\$[\d,]+(?:\.\d+)?/g, cls: 'ndlg-kw-num' },
+  // Numbers with explicit units (dosage, frequency)
+  { re: /\b\d+(?:[,\d]*)?(?:\.\d+)?\s*(?:mg|mL|ml|mcg|kg|g|tablets?|capsules?|drops?|times?)\b/gi, cls: 'ndlg-kw-num' },
+  // Percentages
+  { re: /\b\d+(?:\.\d+)?%/g, cls: 'ndlg-kw-num' },
+  // Time expressions (before standalone numbers to catch "quarter past")
+  { re: /\b(?:quarter\s+(?:past|to)|half\s+past|o'clock|midnight|noon)\b/gi, cls: 'ndlg-kw-date' },
+  // Clock times
+  { re: /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, cls: 'ndlg-kw-date' },
+  // Ordinals
+  { re: /\b\d{1,2}(?:st|nd|rd|th)\b/gi, cls: 'ndlg-kw-date' },
+  // Month names
+  { re: /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\b/g, cls: 'ndlg-kw-date' },
+  // Day names
+  { re: /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/g, cls: 'ndlg-kw-date' },
+  // Years
+  { re: /\b20\d{2}\b/g, cls: 'ndlg-kw-date' },
+  // Phone-style numbers (groups of digits with spaces/dashes)
+  { re: /\b\d{4}[\s-]\d{3}[\s-]\d{3}\b/g, cls: 'ndlg-kw-num' },
+  // Reference/case/file numbers
+  { re: /\b(?:reference|application|case|file|number)\s+\d+\b/gi, cls: 'ndlg-kw-num' },
+  // Standalone numbers (any remaining)
+  { re: /\b\d+(?:,\d{3})*(?:\.\d+)?\b/g, cls: 'ndlg-kw-num' },
+  // Proper nouns mid-sentence (Title Case word not at sentence start — best-effort)
+  { re: /(?<=[\w,;:]\s)[A-Z][a-z]{2,}(?:\s[A-Z][a-z]+)*/g, cls: 'ndlg-kw-name' },
+];
+function naatiHighlightKw(text) {
+  const matches = [];
+  _NDLG_KW_PATTERNS.forEach(({ re, cls }) => {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      matches.push({ start: m.index, end: m.index + m[0].length, text: m[0], cls });
+    }
+  });
+  matches.sort((a, b) => a.start - b.start);
+  const kept = [];
+  let lastEnd = 0;
+  for (const m of matches) {
+    if (m.start >= lastEnd) { kept.push(m); lastEnd = m.end; }
+  }
+  let result = '', pos = 0;
+  for (const m of kept) {
+    result += text.slice(pos, m.start);
+    result += `<mark class="ndlg-kw ${m.cls}">${m.text}</mark>`;
+    pos = m.end;
+  }
+  return result + text.slice(pos);
+}
+function naatiDlgToggleKw() {
+  _ndlgKwOn = !_ndlgKwOn;
+  const btn = document.getElementById('ndlg-kw-btn');
+  if (btn) btn.classList.toggle('on', _ndlgKwOn);
+  // Re-render EN columns in place without full re-render
+  const turns = document.querySelectorAll('.ndlg-en');
+  turns.forEach((el, i) => {
+    if (!_ndlgTurns[i]) return;
+    el.innerHTML = (_ndlgKwOn ? naatiHighlightKw(_ndlgTurns[i].en) : _ndlgTurns[i].en) +
+      `<button class="ndlg-speak-btn" onclick="naatiDlgSpeak(${i})" title="Speak this line"><i class="ti ti-volume"></i></button>`;
+  });
+}
+
 // ---- Dialogue browser ----
 let _naatiDlg = { catIdx: 0, dlgIdx: 0 };
 let _ndlgPlaying = false;
@@ -5291,10 +5469,11 @@ function naatiDlgRender() {
   const roles = [...new Set(dlg.turns.map(t => t.role))];
   const turns = dlg.turns.map((t, idx) => {
     const side = roles.indexOf(t.role) === 0 ? 'a' : 'b';
+    const enHtml = _ndlgKwOn ? naatiHighlightKw(t.en) : t.en;
     return `<div class="ndlg-turn ndlg-${side}">
       <div class="ndlg-role">${t.role}</div>
       <div class="ndlg-cols">
-        <div class="ndlg-en">${t.en}<button class="ndlg-speak-btn" onclick="naatiDlgSpeak(${idx})" title="Speak this line"><i class="ti ti-volume"></i></button></div>
+        <div class="ndlg-en">${enHtml}<button class="ndlg-speak-btn" onclick="naatiDlgSpeak(${idx})" title="Speak this line"><i class="ti ti-volume"></i></button></div>
         <div class="ndlg-bn">${t.bn}</div>
       </div>
     </div>`;
@@ -5305,7 +5484,10 @@ function naatiDlgRender() {
         <div class="ndlg-title">${dlg.title}</div>
         <div class="ndlg-scenario">${dlg.scenario}</div>
       </div>
-      <button class="ndlg-play-all-btn" id="ndlg-play-btn" onclick="naatiDlgPlayAll()"><i class="ti ti-player-play"></i> Play EN</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button class="ndlg-kw-toggle${_ndlgKwOn ? ' on' : ''}" id="ndlg-kw-btn" onclick="naatiDlgToggleKw()" title="Toggle keyword highlights"><i class="ti ti-highlight"></i> Keywords</button>
+        <button class="ndlg-play-all-btn" id="ndlg-play-btn" onclick="naatiDlgPlayAll()"><i class="ti ti-player-play"></i> Play EN</button>
+      </div>
     </div>
     <div class="ndlg-col-header"><span>🇦🇺 English</span><span>🇧🇩 Bengali</span></div>
     <div class="ndlg-thread">${turns}</div>
