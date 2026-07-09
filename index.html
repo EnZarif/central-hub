@@ -1925,10 +1925,13 @@
   .ndlg-speak-btn:hover { opacity: 1; color: var(--teal-text); background: var(--teal-bg); }
   .ndlg-turn.ndlg-speaking { background: var(--amber-bg) !important; border-color: var(--amber-text) !important; box-shadow: 0 0 0 2px var(--amber-text); transition: background 0.25s, box-shadow 0.25s; }
   /* Keyword highlights in dialogues */
-  mark.ndlg-kw { border-radius: 3px; padding: 0 2px; font-style: normal; }
+  mark.ndlg-kw { border-radius: 3px; padding: 0 2px; font-style: normal; font-weight: 600; }
   mark.ndlg-kw-num { background: rgba(255,180,0,0.28); color: var(--amber-text); }
   mark.ndlg-kw-date { background: rgba(56,189,248,0.18); color: var(--teal-text); }
   mark.ndlg-kw-name { background: rgba(167,139,250,0.2); color: var(--purple-text); }
+  mark.ndlg-kw-term { background: rgba(52,211,153,0.18); color: var(--green-text); }
+  .ndlg-kw-legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; font-size: 11.5px; color: var(--text-3); padding: 8px 10px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+  .ndlg-kw-legend mark { font-size: 11px; padding: 1px 5px; }
   .ndlg-kw-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border-md); background: transparent; font-size: 11.5px; font-weight: 600; color: var(--text-3); cursor: pointer; font-family: inherit; transition: background 0.12s, color 0.12s, border-color 0.12s; }
   .ndlg-kw-toggle.on { background: rgba(255,180,0,0.18); border-color: var(--amber-text); color: var(--amber-text); }
   /* Note-taking strategy section */
@@ -5328,32 +5331,84 @@ function naatiVocabRender() {
 
 // ---- Dialogue keyword highlighter ----
 let _ndlgKwOn = true;
+// Domain vocabulary to highlight as exam-critical terms (green)
+const _NDLG_KW_TERM_LIST = [
+  // Multi-word terms first (must appear before single-word variants)
+  'blood pressure','blood test','blood sugar','blood type','blood group',
+  'legal aid','child support','parenting plan','family violence','domestic violence',
+  'health check','skills assessment','mutual obligations','rent assistance',
+  'crisis payment','carer payment','home affairs','mental health','side effects',
+  'not guilty','chest pain','next of kin','tax file number','tax file',
+  'birth certificate','death certificate','marriage certificate',
+  'intensive care','emergency department','operating theatre','general practitioner',
+  'permanent resident','temporary resident','bridging visa','partner visa',
+  'protection visa','student visa','work visa','tourist visa',
+  'community legal','legal representation','duty lawyer','public defender',
+  'restraining order','intervention order','apprehended violence',
+  'income support','newstart allowance','youth allowance',
+  // Medical
+  'diagnosis','prescribed','prescription','medication','medications','dosage',
+  'dose','tablet','tablets','capsule','capsules','injection','inhaler','drops',
+  'allergic','allergy','allergies','diabetes','asthma','hypertension',
+  'referral','specialist','surgery','operation','procedure','emergency',
+  'ambulance','hospital','clinic','appointment','chronic','acute',
+  'infection','fracture','injury','wound','anaesthetic','anaesthesia',
+  'depression','anxiety','psychologist','psychiatrist','counselling','therapy',
+  'physiotherapy','occupational','rehabilitation','palliative','hospice',
+  'miscarriage','stillbirth','pregnancy','prenatal','postnatal',
+  'tumour','cancer','chemotherapy','radiation','biopsy',
+  'stroke','seizure','epilepsy','dementia','disability',
+  // Legal
+  'charged','charge','offence','offense','bail','court','lawyer','solicitor',
+  'plea','guilty','fine','sentence','warrant','custody','magistrate',
+  'judge','appeal','hearing','evidence','witness','defendant','plaintiff',
+  'prosecution','conviction','acquittal','verdict','parole','probation',
+  'arrest','detained','remand','summons','subpoena','affidavit',
+  // Centrelink / Social Services
+  'payment','benefit','allowance','pension','jobseeker','disability support',
+  'medicare','rebate','claim','approved','rejected','denied',
+  'income','assets','assessment','review','overpayment','debt','compliance',
+  'centrelink','concession','nominee','correspondence','nominee',
+  'bereavement','hardship','advance','supplement',
+  // Immigration / Visa
+  'visa','application','permanent','temporary','bridging','citizenship',
+  'passport','sponsor','sponsorship','nomination','refusal','migration',
+  'resident','refugee','asylum','humanitarian','character','deportation',
+  'detention','unlawful','overstay','cancellation','department',
+  // Housing / Tenancy
+  'rent','lease','bond','eviction','evicted','notice','landlord','tenant',
+  'repairs','maintenance','tribunal','breach','vacate','vacant','property',
+  'condition report','rental agreement','rooming house','crisis accommodation',
+  // Family / Child Protection
+  'custody','visitation','welfare','guardianship','adoption','foster',
+  'child protection','family court','intervention',
+  // Urgent / status
+  'urgent','immediately','deadline','expire','expires','expired','overdue',
+  'required','mandatory','compulsory','penalty','liable','obligation',
+  'suspended','terminated','cancelled','revoked','reinstated',
+];
+// Build one regex from the list (longest terms first to avoid partial overlap)
+const _NDLG_KW_TERM_RE = new RegExp(
+  '\\b(' + _NDLG_KW_TERM_LIST
+    .slice().sort((a, b) => b.length - a.length)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|') + ')\\b',
+  'gi'
+);
 const _NDLG_KW_PATTERNS = [
-  // Dollar amounts
   { re: /\$[\d,]+(?:\.\d+)?/g, cls: 'ndlg-kw-num' },
-  // Numbers with explicit units (dosage, frequency)
   { re: /\b\d+(?:[,\d]*)?(?:\.\d+)?\s*(?:mg|mL|ml|mcg|kg|g|tablets?|capsules?|drops?|times?)\b/gi, cls: 'ndlg-kw-num' },
-  // Percentages
   { re: /\b\d+(?:\.\d+)?%/g, cls: 'ndlg-kw-num' },
-  // Time expressions (before standalone numbers to catch "quarter past")
   { re: /\b(?:quarter\s+(?:past|to)|half\s+past|o'clock|midnight|noon)\b/gi, cls: 'ndlg-kw-date' },
-  // Clock times
   { re: /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, cls: 'ndlg-kw-date' },
-  // Ordinals
   { re: /\b\d{1,2}(?:st|nd|rd|th)\b/gi, cls: 'ndlg-kw-date' },
-  // Month names
   { re: /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\b/g, cls: 'ndlg-kw-date' },
-  // Day names
   { re: /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/g, cls: 'ndlg-kw-date' },
-  // Years
   { re: /\b20\d{2}\b/g, cls: 'ndlg-kw-date' },
-  // Phone-style numbers (groups of digits with spaces/dashes)
   { re: /\b\d{4}[\s-]\d{3}[\s-]\d{3}\b/g, cls: 'ndlg-kw-num' },
-  // Reference/case/file numbers
   { re: /\b(?:reference|application|case|file|number)\s+\d+\b/gi, cls: 'ndlg-kw-num' },
-  // Standalone numbers (any remaining)
   { re: /\b\d+(?:,\d{3})*(?:\.\d+)?\b/g, cls: 'ndlg-kw-num' },
-  // Proper nouns mid-sentence (Title Case word not at sentence start — best-effort)
+  { re: _NDLG_KW_TERM_RE, cls: 'ndlg-kw-term' },
   { re: /(?<=[\w,;:]\s)[A-Z][a-z]{2,}(?:\s[A-Z][a-z]+)*/g, cls: 'ndlg-kw-name' },
 ];
 function naatiHighlightKw(text) {
@@ -5362,10 +5417,10 @@ function naatiHighlightKw(text) {
     re.lastIndex = 0;
     let m;
     while ((m = re.exec(text)) !== null) {
-      matches.push({ start: m.index, end: m.index + m[0].length, text: m[0], cls });
+      matches.push({ start: m.index, end: m.index + m[0].length, txt: m[0], cls });
     }
   });
-  matches.sort((a, b) => a.start - b.start);
+  matches.sort((a, b) => a.start - b.start || b.end - a.end);
   const kept = [];
   let lastEnd = 0;
   for (const m of matches) {
@@ -5374,7 +5429,7 @@ function naatiHighlightKw(text) {
   let result = '', pos = 0;
   for (const m of kept) {
     result += text.slice(pos, m.start);
-    result += `<mark class="ndlg-kw ${m.cls}">${m.text}</mark>`;
+    result += `<mark class="ndlg-kw ${m.cls}">${m.txt}</mark>`;
     pos = m.end;
   }
   return result + text.slice(pos);
@@ -5493,7 +5548,13 @@ function naatiDlgRender() {
     </div>
     <div class="ndlg-col-header"><span>🇦🇺 English</span><span>🇧🇩 Bengali</span></div>
     <div class="ndlg-thread">${turns}</div>
-    <div style="margin-top:12px;">${navRow}</div>`;
+    <div style="margin-top:12px;">${navRow}</div>
+    <div class="ndlg-kw-legend">
+      <mark class="ndlg-kw ndlg-kw-num">123 / $</mark> numbers &amp; amounts
+      <mark class="ndlg-kw ndlg-kw-date">dates / times</mark>
+      <mark class="ndlg-kw ndlg-kw-term">key terms</mark>
+      <mark class="ndlg-kw ndlg-kw-name">names</mark>
+    </div>`;
 }
 
 function renderNaatiPage() {
