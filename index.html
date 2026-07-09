@@ -1917,6 +1917,13 @@
   .nexam-box { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border-md); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 1px; color: var(--green-text); }
   .nexam-check.done .nexam-box { background: var(--green-bg); border-color: var(--green-text); }
   .nexam-text { font-size: 14px; color: var(--text); line-height: 1.45; }
+  /* Dialogue TTS */
+  .ndlg-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .ndlg-play-all-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; border-radius: 20px; border: 1.5px solid var(--teal); background: var(--teal-bg); color: var(--teal-text); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
+  .ndlg-play-all-btn.active { background: var(--coral-bg); border-color: var(--coral-text); color: var(--coral-text); }
+  .ndlg-speak-btn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; border: none; background: transparent; color: var(--text-3); cursor: pointer; font-size: 13px; margin-left: 6px; vertical-align: middle; opacity: 0.6; transition: opacity 0.12s, color 0.12s, background 0.12s; flex-shrink: 0; }
+  .ndlg-speak-btn:hover { opacity: 1; color: var(--teal-text); background: var(--teal-bg); }
+  .ndlg-turn.ndlg-speaking { background: var(--amber-bg) !important; border-color: var(--amber-text) !important; box-shadow: 0 0 0 2px var(--amber-text); transition: background 0.25s, box-shadow 0.25s; }
   /* Register table */
   .nreg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .nreg-table th { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 10px; text-align: left; border-bottom: 2px solid var(--border-md); }
@@ -5207,17 +5214,65 @@ function naatiVocabRender() {
 
 // ---- Dialogue browser ----
 let _naatiDlg = { catIdx: 0, dlgIdx: 0 };
+let _ndlgPlaying = false;
+let _ndlgTurns = [];
 function naatiDlgSetCat(catIdx) {
+  naatiDlgStop();
   _naatiDlg.catIdx = catIdx;
   _naatiDlg.dlgIdx = 0;
   naatiDlgRender();
 }
 function naatiDlgNav(dir) {
+  naatiDlgStop();
   const items = NAATI_DIALOGUES[_naatiDlg.catIdx].items;
   _naatiDlg.dlgIdx = (_naatiDlg.dlgIdx + dir + items.length) % items.length;
   naatiDlgRender();
 }
+function naatiDlgSpeak(idx) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(_ndlgTurns[idx].en);
+  utt.lang = 'en-AU';
+  utt.rate = 0.88;
+  window.speechSynthesis.speak(utt);
+}
+function naatiDlgStop() {
+  _ndlgPlaying = false;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  document.querySelectorAll('.ndlg-turn').forEach(el => el.classList.remove('ndlg-speaking'));
+  const btn = document.getElementById('ndlg-play-btn');
+  if (btn) { btn.innerHTML = '<i class="ti ti-player-play"></i> Play EN'; btn.classList.remove('active'); }
+}
+function naatiDlgPlayAll() {
+  if (_ndlgPlaying) { naatiDlgStop(); return; }
+  if (!window.speechSynthesis || !_ndlgTurns.length) return;
+  _ndlgPlaying = true;
+  const btn = document.getElementById('ndlg-play-btn');
+  if (btn) { btn.innerHTML = '<i class="ti ti-player-stop"></i> Stop'; btn.classList.add('active'); }
+  window.speechSynthesis.cancel();
+  let i = 0;
+  function playNext() {
+    if (!_ndlgPlaying || i >= _ndlgTurns.length) {
+      _ndlgPlaying = false;
+      document.querySelectorAll('.ndlg-turn').forEach(el => el.classList.remove('ndlg-speaking'));
+      if (btn) { btn.innerHTML = '<i class="ti ti-player-play"></i> Play EN'; btn.classList.remove('active'); }
+      return;
+    }
+    const turnIdx = i++;
+    document.querySelectorAll('.ndlg-turn').forEach((el, j) => el.classList.toggle('ndlg-speaking', j === turnIdx));
+    const utt = new SpeechSynthesisUtterance(_ndlgTurns[turnIdx].en);
+    utt.lang = 'en-AU';
+    utt.rate = 0.88;
+    utt.onend = () => {
+      document.querySelectorAll('.ndlg-turn').forEach(el => el.classList.remove('ndlg-speaking'));
+      if (_ndlgPlaying) setTimeout(playNext, 1300);
+    };
+    window.speechSynthesis.speak(utt);
+  }
+  playNext();
+}
 function naatiDlgRender() {
+  naatiDlgStop();
   const el = document.getElementById('naati-dialogues');
   if (!el) return;
   const { catIdx, dlgIdx } = _naatiDlg;
@@ -5226,6 +5281,7 @@ function naatiDlgRender() {
   ).join('')}</div>`;
   const cat = NAATI_DIALOGUES[catIdx];
   const dlg = cat.items[dlgIdx];
+  _ndlgTurns = dlg.turns;
   const navRow = cat.items.length > 1
     ? `<div class="ndlg-nav">
         <button class="naati-vocab-nav-btn" onclick="naatiDlgNav(-1)"><i class="ti ti-arrow-left"></i> Prev</button>
@@ -5233,20 +5289,23 @@ function naatiDlgRender() {
         <button class="naati-vocab-nav-btn next" onclick="naatiDlgNav(1)">Next <i class="ti ti-arrow-right"></i></button>
       </div>` : '';
   const roles = [...new Set(dlg.turns.map(t => t.role))];
-  const turns = dlg.turns.map(t => {
+  const turns = dlg.turns.map((t, idx) => {
     const side = roles.indexOf(t.role) === 0 ? 'a' : 'b';
     return `<div class="ndlg-turn ndlg-${side}">
       <div class="ndlg-role">${t.role}</div>
       <div class="ndlg-cols">
-        <div class="ndlg-en">${t.en}</div>
+        <div class="ndlg-en">${t.en}<button class="ndlg-speak-btn" onclick="naatiDlgSpeak(${idx})" title="Speak this line"><i class="ti ti-volume"></i></button></div>
         <div class="ndlg-bn">${t.bn}</div>
       </div>
     </div>`;
   }).join('');
   el.innerHTML = catBtns +
     `<div class="ndlg-header">
-      <div class="ndlg-title">${dlg.title}</div>
-      <div class="ndlg-scenario">${dlg.scenario}</div>
+      <div>
+        <div class="ndlg-title">${dlg.title}</div>
+        <div class="ndlg-scenario">${dlg.scenario}</div>
+      </div>
+      <button class="ndlg-play-all-btn" id="ndlg-play-btn" onclick="naatiDlgPlayAll()"><i class="ti ti-player-play"></i> Play EN</button>
     </div>
     <div class="ndlg-col-header"><span>🇦🇺 English</span><span>🇧🇩 Bengali</span></div>
     <div class="ndlg-thread">${turns}</div>
