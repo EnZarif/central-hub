@@ -5298,6 +5298,15 @@ function naatiVocabNav(dir) {
   _naatiVocab.idx = (_naatiVocab.idx + dir + total) % total;
   naatiVocabRender();
 }
+function naatiVocabShuffle() {
+  const t = _naatiVocab.terms;
+  for (let i = t.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [t[i], t[j]] = [t[j], t[i]];
+  }
+  _naatiVocab.idx = 0;
+  naatiVocabRender();
+}
 function naatiVocabTouchStart(e) { _nvTouchX = e.touches[0].clientX; }
 function naatiVocabTouchEnd(e) {
   const dx = e.changedTouches[0].clientX - _nvTouchX;
@@ -5325,6 +5334,7 @@ function naatiVocabRender() {
     </div>
     <div class="naati-vocab-nav">
       <button class="naati-vocab-nav-btn" onclick="naatiVocabNav(-1)"><i class="ti ti-arrow-left"></i> Prev</button>
+      <button class="naati-vocab-nav-btn" onclick="naatiVocabShuffle()" title="Shuffle"><i class="ti ti-arrows-shuffle"></i></button>
       <button class="naati-vocab-nav-btn next" onclick="naatiVocabNav(1)">Next <i class="ti ti-arrow-right"></i></button>
     </div>`;
 }
@@ -5695,6 +5705,7 @@ function naatiQuizRender() {
     <span class="naati-quiz-dir-lbl">Direction:</span>
     <button class="naati-quiz-dir-btn${q.direction==='en-bn'?' active':''}" onclick="naatiQuizSetDir('en-bn')">English → Bengali</button>
     <button class="naati-quiz-dir-btn${q.direction==='bn-en'?' active':''}" onclick="naatiQuizSetDir('bn-en')">Bengali → English</button>
+    <button class="naati-quiz-dir-btn" onclick="naatiQuizStart()" title="Shuffle deck"><i class="ti ti-arrows-shuffle"></i> Shuffle</button>
   </div>`;
   const total = q.deck.length;
   if (q.idx >= total) {
