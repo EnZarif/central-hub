@@ -11243,6 +11243,34 @@ const KPI_SOURCES = {
 
 const SSML_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
+// XMLSerializer.serializeToString() re-declares the default namespace on every element
+// created via createElementNS(), producing dozens of redundant xmlns="..." attributes
+// that cause Excel's "we ran into errors" repair dialog. This strips the duplicates,
+// keeping only the root element's declaration. Also handles the edge case where some
+// browsers emit a xmlns:NS1 prefix instead of the default namespace.
+function cleanSheetXml(xml) {
+  // Drop any XML declaration XMLSerializer may prepend (xlsx readers don't need it
+  // and it can conflict with the standalone attribute in the original file).
+  xml = xml.replace(/^<\?xml[^?]*\?>\s*/, '');
+
+  // Case 1: browser used a prefixed namespace (xmlns:NS1="...spreadsheetml...")
+  const prefixedMatch = xml.match(/xmlns:(\w+)="http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main"/);
+  if (prefixedMatch) {
+    const p = prefixedMatch[1];
+    xml = xml.replace(` xmlns:${p}="${SSML_NS}"`, ` xmlns="${SSML_NS}"`);
+    xml = xml.replace(new RegExp(`<${p}:`, 'g'), '<');
+    xml = xml.replace(new RegExp(`</${p}:`, 'g'), '</');
+  }
+
+  // Case 2: default namespace repeated on every child element — keep only the first
+  const nsAttr = ` xmlns="${SSML_NS}"`;
+  let kept = false;
+  return xml.replace(/ xmlns="http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main"/g, () => {
+    if (!kept) { kept = true; return nsAttr; }
+    return '';
+  });
+}
+
 function arrayBufferToBase64(buf) {
   let binary = '';
   const bytes = new Uint8Array(buf);
@@ -11802,8 +11830,8 @@ function nslaFillCmsData(sheetXmlStr, tableXmlStr, dataRows) {
 
   const serializer = new XMLSerializer();
   return {
-    sheetXml: serializer.serializeToString(sheetDoc),
-    tableXml: serializer.serializeToString(tableDoc)
+    sheetXml: cleanSheetXml(serializer.serializeToString(sheetDoc)),
+    tableXml: cleanSheetXml(serializer.serializeToString(tableDoc))
   };
 }
 
@@ -11911,7 +11939,7 @@ function nslaSetSummaryValues(sheetXmlStr, values) {
   }
 
   const serializer = new XMLSerializer();
-  return serializer.serializeToString(sheetDoc);
+  return cleanSheetXml(serializer.serializeToString(sheetDoc));
 }
 
 async function nslaGenerateReport() {
