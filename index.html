@@ -9452,8 +9452,8 @@ async function fetchWeather() {
     const geo = await _geocodeCity(city);
     if (!geo) return null;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}` +
-      `&current=temperature_2m,weathercode` +
-      `&hourly=temperature_2m,weathercode,precipitation_probability` +
+      `&current=temperature_2m,weathercode,is_day` +
+      `&hourly=temperature_2m,weathercode,precipitation_probability,is_day` +
       `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max` +
       `&forecast_days=7&timezone=auto`;
     const res = await fetch(url);
@@ -9461,8 +9461,9 @@ async function fetchWeather() {
     const json = await res.json();
     const temp = Math.round(json.current.temperature_2m);
     const code = json.current.weathercode;
+    const isDay = json.current.is_day === 1;
     // Build hourly: next 12 hours from now
-    const nowIso = json.current.time; // e.g. "2026-07-15T14:00"
+    const nowIso = json.current.time;
     const nowIdx = json.hourly.time.findIndex(t => t >= nowIso);
     const startIdx = nowIdx >= 0 ? nowIdx : 0;
     const hourly = json.hourly.time.slice(startIdx, startIdx + 12).map((t, i) => ({
@@ -9470,6 +9471,7 @@ async function fetchWeather() {
       temp: Math.round(json.hourly.temperature_2m[startIdx + i]),
       code: json.hourly.weathercode[startIdx + i],
       rain: json.hourly.precipitation_probability[startIdx + i] ?? 0,
+      isDay: json.hourly.is_day[startIdx + i] === 1,
     }));
     // Build daily: 7 days
     const daily = json.daily.time.map((t, i) => ({
@@ -9479,14 +9481,14 @@ async function fetchWeather() {
       code: json.daily.weathercode[i],
       rain: json.daily.precipitation_probability_max[i] ?? 0,
     }));
-    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code), code, hourly, daily, city };
+    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code, isDay), code, isDay, hourly, daily, city };
     _weatherCache = { data: result, bucket, city };
     return result;
   } catch { return null; }
 }
-function _wmoIcon(code) {
-  if (code === 0) return 'ti-sun';
-  if (code === 1) return 'ti-sun-high';
+function _wmoIcon(code, isDay = true) {
+  if (code === 0) return isDay ? 'ti-sun' : 'ti-moon-stars';
+  if (code === 1) return isDay ? 'ti-sun-high' : 'ti-moon';
   if (code === 2) return 'ti-cloud';
   if (code === 3) return 'ti-cloud';
   if (code <= 48) return 'ti-cloud-fog';
@@ -9497,9 +9499,9 @@ function _wmoIcon(code) {
   if (code <= 99) return 'ti-cloud-storm';
   return 'ti-cloud';
 }
-function _wmoColor(code) {
-  if (code === 0) return '#fbbf24';
-  if (code === 1) return '#f59e0b';
+function _wmoColor(code, isDay = true) {
+  if (code === 0) return isDay ? '#fbbf24' : '#c4b5fd';
+  if (code === 1) return isDay ? '#f59e0b' : '#a5b4fc';
   if (code === 2) return '#94a3b8';
   if (code === 3) return '#64748b';
   if (code <= 48) return '#a8b8c8';
@@ -9625,7 +9627,7 @@ async function renderHomeWeather() {
         const label = rain.soonIdx === 0 ? 'this hour' : rain.soonIdx === 1 ? 'in 1h' : `in ${rain.soonIdx}h`;
         badge = `<span class="wx-rain-badge"><i class="ti ti-cloud-rain" style="font-size:11px;"></i> Rain ${label}${rain.soonPct >= 50 ? ` · ${rain.soonPct}%` : ''}</span>`;
       }
-      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon" style="color:${_wmoColor(wx.code)}"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
+      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon" style="color:${_wmoColor(wx.code, wx.isDay)}"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
     }
   }
 }
@@ -9659,7 +9661,7 @@ async function wxPanelOpen() {
       const label = i === 0 ? 'Now' : _fmtHour(h.time);
       return `<div class="wx-hour${i === 0 ? ' wx-now' : ''}">
         <span class="wx-hour-time">${label}</span>
-        <i class="ti ${_wmoIcon(h.code)} wx-hour-icon" style="color:${_wmoColor(h.code)}"></i>
+        <i class="ti ${_wmoIcon(h.code, h.isDay)} wx-hour-icon" style="color:${_wmoColor(h.code, h.isDay)}"></i>
         <span class="wx-hour-temp">${h.temp}°</span>
         ${h.rain > 0 ? `<span class="wx-hour-rain">${h.rain}%</span>` : '<span class="wx-hour-rain" style="color:transparent">0%</span>'}
       </div>`;
