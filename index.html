@@ -9486,12 +9486,13 @@ async function fetchWeather() {
 }
 function _wmoIcon(code) {
   if (code === 0) return 'ti-sun';
-  if (code <= 2) return 'ti-cloud-sun';
+  if (code === 1) return 'ti-sun-high';
+  if (code === 2) return 'ti-cloud';
   if (code === 3) return 'ti-cloud';
-  if (code <= 48) return 'ti-cloud';
+  if (code <= 48) return 'ti-cloud-fog';
   if (code <= 55) return 'ti-cloud-rain';
   if (code <= 67) return 'ti-cloud-rain';
-  if (code <= 77) return 'ti-snowflake';
+  if (code <= 77) return 'ti-cloud-snow';
   if (code <= 82) return 'ti-cloud-rain';
   if (code <= 99) return 'ti-cloud-storm';
   return 'ti-cloud';
