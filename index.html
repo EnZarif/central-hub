@@ -960,19 +960,17 @@
   /* ── Weather forecast panel ── */
   .cwc-wx[data-has-wx] { cursor: pointer; border-radius: 8px; transition: background 0.15s; }
   .cwc-wx[data-has-wx]:hover { background: var(--surface2); }
+  .wx-panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 600; align-items: flex-start; justify-content: center; padding: 12vh 20px; }
+  .wx-panel-overlay.active { display: flex; }
   .wx-panel {
-    position: fixed; z-index: 600;
-    width: 272px;
-    background: var(--surface);
+    width: 100%; max-width: 400px;
+    background: color-mix(in srgb, var(--surface) 78%, black 22%);
     border: 1px solid var(--border-md);
     border-radius: 14px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7), 0 0 70px -8px color-mix(in srgb, var(--teal) 40%, transparent);
     overflow: hidden;
-    display: none;
-    animation: wxPanelIn 0.18s cubic-bezier(.2,.85,.25,1) both;
+    animation: fadeIn 0.12s ease;
   }
-  .wx-panel.active { display: block; }
-  @keyframes wxPanelIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
   .wx-panel-head {
     padding: 12px 14px 10px;
     display: flex; align-items: center; justify-content: space-between;
@@ -4136,19 +4134,21 @@
 <!-- Mobile-only floating quick-add button (same action as the "A" quick-capture shortcut) -->
 <button class="mobile-fab" id="mobile-fab" onclick="openQuickCapture()" aria-label="Quick add"><i class="ti ti-plus"></i></button>
 
-<div class="wx-panel" id="wx-forecast-panel">
-  <div class="wx-panel-head">
-    <div>
-      <div class="wx-panel-city" id="wx-panel-city"></div>
-      <div class="wx-panel-now" id="wx-panel-now"></div>
+<div class="wx-panel-overlay" id="wx-forecast-overlay" onclick="if(event.target===this)wxPanelClose()">
+  <div class="wx-panel" id="wx-forecast-panel">
+    <div class="wx-panel-head">
+      <div>
+        <div class="wx-panel-city" id="wx-panel-city"></div>
+        <div class="wx-panel-now" id="wx-panel-now"></div>
+      </div>
+      <button class="wx-panel-close" onclick="wxPanelClose()"><i class="ti ti-x"></i></button>
     </div>
-    <button class="wx-panel-close" onclick="wxPanelClose()"><i class="ti ti-x"></i></button>
+    <div class="wx-section-label">Next 12 hours</div>
+    <div class="wx-hourly" id="wx-hourly"></div>
+    <div class="wx-section-label">7-day forecast</div>
+    <div class="wx-daily" id="wx-daily"></div>
+    <div class="wx-panel-footer">Open-Meteo · updates every 30 min</div>
   </div>
-  <div class="wx-section-label">Next 12 hours</div>
-  <div class="wx-hourly" id="wx-hourly"></div>
-  <div class="wx-section-label">7-day forecast</div>
-  <div class="wx-daily" id="wx-daily"></div>
-  <div class="wx-panel-footer">Open-Meteo · updates every 30 min</div>
 </div>
 
 <div class="kpi-modal-overlay" id="kpi-ops-modal-overlay">
@@ -9558,33 +9558,19 @@ async function renderHomeWeather() {
 
 // ---- Weather forecast panel ----
 function wxPanelToggle() {
-  const panel = document.getElementById('wx-forecast-panel');
-  if (!panel) return;
-  if (panel.classList.contains('active')) { wxPanelClose(); return; }
+  const overlay = document.getElementById('wx-forecast-overlay');
+  if (!overlay) return;
+  if (overlay.classList.contains('active')) { wxPanelClose(); return; }
   wxPanelOpen();
 }
 function wxPanelClose() {
-  const panel = document.getElementById('wx-forecast-panel');
-  if (panel) panel.classList.remove('active');
-  document.removeEventListener('click', _wxPanelOutside);
-}
-function _wxPanelOutside(e) {
-  const panel = document.getElementById('wx-forecast-panel');
-  const trigger = document.getElementById('nav-clock-wx-row');
-  if (panel && !panel.contains(e.target) && trigger && !trigger.contains(e.target)) wxPanelClose();
+  const overlay = document.getElementById('wx-forecast-overlay');
+  if (overlay) overlay.classList.remove('active');
 }
 async function wxPanelOpen() {
-  const panel = document.getElementById('wx-forecast-panel');
-  if (!panel) return;
-  // Position to the right of the nav clock card
-  const card = document.getElementById('nav-clock-wx');
-  if (card) {
-    const r = card.getBoundingClientRect();
-    panel.style.left = (r.right + 10) + 'px';
-    panel.style.top = Math.min(r.top, window.innerHeight - 440) + 'px';
-  }
-  panel.classList.add('active');
-  setTimeout(() => document.addEventListener('click', _wxPanelOutside), 0);
+  const overlay = document.getElementById('wx-forecast-overlay');
+  if (!overlay) return;
+  overlay.classList.add('active');
   const wx = _weatherCache.data;
   if (!wx) return;
   // Header
