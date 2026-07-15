@@ -3647,6 +3647,15 @@
         <input type="file" id="kpi-ops-input" class="kpi-file-input" accept=".xlsx" onchange="kpiOpsLoadFile(this.files[0])">
         <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-ops-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload report</button>
       </div>
+      <div class="kpi-template-row" id="kpi-webhook-row" style="display:none;">
+        <div class="kpi-template-info" style="flex:1;">
+          <div class="kpi-tpl-name">Power Automate webhook URL</div>
+          <input type="url" id="kpi-webhook-input" placeholder="https://prod-xx.westus.logic.azure.com/workflows/..." style="width:100%;margin-top:6px;padding:6px 10px;font-size:12px;font-family:inherit;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;" oninput="kpiWebhookInputChanged()">
+          <div class="kpi-tpl-status" id="kpi-webhook-status"></div>
+        </div>
+        <button class="kpi-file-btn" id="kpi-webhook-save-btn" onclick="kpiWebhookSave()" style="align-self:flex-end;">Save</button>
+      </div>
+      <button class="kpi-file-btn" id="kpi-webhook-toggle-btn" onclick="kpiWebhookToggle()" style="margin-bottom:12px;font-size:12px;color:var(--text-3);border-color:transparent;background:none;padding:2px 0;"></button>
       <div id="kpi-ops-list"></div>
     </div>
   </div>
@@ -4096,6 +4105,7 @@
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="kpiOpsModalClose()">Close</button>
       <button class="generate-btn" id="kpi-ops-modal-copy-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="kpiOpsModalCopy()"><i class="ti ti-copy" style="font-size:15px;"></i> Copy email</button>
+      <button class="generate-btn" id="kpi-ops-modal-send-btn" style="width:auto; margin-bottom:0; padding:8px 18px; display:none;" onclick="kpiOpsSend()"><i class="ti ti-send" style="font-size:15px;"></i> Send</button>
       <button class="generate-btn" id="kpi-ops-modal-next-btn" style="width:auto; margin-bottom:0; padding:8px 18px; display:none;" onclick="kpiOpsModalNext()"><i class="ti ti-arrow-right" style="font-size:15px;"></i> Next</button>
     </div>
   </div>
@@ -11620,6 +11630,7 @@ async function kpiGenerateReport() {
 }
 
 renderKpiPage();
+kpiWebhookInit();
 
 // ===== NSLA REPORT =====
 // Template structure (NSLA Report v24 HB Template.xlsx): the "CMS Data" sheet is
@@ -12245,6 +12256,7 @@ function kpiOpsCopy(i) {
   document.getElementById('kpi-ops-modal-next-btn').style.display = 'none';
   const copyBtn = document.getElementById('kpi-ops-modal-copy-btn');
   copyBtn.innerHTML = '<i class="ti ti-copy" style="font-size:15px;"></i> Copy email';
+  kpiOpsUpdateSendBtn();
   document.getElementById('kpi-ops-modal-overlay').classList.add('active');
 }
 
@@ -12265,6 +12277,94 @@ function kpiOpsModalCopy() {
 
 function kpiOpsModalNext() {
   kpiOpsCopy(kpiOpsCurrentIdx + 1);
+}
+
+// ---- Webhook config ----
+const KPI_WEBHOOK_KEY = 'zarif_kpi_pa_webhook';
+let _kpiWebhookUrl = null;
+
+function kpiWebhookInit() {
+  _kpiWebhookUrl = dbGet(KPI_WEBHOOK_KEY) || null;
+  const toggleBtn = document.getElementById('kpi-webhook-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.textContent = _kpiWebhookUrl ? '⚙ Webhook configured — click to edit' : '⚙ Configure send webhook';
+  }
+}
+
+function kpiWebhookToggle() {
+  const row = document.getElementById('kpi-webhook-row');
+  if (!row) return;
+  const visible = row.style.display !== 'none';
+  row.style.display = visible ? 'none' : '';
+  if (!visible) {
+    const inp = document.getElementById('kpi-webhook-input');
+    if (inp) inp.value = _kpiWebhookUrl || '';
+    const st = document.getElementById('kpi-webhook-status');
+    if (st) st.textContent = _kpiWebhookUrl ? 'Webhook saved' : '';
+  }
+}
+
+function kpiWebhookInputChanged() {
+  const st = document.getElementById('kpi-webhook-status');
+  if (st) st.textContent = '';
+}
+
+function kpiWebhookSave() {
+  const inp = document.getElementById('kpi-webhook-input');
+  const url = (inp ? inp.value : '').trim();
+  _kpiWebhookUrl = url || null;
+  if (_kpiWebhookUrl) dbSet(KPI_WEBHOOK_KEY, _kpiWebhookUrl); else dbSet(KPI_WEBHOOK_KEY, null);
+  const st = document.getElementById('kpi-webhook-status');
+  if (st) st.textContent = _kpiWebhookUrl ? 'Saved!' : 'Cleared.';
+  const toggleBtn = document.getElementById('kpi-webhook-toggle-btn');
+  if (toggleBtn) toggleBtn.textContent = _kpiWebhookUrl ? '⚙ Webhook configured — click to edit' : '⚙ Configure send webhook';
+  document.getElementById('kpi-webhook-row').style.display = 'none';
+}
+
+// Show/hide send button based on whether webhook is configured
+function kpiOpsUpdateSendBtn() {
+  const btn = document.getElementById('kpi-ops-modal-send-btn');
+  if (btn) btn.style.display = _kpiWebhookUrl ? '' : 'none';
+}
+
+async function kpiOpsSend() {
+  if (!_kpiWebhookUrl) return;
+  const row = kpiOpsRows[kpiOpsCurrentIdx];
+  if (!row) return;
+  const toEmail = row[1];
+  if (!toEmail || !toEmail.includes('@')) {
+    alert('No valid email address found for this operator.');
+    return;
+  }
+  const btn = document.getElementById('kpi-ops-modal-send-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="font-size:15px;animation:spin 1s linear infinite;"></i> Sending…';
+  try {
+    const subject = `Your KPIs from ${kpiOpsDateLabel}`;
+    const res = await fetch(_kpiWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, subject, body: kpiOpsCurrentHtml })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    btn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Sent!';
+    btn.style.background = 'var(--green-bg)';
+    btn.style.color = 'var(--green-text)';
+    const nextBtn = document.getElementById('kpi-ops-modal-next-btn');
+    if (kpiOpsCurrentIdx < kpiOpsRows.length - 1 && nextBtn) nextBtn.style.display = '';
+  } catch (err) {
+    btn.innerHTML = '<i class="ti ti-alert-circle" style="font-size:15px;"></i> Failed';
+    btn.style.background = 'var(--coral-bg)';
+    btn.style.color = 'var(--coral-text)';
+    console.error('KPI send error:', err);
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => {
+      btn.innerHTML = '<i class="ti ti-send" style="font-size:15px;"></i> Send';
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 3000);
+  }
 }
 
 async function copyRichText(html, text) {
