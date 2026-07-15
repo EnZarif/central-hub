@@ -953,12 +953,11 @@
     background: var(--teal); opacity: 0.55; transition: width 60s linear; }
   @media (max-width: 760px) {
     .clock-wx-card { min-width: 0; width: 100%; border-radius: 12px; }
-    .cwc-top { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 14px; }
-    .cwc-section { justify-content: flex-start; padding: 0; }
-    .cwc-divider { display: none; }
-    .cwc-time-val { font-size: 26px; }
-    .cwc-wx { flex-direction: row; align-items: center; gap: 10px; }
-    .cwc-wx-main { gap: 6px; }
+    .cwc-top { padding: 10px 12px; }
+    .cwc-date { display: none; }
+    .cwc-divider:not(#nav-clock-wx-divider) { display: none; }
+    .cwc-time-val { font-size: 24px; }
+    .cwc-wx-desc { display: none; }
   }
   @media (max-width: 900px) and (min-width: 761px) { .clock-wx-card { display: none; } }
 
