@@ -272,8 +272,8 @@
     .mobile-topbar-logo .nav-wordmark { font-size: 16px; }
 
     /* Drawer: nav reverts to a vertical sidebar layout while it's an overlay */
-    .nav { width: 270px; max-width: 84vw; height: 100vh; top: 0; bottom: 0; right: auto; z-index: 70; transform: translateX(-100%);
-           flex-direction: column; align-items: stretch; padding: 18px 10px 14px; overflow-y: auto; overflow-x: hidden; gap: 0;
+    .nav { width: 270px; max-width: 84vw; height: 100vh; height: 100dvh; top: 0; bottom: 0; right: auto; z-index: 70; transform: translateX(-100%);
+           flex-direction: column; align-items: stretch; padding: 18px 10px calc(16px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; overflow-x: hidden; gap: 0;
            transition: transform 0.28s cubic-bezier(.4,0,.2,1); will-change: transform; }
     body.nav-open .nav { transform: translateX(0); box-shadow: 8px 0 40px rgba(0,0,0,0.45); }
     body.nav-open { overflow: hidden; }
