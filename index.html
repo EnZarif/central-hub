@@ -958,8 +958,28 @@
   @media (max-width: 900px) and (min-width: 761px) { .clock-wx-card { display: none; } }
 
   /* ── Weather forecast panel ── */
-  .cwc-wx[data-has-wx] { cursor: pointer; border-radius: 8px; transition: background 0.15s; }
+  .cwc-wx[data-has-wx] { cursor: pointer; border-radius: 8px; transition: background 0.15s; position: relative; overflow: hidden; }
   .cwc-wx[data-has-wx]:hover { background: var(--surface2); }
+  .wx-rain-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 8px; }
+  .wx-drop {
+    position: absolute; top: -12px;
+    width: 1.5px; border-radius: 2px;
+    background: linear-gradient(to bottom, transparent, #7ec8e3cc);
+    animation: wxDropFall linear infinite;
+  }
+  @keyframes wxDropFall {
+    0%   { transform: translateY(0) scaleY(0.6); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 0.7; }
+    100% { transform: translateY(80px) scaleY(1); opacity: 0; }
+  }
+  .wx-rain-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 600;
+    color: #5badce; margin-top: 2px;
+    animation: wxBadgePulse 2.5s ease-in-out infinite;
+  }
+  @keyframes wxBadgePulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
   .wx-panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 600; align-items: flex-start; justify-content: center; padding: 12vh 20px; }
   .wx-panel-overlay.active { display: flex; }
   .wx-panel {
@@ -9459,7 +9479,7 @@ async function fetchWeather() {
       code: json.daily.weathercode[i],
       rain: json.daily.precipitation_probability_max[i] ?? 0,
     }));
-    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code), hourly, daily, city };
+    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code), code, hourly, daily, city };
     _weatherCache = { data: result, bucket, city };
     return result;
   } catch { return null; }
@@ -9468,8 +9488,8 @@ function _wmoIcon(code) {
   if (code === 0) return 'ti-sun';
   if (code <= 2) return 'ti-cloud-sun';
   if (code === 3) return 'ti-cloud';
-  if (code <= 48) return 'ti-mist';
-  if (code <= 55) return 'ti-cloud-drizzle';
+  if (code <= 48) return 'ti-cloud';
+  if (code <= 55) return 'ti-cloud-rain';
   if (code <= 67) return 'ti-cloud-rain';
   if (code <= 77) return 'ti-snowflake';
   if (code <= 82) return 'ti-cloud-rain';
@@ -9536,6 +9556,36 @@ function renderHomeBriefing() {
     <div class="home-briefing-text">${parts.join(' ')}</div>
   </div>`;
 }
+function _wxIsRainCode(code) {
+  return (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+}
+function _wxRainCheck(wx) {
+  // Returns { raining: bool, soonIdx: number|null, soonPct: number }
+  const raining = _wxIsRainCode(wx.code ?? 0) || _wxIsRainCode(wx.hourly?.[0]?.code ?? 0);
+  let soonIdx = null, soonPct = 0;
+  if (wx.hourly) {
+    for (let i = 0; i < wx.hourly.length; i++) {
+      const h = wx.hourly[i];
+      if (h.rain >= 50 || _wxIsRainCode(h.code)) {
+        soonIdx = i;
+        soonPct = h.rain;
+        break;
+      }
+    }
+  }
+  return { raining, soonIdx, soonPct };
+}
+function _wxMakeRainLayer(count) {
+  let html = '<div class="wx-rain-layer">';
+  for (let i = 0; i < count; i++) {
+    const left = (Math.random() * 100).toFixed(1);
+    const dur  = (0.6 + Math.random() * 0.7).toFixed(2);
+    const del  = (Math.random() * 1.4).toFixed(2);
+    const h    = (8 + Math.random() * 8).toFixed(1);
+    html += `<span class="wx-drop" style="left:${left}%;height:${h}px;animation-duration:${dur}s;animation-delay:-${del}s;"></span>`;
+  }
+  return html + '</div>';
+}
 async function renderHomeWeather() {
   const wx = await fetchWeather();
   const navRow = document.getElementById('nav-clock-wx-row');
@@ -9549,9 +9599,20 @@ async function renderHomeWeather() {
     } else {
       navRow.style.display = 'flex';
       if (navDiv) navDiv.style.display = '';
-      navRow.innerHTML = `<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>`;
       navRow.setAttribute('data-has-wx', '1');
       navRow.onclick = wxPanelToggle;
+      const rain = _wxRainCheck(wx);
+      let badge = '';
+      let rainLayer = '';
+      if (rain.raining) {
+        rainLayer = _wxMakeRainLayer(10);
+        badge = `<span class="wx-rain-badge"><i class="ti ti-cloud-rain" style="font-size:11px;"></i> Raining now</span>`;
+      } else if (rain.soonIdx !== null) {
+        rainLayer = _wxMakeRainLayer(6);
+        const label = rain.soonIdx === 0 ? 'this hour' : rain.soonIdx === 1 ? 'in 1h' : `in ${rain.soonIdx}h`;
+        badge = `<span class="wx-rain-badge"><i class="ti ti-cloud-rain" style="font-size:11px;"></i> Rain ${label}${rain.soonPct >= 50 ? ` · ${rain.soonPct}%` : ''}</span>`;
+      }
+      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
     }
   }
 }
