@@ -957,6 +957,59 @@
   }
   @media (max-width: 900px) and (min-width: 761px) { .clock-wx-card { display: none; } }
 
+  /* ── Weather forecast panel ── */
+  .cwc-wx[data-has-wx] { cursor: pointer; border-radius: 8px; transition: background 0.15s; }
+  .cwc-wx[data-has-wx]:hover { background: var(--surface2); }
+  .wx-panel {
+    position: fixed; z-index: 600;
+    width: 272px;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+    overflow: hidden;
+    display: none;
+    animation: wxPanelIn 0.18s cubic-bezier(.2,.85,.25,1) both;
+  }
+  .wx-panel.active { display: block; }
+  @keyframes wxPanelIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+  .wx-panel-head {
+    padding: 12px 14px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .wx-panel-city { font-size: 13px; font-weight: 700; color: var(--text); }
+  .wx-panel-now { font-size: 12px; color: var(--text-3); }
+  .wx-panel-close { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 16px; padding: 2px; line-height: 1; }
+  .wx-panel-close:hover { color: var(--text); }
+  .wx-section-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); padding: 10px 14px 6px; }
+  .wx-hourly { display: flex; overflow-x: auto; padding: 0 10px 10px; gap: 4px; scrollbar-width: none; }
+  .wx-hourly::-webkit-scrollbar { display: none; }
+  .wx-hour {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 52px; padding: 8px 6px; border-radius: 10px;
+    background: var(--surface2); font-size: 12px; color: var(--text-2); flex-shrink: 0;
+  }
+  .wx-hour.wx-now { background: var(--teal-bg); color: var(--teal-text); }
+  .wx-hour-time { font-size: 11px; font-weight: 600; }
+  .wx-hour-icon { font-size: 16px; }
+  .wx-hour-temp { font-size: 13px; font-weight: 700; color: var(--text); }
+  .wx-hour-rain { font-size: 10.5px; color: var(--blue, #3B82F6); }
+  .wx-daily { display: flex; flex-direction: column; padding: 0 10px 12px; gap: 2px; }
+  .wx-day {
+    display: grid; grid-template-columns: 70px 20px 1fr auto;
+    align-items: center; gap: 8px;
+    padding: 7px 6px; border-radius: 8px; font-size: 13px;
+  }
+  .wx-day:hover { background: var(--surface2); }
+  .wx-day-name { font-weight: 600; color: var(--text); font-size: 12.5px; }
+  .wx-day-icon { font-size: 15px; text-align: center; }
+  .wx-day-bar { height: 4px; border-radius: 2px; background: var(--border); position: relative; }
+  .wx-day-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px; background: var(--teal); opacity: 0.6; }
+  .wx-day-temps { font-size: 12px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .wx-day-temps strong { color: var(--text); font-weight: 700; }
+  .wx-panel-footer { padding: 8px 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-3); text-align: center; }
+
   /* ── Drag-to-reschedule drop zone (Today tab) ── */
   .tomorrow-drop-zone { display: none; align-items: center; justify-content: center; gap: 8px;
     margin-top: 12px; padding: 14px; border-radius: 12px; border: 1.5px dashed var(--teal);
@@ -4082,6 +4135,21 @@
 
 <!-- Mobile-only floating quick-add button (same action as the "A" quick-capture shortcut) -->
 <button class="mobile-fab" id="mobile-fab" onclick="openQuickCapture()" aria-label="Quick add"><i class="ti ti-plus"></i></button>
+
+<div class="wx-panel" id="wx-forecast-panel">
+  <div class="wx-panel-head">
+    <div>
+      <div class="wx-panel-city" id="wx-panel-city"></div>
+      <div class="wx-panel-now" id="wx-panel-now"></div>
+    </div>
+    <button class="wx-panel-close" onclick="wxPanelClose()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="wx-section-label">Next 12 hours</div>
+  <div class="wx-hourly" id="wx-hourly"></div>
+  <div class="wx-section-label">7-day forecast</div>
+  <div class="wx-daily" id="wx-daily"></div>
+  <div class="wx-panel-footer">Open-Meteo · updates every 30 min</div>
+</div>
 
 <div class="kpi-modal-overlay" id="kpi-ops-modal-overlay">
   <div class="kpi-modal">
@@ -9363,12 +9431,35 @@ async function fetchWeather() {
   try {
     const geo = await _geocodeCity(city);
     if (!geo) return null;
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weathercode&timezone=auto`);
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}` +
+      `&current=temperature_2m,weathercode` +
+      `&hourly=temperature_2m,weathercode,precipitation_probability` +
+      `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max` +
+      `&forecast_days=7&timezone=auto`;
+    const res = await fetch(url);
     if (!res.ok) return null;
     const json = await res.json();
     const temp = Math.round(json.current.temperature_2m);
     const code = json.current.weathercode;
-    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code) };
+    // Build hourly: next 12 hours from now
+    const nowIso = json.current.time; // e.g. "2026-07-15T14:00"
+    const nowIdx = json.hourly.time.findIndex(t => t >= nowIso);
+    const startIdx = nowIdx >= 0 ? nowIdx : 0;
+    const hourly = json.hourly.time.slice(startIdx, startIdx + 12).map((t, i) => ({
+      time: t.slice(11, 16),
+      temp: Math.round(json.hourly.temperature_2m[startIdx + i]),
+      code: json.hourly.weathercode[startIdx + i],
+      rain: json.hourly.precipitation_probability[startIdx + i] ?? 0,
+    }));
+    // Build daily: 7 days
+    const daily = json.daily.time.map((t, i) => ({
+      date: t,
+      high: Math.round(json.daily.temperature_2m_max[i]),
+      low: Math.round(json.daily.temperature_2m_min[i]),
+      code: json.daily.weathercode[i],
+      rain: json.daily.precipitation_probability_max[i] ?? 0,
+    }));
+    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code), hourly, daily, city };
     _weatherCache = { data: result, bucket, city };
     return result;
   } catch { return null; }
@@ -9453,12 +9544,92 @@ async function renderHomeWeather() {
     if (!wx) {
       navRow.style.display = 'none';
       if (navDiv) navDiv.style.display = 'none';
+      navRow.removeAttribute('data-has-wx');
+      navRow.onclick = null;
     } else {
       navRow.style.display = 'flex';
       if (navDiv) navDiv.style.display = '';
       navRow.innerHTML = `<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>`;
+      navRow.setAttribute('data-has-wx', '1');
+      navRow.onclick = wxPanelToggle;
     }
   }
+}
+
+// ---- Weather forecast panel ----
+function wxPanelToggle() {
+  const panel = document.getElementById('wx-forecast-panel');
+  if (!panel) return;
+  if (panel.classList.contains('active')) { wxPanelClose(); return; }
+  wxPanelOpen();
+}
+function wxPanelClose() {
+  const panel = document.getElementById('wx-forecast-panel');
+  if (panel) panel.classList.remove('active');
+  document.removeEventListener('click', _wxPanelOutside);
+}
+function _wxPanelOutside(e) {
+  const panel = document.getElementById('wx-forecast-panel');
+  const trigger = document.getElementById('nav-clock-wx-row');
+  if (panel && !panel.contains(e.target) && trigger && !trigger.contains(e.target)) wxPanelClose();
+}
+async function wxPanelOpen() {
+  const panel = document.getElementById('wx-forecast-panel');
+  if (!panel) return;
+  // Position to the right of the nav clock card
+  const card = document.getElementById('nav-clock-wx');
+  if (card) {
+    const r = card.getBoundingClientRect();
+    panel.style.left = (r.right + 10) + 'px';
+    panel.style.top = Math.min(r.top, window.innerHeight - 440) + 'px';
+  }
+  panel.classList.add('active');
+  setTimeout(() => document.addEventListener('click', _wxPanelOutside), 0);
+  const wx = _weatherCache.data;
+  if (!wx) return;
+  // Header
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('wx-panel-city').textContent = wx.city || _weatherSettings.city;
+  document.getElementById('wx-panel-now').textContent = `${wx.temp}°C · ${wx.desc}`;
+  // Hourly
+  const hourlyEl = document.getElementById('wx-hourly');
+  if (hourlyEl && wx.hourly) {
+    hourlyEl.innerHTML = wx.hourly.map((h, i) => {
+      const label = i === 0 ? 'Now' : _fmtHour(h.time);
+      return `<div class="wx-hour${i === 0 ? ' wx-now' : ''}">
+        <span class="wx-hour-time">${label}</span>
+        <i class="ti ${_wmoIcon(h.code)} wx-hour-icon"></i>
+        <span class="wx-hour-temp">${h.temp}°</span>
+        ${h.rain > 0 ? `<span class="wx-hour-rain">${h.rain}%</span>` : '<span class="wx-hour-rain" style="color:transparent">0%</span>'}
+      </div>`;
+    }).join('');
+  }
+  // Daily
+  const dailyEl = document.getElementById('wx-daily');
+  if (dailyEl && wx.daily) {
+    const allHighs = wx.daily.map(d => d.high);
+    const maxHigh = Math.max(...allHighs);
+    const minLow = Math.min(...wx.daily.map(d => d.low));
+    const range = maxHigh - minLow || 1;
+    dailyEl.innerHTML = wx.daily.map((d, i) => {
+      const date = new Date(d.date + 'T12:00:00');
+      const name = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : dayNames[date.getDay()];
+      const barLeft = ((d.low - minLow) / range * 100).toFixed(0);
+      const barWidth = ((d.high - d.low) / range * 100).toFixed(0);
+      return `<div class="wx-day">
+        <span class="wx-day-name">${name}</span>
+        <i class="ti ${_wmoIcon(d.code)} wx-day-icon"></i>
+        <div class="wx-day-bar"><div class="wx-day-bar-fill" style="left:${barLeft}%;width:${barWidth}%"></div></div>
+        <span class="wx-day-temps">${d.low}° <strong>${d.high}°</strong>${d.rain > 20 ? ` <span style="color:var(--blue,#3B82F6);font-size:11px">${d.rain}%</span>` : ''}</span>
+      </div>`;
+    }).join('');
+  }
+}
+function _fmtHour(timeStr) {
+  const [h] = timeStr.split(':');
+  const hr = parseInt(h);
+  return hr === 0 ? '12am' : hr < 12 ? `${hr}am` : hr === 12 ? '12pm' : `${hr - 12}pm`;
 }
 
 function animateGhostRing(el, pctEl, targetPct) {
