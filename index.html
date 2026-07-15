@@ -9497,6 +9497,18 @@ function _wmoIcon(code) {
   if (code <= 99) return 'ti-cloud-storm';
   return 'ti-cloud';
 }
+function _wmoColor(code) {
+  if (code === 0) return '#fbbf24';
+  if (code === 1) return '#f59e0b';
+  if (code === 2) return '#94a3b8';
+  if (code === 3) return '#64748b';
+  if (code <= 48) return '#a8b8c8';
+  if (code <= 67) return '#60a5fa';
+  if (code <= 77) return '#bae6fd';
+  if (code <= 82) return '#3b82f6';
+  if (code <= 99) return '#a78bfa';
+  return '#94a3b8';
+}
 function _wmoDec(code) {
   if (code === 0) return 'clear sky';
   if (code === 1) return 'mainly clear';
@@ -9613,7 +9625,7 @@ async function renderHomeWeather() {
         const label = rain.soonIdx === 0 ? 'this hour' : rain.soonIdx === 1 ? 'in 1h' : `in ${rain.soonIdx}h`;
         badge = `<span class="wx-rain-badge"><i class="ti ti-cloud-rain" style="font-size:11px;"></i> Rain ${label}${rain.soonPct >= 50 ? ` · ${rain.soonPct}%` : ''}</span>`;
       }
-      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
+      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon" style="color:${_wmoColor(wx.code)}"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
     }
   }
 }
@@ -9647,7 +9659,7 @@ async function wxPanelOpen() {
       const label = i === 0 ? 'Now' : _fmtHour(h.time);
       return `<div class="wx-hour${i === 0 ? ' wx-now' : ''}">
         <span class="wx-hour-time">${label}</span>
-        <i class="ti ${_wmoIcon(h.code)} wx-hour-icon"></i>
+        <i class="ti ${_wmoIcon(h.code)} wx-hour-icon" style="color:${_wmoColor(h.code)}"></i>
         <span class="wx-hour-temp">${h.temp}°</span>
         ${h.rain > 0 ? `<span class="wx-hour-rain">${h.rain}%</span>` : '<span class="wx-hour-rain" style="color:transparent">0%</span>'}
       </div>`;
@@ -9667,7 +9679,7 @@ async function wxPanelOpen() {
       const barWidth = ((d.high - d.low) / range * 100).toFixed(0);
       return `<div class="wx-day">
         <span class="wx-day-name">${name}</span>
-        <i class="ti ${_wmoIcon(d.code)} wx-day-icon"></i>
+        <i class="ti ${_wmoIcon(d.code)} wx-day-icon" style="color:${_wmoColor(d.code)}"></i>
         <div class="wx-day-bar"><div class="wx-day-bar-fill" style="left:${barLeft}%;width:${barWidth}%"></div></div>
         <span class="wx-day-temps">${d.low}° <strong>${d.high}°</strong>${d.rain > 20 ? ` <span style="color:var(--blue,#3B82F6);font-size:11px">${d.rain}%</span>` : ''}</span>
       </div>`;
