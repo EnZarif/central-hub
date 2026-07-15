@@ -3729,21 +3729,18 @@
         <i class="ti ti-chevron-down s-chev"></i>
       </div>
       <div class="s-body" id="s-weather">
-        <div class="settings-key-row">
-          <input type="password" class="settings-input" id="settings-owm-key" placeholder="OpenWeatherMap API key" style="width:100%;">
-          <button class="settings-save-btn" onclick="saveWeatherSettings()"><i class="ti ti-device-floppy"></i> Save</button>
-          <button class="settings-save-btn" onclick="testWeatherSettings()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-plug-connected"></i> Test</button>
-        </div>
-        <div class="ai-hint" id="weather-key-status"></div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">City</div>
-            <div class="settings-row-desc">e.g. Melbourne,AU</div>
+            <div class="settings-row-desc">e.g. Melbourne</div>
           </div>
-          <div class="settings-row-ctrl">
-            <input type="text" class="settings-input" id="settings-weather-city" placeholder="Melbourne,AU" style="min-width:150px;">
+          <div class="settings-row-ctrl" style="display:flex;gap:8px;align-items:center;">
+            <input type="text" class="settings-input" id="settings-weather-city" placeholder="Melbourne" style="min-width:150px;">
+            <button class="settings-save-btn" onclick="saveWeatherSettings()"><i class="ti ti-device-floppy"></i> Save</button>
+            <button class="settings-save-btn" onclick="testWeatherSettings()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-plug-connected"></i> Test</button>
           </div>
         </div>
+        <div class="ai-hint" id="weather-key-status"></div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">Commute time</div>
@@ -3753,7 +3750,7 @@
             <input type="number" class="settings-input" id="settings-commute-mins" placeholder="30" style="width:80px;" min="0" max="300">
           </div>
         </div>
-        <div class="ai-hint">Weather refreshes every 30 min. Get a free key at <strong>openweathermap.org</strong> → API keys (Current Weather Data, free tier).</div>
+        <div class="ai-hint">Powered by <strong>Open-Meteo</strong> — free, no API key needed. Refreshes every 30 min.</div>
       </div>
     </div>
 
@@ -9306,73 +9303,102 @@ function applySmartSchedDate(dateStr) {
   if (hint) hint.classList.remove('show');
 }
 
-// ===== Weather & Commute =====
-let _weatherSettings = { key: '', city: 'Melbourne,AU', commuteMins: 0 };
+// ===== Weather & Commute (Open-Meteo — no API key needed) =====
+let _weatherSettings = { city: 'Melbourne', commuteMins: 0 };
 let _weatherCache = { data: null, bucket: -1, city: '' };
+let _weatherGeoCache = {};
 
 function loadWeatherSettings() {
-  _weatherSettings = dbGet('zarif_weather_settings') || { key: '', city: 'Melbourne,AU', commuteMins: 0 };
-  const keyEl = document.getElementById('settings-owm-key');
+  const saved = dbGet('zarif_weather_settings') || {};
+  _weatherSettings = { city: saved.city || 'Melbourne', commuteMins: saved.commuteMins || 0 };
   const cityEl = document.getElementById('settings-weather-city');
   const comEl = document.getElementById('settings-commute-mins');
-  if (keyEl) keyEl.value = _weatherSettings.key || '';
-  if (cityEl) cityEl.value = _weatherSettings.city || 'Melbourne,AU';
+  if (cityEl) cityEl.value = _weatherSettings.city;
   if (comEl) comEl.value = _weatherSettings.commuteMins || '';
 }
 function saveWeatherSettings() {
-  const key = (document.getElementById('settings-owm-key').value || '').trim();
-  const city = (document.getElementById('settings-weather-city').value || '').trim() || 'Melbourne,AU';
+  const city = (document.getElementById('settings-weather-city').value || '').trim() || 'Melbourne';
   const commuteMins = parseInt(document.getElementById('settings-commute-mins').value || '0') || 0;
-  _weatherSettings = { key, city, commuteMins };
+  _weatherSettings = { city, commuteMins };
   dbSet('zarif_weather_settings', _weatherSettings);
   _weatherCache = { data: null, bucket: -1, city: '' };
+  _weatherGeoCache = {};
   renderHomeBriefing();
+  renderHomeWeather();
   showToast('<i class="ti ti-cloud-check"></i> Weather settings saved');
 }
 async function testWeatherSettings() {
-  const key = (document.getElementById('settings-owm-key').value || '').trim();
-  const city = (document.getElementById('settings-weather-city').value || '').trim() || 'Melbourne,AU';
+  const city = (document.getElementById('settings-weather-city').value || '').trim() || 'Melbourne';
   const statusEl = document.getElementById('weather-key-status');
-  if (!key) { if (statusEl) statusEl.textContent = 'Enter an API key first.'; return; }
   if (statusEl) statusEl.textContent = 'Testing…';
   try {
-    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${encodeURIComponent(key)}&units=metric`);
+    const geo = await _geocodeCity(city);
+    if (!geo) { if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Could not find "${esc(city)}" — try a different city name.</span>`; return; }
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weathercode&timezone=auto`);
+    if (!res.ok) throw new Error(res.status);
     const json = await res.json();
-    if (!res.ok) {
-      const msg = json.message || `HTTP ${res.status}`;
-      if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Error: ${esc(msg)}</span>`;
-    } else {
-      const temp = Math.round(json.main.temp);
-      const desc = json.weather[0].description;
-      if (statusEl) statusEl.innerHTML = `<span style="color:var(--green-text)"><i class="ti ti-check"></i> Connected — ${esc(city)}: ${temp}°C, ${esc(desc)}</span>`;
-    }
+    const temp = Math.round(json.current.temperature_2m);
+    const desc = _wmoDec(json.current.weathercode);
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--green-text)"><i class="ti ti-check"></i> Connected — ${esc(city)}: ${temp}°C, ${esc(desc)}</span>`;
   } catch (e) {
     if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Network error — ${esc(String(e))}</span>`;
   }
 }
+async function _geocodeCity(city) {
+  if (_weatherGeoCache[city]) return _weatherGeoCache[city];
+  try {
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+    const json = await res.json();
+    if (!json.results?.length) return null;
+    const { latitude: lat, longitude: lon } = json.results[0];
+    _weatherGeoCache[city] = { lat, lon };
+    return { lat, lon };
+  } catch { return null; }
+}
 async function fetchWeather() {
-  const { key, city } = _weatherSettings;
-  if (!key || !city) return null;
-  const bucket = Math.floor(Date.now() / 1800000); // 30-min buckets
+  const { city } = _weatherSettings;
+  if (!city) return null;
+  const bucket = Math.floor(Date.now() / 1800000);
   if (_weatherCache.data && _weatherCache.bucket === bucket && _weatherCache.city === city) return _weatherCache.data;
   try {
-    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${encodeURIComponent(key)}&units=metric`);
+    const geo = await _geocodeCity(city);
+    if (!geo) return null;
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weathercode&timezone=auto`);
     if (!res.ok) return null;
     const json = await res.json();
-    const result = { temp: Math.round(json.main.temp), desc: json.weather[0].description, icon: _wxIcon(json.weather[0].id) };
+    const temp = Math.round(json.current.temperature_2m);
+    const code = json.current.weathercode;
+    const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code) };
     _weatherCache = { data: result, bucket, city };
     return result;
   } catch { return null; }
 }
-function _wxIcon(id) {
-  if (id >= 200 && id < 300) return 'ti-cloud-storm';
-  if (id >= 300 && id < 500) return 'ti-cloud-rain';
-  if (id >= 500 && id < 600) return 'ti-cloud-rain';
-  if (id >= 600 && id < 700) return 'ti-snowflake';
-  if (id >= 700 && id < 800) return 'ti-mist';
-  if (id === 800) return 'ti-sun';
-  if (id > 800 && id < 803) return 'ti-cloud-sun';
+function _wmoIcon(code) {
+  if (code === 0) return 'ti-sun';
+  if (code <= 2) return 'ti-cloud-sun';
+  if (code === 3) return 'ti-cloud';
+  if (code <= 48) return 'ti-mist';
+  if (code <= 55) return 'ti-cloud-drizzle';
+  if (code <= 67) return 'ti-cloud-rain';
+  if (code <= 77) return 'ti-snowflake';
+  if (code <= 82) return 'ti-cloud-rain';
+  if (code <= 99) return 'ti-cloud-storm';
   return 'ti-cloud';
+}
+function _wmoDec(code) {
+  if (code === 0) return 'clear sky';
+  if (code === 1) return 'mainly clear';
+  if (code === 2) return 'partly cloudy';
+  if (code === 3) return 'overcast';
+  if (code <= 48) return 'foggy';
+  if (code <= 55) return 'drizzle';
+  if (code <= 65) return 'rain';
+  if (code <= 67) return 'freezing rain';
+  if (code <= 77) return 'snow';
+  if (code <= 82) return 'rain showers';
+  if (code <= 86) return 'snow showers';
+  if (code === 95) return 'thunderstorm';
+  return 'thunderstorm with hail';
 }
 
 // ===== Daily briefing (Home) =====
