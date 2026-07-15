@@ -1027,6 +1027,8 @@
   .wx-day-temps { font-size: 12px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .wx-day-temps strong { color: var(--text); font-weight: 700; }
   .wx-panel-footer { padding: 8px 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-3); text-align: center; }
+  .wx-icon-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .wx-night-badge { position: absolute; bottom: -2px; right: -5px; font-size: 8px; color: #a5b4fc; line-height: 1; pointer-events: none; }
 
   /* ── Drag-to-reschedule drop zone (Today tab) ── */
   .tomorrow-drop-zone { display: none; align-items: center; justify-content: center; gap: 8px;
@@ -9486,6 +9488,13 @@ async function fetchWeather() {
     return result;
   } catch { return null; }
 }
+function _wmoIconHtml(code, isDay, cls) {
+  const icon = `<i class="ti ${_wmoIcon(code, isDay)} ${cls}" style="color:${_wmoColor(code, isDay)}"></i>`;
+  if (!isDay && code > 1) {
+    return `<span class="wx-icon-wrap">${icon}<i class="ti ti-moon wx-night-badge"></i></span>`;
+  }
+  return icon;
+}
 function _wmoIcon(code, isDay = true) {
   if (code === 0) return isDay ? 'ti-sun' : 'ti-moon-stars';
   if (code === 1) return isDay ? 'ti-sun-high' : 'ti-moon';
@@ -9627,7 +9636,7 @@ async function renderHomeWeather() {
         const label = rain.soonIdx === 0 ? 'this hour' : rain.soonIdx === 1 ? 'in 1h' : `in ${rain.soonIdx}h`;
         badge = `<span class="wx-rain-badge"><i class="ti ti-cloud-rain" style="font-size:11px;"></i> Rain ${label}${rain.soonPct >= 50 ? ` · ${rain.soonPct}%` : ''}</span>`;
       }
-      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main"><i class="ti ${wx.icon} cwc-wx-icon" style="color:${_wmoColor(wx.code, wx.isDay)}"></i><span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
+      navRow.innerHTML = `${rainLayer}<div class="cwc-wx-main">${_wmoIconHtml(wx.code, wx.isDay, 'cwc-wx-icon')}<span class="cwc-wx-temp">${wx.temp}°C</span></div><span class="cwc-wx-desc">${esc(wx.desc)}</span>${badge}`;
     }
   }
 }
@@ -9661,7 +9670,7 @@ async function wxPanelOpen() {
       const label = i === 0 ? 'Now' : _fmtHour(h.time);
       return `<div class="wx-hour${i === 0 ? ' wx-now' : ''}">
         <span class="wx-hour-time">${label}</span>
-        <i class="ti ${_wmoIcon(h.code, h.isDay)} wx-hour-icon" style="color:${_wmoColor(h.code, h.isDay)}"></i>
+        ${_wmoIconHtml(h.code, h.isDay, 'wx-hour-icon')}
         <span class="wx-hour-temp">${h.temp}°</span>
         ${h.rain > 0 ? `<span class="wx-hour-rain">${h.rain}%</span>` : '<span class="wx-hour-rain" style="color:transparent">0%</span>'}
       </div>`;
