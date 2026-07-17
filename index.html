@@ -912,8 +912,11 @@
   .jl-proj-toggle i { font-size: 12px; color: var(--text-3); flex-shrink: 0; }
   .jl-proj-count { font-size: 10.5px; background: var(--teal-bg); color: var(--teal-text); border-radius: 20px; padding: 1px 8px; font-weight: 700; margin-left: 2px; }
   .jl-proj-body { border-top: 0.5px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .jl-proj-new-row { display: none; gap: 6px; margin-top: 10px; align-items: center; }
-  .jl-proj-new-row input { flex: 1; }
+  .jl-proj-filter { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .jl-proj-filter-btn { background: none; border: 0.5px solid var(--border-md); color: var(--text-3); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+  .jl-proj-filter-btn:hover { color: var(--text-2); }
+  .jl-proj-filter-btn.active { background: var(--teal-bg); color: var(--teal-text); border-color: transparent; }
+  .jl-proj-status { font-size: 10px; font-weight: 600; margin-left: 2px; opacity: 0.85; }
   .toast-host { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
   .toast-item { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); box-shadow: 0 8px 24px rgba(0,0,0,0.35); opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; }
   .toast-item.show { opacity: 1; transform: translateY(0); }
@@ -3254,16 +3257,16 @@
       <button class="add-task-trigger" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i> Amtek Job Reminder</button>
       <button class="add-task-trigger" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i> Add Amtek Job List</button>
       <div class="card jl-proj-card">
-        <div class="card-title">
-          <span><i class="ti ti-folder-open"></i> Amtek Projects</span>
-          <button class="jl-proj-add-btn" onclick="amtekProjAddStart()"><i class="ti ti-plus"></i> New</button>
+        <div class="card-title"><i class="ti ti-folder-open"></i> Amtek Projects</div>
+        <div class="jl-proj-filter">
+          <button class="jl-proj-filter-btn active" data-apf="open" onclick="setAmtekProjFilter('open')">Open</button>
+          <button class="jl-proj-filter-btn" data-apf="active" onclick="setAmtekProjFilter('active')">Active</button>
+          <button class="jl-proj-filter-btn" data-apf="onhold" onclick="setAmtekProjFilter('onhold')">On Hold</button>
+          <button class="jl-proj-filter-btn" data-apf="awaiting-client" onclick="setAmtekProjFilter('awaiting-client')">Awaiting</button>
+          <button class="jl-proj-filter-btn" data-apf="delivered" onclick="setAmtekProjFilter('delivered')">Delivered</button>
+          <button class="jl-proj-filter-btn" data-apf="all" onclick="setAmtekProjFilter('all')">All</button>
         </div>
         <div class="jl-proj-items" id="amtek-proj-list"></div>
-        <div class="jl-proj-new-row" id="amtek-proj-new-row">
-          <input class="field-input" id="amtek-proj-name-input" placeholder="Project name…" onkeydown="if(event.key==='Enter')amtekProjSaveNew();if(event.key==='Escape')amtekProjCancel()">
-          <button class="generate-btn" style="padding:7px 12px;margin:0;width:auto;" onclick="amtekProjSaveNew()"><i class="ti ti-check"></i></button>
-          <button class="kpi-file-btn" style="padding:7px 10px;" onclick="amtekProjCancel()"><i class="ti ti-x"></i></button>
-        </div>
       </div>
       <div class="card jl-card">
         <div class="card-title"><i class="ti ti-list-details"></i> Amtek Job List</div>
@@ -7602,71 +7605,46 @@ function closeJobReminderDetail() {
 let jobLists = [];
 let editingJobListId = null;
 let _jlArchiveOpen = false;
-let amtekProjects = [];
 let _amtekProjOpen = {};
+let _amtekProjFilter = 'open';
 
 function saveJobLists() { dbSet('zarif_job_lists', jobLists); }
-function saveAmtekProjects() { dbSet('zarif_amtek_projects', amtekProjects); }
 
 function fillAmtekProjSelect(selectedVal) {
   const sel = document.getElementById('jl-amtek-project');
   if (!sel) return;
-  sel.innerHTML = '<option value="">— None —</option>' + amtekProjects
-    .map(p => `<option value="${p.id}"${String(p.id) === String(selectedVal) ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+  const STATUS_ORDER = { active: 0, onhold: 1, 'awaiting-client': 2, delivered: 3 };
+  const sorted = [...projects].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
+  const statusSuffix = { onhold: ' (On Hold)', 'awaiting-client': ' (Awaiting)', delivered: ' (Delivered)' };
+  sel.innerHTML = '<option value="">— None —</option>' + sorted
+    .map(p => `<option value="${p.id}"${String(p.id) === String(selectedVal) ? ' selected' : ''}>${esc(p.title)}${statusSuffix[p.status] || ''}</option>`).join('');
 }
 
-function amtekProjAddStart() {
-  const row = document.getElementById('amtek-proj-new-row');
-  if (row) { row.style.display = 'flex'; document.getElementById('amtek-proj-name-input').focus(); }
-}
-function amtekProjCancel() {
-  const row = document.getElementById('amtek-proj-new-row');
-  if (row) row.style.display = 'none';
-  const inp = document.getElementById('amtek-proj-name-input');
-  if (inp) inp.value = '';
-}
-function amtekProjSaveNew() {
-  const inp = document.getElementById('amtek-proj-name-input');
-  const name = inp ? inp.value.trim() : '';
-  if (!name) return;
-  amtekProjects.push({ id: 'ap' + Date.now(), name, createdAt: Date.now() });
-  saveAmtekProjects();
-  amtekProjCancel();
+function setAmtekProjFilter(f) {
+  _amtekProjFilter = f;
+  document.querySelectorAll('.jl-proj-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.apf === f));
   renderAmtekProjects();
 }
-function renameAmtekProject(id) {
-  const p = amtekProjects.find(x => String(x.id) === String(id));
-  if (!p) return;
-  const name = prompt('Rename project:', p.name);
-  if (!name || !name.trim()) return;
-  p.name = name.trim();
-  saveAmtekProjects();
-  renderAmtekProjects();
-}
-function deleteAmtekProject(id) {
-  const p = amtekProjects.find(x => String(x.id) === String(id));
-  if (!p) return;
-  const linked = jobLists.filter(j => String(j.amtekProjectId) === String(id));
-  if (linked.length && !confirm(`Remove project "${p.name}"? The ${linked.length} linked job list${linked.length > 1 ? 's' : ''} will become unassigned.`)) return;
-  linked.forEach(j => { j.amtekProjectId = null; });
-  amtekProjects = amtekProjects.filter(x => String(x.id) !== String(id));
-  saveAmtekProjects();
-  saveJobLists();
-  renderAmtekProjects();
-  renderJobListSidebar();
-}
+
 function toggleAmtekProject(id) {
   _amtekProjOpen[id] = !_amtekProjOpen[id];
   renderAmtekProjects();
 }
+
 function renderAmtekProjects() {
   const el = document.getElementById('amtek-proj-list');
   if (!el) return;
-  if (!amtekProjects.length) {
-    el.innerHTML = '<div class="jl-empty">No projects yet — click New to add one.</div>';
+  const STATUS_ORDER = { active: 0, onhold: 1, 'awaiting-client': 2, delivered: 3 };
+  const STATUS_COLORS = { active: 'var(--teal-text)', onhold: '#EF9F27', 'awaiting-client': '#7F77DD', delivered: 'var(--text-3)' };
+  let filtered = [...projects];
+  if (_amtekProjFilter === 'open') filtered = filtered.filter(p => p.status !== 'delivered');
+  else if (_amtekProjFilter !== 'all') filtered = filtered.filter(p => p.status === _amtekProjFilter);
+  filtered.sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
+  if (!filtered.length) {
+    el.innerHTML = '<div class="jl-empty">No projects match this filter.</div>';
     return;
   }
-  el.innerHTML = amtekProjects.map(p => {
+  el.innerHTML = filtered.map(p => {
     const linked = jobLists.filter(j => String(j.amtekProjectId) === String(p.id));
     const open = !!_amtekProjOpen[p.id];
     const body = open
@@ -7676,13 +7654,10 @@ function renderAmtekProjects() {
       <div class="jl-proj-hd">
         <button class="jl-proj-toggle" onclick="toggleAmtekProject('${p.id}')">
           <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
-          <span>${esc(p.name)}</span>
+          <span>${esc(p.title)}</span>
+          <span class="jl-proj-status" style="color:${STATUS_COLORS[p.status] || 'var(--text-3)'}">${PROJ_STATUS_LABELS[p.status] || p.status}</span>
           ${linked.length ? `<span class="jl-proj-count">${linked.length}</span>` : ''}
         </button>
-        <div class="jl-actions" style="padding-right:8px;">
-          <button class="jl-icon-btn" onclick="renameAmtekProject('${p.id}')" title="Rename"><i class="ti ti-pencil"></i></button>
-          <button class="jl-icon-btn" onclick="deleteAmtekProject('${p.id}')" title="Delete"><i class="ti ti-trash"></i></button>
-        </div>
       </div>
       ${body}
     </div>`;
@@ -13732,6 +13707,7 @@ function renderProjectsBoard(filtered) {
 
 function renderProjects() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
+  if (typeof renderAmtekProjects === 'function') renderAmtekProjects();
   const total     = projects.length;
   const active    = projects.filter(p => p.status === 'active').length;
   const delivered = projects.filter(p => p.status === 'delivered').length;
@@ -16102,7 +16078,6 @@ async function initApp() {
   nextProjectId  = projects.reduce((m,p) => Math.max(m, p.id || 0), 0) + 1;
 
   jobLists       = dbGet('zarif_job_lists')      || [];
-  amtekProjects  = dbGet('zarif_amtek_projects') || [];
 
   // Filter expired once-tasks
   const _before = customTasks.length;
