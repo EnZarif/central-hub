@@ -7610,14 +7610,22 @@ let _amtekProjFilter = 'open';
 
 function saveJobLists() { dbSet('zarif_job_lists', jobLists); }
 
+function _anzWlSubs() {
+  const subs = [];
+  (projects || []).filter(p => /\banz\b|anzwl/i.test(p.title || '')).forEach(p => {
+    (p.subs || []).forEach(s => subs.push({ ...s, _parentTitle: p.title }));
+  });
+  return subs;
+}
+
 function fillAmtekProjSelect(selectedVal) {
   const sel = document.getElementById('jl-amtek-project');
   if (!sel) return;
   const STATUS_ORDER = { active: 0, onhold: 1, 'awaiting-client': 2, delivered: 3 };
-  const sorted = [...projects].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
   const statusSuffix = { onhold: ' (On Hold)', 'awaiting-client': ' (Awaiting)', delivered: ' (Delivered)' };
+  const sorted = _anzWlSubs().sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
   sel.innerHTML = '<option value="">— None —</option>' + sorted
-    .map(p => `<option value="${p.id}"${String(p.id) === String(selectedVal) ? ' selected' : ''}>${esc(p.title)}${statusSuffix[p.status] || ''}</option>`).join('');
+    .map(s => `<option value="${s.id}"${String(s.id) === String(selectedVal) ? ' selected' : ''}>${esc(s.title)}${statusSuffix[s.status] || ''}</option>`).join('');
 }
 
 function setAmtekProjFilter(f) {
@@ -7636,26 +7644,26 @@ function renderAmtekProjects() {
   if (!el) return;
   const STATUS_ORDER = { active: 0, onhold: 1, 'awaiting-client': 2, delivered: 3 };
   const STATUS_COLORS = { active: 'var(--teal-text)', onhold: '#EF9F27', 'awaiting-client': '#7F77DD', delivered: 'var(--text-3)' };
-  let filtered = [...projects];
-  if (_amtekProjFilter === 'open') filtered = filtered.filter(p => p.status !== 'delivered');
-  else if (_amtekProjFilter !== 'all') filtered = filtered.filter(p => p.status === _amtekProjFilter);
-  filtered.sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
-  if (!filtered.length) {
+  let subs = _anzWlSubs();
+  if (_amtekProjFilter === 'open') subs = subs.filter(s => s.status !== 'delivered');
+  else if (_amtekProjFilter !== 'all') subs = subs.filter(s => s.status === _amtekProjFilter);
+  subs.sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
+  if (!subs.length) {
     el.innerHTML = '<div class="jl-empty">No projects match this filter.</div>';
     return;
   }
-  el.innerHTML = filtered.map(p => {
-    const linked = jobLists.filter(j => String(j.amtekProjectId) === String(p.id));
-    const open = !!_amtekProjOpen[p.id];
+  el.innerHTML = subs.map(s => {
+    const linked = jobLists.filter(j => String(j.amtekProjectId) === String(s.id));
+    const open = !!_amtekProjOpen[s.id];
     const body = open
       ? `<div class="jl-proj-body">${linked.length ? linked.map(jlRowHtml).join('') : '<div class="jl-empty">No job lists linked — tag one to this project when adding.</div>'}</div>`
       : '';
     return `<div class="jl-proj-row">
       <div class="jl-proj-hd">
-        <button class="jl-proj-toggle" onclick="toggleAmtekProject('${p.id}')">
+        <button class="jl-proj-toggle" onclick="toggleAmtekProject('${s.id}')">
           <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
-          <span>${esc(p.title)}</span>
-          <span class="jl-proj-status" style="color:${STATUS_COLORS[p.status] || 'var(--text-3)'}">${PROJ_STATUS_LABELS[p.status] || p.status}</span>
+          <span>${esc(s.title)}</span>
+          <span class="jl-proj-status" style="color:${STATUS_COLORS[s.status] || 'var(--text-3)'}">${PROJ_STATUS_LABELS[s.status] || s.status}</span>
           ${linked.length ? `<span class="jl-proj-count">${linked.length}</span>` : ''}
         </button>
       </div>
