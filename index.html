@@ -914,20 +914,25 @@
   .jl-proj-filter-btn.active { background: var(--teal-bg); border-color: transparent; color: var(--teal-text); }
   .jl-proj-items { display: flex; flex-direction: column; gap: 4px; padding: 6px; }
   .jl-proj-empty { font-size: 14px; color: var(--text-3); padding: 6px 0; }
-  .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 8px; overflow: hidden; transition: border-color 0.15s; }
+  .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 8px; overflow: hidden; transition: border-color 0.2s; }
   .jl-proj-row:hover { border-color: rgba(255,255,255,0.18); }
+  .jl-proj-row.open { border-color: var(--teal); }
   .jl-proj-hd { display: flex; align-items: stretch; }
   .jl-proj-stripe { width: 3px; flex-shrink: 0; }
   .jl-proj-toggle { flex: 1; display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer; padding: 8px 10px; text-align: left; font-family: inherit; transition: background 0.12s; min-width: 0; overflow: hidden; }
   .jl-proj-toggle:hover { background: var(--surface2); }
-  .jl-proj-toggle i { font-size: 12px; color: var(--text-3); flex-shrink: 0; }
+  .jl-proj-toggle i { font-size: 12px; color: var(--text-3); flex-shrink: 0; transition: transform 0.22s cubic-bezier(.4,0,.2,1); }
+  .jl-proj-row.open .jl-proj-toggle i { transform: rotate(90deg); }
   .jl-proj-toggle .jl-proj-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .jl-proj-count { font-size: 12px; background: var(--surface2); border: 0.5px solid var(--border-md); color: var(--text-2); border-radius: 20px; padding: 1px 7px; font-weight: 700; flex-shrink: 0; }
+  .jl-proj-count { font-size: 12px; background: var(--surface2); border: 0.5px solid var(--border-md); color: var(--text-2); border-radius: 20px; padding: 1px 7px; font-weight: 700; flex-shrink: 0; transition: transform 0.2s; }
+  .jl-proj-row.open .jl-proj-count { transform: scale(1.15); }
   .jl-proj-status-pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; }
-  .jl-proj-body { border-top: 0.5px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.12); }
-  .jl-proj-progress { display: flex; align-items: center; gap: 6px; padding: 0 10px 6px 10px; }
+  .jl-proj-body { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.22s; }
+  .jl-proj-row.open .jl-proj-body { max-height: 600px; opacity: 1; }
+  .jl-proj-body-inner { border-top: 0.5px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.12); }
+  .jl-proj-progress { display: flex; align-items: center; gap: 6px; padding: 0 2px 4px; }
   .jl-proj-bar-track { flex: 1; height: 3px; background: var(--border-md); border-radius: 3px; overflow: hidden; }
-  .jl-proj-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .jl-proj-bar-fill { height: 100%; border-radius: 3px; width: 0%; transition: width 0.55s cubic-bezier(.4,0,.2,1); }
   .jl-proj-bar-pct { font-size: 11px; color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .toast-host { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
   .toast-item { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); box-shadow: 0 8px 24px rgba(0,0,0,0.35); opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; }
@@ -7655,7 +7660,15 @@ function setAmtekProjFilter(f) {
 
 function toggleAmtekProject(id) {
   _amtekProjOpen[id] = !_amtekProjOpen[id];
-  renderAmtekProjects();
+  const row = document.querySelector(`.jl-proj-row[data-proj-id="${id}"]`);
+  if (!row) { renderAmtekProjects(); return; }
+  const isOpen = !!_amtekProjOpen[id];
+  row.classList.toggle('open', isOpen);
+  const fill = row.querySelector('.jl-proj-bar-fill');
+  if (fill) {
+    if (isOpen) setTimeout(() => { fill.style.width = fill.dataset.target || '0%'; }, 120);
+    else fill.style.width = '0%';
+  }
 }
 
 const _FILTER_PILL = {
@@ -7716,29 +7729,34 @@ function renderAmtekProjects() {
       return 0;
     });
     const open = !!_amtekProjOpen[s.id];
-    const sc = STRIPE_COLOR[s.status] || 'var(--text-3)';
-    const pb = PILL_BG[s.status] || 'var(--surface2)';
     const doneCount = linked.filter(j => j.done).length;
     const total = linked.length;
+    const pct = total > 0 ? Math.round(doneCount / total * 100) : 0;
     const progressHtml = total > 0
-      ? `<div class="jl-proj-progress"><div class="jl-proj-bar-track"><div class="jl-proj-bar-fill" style="width:${Math.round(doneCount/total*100)}%;background:var(--teal-text)"></div></div><span class="jl-proj-bar-pct">${doneCount}/${total}</span></div>`
+      ? `<div class="jl-proj-progress"><div class="jl-proj-bar-track"><div class="jl-proj-bar-fill" style="background:var(--teal-text)" data-target="${pct}%"></div></div><span class="jl-proj-bar-pct">${doneCount}/${total}</span></div>`
       : '';
-    const body = open
-      ? `<div class="jl-proj-body">${linked.length ? linked.map(jlRowHtml).join('') : '<div class="jl-empty">No job lists linked — tag one to this project when adding.</div>'}</div>`
-      : '';
-    return `<div class="jl-proj-row">
+    const bodyContent = linked.length ? linked.map(jlRowHtml).join('') : '<div class="jl-empty">No job lists linked — tag one to this project when adding.</div>';
+    return `<div class="jl-proj-row${open ? ' open' : ''}" data-proj-id="${s.id}">
       <div class="jl-proj-hd">
         <button class="jl-proj-toggle" onclick="toggleAmtekProject('${s.id}')">
-          <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
+          <i class="ti ti-chevron-right"></i>
           <span class="jl-proj-name">${esc(s.title)}</span>
           <span class="jl-proj-status-pill" style="background:rgba(255,255,255,0.06);color:var(--text-3)">${PROJ_STATUS_LABELS[s.status] || s.status}</span>
           ${total ? `<span class="jl-proj-count">${total}</span>` : ''}
         </button>
       </div>
-      ${progressHtml}
-      ${body}
+      <div class="jl-proj-body">
+        <div class="jl-proj-body-inner">
+          ${progressHtml}
+          ${bodyContent}
+        </div>
+      </div>
     </div>`;
   }).join('');
+  // Set progress bar widths for rows that are already open on render
+  el.querySelectorAll('.jl-proj-row.open .jl-proj-bar-fill').forEach(fill => {
+    fill.style.width = fill.dataset.target || '0%';
+  });
 }
 
 function anzSubProjectOptions() {
