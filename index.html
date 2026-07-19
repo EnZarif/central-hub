@@ -916,7 +916,7 @@
   .jl-proj-empty { font-size: 14px; color: var(--text-3); padding: 6px 0; }
   .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 8px; overflow: hidden; transition: border-color 0.2s; }
   .jl-proj-row:hover { border-color: rgba(255,255,255,0.18); }
-  .jl-proj-row.open { border-color: var(--teal); }
+  .jl-proj-row.open { border-color: var(--border-md); }
   .jl-proj-hd { display: flex; align-items: stretch; }
   .jl-proj-stripe { width: 3px; flex-shrink: 0; }
   .jl-proj-toggle { flex: 1; display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer; padding: 8px 10px; text-align: left; font-family: inherit; transition: background 0.12s; min-width: 0; overflow: hidden; }
@@ -928,10 +928,10 @@
   .jl-proj-row.open .jl-proj-count { transform: scale(1.15); }
   .jl-proj-status-pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; }
   .jl-proj-body { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.22s; }
-  .jl-proj-row.open .jl-proj-body { max-height: 440px; opacity: 1; }
-  .jl-proj-body-inner { border-top: 0.5px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.12); max-height: 420px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-md) transparent; }
-  .jl-proj-body-inner::-webkit-scrollbar { width: 4px; }
-  .jl-proj-body-inner::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 4px; }
+  .jl-proj-row.open .jl-proj-body { max-height: 480px; overflow-y: auto; opacity: 1; scrollbar-width: thin; scrollbar-color: var(--border-md) transparent; }
+  .jl-proj-row.open .jl-proj-body::-webkit-scrollbar { width: 4px; }
+  .jl-proj-row.open .jl-proj-body::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 4px; }
+  .jl-proj-body-inner { border-top: 0.5px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.12); }
   .jl-proj-progress { display: flex; align-items: center; gap: 6px; padding: 0 2px 4px; }
   .jl-proj-bar-track { flex: 1; height: 3px; background: var(--border-md); border-radius: 3px; overflow: hidden; }
   .jl-proj-bar-fill { height: 100%; border-radius: 3px; width: 0%; transition: width 0.55s cubic-bezier(.4,0,.2,1); }
