@@ -7677,7 +7677,7 @@ function renderAmtekProjects() {
   const el = document.getElementById('amtek-proj-list');
   if (!el) return;
   const STATUS_ORDER = { active: 0, onhold: 1, 'awaiting-client': 2, delivered: 3 };
-  const STRIPE_COLOR = { active: 'var(--green-text)', onhold: 'var(--amber-text)', 'awaiting-client': '#AFA9EC', delivered: 'var(--text-3)' };
+  const STRIPE_COLOR = { active: 'var(--teal-text)', onhold: 'var(--teal-text)', 'awaiting-client': 'var(--teal-text)', delivered: 'var(--text-3)' };
   const PILL_BG    = { active: 'var(--green-bg)', onhold: 'var(--amber-bg)', 'awaiting-client': 'rgba(127,119,221,0.13)', delivered: 'var(--surface2)' };
 
   // Update card header subtitle + status dots
