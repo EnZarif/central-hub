@@ -554,6 +554,37 @@
   .slim-header .hub-filter-bar { margin-bottom: 0; padding: 8px 12px; border-top: none; }
   @media (prefers-reduced-motion: reduce) { .slimh-bar-fill { transition: none; } }
 
+  /* BENTO HEADER */
+  .slim-header.bento-header { background: transparent; border: none; border-radius: 0; overflow: visible; padding: 0; margin-bottom: 0; }
+  .bento-row { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .bento-card { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 14px; overflow: hidden; }
+  .bento-prog-card { padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: center; }
+  .bento-ring { width: 58px !important; height: 58px !important; }
+  .bento-ring-hole { width: 42px !important; height: 42px !important; }
+  .bento-prog-info { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; }
+  .bento-prog-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .bento-prog-sub { font-size: 11px; color: var(--text-3); text-align: center; }
+  .bento-prog-bar { flex: none !important; width: 100%; margin: 3px 0 0 !important; }
+  .bento-prog-pct { text-align: center; min-width: auto; }
+  .bento-stats-card { padding: 12px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; align-items: start; }
+  .bstat { background: none; border: none; cursor: pointer; font-family: inherit; text-align: center; padding: 5px; border-radius: 9px; transition: background 0.12s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  button.bstat:hover { background: var(--surface2); }
+  button.bstat.active { background: var(--teal-bg); }
+  .bstat-no-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px; }
+  .bstat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); line-height: 1; }
+  .bstat-label { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+  .bento-dmb { grid-column: 1 / -1; margin: -2px 0 0; justify-content: center; font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+  .bento-qa-card { display: flex; flex-direction: column; }
+  .bento-qa-card .slimh-qa { border-bottom: 0.5px solid var(--border); }
+  .bento-qa-card .smart-sched-hint { padding: 5px 14px 6px; border-bottom: 0.5px solid var(--border); }
+  .bento-qa-card .hub-filter-bar { margin-bottom: 0 !important; padding: 7px 12px; border-top: none; flex-wrap: wrap; row-gap: 4px; flex: 1; align-content: flex-start; }
+  /* UNIFIED NAV */
+  .unified-nav { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 12px; padding: 4px; margin-bottom: 1.2rem; display: flex; gap: 0; align-items: center; overflow-x: auto; scrollbar-width: none; }
+  .unified-nav::-webkit-scrollbar { display: none; }
+  .unified-nav .tab { flex: none; padding: 7px 10px; font-size: 12px; border-radius: 8px; }
+  .unified-nav-sep { width: 1px; height: 20px; background: var(--border-md); flex-shrink: 0; margin: 0 4px; }
+  @media (max-width: 680px) { .bento-row { grid-template-columns: 1fr 1fr; } .bento-prog-card { flex-direction: row; padding: 10px 12px; } .bento-ring { width: 38px !important; height: 38px !important; } .bento-ring-hole { width: 28px !important; height: 28px !important; } }
+
   /* TABS */
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
   .today-banner i { font-size: 15px; }
@@ -3195,49 +3226,63 @@
     <div class="tasks-layout">
     <div class="tasks-main">
 
-    <!-- SLIM TASK HEADER -->
-    <div class="slim-header" id="task-slim-header">
-      <div class="slimh-qa">
-        <i class="ti ti-bolt"></i>
-        <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}" oninput="onQuickAddInput()">
-        <button class="slimh-qa-btn" onclick="quickAddTask()" title="Add task"><i class="ti ti-plus"></i></button>
-      </div>
-      <div class="smart-sched-hint" id="smart-sched-hint">
-        <i class="ti ti-calendar-event"></i>
-        <span style="color:var(--text-3)">Light days:</span>
-        <span id="smart-sched-chips"></span>
-      </div>
-      <div class="slimh-progress">
-        <div class="ring slimh-ring" id="s-ring"><div class="ring-hole slimh-ring-hole"><span id="s-ring-pct" style="display:none">0%</span></div></div>
-        <div class="slimh-greeting">Hey, Zarif <span class="slimh-sub" id="s-sub">Loading…</span></div>
-        <div class="slimh-bar-wrap"><div class="slimh-bar-fill" id="s-bar-fill"></div></div>
-        <span class="slimh-pct" id="s-bar-pct">0%</span>
-      </div>
-      <div class="slimh-chips">
-        <button class="slimh-chip" id="stat-all" onclick="setStatFilter('all')" title="Show all of today's tasks">
-          <i class="ti ti-list-check"></i><span id="s-total">0</span>&thinsp;today
-        </button>
-        <span class="slimh-csep"></span>
-        <button class="slimh-chip" id="stat-done" onclick="setStatFilter('done')" title="Show completed tasks">
-          <i class="ti ti-circle-check" style="color:var(--green-text)"></i><span id="s-done">0</span>&thinsp;done
-        </button>
-        <span class="slimh-csep"></span>
-        <button class="slimh-chip" id="stat-high" onclick="setStatFilter('high')" title="Show high-priority tasks">
-          <i class="ti ti-flame" style="color:var(--coral-text)"></i><span id="s-high">0</span>&thinsp;high
-        </button>
-        <span class="slimh-csep"></span>
-        <div class="slimh-streak">
-          <i class="ti ti-bolt" style="color:var(--amber-text)"></i><span id="s-streak">0</span>&thinsp;<span id="s-streak-l">day streak</span>
+    <!-- BENTO TASK HEADER -->
+    <div class="slim-header bento-header" id="task-slim-header">
+      <div class="bento-row">
+
+        <!-- Card 1: Progress ring + greeting -->
+        <div class="bento-card bento-prog-card">
+          <div class="ring slimh-ring bento-ring" id="s-ring"><div class="ring-hole slimh-ring-hole bento-ring-hole"><span id="s-ring-pct" style="display:none">0%</span></div></div>
+          <div class="bento-prog-info">
+            <div class="bento-prog-name">Hey, Zarif</div>
+            <div class="bento-prog-sub" id="s-sub">Loading…</div>
+            <div class="slimh-bar-wrap bento-prog-bar"><div class="slimh-bar-fill" id="s-bar-fill"></div></div>
+            <span class="slimh-pct bento-prog-pct" id="s-bar-pct">0%</span>
+          </div>
         </div>
-        <div id="day-mode-banner" class="day-mode-banner"></div>
-      </div>
-      <div class="hub-filter-bar" id="task-hub-filter-bar">
-        <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
-        <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
-        <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
-        <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
-        <div id="task-tag-filter-holder"></div>
-        <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
+
+        <!-- Card 2: Stats 2×2 -->
+        <div class="bento-card bento-stats-card">
+          <button class="bstat" id="stat-done" onclick="setStatFilter('done')" title="Show completed tasks">
+            <div class="bstat-val" style="color:var(--green-text)"><span id="s-done">0</span></div>
+            <div class="bstat-label"><i class="ti ti-circle-check"></i> done</div>
+          </button>
+          <button class="bstat" id="stat-high" onclick="setStatFilter('high')" title="Show high-priority tasks">
+            <div class="bstat-val" style="color:var(--coral-text)"><span id="s-high">0</span></div>
+            <div class="bstat-label"><i class="ti ti-flame"></i> high</div>
+          </button>
+          <button class="bstat" id="stat-all" onclick="setStatFilter('all')" title="Show all of today's tasks">
+            <div class="bstat-val"><span id="s-total">0</span></div>
+            <div class="bstat-label"><i class="ti ti-list-check"></i> today</div>
+          </button>
+          <div class="bstat-no-btn">
+            <div class="bstat-val" style="color:var(--amber-text)"><span id="s-streak">0</span></div>
+            <div class="bstat-label"><i class="ti ti-bolt"></i> <span id="s-streak-l">day streak</span></div>
+          </div>
+          <div id="day-mode-banner" class="day-mode-banner bento-dmb"></div>
+        </div>
+
+        <!-- Card 3: Quick-add + hub filter -->
+        <div class="bento-card bento-qa-card">
+          <div class="slimh-qa">
+            <i class="ti ti-bolt"></i>
+            <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}" oninput="onQuickAddInput()">
+            <button class="slimh-qa-btn" onclick="quickAddTask()" title="Add task"><i class="ti ti-plus"></i></button>
+          </div>
+          <div class="smart-sched-hint" id="smart-sched-hint">
+            <i class="ti ti-calendar-event"></i>
+            <span style="color:var(--text-3)">Light days:</span>
+            <span id="smart-sched-chips"></span>
+          </div>
+          <div class="hub-filter-bar" id="task-hub-filter-bar">
+            <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
+            <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
+            <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
+            <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
+            <div id="task-tag-filter-holder"></div>
+          </div>
+        </div>
+
       </div>
     </div>
     <div id="dash-upcoming" class="dash-upcoming" style="display:none;margin-bottom:12px" onclick="switchTab('date')"></div>
@@ -3250,8 +3295,9 @@
       <span id="banner-text"></span>
     </div>
 
-    <div class="tabs">
+    <div class="tabs unified-nav">
       <button class="check-tomorrow-btn tab-select-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
+      <span class="unified-nav-sep"></span>
       <button class="tab active" data-tab="today" onclick="switchTab('today')"><i class="ti ti-star"></i> Today</button>
       <button class="tab" data-tab="daily" onclick="switchTab('daily')"><i class="ti ti-sun"></i> Daily</button>
       <button class="tab" data-tab="weekly" onclick="switchTab('weekly')"><i class="ti ti-calendar-week"></i> Weekly</button>
@@ -3259,6 +3305,9 @@
       <button class="tab" data-tab="date" onclick="switchTab('date')"><i class="ti ti-calendar-event"></i> By date</button>
       <button class="tab" data-tab="all" onclick="switchTab('all')"><i class="ti ti-layout-list"></i> All</button>
       <button class="tab" data-tab="calendar" onclick="switchTab('calendar')"><i class="ti ti-calendar-month"></i> Calendar</button>
+      <span style="flex:1"></span>
+      <span class="unified-nav-sep"></span>
+      <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
     </div>
 
     <div id="due-soon-section"></div>
