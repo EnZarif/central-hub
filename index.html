@@ -573,7 +573,8 @@
   .bstat-no-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px; }
   .bstat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); line-height: 1; }
   .bstat-label { font-size: 10px; color: var(--text-3); margin-top: 2px; }
-  .bento-dmb { grid-column: 1 / -1; margin: -2px 0 0; justify-content: center; font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+  .bento-dmb-strip { margin-bottom: 8px; font-size: 11.5px; border-radius: 10px; }
+  .bento-dmb-strip:not([class*="dmb-working"]):not([class*="dmb-off"]) { display: none; }
   .bento-qa-card { display: flex; flex-direction: column; }
   .bento-qa-card .slimh-qa { border-bottom: 0.5px solid var(--border); }
   .bento-qa-card .smart-sched-hint { padding: 5px 14px 6px; border-bottom: 0.5px solid var(--border); }
@@ -3259,7 +3260,6 @@
             <div class="bstat-val" style="color:var(--amber-text)"><span id="s-streak">0</span></div>
             <div class="bstat-label"><i class="ti ti-bolt"></i> <span id="s-streak-l">day streak</span></div>
           </div>
-          <div id="day-mode-banner" class="day-mode-banner bento-dmb"></div>
         </div>
 
         <!-- Card 3: Quick-add + hub filter -->
@@ -3285,6 +3285,7 @@
 
       </div>
     </div>
+    <div id="day-mode-banner" class="day-mode-banner bento-dmb-strip"></div>
     <div id="dash-upcoming" class="dash-upcoming" style="display:none;margin-bottom:12px" onclick="switchTab('date')"></div>
 
     <div id="tasks-highlights"></div>
@@ -16127,7 +16128,7 @@ function renderDayModeBanner() {
   const holidayName = vicHolidayName(today);
   const dow = parseYmdLocal(today).getDay();
   const reason = holidayName || (dow === 0 || dow === 6 ? DAY_NAMES[dow] : '');
-  el.className = 'day-mode-banner ' + (mode === 'working' ? 'dmb-working' : 'dmb-off');
+  el.className = 'day-mode-banner bento-dmb-strip ' + (mode === 'working' ? 'dmb-working' : 'dmb-off');
   el.innerHTML = `<i class="ti ${mode === 'working' ? 'ti-briefcase' : 'ti-beach'}"></i>
     <span class="dmb-label">${mode === 'working' ? 'Working day' : 'Day off'}</span>
     ${reason ? `<span class="dmb-reason">${esc(reason)}</span>` : ''}
