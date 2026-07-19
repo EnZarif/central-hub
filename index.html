@@ -899,20 +899,19 @@
   .jl-archive-toggle:hover { color: var(--text-2); }
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
   /* Amtek Projects card */
-  .jl-proj-card { padding: 0; overflow: hidden; }
-  .jl-proj-card-header { display: flex; align-items: center; gap: 9px; padding: 10px 12px 8px; border-bottom: 0.5px solid var(--border); }
-  .jl-proj-card-icon { width: 24px; height: 24px; background: rgba(255,255,255,0.07); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.45); flex-shrink: 0; }
-  .jl-proj-card-titles { flex: 1; min-width: 0; }
-  .jl-proj-card-title { font-size: 15px; font-weight: 600; color: var(--text); }
-  .jl-proj-card-subtitle { font-size: 12px; color: var(--text-3); margin-top: 0px; }
-  .jl-proj-status-dots { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+  .jl-proj-card { padding: 14px 16px 0; overflow: hidden; }
+  .jl-proj-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+  .jl-proj-card-header > i { font-size: 15px; color: var(--teal); flex-shrink: 0; }
+  .jl-proj-card-header-title { font-size: 13px; font-weight: 500; color: var(--text-2); }
+  .jl-proj-card-subtitle { font-size: 11px; color: var(--text-3); font-weight: 400; margin-left: 2px; }
+  .jl-proj-status-dots { display: flex; gap: 4px; align-items: center; margin-left: auto; }
   .jl-proj-sdot { width: 6px; height: 6px; border-radius: 50%; }
-  .jl-proj-filter { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; padding: 6px 10px 5px; border-bottom: 0.5px solid var(--border); }
+  .jl-proj-filter { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; padding: 6px 16px 5px; border-bottom: 0.5px solid var(--border); margin: 0 -16px; }
   .jl-proj-filter::-webkit-scrollbar { display: none; }
   .jl-proj-filter-btn { background: none; border: 0.5px solid var(--border-md); color: var(--text-3); font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; flex-shrink: 0; }
   .jl-proj-filter-btn:hover { color: var(--text-2); }
   .jl-proj-filter-btn.active { background: var(--teal-bg); border-color: transparent; color: var(--teal-text); }
-  .jl-proj-items { display: flex; flex-direction: column; gap: 4px; padding: 6px; }
+  .jl-proj-items { display: flex; flex-direction: column; gap: 4px; padding: 6px 0 10px; }
   .jl-proj-empty { font-size: 14px; color: var(--text-3); padding: 6px 0; }
   .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 8px; overflow: hidden; transition: border-color 0.2s; }
   .jl-proj-row:hover { border-color: rgba(255,255,255,0.18); }
@@ -3276,12 +3275,10 @@
       <button class="add-task-trigger" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i> Amtek Job Reminder</button>
       <button class="add-task-trigger" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i> Add Amtek Job List</button>
       <div class="card jl-proj-card">
-        <div class="jl-proj-card-header" id="amtek-proj-header">
-          <div class="jl-proj-card-icon"><i class="ti ti-folder-open"></i></div>
-          <div class="jl-proj-card-titles">
-            <div class="jl-proj-card-title">Amtek Projects</div>
-            <div class="jl-proj-card-subtitle" id="amtek-proj-subtitle">ANZ WL</div>
-          </div>
+        <div class="jl-proj-card-header">
+          <i class="ti ti-folder-open"></i>
+          <span class="jl-proj-card-header-title">Amtek Projects</span>
+          <span class="jl-proj-card-subtitle" id="amtek-proj-subtitle"></span>
           <div class="jl-proj-status-dots" id="amtek-proj-dots"></div>
         </div>
         <div class="jl-proj-filter">
@@ -14031,6 +14028,27 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.30.0', type: 'minor', date: '19 Jul 2026', title: 'Amtek Projects card: animated expand, scrollable rows, redesigned header', changes: [
+    'Tapping a project row now animates open with a height transition — chevron rotates 90°, count badge pops to scale, and the progress bar slides in 120ms after the expand settles; collapsing reverses all of it without a re-render',
+    'Items inside an expanded project scroll when there are more than ~5; dates, badges, and action buttons are all visible at full height',
+    'Card header redesigned to match all other sidebar cards: flat teal icon (no box), 13px/500 weight text in var(--text-2), 14px 16px padding',
+    'Live subtitle shows "ANZ WL · N open" and status dot summary (green / amber / violet) updates as project statuses change',
+    'Active filter pill and progress bar fill use the theme accent color — always matches whichever color scheme is active',
+    'Default filter is now Active (was Open) — only changes when another pill is explicitly tapped',
+    'Filter pills sit on a single horizontally-scrollable row (no more two-line wrapping)',
+    'ANZ WL sub-projects only: helpdesk, management, and the top-level ANZ WL row are excluded via /\\banz\\b|anzwl/i',
+    'Job lists inside each project sorted: undone items by due date first, completed items at the bottom',
+  ]},
+  { ver: '4.29.3', type: 'patch', date: '19 Jul 2026', title: 'Mobile nav: iPhone 15 Pro safe area fix + settings button order', changes: [
+    'Nav drawer used 100vh which does not account for the home indicator on iOS — replaced with 100dvh and added env(safe-area-inset-bottom) padding so the settings button is no longer hidden behind the home indicator',
+    'Settings button moved above the clock/weather card in the mobile nav drawer',
+  ]},
+  { ver: '4.29.2', type: 'patch', date: '19 Jul 2026', title: 'Weather: day/night icons, color-coded conditions, fixed missing icon', changes: [
+    'Added is_day field to Open-Meteo API request — clear sky at night shows moon-stars icon, mainly clear shows moon icon',
+    'Overcast and precipitation icons at night get a small moon badge overlay in the bottom-right corner to distinguish night from day',
+    'Color-coded all weather icons: sun → amber, rain → blue, storm → purple, snow → ice blue; clear night icons use violet instead of amber',
+    'Fixed missing 4am forecast icon: ti-cloud-sun does not exist in the Tabler webfont; replaced with valid names (ti-sun-high, ti-cloud-fog, ti-cloud-snow)',
+  ]},
   { ver: '4.29.1', type: 'patch', date: '4 Jul 2026', title: 'Removed Focus mode button; moved Select left of Check tomorrow', changes: [
     'Focus mode button removed from the task header — it\'s still accessible via the command palette (F key)',
     'Select button moved to sit before Check tomorrow, keeping bulk-action controls grouped on the left of the action area',
