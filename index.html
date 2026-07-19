@@ -900,8 +900,8 @@
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
   /* Amtek Projects card */
   .jl-proj-card { padding: 0; overflow: hidden; }
-  .jl-proj-card-header { display: flex; align-items: center; gap: 9px; padding: 10px 12px 8px; border-bottom: 0.5px solid var(--border); }
-  .jl-proj-card-icon { width: 24px; height: 24px; background: var(--teal-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--teal-text); flex-shrink: 0; }
+  .jl-proj-card-header { display: flex; align-items: center; gap: 9px; padding: 10px 12px 8px; border-bottom: 0.5px solid var(--border); transition: background 0.4s ease; }
+  .jl-proj-card-icon { width: 24px; height: 24px; background: rgba(255,255,255,0.07); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.45); flex-shrink: 0; }
   .jl-proj-card-titles { flex: 1; min-width: 0; }
   .jl-proj-card-title { font-size: 15px; font-weight: 600; color: var(--text); }
   .jl-proj-card-subtitle { font-size: 12px; color: var(--text-3); margin-top: 0px; }
@@ -911,7 +911,7 @@
   .jl-proj-filter::-webkit-scrollbar { display: none; }
   .jl-proj-filter-btn { background: none; border: 0.5px solid var(--border-md); color: var(--text-3); font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; flex-shrink: 0; }
   .jl-proj-filter-btn:hover { color: var(--text-2); }
-  .jl-proj-filter-btn.active { background: var(--teal-bg); color: var(--teal-text); border-color: transparent; }
+  .jl-proj-filter-btn.active { border-color: transparent; }
   .jl-proj-items { display: flex; flex-direction: column; gap: 4px; padding: 6px; }
   .jl-proj-empty { font-size: 14px; color: var(--text-3); padding: 6px 0; }
   .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 8px; overflow: hidden; transition: border-color 0.15s; }
@@ -3269,7 +3269,7 @@
       <button class="add-task-trigger" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i> Amtek Job Reminder</button>
       <button class="add-task-trigger" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i> Add Amtek Job List</button>
       <div class="card jl-proj-card">
-        <div class="jl-proj-card-header">
+        <div class="jl-proj-card-header" id="amtek-proj-header">
           <div class="jl-proj-card-icon"><i class="ti ti-folder-open"></i></div>
           <div class="jl-proj-card-titles">
             <div class="jl-proj-card-title">Amtek Projects</div>
@@ -7658,6 +7658,21 @@ function toggleAmtekProject(id) {
   renderAmtekProjects();
 }
 
+const _FILTER_PILL = {
+  open:              { bg: 'rgba(96,165,250,0.12)',   color: '#60a5fa',  border: 'rgba(96,165,250,0.3)' },
+  active:            { bg: 'rgba(99,153,34,0.15)',    color: '#97C459',  border: 'rgba(99,153,34,0.35)' },
+  onhold:            { bg: 'rgba(239,159,39,0.15)',   color: '#FAC775',  border: 'rgba(239,159,39,0.35)' },
+  'awaiting-client': { bg: 'rgba(127,119,221,0.15)',  color: '#AFA9EC',  border: 'rgba(127,119,221,0.35)' },
+  delivered:         { bg: 'rgba(255,255,255,0.07)',  color: 'rgba(232,236,238,0.45)', border: 'rgba(255,255,255,0.15)' },
+  all:               { bg: 'rgba(255,255,255,0.09)',  color: 'rgba(232,236,238,0.75)', border: 'rgba(255,255,255,0.2)' },
+};
+const _GRAD_STOP = {
+  active: 'rgba(99,153,34,0.14)',
+  onhold: 'rgba(239,159,39,0.11)',
+  'awaiting-client': 'rgba(127,119,221,0.11)',
+  delivered: 'rgba(255,255,255,0.03)',
+};
+
 function renderAmtekProjects() {
   const el = document.getElementById('amtek-proj-list');
   if (!el) return;
@@ -7681,6 +7696,35 @@ function renderAmtekProjects() {
       wC ? `<div class="jl-proj-sdot" style="background:#AFA9EC" title="${wC} awaiting"></div>` : '',
     ].join('');
   }
+
+  // Header gradient from statuses present across all subs
+  const headerEl = document.getElementById('amtek-proj-header');
+  if (headerEl) {
+    const presentStatuses = [...new Set(allSubs.map(s => s.status))].sort((a,b) => (STATUS_ORDER[a]??9)-(STATUS_ORDER[b]??9));
+    const stops = presentStatuses.map(st => _GRAD_STOP[st]).filter(Boolean);
+    if (stops.length === 1) {
+      headerEl.style.background = `linear-gradient(135deg, ${stops[0]} 0%, transparent 100%)`;
+    } else if (stops.length >= 2) {
+      const gradStr = stops.map((s,i) => `${s} ${Math.round(i/(stops.length-1)*100)}%`).join(', ');
+      headerEl.style.background = `linear-gradient(135deg, ${gradStr})`;
+    } else {
+      headerEl.style.background = '';
+    }
+  }
+
+  // Filter pill colors — reactive to which filter is active
+  document.querySelectorAll('.jl-proj-filter-btn').forEach(b => {
+    if (b.classList.contains('active')) {
+      const ps = _FILTER_PILL[b.dataset.apf] || _FILTER_PILL.all;
+      b.style.background = ps.bg;
+      b.style.color = ps.color;
+      b.style.borderColor = ps.border;
+    } else {
+      b.style.background = '';
+      b.style.color = '';
+      b.style.borderColor = '';
+    }
+  });
 
   let subs = allSubs.slice();
   if (_amtekProjFilter === 'open') subs = subs.filter(s => s.status !== 'delivered');
