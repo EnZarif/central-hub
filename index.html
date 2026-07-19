@@ -899,24 +899,35 @@
   .jl-archive-toggle:hover { color: var(--text-2); }
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
   /* Amtek Projects card */
-  .jl-proj-card { padding: 14px 16px; }
-  .jl-proj-card .card-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
-  .jl-proj-add-btn { background: none; border: none; color: var(--teal-text); cursor: pointer; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; font-family: inherit; }
-  .jl-proj-add-btn:hover { background: var(--teal-bg); }
-  .jl-proj-items { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-  .jl-proj-empty { font-size: 12px; color: var(--text-3); padding: 6px 0; }
-  .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 9px; overflow: hidden; }
-  .jl-proj-hd { display: flex; align-items: center; }
-  .jl-proj-toggle { flex: 1; display: flex; align-items: center; gap: 7px; background: none; border: none; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; padding: 9px 10px; text-align: left; font-family: inherit; transition: background 0.12s; }
-  .jl-proj-toggle:hover { background: var(--surface2); }
-  .jl-proj-toggle i { font-size: 12px; color: var(--text-3); flex-shrink: 0; }
-  .jl-proj-count { font-size: 10.5px; background: var(--teal-bg); color: var(--teal-text); border-radius: 20px; padding: 1px 8px; font-weight: 700; margin-left: 2px; }
-  .jl-proj-body { border-top: 0.5px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .jl-proj-filter { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .jl-proj-card { padding: 0; overflow: hidden; }
+  .jl-proj-card-header { display: flex; align-items: center; gap: 10px; padding: 13px 15px 10px; border-bottom: 0.5px solid var(--border); }
+  .jl-proj-card-icon { width: 28px; height: 28px; background: var(--teal-bg); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--teal-text); flex-shrink: 0; }
+  .jl-proj-card-titles { flex: 1; min-width: 0; }
+  .jl-proj-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .jl-proj-card-subtitle { font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+  .jl-proj-status-dots { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+  .jl-proj-sdot { width: 6px; height: 6px; border-radius: 50%; }
+  .jl-proj-filter { display: flex; gap: 4px; flex-wrap: wrap; padding: 9px 12px 8px; border-bottom: 0.5px solid var(--border); }
   .jl-proj-filter-btn { background: none; border: 0.5px solid var(--border-md); color: var(--text-3); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.12s; }
   .jl-proj-filter-btn:hover { color: var(--text-2); }
   .jl-proj-filter-btn.active { background: var(--teal-bg); color: var(--teal-text); border-color: transparent; }
-  .jl-proj-status { font-size: 10px; font-weight: 600; margin-left: 2px; opacity: 0.85; }
+  .jl-proj-items { display: flex; flex-direction: column; gap: 5px; padding: 8px; }
+  .jl-proj-empty { font-size: 12px; color: var(--text-3); padding: 6px 0; }
+  .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 9px; overflow: hidden; transition: border-color 0.15s; }
+  .jl-proj-row:hover { border-color: rgba(255,255,255,0.18); }
+  .jl-proj-hd { display: flex; align-items: stretch; }
+  .jl-proj-stripe { width: 3px; flex-shrink: 0; }
+  .jl-proj-toggle { flex: 1; display: flex; align-items: center; gap: 7px; background: none; border: none; color: var(--text); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 9px 10px; text-align: left; font-family: inherit; transition: background 0.12s; min-width: 0; overflow: hidden; }
+  .jl-proj-toggle:hover { background: var(--surface2); }
+  .jl-proj-toggle i { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+  .jl-proj-toggle .jl-proj-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jl-proj-count { font-size: 10px; background: var(--surface2); border: 0.5px solid var(--border-md); color: var(--text-2); border-radius: 20px; padding: 1px 7px; font-weight: 700; flex-shrink: 0; }
+  .jl-proj-status-pill { font-size: 9.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; }
+  .jl-proj-body { border-top: 0.5px solid var(--border); padding: 7px 8px 8px; display: flex; flex-direction: column; gap: 5px; background: rgba(0,0,0,0.12); }
+  .jl-proj-progress { display: flex; align-items: center; gap: 7px; padding: 0 10px 6px 10px; }
+  .jl-proj-bar-track { flex: 1; height: 3px; background: var(--border-md); border-radius: 3px; overflow: hidden; }
+  .jl-proj-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .jl-proj-bar-pct { font-size: 9.5px; color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .toast-host { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
   .toast-item { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: var(--text-2); box-shadow: 0 8px 24px rgba(0,0,0,0.35); opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; }
   .toast-item.show { opacity: 1; transform: translateY(0); }
@@ -3257,7 +3268,14 @@
       <button class="add-task-trigger" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i> Amtek Job Reminder</button>
       <button class="add-task-trigger" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i> Add Amtek Job List</button>
       <div class="card jl-proj-card">
-        <div class="card-title"><i class="ti ti-folder-open"></i> Amtek Projects</div>
+        <div class="jl-proj-card-header">
+          <div class="jl-proj-card-icon"><i class="ti ti-folder-open"></i></div>
+          <div class="jl-proj-card-titles">
+            <div class="jl-proj-card-title">Amtek Projects</div>
+            <div class="jl-proj-card-subtitle" id="amtek-proj-subtitle">ANZ WL</div>
+          </div>
+          <div class="jl-proj-status-dots" id="amtek-proj-dots"></div>
+        </div>
         <div class="jl-proj-filter">
           <button class="jl-proj-filter-btn active" data-apf="open" onclick="setAmtekProjFilter('open')">Open</button>
           <button class="jl-proj-filter-btn" data-apf="active" onclick="setAmtekProjFilter('active')">Active</button>
@@ -7643,8 +7661,27 @@ function renderAmtekProjects() {
   const el = document.getElementById('amtek-proj-list');
   if (!el) return;
   const STATUS_ORDER = { active: 0, onhold: 1, 'awaiting-client': 2, delivered: 3 };
-  const STATUS_COLORS = { active: 'var(--teal-text)', onhold: '#EF9F27', 'awaiting-client': '#7F77DD', delivered: 'var(--text-3)' };
-  let subs = _anzWlSubs();
+  const STRIPE_COLOR = { active: 'var(--green-text)', onhold: 'var(--amber-text)', 'awaiting-client': '#AFA9EC', delivered: 'var(--text-3)' };
+  const PILL_BG    = { active: 'var(--green-bg)', onhold: 'var(--amber-bg)', 'awaiting-client': 'rgba(127,119,221,0.13)', delivered: 'var(--surface2)' };
+
+  // Update card header subtitle + status dots
+  const allSubs = _anzWlSubs();
+  const openCount = allSubs.filter(s => s.status !== 'delivered').length;
+  const subEl = document.getElementById('amtek-proj-subtitle');
+  if (subEl) subEl.textContent = `ANZ WL · ${openCount} open`;
+  const dotsEl = document.getElementById('amtek-proj-dots');
+  if (dotsEl) {
+    const aC = allSubs.filter(s => s.status === 'active').length;
+    const oC = allSubs.filter(s => s.status === 'onhold').length;
+    const wC = allSubs.filter(s => s.status === 'awaiting-client').length;
+    dotsEl.innerHTML = [
+      aC ? `<div class="jl-proj-sdot" style="background:var(--green-text)" title="${aC} active"></div>` : '',
+      oC ? `<div class="jl-proj-sdot" style="background:var(--amber-text)" title="${oC} on hold"></div>` : '',
+      wC ? `<div class="jl-proj-sdot" style="background:#AFA9EC" title="${wC} awaiting"></div>` : '',
+    ].join('');
+  }
+
+  let subs = allSubs.slice();
   if (_amtekProjFilter === 'open') subs = subs.filter(s => s.status !== 'delivered');
   else if (_amtekProjFilter !== 'all') subs = subs.filter(s => s.status === _amtekProjFilter);
   subs.sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.title.localeCompare(b.title));
@@ -7662,18 +7699,27 @@ function renderAmtekProjects() {
       return 0;
     });
     const open = !!_amtekProjOpen[s.id];
+    const sc = STRIPE_COLOR[s.status] || 'var(--text-3)';
+    const pb = PILL_BG[s.status] || 'var(--surface2)';
+    const doneCount = linked.filter(j => j.done).length;
+    const total = linked.length;
+    const progressHtml = total > 0
+      ? `<div class="jl-proj-progress"><div class="jl-proj-bar-track"><div class="jl-proj-bar-fill" style="width:${Math.round(doneCount/total*100)}%;background:${sc}"></div></div><span class="jl-proj-bar-pct">${doneCount}/${total}</span></div>`
+      : '';
     const body = open
       ? `<div class="jl-proj-body">${linked.length ? linked.map(jlRowHtml).join('') : '<div class="jl-empty">No job lists linked — tag one to this project when adding.</div>'}</div>`
       : '';
     return `<div class="jl-proj-row">
       <div class="jl-proj-hd">
+        <div class="jl-proj-stripe" style="background:${sc}"></div>
         <button class="jl-proj-toggle" onclick="toggleAmtekProject('${s.id}')">
           <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
-          <span>${esc(s.title)}</span>
-          <span class="jl-proj-status" style="color:${STATUS_COLORS[s.status] || 'var(--text-3)'}">${PROJ_STATUS_LABELS[s.status] || s.status}</span>
-          ${linked.length ? `<span class="jl-proj-count">${linked.length}</span>` : ''}
+          <span class="jl-proj-name">${esc(s.title)}</span>
+          <span class="jl-proj-status-pill" style="background:${pb};color:${sc}">${PROJ_STATUS_LABELS[s.status] || s.status}</span>
+          ${total ? `<span class="jl-proj-count">${total}</span>` : ''}
         </button>
       </div>
+      ${progressHtml}
       ${body}
     </div>`;
   }).join('');
