@@ -3278,8 +3278,8 @@
           <div class="jl-proj-status-dots" id="amtek-proj-dots"></div>
         </div>
         <div class="jl-proj-filter">
-          <button class="jl-proj-filter-btn active" data-apf="open" onclick="setAmtekProjFilter('open')">Open</button>
-          <button class="jl-proj-filter-btn" data-apf="active" onclick="setAmtekProjFilter('active')">Active</button>
+          <button class="jl-proj-filter-btn" data-apf="open" onclick="setAmtekProjFilter('open')">Open</button>
+          <button class="jl-proj-filter-btn active" data-apf="active" onclick="setAmtekProjFilter('active')">Active</button>
           <button class="jl-proj-filter-btn" data-apf="onhold" onclick="setAmtekProjFilter('onhold')">On Hold</button>
           <button class="jl-proj-filter-btn" data-apf="awaiting-client" onclick="setAmtekProjFilter('awaiting-client')">Awaiting</button>
           <button class="jl-proj-filter-btn" data-apf="delivered" onclick="setAmtekProjFilter('delivered')">Delivered</button>
@@ -7625,7 +7625,7 @@ let jobLists = [];
 let editingJobListId = null;
 let _jlArchiveOpen = false;
 let _amtekProjOpen = {};
-let _amtekProjFilter = 'open';
+let _amtekProjFilter = 'active';
 
 function saveJobLists() { dbSet('zarif_job_lists', jobLists); }
 
