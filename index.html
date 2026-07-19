@@ -911,7 +911,7 @@
   .jl-proj-filter::-webkit-scrollbar { display: none; }
   .jl-proj-filter-btn { background: none; border: 0.5px solid var(--border-md); color: var(--text-3); font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; flex-shrink: 0; }
   .jl-proj-filter-btn:hover { color: var(--text-2); }
-  .jl-proj-filter-btn.active { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .jl-proj-filter-btn.active { background: var(--teal-bg); border-color: transparent; color: var(--teal-text); }
   .jl-proj-items { display: flex; flex-direction: column; gap: 4px; padding: 6px; }
   .jl-proj-empty { font-size: 14px; color: var(--text-3); padding: 6px 0; }
   .jl-proj-row { border: 0.5px solid var(--border-md); border-radius: 8px; overflow: hidden; transition: border-color 0.15s; }
@@ -7721,7 +7721,7 @@ function renderAmtekProjects() {
     const doneCount = linked.filter(j => j.done).length;
     const total = linked.length;
     const progressHtml = total > 0
-      ? `<div class="jl-proj-progress"><div class="jl-proj-bar-track"><div class="jl-proj-bar-fill" style="width:${Math.round(doneCount/total*100)}%;background:${sc}"></div></div><span class="jl-proj-bar-pct">${doneCount}/${total}</span></div>`
+      ? `<div class="jl-proj-progress"><div class="jl-proj-bar-track"><div class="jl-proj-bar-fill" style="width:${Math.round(doneCount/total*100)}%;background:var(--teal-text)"></div></div><span class="jl-proj-bar-pct">${doneCount}/${total}</span></div>`
       : '';
     const body = open
       ? `<div class="jl-proj-body">${linked.length ? linked.map(jlRowHtml).join('') : '<div class="jl-empty">No job lists linked — tag one to this project when adding.</div>'}</div>`
