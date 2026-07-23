@@ -930,6 +930,19 @@
   .jl-archive-toggle { width: 100%; display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-3); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px 2px; font-family: inherit; }
   .jl-archive-toggle:hover { color: var(--text-2); }
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
+  /* Due-today pinned group inside Amtek Job List */
+  .jl-today-group { margin: -8px -16px 4px; padding: 8px 16px 10px; background: rgba(239,159,39,0.05); border-bottom: 0.5px solid rgba(239,159,39,0.28); }
+  .jl-today-header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .jl-today-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber-text); flex-shrink: 0; box-shadow: 0 0 0 3px rgba(239,159,39,0.2); animation: jlTodayPulse 1.8s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .jl-today-dot { animation: none; } }
+  @keyframes jlTodayPulse { 0%,100% { box-shadow: 0 0 0 3px rgba(239,159,39,0.2); } 50% { box-shadow: 0 0 0 5px rgba(239,159,39,0.06); } }
+  .jl-today-label { font-size: 10.5px; font-weight: 700; color: var(--amber-text); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+  .jl-today-count { font-size: 10px; font-weight: 700; background: var(--amber-bg); color: var(--amber-text); border-radius: 8px; padding: 1px 7px; }
+  .jl-today-items { display: flex; flex-direction: column; gap: 6px; }
+  .jl-today-items .jl-item { background: rgba(239,159,39,0.07); border: 0.5px solid rgba(239,159,39,0.18); }
+  .jl-today-items .jl-item::before { background: var(--amber-text) !important; }
+  .jl-cb.jl-today-cb { border-color: var(--amber-text); background: rgba(239,159,39,0.08); }
+  .jl-cb.jl-today-cb:checked { background: var(--amber-text); border-color: var(--amber-text); box-shadow: 0 0 0 4px rgba(239,159,39,0.2); }
   /* Amtek Projects card */
   .jl-proj-card { padding: 14px 16px 0; overflow: hidden; }
   .jl-proj-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
@@ -8055,7 +8068,7 @@ function moveJobList(id, dir) {
   renderJobListSidebar();
 }
 
-function jlRowHtml(j) {
+function jlRowHtml(j, isToday = false) {
   let linkBadge = '';
   if (j.projId && j.subId) {
     const p = projects.find(x => x.id === j.projId);
@@ -8069,7 +8082,7 @@ function jlRowHtml(j) {
   const openAttr = j.url ? `onclick="markJobListOpened('${j.id}',${jsAttr(j.url)})"` : '';
   return `<div class="jl-item${j.done ? ' done' : ''}">
       <label class="jl-cb-wrap">
-        <input type="checkbox" class="jl-cb" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
+        <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
         <i class="ti ti-check jl-cb-check"></i>
       </label>
       <div class="jl-body">
@@ -8106,7 +8119,13 @@ function renderJobListSidebar() {
   const now = Date.now();
   const archived = untagged.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS);
   const active = untagged.filter(j => !archived.includes(j));
-  const sortedActive = [...active].sort((a, b) => {
+
+  const todayStr = ymd(new Date());
+  const dueToday = active.filter(j => !j.done && j.date === todayStr);
+  const dueTodayIds = new Set(dueToday.map(j => j.id));
+  const rest = active.filter(j => !dueTodayIds.has(j.id));
+
+  const sortedRest = [...rest].sort((a, b) => {
     const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
     if (doneDiff !== 0) return doneDiff;
     if (a.date && b.date) return a.date.localeCompare(b.date);
@@ -8115,8 +8134,21 @@ function renderJobListSidebar() {
     return 0;
   });
 
-  let html = sortedActive.length
-    ? sortedActive.map(jlRowHtml).join('')
+  let html = '';
+
+  if (dueToday.length) {
+    html += `<div class="jl-today-group">
+      <div class="jl-today-header">
+        <div class="jl-today-dot"></div>
+        <span class="jl-today-label">Due today</span>
+        <span class="jl-today-count">${dueToday.length}</span>
+      </div>
+      <div class="jl-today-items">${dueToday.map(j => jlRowHtml(j, true)).join('')}</div>
+    </div>`;
+  }
+
+  html += sortedRest.length
+    ? sortedRest.map(j => jlRowHtml(j)).join('')
     : '<div class="jl-empty">Nothing active — add one above.</div>';
 
   if (archived.length) {
