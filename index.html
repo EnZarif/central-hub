@@ -8075,6 +8075,10 @@ function jlRowHtml(j, isToday = false) {
     const s = p && (p.subs || []).find(x => x.id === j.subId);
     if (s) linkBadge = `<span class="jl-link-badge" title="Linked to ${esc(p.title)} › ${esc(s.title)} checklist"><i class="ti ti-link"></i> ${esc(s.title)}</span>`;
   }
+  if (isToday && j.amtekProjectId && !linkBadge) {
+    const amtekSub = _anzWlSubs().find(s => String(s.id) === String(j.amtekProjectId));
+    if (amtekSub) linkBadge = `<span class="jl-link-badge" title="Amtek Project"><i class="ti ti-folder"></i> ${esc(amtekSub.title)}</span>`;
+  }
   const dueChip = jlDueChip(j.date);
   const staleDays = !j.done ? jlStaleDays(j) : null;
   const staleChip = (staleDays !== null && staleDays >= JL_STALE_DAYS)
@@ -8125,6 +8129,10 @@ function renderJobListSidebar() {
   const dueTodayIds = new Set(dueToday.map(j => j.id));
   const rest = active.filter(j => !dueTodayIds.has(j.id));
 
+  // Also include project-tagged jobs due today (they stay visible in Amtek Projects too)
+  const taggedToday = jobLists.filter(j => j.amtekProjectId && !j.done && j.date === todayStr);
+  const allDueToday = [...dueToday, ...taggedToday];
+
   const sortedRest = [...rest].sort((a, b) => {
     const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
     if (doneDiff !== 0) return doneDiff;
@@ -8136,14 +8144,14 @@ function renderJobListSidebar() {
 
   let html = '';
 
-  if (dueToday.length) {
+  if (allDueToday.length) {
     html += `<div class="jl-today-group">
       <div class="jl-today-header">
         <div class="jl-today-dot"></div>
         <span class="jl-today-label">Due today</span>
-        <span class="jl-today-count">${dueToday.length}</span>
+        <span class="jl-today-count">${allDueToday.length}</span>
       </div>
-      <div class="jl-today-items">${dueToday.map(j => jlRowHtml(j, true)).join('')}</div>
+      <div class="jl-today-items">${allDueToday.map(j => jlRowHtml(j, true)).join('')}</div>
     </div>`;
   }
 
