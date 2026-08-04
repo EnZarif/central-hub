@@ -8075,7 +8075,7 @@ function jlRowHtml(j, isToday = false) {
     const s = p && (p.subs || []).find(x => x.id === j.subId);
     if (s) linkBadge = `<span class="jl-link-badge" title="Linked to ${esc(p.title)} › ${esc(s.title)} checklist"><i class="ti ti-link"></i> ${esc(s.title)}</span>`;
   }
-  if (isToday && j.amtekProjectId && !linkBadge) {
+  if (j.amtekProjectId && !linkBadge) {
     const amtekSub = _anzWlSubs().find(s => String(s.id) === String(j.amtekProjectId));
     if (amtekSub) linkBadge = `<span class="jl-link-badge" title="Amtek Project"><i class="ti ti-folder"></i> ${esc(amtekSub.title)}</span>`;
   }
@@ -8115,23 +8115,21 @@ const JL_ARCHIVE_AFTER_MS = 24 * 60 * 60 * 1000;
 function renderJobListSidebar() {
   const el = document.getElementById('jl-list');
   if (!el) return;
-  const untagged = jobLists.filter(j => !j.amtekProjectId);
-  if (!untagged.length) {
-    el.innerHTML = '<div class="jl-empty">All job lists are assigned to projects above.</div>';
+  // Untagged jobs always show here; tagged jobs show here only when they have a due date
+  const visible = jobLists.filter(j => !j.amtekProjectId || j.date);
+  if (!visible.length) {
+    el.innerHTML = '<div class="jl-empty">Nothing to show — add a job list above.</div>';
     return;
   }
   const now = Date.now();
-  const archived = untagged.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS);
-  const active = untagged.filter(j => !archived.includes(j));
+  // Only archive untagged done items; tagged items manage their lifecycle inside their project
+  const archived = visible.filter(j => !j.amtekProjectId && j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS);
+  const active = visible.filter(j => !archived.includes(j));
 
   const todayStr = ymd(new Date());
   const dueToday = active.filter(j => !j.done && j.date === todayStr);
   const dueTodayIds = new Set(dueToday.map(j => j.id));
   const rest = active.filter(j => !dueTodayIds.has(j.id));
-
-  // Also include project-tagged jobs due today (they stay visible in Amtek Projects too)
-  const taggedToday = jobLists.filter(j => j.amtekProjectId && !j.done && j.date === todayStr);
-  const allDueToday = [...dueToday, ...taggedToday];
 
   const sortedRest = [...rest].sort((a, b) => {
     const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
@@ -8144,20 +8142,20 @@ function renderJobListSidebar() {
 
   let html = '';
 
-  if (allDueToday.length) {
+  if (dueToday.length) {
     html += `<div class="jl-today-group">
       <div class="jl-today-header">
         <div class="jl-today-dot"></div>
         <span class="jl-today-label">Due today</span>
-        <span class="jl-today-count">${allDueToday.length}</span>
+        <span class="jl-today-count">${dueToday.length}</span>
       </div>
-      <div class="jl-today-items">${allDueToday.map(j => jlRowHtml(j, true)).join('')}</div>
+      <div class="jl-today-items">${dueToday.map(j => jlRowHtml(j, true)).join('')}</div>
     </div>`;
   }
 
   html += sortedRest.length
     ? sortedRest.map(j => jlRowHtml(j)).join('')
-    : '<div class="jl-empty">Nothing active — add one above.</div>';
+    : (dueToday.length ? '' : '<div class="jl-empty">Nothing active — add one above.</div>');
 
   if (archived.length) {
     const sortedArchived = [...archived].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
