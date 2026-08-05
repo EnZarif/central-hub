@@ -1767,23 +1767,23 @@
   .amtek-tab.active { color: var(--teal-text); border-bottom-color: var(--teal-text); }
   .amtek-tab-panel { display: none; }
   .amtek-tab-panel.active { display: block; }
-  /* Job List tab — flat stripe rows */
-  .jl-tab-panel .jl-list { gap: 0; margin-top: 0; }
-  .jl-tab-panel .jl-item { background: none; border-radius: 0; padding: 7px 14px; border-bottom: 0.5px solid var(--border); }
-  .jl-tab-panel .jl-item:hover { background: var(--surface2); }
+  /* Job List tab — card-style rows */
+  .jl-tab-panel .jl-list { gap: 7px; margin-top: 0; padding: 10px; }
+  .jl-tab-panel .jl-item { background: var(--surface2); border-radius: 8px; padding: 10px 12px 10px 14px; border: 0.5px solid var(--border-md); }
+  .jl-tab-panel .jl-item:hover { border-color: rgba(255,255,255,0.14); }
   .jl-tab-panel .jl-item::before { background: var(--border-md) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(210,85,40,0.07); border-bottom-color: rgba(210,85,40,0.22); }
+  .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(210,85,40,0.07); border-color: rgba(210,85,40,0.28); }
   .jl-tab-panel .jl-item.jl-stripe-ov:hover { background: rgba(210,85,40,0.11); }
   .jl-tab-panel .jl-item.jl-stripe-ov::before { background: var(--coral-text) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(239,159,39,0.07); border-bottom-color: rgba(239,159,39,0.22); }
+  .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(239,159,39,0.07); border-color: rgba(239,159,39,0.28); }
   .jl-tab-panel .jl-item.jl-stripe-td:hover { background: rgba(239,159,39,0.11); }
   .jl-tab-panel .jl-item.jl-stripe-td::before { background: var(--amber-text) !important; }
   .jl-tab-panel .jl-item.done::before { background: var(--text-3) !important; }
   .jl-flat-divider { height: 0.5px; background: var(--border-md); margin: 0 14px; }
   .jl-tab-panel .jl-empty { padding: 10px 14px; }
   .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
-  .jl-tab-panel .jl-archive-list { gap: 0; }
-  .jl-tab-panel .jl-archive-list .jl-item { border-bottom: 0.5px solid var(--border); opacity: 0.65; }
+  .jl-tab-panel .jl-archive-list { gap: 7px; }
+  .jl-tab-panel .jl-archive-list .jl-item { opacity: 0.65; }
   /* Projects tab — scoped overrides */
   .amtek-tab-panel .jl-proj-filter { margin: 0; padding: 6px 10px 5px; }
   .amtek-tab-panel .jl-proj-items { padding: 8px; gap: 6px; }
