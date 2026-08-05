@@ -1744,6 +1744,43 @@
   .add-task-trigger { width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 14px; margin-bottom: 14px; border-radius: var(--radius-lg); border: 1px dashed var(--border-md); background: var(--surface); color: var(--text-2); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
   .add-task-trigger:hover { border-color: var(--teal); color: var(--teal-text); background: var(--teal-bg); }
   .add-task-trigger i { font-size: 15px; }
+  /* Sidebar icon toolbar */
+  .sidebar-toolbar { display: flex; background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 0; }
+  .sidebar-tool-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 11px 6px; background: none; border: none; border-right: 0.5px solid var(--border); color: var(--text-3); cursor: pointer; font-family: inherit; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; transition: background 0.12s, color 0.12s; }
+  .sidebar-tool-btn:last-child { border-right: none; }
+  .sidebar-tool-btn:hover { background: var(--surface2); color: var(--teal-text); }
+  .sidebar-tool-btn > i { font-size: 17px; }
+  /* Unified Amtek card */
+  .amtek-card { overflow: hidden; }
+  .amtek-card-hd { display: flex; align-items: center; gap: 7px; padding: 11px 14px 0; }
+  .amtek-card-hd > i { font-size: 14px; color: var(--teal-text); }
+  .amtek-card-hd-title { font-size: 13px; font-weight: 600; color: var(--text-2); flex: 1; }
+  .amtek-chips { display: flex; gap: 4px; align-items: center; }
+  .jl-chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: none; }
+  .jl-chip.ov { background: var(--coral-bg); color: var(--coral-text); }
+  .jl-chip.td { background: var(--amber-bg); color: var(--amber-text); }
+  .amtek-tabs { display: flex; padding: 8px 14px 0; border-bottom: 0.5px solid var(--border); margin-top: 6px; }
+  .amtek-tab { padding: 5px 10px; font-size: 12px; font-weight: 600; color: var(--text-3); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; margin-bottom: -0.5px; transition: color 0.13s, border-color 0.13s; }
+  .amtek-tab.active { color: var(--teal-text); border-bottom-color: var(--teal-text); }
+  .amtek-tab-panel { display: none; }
+  .amtek-tab-panel.active { display: block; }
+  /* Job List tab — flat stripe rows */
+  .jl-tab-panel .jl-list { gap: 0; margin-top: 0; }
+  .jl-tab-panel .jl-item { background: none; border-radius: 0; padding: 7px 14px; border-bottom: 0.5px solid var(--border); }
+  .jl-tab-panel .jl-item:hover { background: var(--surface2); }
+  .jl-tab-panel .jl-item::before { background: var(--border-md) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-ov::before { background: var(--coral-text) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-td::before { background: var(--amber-text) !important; }
+  .jl-tab-panel .jl-item.done::before { background: var(--text-3) !important; }
+  .jl-flat-divider { height: 0.5px; background: var(--border-md); margin: 0 14px; }
+  .jl-tab-panel .jl-empty { padding: 10px 14px; }
+  .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
+  .jl-tab-panel .jl-archive-list { gap: 0; }
+  .jl-tab-panel .jl-archive-list .jl-item { border-bottom: 0.5px solid var(--border); opacity: 0.65; }
+  /* Projects tab — scoped overrides */
+  .amtek-tab-panel .jl-proj-filter { margin: 0; padding: 6px 10px 5px; }
+  .amtek-tab-panel .jl-proj-items { padding: 8px; gap: 6px; }
+  .amtek-proj-subhd { display: flex; align-items: center; gap: 6px; padding: 8px 14px 0; }
   .kpi-modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
 
   /* SETTINGS PAGE */
@@ -3348,29 +3385,42 @@
     </div>
 
     <div class="tasks-sidebar">
-      <button class="add-task-trigger" onclick="openAddTaskModal()"><i class="ti ti-plus"></i> Add your own task</button>
-      <button class="add-task-trigger" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i> Amtek Job Reminder</button>
-      <button class="add-task-trigger" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i> Add Amtek Job List</button>
-      <div class="card jl-proj-card">
-        <div class="jl-proj-card-header">
-          <i class="ti ti-folder-open"></i>
-          <span class="jl-proj-card-header-title">Amtek Projects</span>
-          <span class="jl-proj-card-subtitle" id="amtek-proj-subtitle"></span>
-          <div class="jl-proj-status-dots" id="amtek-proj-dots"></div>
-        </div>
-        <div class="jl-proj-filter">
-          <button class="jl-proj-filter-btn" data-apf="open" onclick="setAmtekProjFilter('open')">Open</button>
-          <button class="jl-proj-filter-btn active" data-apf="active" onclick="setAmtekProjFilter('active')">Active</button>
-          <button class="jl-proj-filter-btn" data-apf="onhold" onclick="setAmtekProjFilter('onhold')">On Hold</button>
-          <button class="jl-proj-filter-btn" data-apf="awaiting-client" onclick="setAmtekProjFilter('awaiting-client')">Awaiting</button>
-          <button class="jl-proj-filter-btn" data-apf="delivered" onclick="setAmtekProjFilter('delivered')">Delivered</button>
-          <button class="jl-proj-filter-btn" data-apf="all" onclick="setAmtekProjFilter('all')">All</button>
-        </div>
-        <div class="jl-proj-items" id="amtek-proj-list"></div>
+      <div class="sidebar-toolbar">
+        <button class="sidebar-tool-btn" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
+        <button class="sidebar-tool-btn" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i>Reminder</button>
+        <button class="sidebar-tool-btn" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
       </div>
-      <div class="card jl-card">
-        <div class="card-title"><i class="ti ti-list-details"></i> Amtek Job List</div>
-        <div class="jl-list" id="jl-list"></div>
+      <div class="card amtek-card">
+        <div class="amtek-card-hd">
+          <i class="ti ti-building-factory-2"></i>
+          <span class="amtek-card-hd-title">Amtek</span>
+          <div class="amtek-chips">
+            <span class="jl-chip ov" id="jl-chip-ov"></span>
+            <span class="jl-chip td" id="jl-chip-td"></span>
+          </div>
+        </div>
+        <div class="amtek-tabs">
+          <button class="amtek-tab active" onclick="switchAmtekTab(this,'amtek-panel-jl')">Job List</button>
+          <button class="amtek-tab" onclick="switchAmtekTab(this,'amtek-panel-proj')">Projects</button>
+        </div>
+        <div class="amtek-tab-panel jl-tab-panel active" id="amtek-panel-jl">
+          <div class="jl-list" id="jl-list"></div>
+        </div>
+        <div class="amtek-tab-panel" id="amtek-panel-proj">
+          <div class="amtek-proj-subhd">
+            <span class="jl-proj-card-subtitle" id="amtek-proj-subtitle"></span>
+            <div class="jl-proj-status-dots" id="amtek-proj-dots"></div>
+          </div>
+          <div class="jl-proj-filter">
+            <button class="jl-proj-filter-btn" data-apf="open" onclick="setAmtekProjFilter('open')">Open</button>
+            <button class="jl-proj-filter-btn active" data-apf="active" onclick="setAmtekProjFilter('active')">Active</button>
+            <button class="jl-proj-filter-btn" data-apf="onhold" onclick="setAmtekProjFilter('onhold')">On Hold</button>
+            <button class="jl-proj-filter-btn" data-apf="awaiting-client" onclick="setAmtekProjFilter('awaiting-client')">Awaiting</button>
+            <button class="jl-proj-filter-btn" data-apf="delivered" onclick="setAmtekProjFilter('delivered')">Delivered</button>
+            <button class="jl-proj-filter-btn" data-apf="all" onclick="setAmtekProjFilter('all')">All</button>
+          </div>
+          <div class="jl-proj-items" id="amtek-proj-list"></div>
+        </div>
       </div>
       <div class="card kb-card">
         <div class="card-title"><i class="ti ti-bulb"></i> Knowledge base</div>
@@ -8098,7 +8148,8 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
   const staleChip = (staleDays !== null && staleDays >= JL_STALE_DAYS)
     ? `<span class="jl-due stale" title="Not opened or checked in ${staleDays} days"><i class="ti ti-alert-triangle"></i> ${staleDays}d stale</span>` : '';
   const openAttr = j.url ? `onclick="markJobListOpened('${j.id}',${jsAttr(j.url)})"` : '';
-  return `<div class="jl-item${j.done ? ' done' : ''}">
+  const stripeClass = isOverdue ? ' jl-stripe-ov' : isToday ? ' jl-stripe-td' : '';
+  return `<div class="jl-item${j.done ? ' done' : ''}${stripeClass}">
       <label class="jl-cb-wrap">
         <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : isOverdue ? ' jl-overdue-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
         <i class="ti ti-check jl-cb-check"></i>
@@ -8118,6 +8169,14 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
     </div>`;
 }
 
+function switchAmtekTab(btn, panelId) {
+  const card = btn.closest('.amtek-card');
+  card.querySelectorAll('.amtek-tab').forEach(t => t.classList.remove('active'));
+  card.querySelectorAll('.amtek-tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
 function toggleJlArchive() {
   _jlArchiveOpen = !_jlArchiveOpen;
   renderAmtekProjects();
@@ -8133,6 +8192,8 @@ function renderJobListSidebar() {
   const visible = jobLists.filter(j => !j.amtekProjectId || j.date);
   if (!visible.length) {
     el.innerHTML = '<div class="jl-empty">Nothing to show — add a job list above.</div>';
+    const _oc = document.getElementById('jl-chip-ov'); if (_oc) _oc.style.display = 'none';
+    const _tc = document.getElementById('jl-chip-td'); if (_tc) _tc.style.display = 'none';
     return;
   }
   const now = Date.now();
@@ -8155,29 +8216,23 @@ function renderJobListSidebar() {
     return 0;
   });
 
+  // Update header chips
+  const ovChipEl = document.getElementById('jl-chip-ov');
+  const tdChipEl = document.getElementById('jl-chip-td');
+  if (ovChipEl) { ovChipEl.textContent = `${overdue.length} overdue`; ovChipEl.style.display = overdue.length ? '' : 'none'; }
+  if (tdChipEl) { tdChipEl.textContent = `${dueToday.length} today`; tdChipEl.style.display = dueToday.length ? '' : 'none'; }
+
   let html = '';
 
   if (overdue.length) {
     const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
-    html += `<div class="jl-overdue-group">
-      <div class="jl-overdue-header">
-        <div class="jl-overdue-dot"></div>
-        <span class="jl-overdue-label">Overdue</span>
-        <span class="jl-overdue-count">${overdue.length}</span>
-      </div>
-      <div class="jl-overdue-items">${sortedOverdue.map(j => jlRowHtml(j, false, true)).join('')}</div>
-    </div>`;
+    html += sortedOverdue.map(j => jlRowHtml(j, false, true)).join('');
+    if (dueToday.length || sortedRest.length) html += '<div class="jl-flat-divider"></div>';
   }
 
   if (dueToday.length) {
-    html += `<div class="jl-today-group">
-      <div class="jl-today-header">
-        <div class="jl-today-dot"></div>
-        <span class="jl-today-label">Due today</span>
-        <span class="jl-today-count">${dueToday.length}</span>
-      </div>
-      <div class="jl-today-items">${dueToday.map(j => jlRowHtml(j, true)).join('')}</div>
-    </div>`;
+    html += dueToday.map(j => jlRowHtml(j, true)).join('');
+    if (sortedRest.length) html += '<div class="jl-flat-divider"></div>';
   }
 
   html += sortedRest.length
