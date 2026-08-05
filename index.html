@@ -1773,7 +1773,11 @@
   .jl-tab-panel .jl-list { gap: 7px; margin-top: 0; padding: 10px; }
   .jl-tab-panel .jl-item { background: var(--surface2); border-radius: 8px; padding: 10px 12px 10px 14px; border: 0.5px solid var(--border-md); }
   .jl-tab-panel .jl-item:hover { border-color: rgba(255,255,255,0.14); }
-  .jl-tab-panel .jl-item::before { background: var(--jl-bar, var(--border-md)) !important; }
+  /* Accent bar colours — ID scope beats any class rule without needing !important tricks */
+  #amtek-panel-jl .jl-item::before { background: var(--border-md) !important; }
+  #amtek-panel-jl .jl-item.jl-stripe-ov::before { background: var(--coral-text) !important; }
+  #amtek-panel-jl .jl-item.jl-stripe-td::before { background: var(--amber-text) !important; }
+  #amtek-panel-jl .jl-item.done::before { background: var(--text-3) !important; }
   .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(210,85,40,0.07); border-color: rgba(210,85,40,0.28); }
   .jl-tab-panel .jl-item.jl-stripe-ov:hover { background: rgba(210,85,40,0.16) !important; border-color: rgba(210,85,40,0.42) !important; }
   .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(239,159,39,0.07); border-color: rgba(239,159,39,0.28); }
@@ -1782,7 +1786,12 @@
   .jl-tab-panel .jl-item.jl-stripe-td .jl-cb:checked { background: var(--amber-text) !important; border-color: var(--amber-text) !important; box-shadow: 0 0 0 4px rgba(239,159,39,0.22); }
   .jl-tab-panel .jl-item.jl-stripe-ov .jl-cb { border-color: var(--coral-text) !important; background: rgba(210,85,40,0.12) !important; }
   .jl-tab-panel .jl-item.jl-stripe-ov .jl-cb:checked { background: var(--coral-text) !important; border-color: var(--coral-text) !important; box-shadow: 0 0 0 4px rgba(210,85,40,0.22); }
-  .jl-tab-panel .jl-item.done::before { background: var(--text-3) !important; }
+  /* Time filter pill bar */
+  .jl-time-filter { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 8px 10px; border-bottom: 0.5px solid var(--border); }
+  .jl-time-filter::-webkit-scrollbar { display: none; }
+  .jl-time-btn { padding: 3px 9px; border-radius: 20px; border: 0.5px solid var(--border-md); background: transparent; font-size: 11px; color: var(--text-3); cursor: pointer; font-family: inherit; font-weight: 500; white-space: nowrap; flex-shrink: 0; transition: all 0.12s; }
+  .jl-time-btn.active { background: var(--teal-bg); border-color: var(--teal-text); color: var(--teal-text); }
+  .jl-time-btn.auto-btn { border-style: dashed; font-size: 10px; }
   /* Section labels inside job list */
   .jl-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.55px; color: var(--text-3); padding: 6px 14px 0; display: flex; align-items: center; gap: 5px; }
   .jl-section-label i { font-size: 11px; }
@@ -3419,6 +3428,14 @@
           <button class="amtek-tab" onclick="switchAmtekTab(this,'amtek-panel-proj')">Projects</button>
         </div>
         <div class="amtek-tab-panel jl-tab-panel active" id="amtek-panel-jl">
+          <div class="jl-time-filter" id="jl-time-filter">
+            <button class="jl-time-btn active" data-tf="all" onclick="setJlTimeFilter('all')">All</button>
+            <button class="jl-time-btn" data-tf="morning" onclick="setJlTimeFilter('morning')">Morning</button>
+            <button class="jl-time-btn" data-tf="lunch" onclick="setJlTimeFilter('lunch')">Lunch</button>
+            <button class="jl-time-btn" data-tf="eod" onclick="setJlTimeFilter('eod')">End of Day</button>
+            <button class="jl-time-btn" data-tf="afterhours" onclick="setJlTimeFilter('afterhours')">Afterhours</button>
+            <button class="jl-time-btn auto-btn" onclick="setJlTimeFilterAuto()" title="Auto-detect Melbourne time">🕐 Now</button>
+          </div>
           <div class="jl-list" id="jl-list"></div>
         </div>
         <div class="amtek-tab-panel" id="amtek-panel-proj">
@@ -4692,6 +4709,16 @@
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due date</div>
         <div id="jl-date-holder"></div>
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Time slot <span style="font-weight:400;color:var(--text-3)">(optional)</span></div>
+        <select class="field-input" id="jl-time">
+          <option value="">— None —</option>
+          <option value="morning">Morning</option>
+          <option value="lunch">Lunch</option>
+          <option value="eod">End of Day</option>
+          <option value="afterhours">Afterhours</option>
+        </select>
       </div>
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Amtek Project <span style="font-weight:400;color:var(--text-3)">(optional)</span></div>
@@ -7770,6 +7797,25 @@ function closeJobReminderDetail() {
 let jobLists = [];
 let editingJobListId = null;
 let _jlArchiveOpen = false;
+let _jlTimeFilter = 'all';
+
+function _melbHour() {
+  return parseInt(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', hour12: false }).format(new Date()), 10);
+}
+function _hourToSlot(h) {
+  if (h >= 6 && h < 12) return 'morning';
+  if (h >= 12 && h < 14) return 'lunch';
+  if (h >= 14 && h < 18) return 'eod';
+  return 'afterhours';
+}
+function setJlTimeFilter(f) {
+  _jlTimeFilter = f;
+  document.querySelectorAll('#jl-time-filter .jl-time-btn[data-tf]').forEach(b => b.classList.toggle('active', b.dataset.tf === f));
+  renderJobListSidebar();
+}
+function setJlTimeFilterAuto() {
+  setJlTimeFilter(_hourToSlot(_melbHour()));
+}
 let _amtekProjOpen = {};
 let _amtekProjFilter = 'active';
 
@@ -7961,6 +8007,7 @@ function openAddJobListModal() {
   document.getElementById('jl-url').value = '';
   document.getElementById('jl-fetch-status').textContent = '';
   document.getElementById('jl-date-holder').innerHTML = makeDatePicker('jl-date', '', null, 'Pick a date');
+  document.getElementById('jl-time').value = '';
   fillAmtekProjSelect('');
   fillJlSubProjectSelect('');
   document.getElementById('add-joblist-modal-overlay').classList.add('active');
@@ -7976,6 +8023,7 @@ function openEditJobList(id) {
   document.getElementById('jl-url').value = j.url || '';
   document.getElementById('jl-fetch-status').textContent = '';
   document.getElementById('jl-date-holder').innerHTML = makeDatePicker('jl-date', j.date || '', null, 'Pick a date');
+  document.getElementById('jl-time').value = j.time || '';
   fillAmtekProjSelect(j.amtekProjectId || '');
   fillJlSubProjectSelect((j.projId != null && j.subId != null) ? `${j.projId}:${j.subId}` : '');
   document.getElementById('add-joblist-modal-overlay').classList.add('active');
@@ -8017,20 +8065,21 @@ function saveJobList() {
   const subVal = document.getElementById('jl-subproject').value;
   const [projId, subId] = subVal ? subVal.split(':').map(Number) : [null, null];
   const amtekProjectId = document.getElementById('jl-amtek-project')?.value || null;
+  const time = document.getElementById('jl-time')?.value || null;
 
   if (editingJobListId) {
     const j = jobLists.find(x => String(x.id) === String(editingJobListId));
     if (j) {
       const linkChanged = j.projId !== projId || j.subId !== subId;
       if (linkChanged) removeLinkedTodo(j);
-      j.name = name; j.url = url; j.date = date;
+      j.name = name; j.url = url; j.date = date; j.time = time || null;
       j.projId = projId || null; j.subId = subId || null;
       j.amtekProjectId = amtekProjectId || null;
       if (projId && subId && (linkChanged || !j.todoId)) linkJobListTodo(j);
       else if (!projId) j.todoId = null;
     }
   } else {
-    const j = { id: 'jl' + Date.now(), name, url, date, done: false, projId: projId || null, subId: subId || null, amtekProjectId: amtekProjectId || null, todoId: null, createdAt: Date.now() };
+    const j = { id: 'jl' + Date.now(), name, url, date, time: time || null, done: false, projId: projId || null, subId: subId || null, amtekProjectId: amtekProjectId || null, todoId: null, createdAt: Date.now() };
     if (projId && subId) linkJobListTodo(j);
     jobLists.push(j);
   }
@@ -8164,8 +8213,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
     ? `<span class="jl-due stale" title="Not opened or checked in ${staleDays} days"><i class="ti ti-alert-triangle"></i> ${staleDays}d stale</span>` : '';
   const openAttr = j.url ? `onclick="markJobListOpened('${j.id}',${jsAttr(j.url)})"` : '';
   const stripeClass = isOverdue ? ' jl-stripe-ov' : isToday ? ' jl-stripe-td' : '';
-  const barColor = isOverdue ? 'var(--coral-text)' : isToday ? 'var(--amber-text)' : 'var(--border-md)';
-  return `<div class="jl-item${j.done ? ' done' : ''}${stripeClass}" style="--jl-bar:${barColor}">
+  return `<div class="jl-item${j.done ? ' done' : ''}${stripeClass}">
       <label class="jl-cb-wrap">
         <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : isOverdue ? ' jl-overdue-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
         <i class="ti ti-check jl-cb-check"></i>
@@ -8205,7 +8253,11 @@ function renderJobListSidebar() {
   const el = document.getElementById('jl-list');
   if (!el) return;
   // Untagged jobs always show here; tagged jobs show here only when they have a due date
-  const visible = jobLists.filter(j => !j.amtekProjectId || j.date);
+  // Time filter: jobs with no time slot always pass; jobs with a slot pass only if it matches
+  const visible = jobLists.filter(j =>
+    (!j.amtekProjectId || j.date) &&
+    (_jlTimeFilter === 'all' || !j.time || j.time === _jlTimeFilter)
+  );
   if (!visible.length) {
     el.innerHTML = '<div class="jl-empty">Nothing to show — add a job list above.</div>';
     const _oc = document.getElementById('jl-chip-ov'); if (_oc) _oc.style.display = 'none';
