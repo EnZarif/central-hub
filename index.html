@@ -1744,6 +1744,9 @@
   .add-task-trigger { width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 14px; margin-bottom: 14px; border-radius: var(--radius-lg); border: 1px dashed var(--border-md); background: var(--surface); color: var(--text-2); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
   .add-task-trigger:hover { border-color: var(--teal); color: var(--teal-text); background: var(--teal-bg); }
   .add-task-trigger i { font-size: 15px; }
+  /* Sidebar spacing */
+  .tasks-sidebar .sidebar-toolbar { margin-bottom: 10px; }
+  .tasks-sidebar .amtek-card { margin-bottom: 10px; }
   /* Sidebar icon toolbar */
   .sidebar-toolbar { display: flex; background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 0; }
   .sidebar-tool-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 11px 6px; background: none; border: none; border-right: 0.5px solid var(--border); color: var(--text-3); cursor: pointer; font-family: inherit; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; transition: background 0.12s, color 0.12s; }
@@ -1769,7 +1772,11 @@
   .jl-tab-panel .jl-item { background: none; border-radius: 0; padding: 7px 14px; border-bottom: 0.5px solid var(--border); }
   .jl-tab-panel .jl-item:hover { background: var(--surface2); }
   .jl-tab-panel .jl-item::before { background: var(--border-md) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(210,85,40,0.07); border-bottom-color: rgba(210,85,40,0.22); }
+  .jl-tab-panel .jl-item.jl-stripe-ov:hover { background: rgba(210,85,40,0.11); }
   .jl-tab-panel .jl-item.jl-stripe-ov::before { background: var(--coral-text) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(239,159,39,0.07); border-bottom-color: rgba(239,159,39,0.22); }
+  .jl-tab-panel .jl-item.jl-stripe-td:hover { background: rgba(239,159,39,0.11); }
   .jl-tab-panel .jl-item.jl-stripe-td::before { background: var(--amber-text) !important; }
   .jl-tab-panel .jl-item.done::before { background: var(--text-3) !important; }
   .jl-flat-divider { height: 0.5px; background: var(--border-md); margin: 0 14px; }
