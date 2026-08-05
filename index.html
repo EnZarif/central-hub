@@ -906,9 +906,11 @@
   .jl-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--teal); }
   .jl-item.done::before { background: var(--text-3); }
   .jl-cb-wrap { position: relative; flex-shrink: 0; margin-top: 1px; width: 18px; height: 18px; display: inline-block; cursor: pointer; }
-  .jl-cb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin: 0; border-radius: 50%; border: 1.5px solid var(--teal-text); background: rgba(74,158,232,0.08); cursor: pointer; transition: all 0.15s; }
-  .jl-cb:hover { border-color: var(--teal); }
-  .jl-cb:checked { background: linear-gradient(135deg, var(--teal), #2a6db8); border-color: var(--teal); box-shadow: 0 0 0 4px rgba(74,158,232,0.18); }
+  .jl-cb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin: 0; border-radius: 50%; border: 1.5px solid var(--text-3); background: transparent; cursor: pointer; transition: all 0.15s; }
+  .jl-cb:hover { border-color: var(--text-2); }
+  .jl-cb:checked { background: var(--text-2); border-color: var(--text-2); box-shadow: 0 0 0 4px rgba(255,255,255,0.08); }
+  .jl-cb.jl-today-cb:checked { background: var(--amber-text); border-color: var(--amber-text); box-shadow: 0 0 0 4px rgba(239,159,39,0.22); }
+  .jl-cb.jl-overdue-cb:checked { background: var(--coral-text); border-color: var(--coral-text); box-shadow: 0 0 0 4px rgba(210,85,40,0.22); }
   .jl-cb-check { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.12s; }
   .jl-cb:checked ~ .jl-cb-check { opacity: 1; }
   .jl-body { flex: 1; min-width: 0; }
