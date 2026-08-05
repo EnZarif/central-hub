@@ -943,6 +943,20 @@
   .jl-today-items .jl-item::before { background: var(--amber-text) !important; }
   .jl-cb.jl-today-cb { border-color: var(--amber-text); background: rgba(239,159,39,0.08); }
   .jl-cb.jl-today-cb:checked { background: var(--amber-text); border-color: var(--amber-text); box-shadow: 0 0 0 4px rgba(239,159,39,0.2); }
+  /* Overdue pinned group */
+  .jl-overdue-group { margin: -8px -16px 4px; padding: 8px 16px 10px; background: rgba(210,85,40,0.06); border-bottom: 0.5px solid rgba(210,85,40,0.32); }
+  .jl-overdue-header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .jl-overdue-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral-text); flex-shrink: 0; box-shadow: 0 0 0 3px rgba(210,85,40,0.25); animation: jlOverduePulse 1.4s ease-in-out infinite; }
+  @keyframes jlOverduePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(210,85,40,0.25); } 50% { box-shadow: 0 0 0 5px rgba(210,85,40,0.08); } }
+  .jl-overdue-label { font-size: 10.5px; font-weight: 700; color: var(--coral-text); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
+  .jl-overdue-count { font-size: 10px; font-weight: 700; background: var(--coral-bg); color: var(--coral-text); border-radius: 8px; padding: 1px 7px; }
+  .jl-overdue-items { display: flex; flex-direction: column; gap: 6px; }
+  .jl-overdue-items .jl-item { background: rgba(210,85,40,0.07); border: 0.5px solid rgba(210,85,40,0.22); }
+  .jl-overdue-items .jl-item::before { background: var(--coral-text) !important; }
+  .jl-cb.jl-overdue-cb { border-color: var(--coral-text); background: rgba(210,85,40,0.08); }
+  .jl-cb.jl-overdue-cb:checked { background: var(--coral-text); border-color: var(--coral-text); box-shadow: 0 0 0 4px rgba(210,85,40,0.2); }
+  /* When overdue group is present, today group has no top margin bleed (it follows overdue) */
+  .jl-overdue-group + .jl-today-group { margin-top: 0; }
   /* Amtek Projects card */
   .jl-proj-card { padding: 14px 16px 0; overflow: hidden; }
   .jl-proj-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
@@ -8068,7 +8082,7 @@ function moveJobList(id, dir) {
   renderJobListSidebar();
 }
 
-function jlRowHtml(j, isToday = false) {
+function jlRowHtml(j, isToday = false, isOverdue = false) {
   let linkBadge = '';
   if (j.projId && j.subId) {
     const p = projects.find(x => x.id === j.projId);
@@ -8086,7 +8100,7 @@ function jlRowHtml(j, isToday = false) {
   const openAttr = j.url ? `onclick="markJobListOpened('${j.id}',${jsAttr(j.url)})"` : '';
   return `<div class="jl-item${j.done ? ' done' : ''}">
       <label class="jl-cb-wrap">
-        <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
+        <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : isOverdue ? ' jl-overdue-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
         <i class="ti ti-check jl-cb-check"></i>
       </label>
       <div class="jl-body">
@@ -8127,9 +8141,10 @@ function renderJobListSidebar() {
   const active = visible.filter(j => !archived.includes(j));
 
   const todayStr = ymd(new Date());
+  const overdue  = active.filter(j => !j.done && j.date && j.date < todayStr);
   const dueToday = active.filter(j => !j.done && j.date === todayStr);
-  const dueTodayIds = new Set(dueToday.map(j => j.id));
-  const rest = active.filter(j => !dueTodayIds.has(j.id));
+  const pinnedIds = new Set([...overdue, ...dueToday].map(j => j.id));
+  const rest = active.filter(j => !pinnedIds.has(j.id));
 
   const sortedRest = [...rest].sort((a, b) => {
     const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
@@ -8141,6 +8156,18 @@ function renderJobListSidebar() {
   });
 
   let html = '';
+
+  if (overdue.length) {
+    const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
+    html += `<div class="jl-overdue-group">
+      <div class="jl-overdue-header">
+        <div class="jl-overdue-dot"></div>
+        <span class="jl-overdue-label">Overdue</span>
+        <span class="jl-overdue-count">${overdue.length}</span>
+      </div>
+      <div class="jl-overdue-items">${sortedOverdue.map(j => jlRowHtml(j, false, true)).join('')}</div>
+    </div>`;
+  }
 
   if (dueToday.length) {
     html += `<div class="jl-today-group">
@@ -8155,7 +8182,7 @@ function renderJobListSidebar() {
 
   html += sortedRest.length
     ? sortedRest.map(j => jlRowHtml(j)).join('')
-    : (dueToday.length ? '' : '<div class="jl-empty">Nothing active — add one above.</div>');
+    : (pinnedIds.size ? '' : '<div class="jl-empty">Nothing active — add one above.</div>');
 
   if (archived.length) {
     const sortedArchived = [...archived].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
