@@ -1771,15 +1771,17 @@
   .jl-tab-panel .jl-list { gap: 7px; margin-top: 0; padding: 10px; }
   .jl-tab-panel .jl-item { background: var(--surface2); border-radius: 8px; padding: 10px 12px 10px 14px; border: 0.5px solid var(--border-md); }
   .jl-tab-panel .jl-item:hover { border-color: rgba(255,255,255,0.14); }
-  .jl-tab-panel .jl-item::before { background: var(--border-md) !important; }
+  .jl-tab-panel .jl-item::before { background: var(--jl-bar, var(--border-md)) !important; }
   .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(210,85,40,0.07); border-color: rgba(210,85,40,0.28); }
   .jl-tab-panel .jl-item.jl-stripe-ov:hover { background: rgba(210,85,40,0.11); }
-  .jl-tab-panel .jl-item.jl-stripe-ov::before { background: var(--coral-text) !important; }
   .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(239,159,39,0.07); border-color: rgba(239,159,39,0.28); }
   .jl-tab-panel .jl-item.jl-stripe-td:hover { background: rgba(239,159,39,0.11); }
-  .jl-tab-panel .jl-item.jl-stripe-td::before { background: var(--amber-text) !important; }
   .jl-tab-panel .jl-item.done::before { background: var(--text-3) !important; }
-  .jl-flat-divider { height: 0.5px; background: var(--border-md); margin: 0 14px; }
+  /* Section labels inside job list */
+  .jl-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.55px; color: var(--text-3); padding: 6px 14px 0; display: flex; align-items: center; gap: 5px; }
+  .jl-section-label i { font-size: 11px; }
+  .jl-section-label.ov { color: var(--coral-text); }
+  .jl-section-label.td { color: var(--amber-text); }
   .jl-tab-panel .jl-empty { padding: 10px 14px; }
   .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
   .jl-tab-panel .jl-archive-list { gap: 7px; }
@@ -8156,7 +8158,8 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
     ? `<span class="jl-due stale" title="Not opened or checked in ${staleDays} days"><i class="ti ti-alert-triangle"></i> ${staleDays}d stale</span>` : '';
   const openAttr = j.url ? `onclick="markJobListOpened('${j.id}',${jsAttr(j.url)})"` : '';
   const stripeClass = isOverdue ? ' jl-stripe-ov' : isToday ? ' jl-stripe-td' : '';
-  return `<div class="jl-item${j.done ? ' done' : ''}${stripeClass}">
+  const barColor = isOverdue ? 'var(--coral-text)' : isToday ? 'var(--amber-text)' : 'var(--border-md)';
+  return `<div class="jl-item${j.done ? ' done' : ''}${stripeClass}" style="--jl-bar:${barColor}">
       <label class="jl-cb-wrap">
         <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : isOverdue ? ' jl-overdue-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
         <i class="ti ti-check jl-cb-check"></i>
@@ -8233,18 +8236,21 @@ function renderJobListSidebar() {
 
   if (overdue.length) {
     const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
+    html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
     html += sortedOverdue.map(j => jlRowHtml(j, false, true)).join('');
-    if (dueToday.length || sortedRest.length) html += '<div class="jl-flat-divider"></div>';
   }
 
   if (dueToday.length) {
+    html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
     html += dueToday.map(j => jlRowHtml(j, true)).join('');
-    if (sortedRest.length) html += '<div class="jl-flat-divider"></div>';
   }
 
-  html += sortedRest.length
-    ? sortedRest.map(j => jlRowHtml(j)).join('')
-    : (pinnedIds.size ? '' : '<div class="jl-empty">Nothing active — add one above.</div>');
+  if (sortedRest.length) {
+    if (pinnedIds.size) html += `<div class="jl-section-label"><i class="ti ti-clock"></i> Upcoming</div>`;
+    html += sortedRest.map(j => jlRowHtml(j)).join('');
+  } else if (!pinnedIds.size) {
+    html += '<div class="jl-empty">Nothing active — add one above.</div>';
+  }
 
   if (archived.length) {
     const sortedArchived = [...archived].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
