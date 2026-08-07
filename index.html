@@ -576,9 +576,11 @@
   .bento-dmb-strip { margin-bottom: 8px; font-size: 11.5px; border-radius: 10px; }
   .bento-dmb-strip:not([class*="dmb-working"]):not([class*="dmb-off"]) { display: none; }
   .bento-qa-card { display: flex; flex-direction: column; }
-  .bento-qa-card .slimh-qa { border-bottom: 0.5px solid var(--border); }
+  .bento-qa-card .slimh-qa { border-bottom: 0.5px solid var(--border); padding: 10px 14px; }
   .bento-qa-card .smart-sched-hint { padding: 5px 14px 6px; border-bottom: 0.5px solid var(--border); }
-  .bento-qa-card .hub-filter-bar { margin-bottom: 0 !important; padding: 7px 12px; border-top: none; flex-wrap: wrap; row-gap: 4px; flex: 1; align-content: flex-start; }
+  .bento-qa-card .hub-filter-bar { margin-bottom: 0 !important; padding: 10px 12px; border-top: none; flex-wrap: wrap; row-gap: 4px; align-content: center; }
+  .bento-qa-card .bento-dmb-strip { margin: 0; border-radius: 0; border-top: 0.5px solid var(--border); padding: 10px 14px; font-size: 11.5px; }
+  .bento-qa-card .bento-dmb-strip.dmb-working, .bento-qa-card .bento-dmb-strip.dmb-off { background: transparent; border-left: none; border-right: none; border-bottom: none; }
   /* UNIFIED NAV */
   .unified-nav { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 12px; padding: 4px; margin-bottom: 1.2rem; display: flex; gap: 0; align-items: center; overflow-x: auto; scrollbar-width: none; }
   .unified-nav::-webkit-scrollbar { display: none; }
@@ -3369,11 +3371,11 @@
             <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
             <div id="task-tag-filter-holder"></div>
           </div>
+          <div id="day-mode-banner" class="day-mode-banner bento-dmb-strip"></div>
         </div>
 
       </div>
     </div>
-    <div id="day-mode-banner" class="day-mode-banner bento-dmb-strip"></div>
     <div id="dash-upcoming" class="dash-upcoming" style="display:none;margin-bottom:12px" onclick="switchTab('date')"></div>
 
     <div id="tasks-highlights"></div>
