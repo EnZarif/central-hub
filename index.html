@@ -1718,6 +1718,12 @@
   .kpi-upload-cols { font-size: 12px; color: var(--text-3); margin-top: 2px; }
   .kpi-upload-status { font-size: 12px; color: var(--text-3); white-space: nowrap; }
   .kpi-upload-status.ready { color: var(--teal); }
+  .kpi-ops-file-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
+  .kpi-ops-file-item:last-child { border-bottom: none; }
+  .kpi-ops-file-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .kpi-ops-file-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .kpi-ops-file-remove { width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: var(--text-3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .kpi-ops-file-remove:hover { background: var(--coral-bg); color: var(--coral-text); }
   .kpi-file-input { display: none; }
   .kpi-file-btn { padding: 6px 14px; font-size: 12px; font-weight: 500; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
   .kpi-file-btn:hover { border-color: var(--teal); color: var(--teal); }
@@ -3934,12 +3940,13 @@
       <div class="card-title"><i class="ti ti-mail" style="font-size:13px;"></i> Operator KPI emails</div>
       <div class="kpi-template-row">
         <div class="kpi-template-info">
-          <div class="kpi-tpl-name">Refreshed daily report file</div>
-          <div class="kpi-tpl-status" id="kpi-ops-status">No file loaded</div>
+          <div class="kpi-tpl-name">Daily report files</div>
+          <div class="kpi-tpl-status" id="kpi-ops-status">No files loaded</div>
         </div>
-        <input type="file" id="kpi-ops-input" class="kpi-file-input" accept=".xlsx" onchange="kpiOpsLoadFile(this.files[0])">
-        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-ops-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload report</button>
+        <input type="file" id="kpi-ops-input" class="kpi-file-input" accept=".xlsx" multiple onchange="kpiOpsAddFiles(this.files)">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-ops-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Add file(s)</button>
       </div>
+      <div id="kpi-ops-file-list"></div>
       <div id="kpi-ops-list"></div>
     </div>
   </div>
@@ -12778,8 +12785,7 @@ const KPI_OPS_COLUMNS = [
   { header: 'ANZ Jobs Scheduled',                        headBg: '#FFE1E1', headColor: '#000000', headBold: true,  cellBg: '#FFE1E1', cellColor: '#000000' }
 ];
 
-let kpiOpsRows = [];
-let kpiOpsTotals = null;
+let kpiOpsFiles = [];
 
 const KPI_OPS_COL_WIDTHS = [180, 281, 104, 82, 70, 104, 100, 152, 64, 106, 129, 140, 94, 85, 104, 64, 64, 64, 64, 64];
 
@@ -12836,49 +12842,44 @@ function findAhtRawMap(wb) {
 
 function parseKpiOpsDateLabel(filename) {
   const m = filename.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-  if (!m) return 'yesterday';
-  const day = parseInt(m[1], 10);
-  const month = parseInt(m[2], 10);
-  const year = parseInt(m[3], 10);
+  if (!m) return 'that day';
+  const day = parseInt(m[1], 10), month = parseInt(m[2], 10), year = parseInt(m[3], 10);
   const date = new Date(year, month - 1, day);
-  if (isNaN(date.getTime())) return 'yesterday';
+  if (isNaN(date.getTime())) return 'that day';
   return `${DAY_NAMES[date.getDay()]}, ${day} ${MON_NAMES[month - 1]} ${year}`;
 }
 
-let kpiOpsDateLabel = 'yesterday';
+async function kpiOpsAddFiles(fileList) {
+  for (const file of Array.from(fileList)) await kpiOpsLoadOneFile(file);
+  document.getElementById('kpi-ops-input').value = '';
+  renderKpiOpsFileList();
+  renderKpiOpsList();
+}
 
-async function kpiOpsLoadFile(file) {
-  const statusEl = document.getElementById('kpi-ops-status');
-  if (!file) return;
-  statusEl.textContent = 'Reading...';
+async function kpiOpsLoadOneFile(file) {
   try {
-    kpiOpsDateLabel = parseKpiOpsDateLabel(file.name);
+    if (kpiOpsFiles.some(f => f.fileName === file.name)) return;
+    const dateLabel = parseKpiOpsDateLabel(file.name);
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: 'array', cellDates: true });
     const sheetName = wb.SheetNames.find(n => n.trim().toLowerCase() === 'report') || wb.SheetNames[wb.SheetNames.length - 1];
     const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
-    if (!rows.length) throw new Error('Sheet is empty');
-
-    const headerRow = rows[0].map(normalizeHeader);
+    const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    if (!rawRows.length) return;
+    const headerRow = rawRows[0].map(normalizeHeader);
     const colIdx = KPI_OPS_COLUMNS.map(c => headerRow.indexOf(normalizeHeader(c.header)));
-    if (colIdx[0] === -1) throw new Error('Could not find "CMS Name" column');
-
+    if (colIdx[0] === -1) return;
     const ahtRawMap = findAhtRawMap(wb);
-
-    kpiOpsRows = [];
-    kpiOpsTotals = null;
-    for (let i = 1; i < rows.length; i++) {
-      const r = rows[i];
+    const rows = [];
+    let totals = null;
+    for (let i = 1; i < rawRows.length; i++) {
+      const r = rawRows[i];
       const name = (r[colIdx[0]] || '').toString().trim();
       const values = KPI_OPS_COLUMNS.map((c, j) => {
         const idx = colIdx[j];
         return idx === -1 ? '' : (r[idx] == null ? '' : String(r[idx]).trim());
       });
-      if (!name) {
-        if (values.some(v => v !== '')) kpiOpsTotals = values;
-        break;
-      }
+      if (!name) { if (values.some(v => v !== '')) totals = values; break; }
       if (isZeroValue(values[4])) {
         let rawSeconds = parseAhtRawSeconds(values[3]);
         if (rawSeconds === null || rawSeconds === 0) {
@@ -12888,53 +12889,92 @@ async function kpiOpsLoadFile(file) {
         if (rawSeconds !== null && rawSeconds > 0) values[4] = formatAht(rawSeconds);
       }
       if (values.slice(2).every(isZeroValue)) continue;
-      kpiOpsRows.push(values);
+      rows.push(values);
     }
+    kpiOpsFiles.push({ dateLabel, rows, totals, fileName: file.name, count: rows.length });
+    kpiOpsFiles.sort((a, b) => {
+      const ts = fn => { const m = fn.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/); return m ? new Date(+m[3], +m[2]-1, +m[1]).getTime() : 0; };
+      return ts(a.fileName) - ts(b.fileName);
+    });
+  } catch (err) { console.error('kpiOpsLoadOneFile:', err); }
+}
 
-    statusEl.textContent = `Loaded: ${file.name} (${kpiOpsRows.length} operators)`;
-    renderKpiOpsList();
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = 'Error: ' + err.message;
+function kpiOpsRemoveFile(idx) {
+  kpiOpsFiles.splice(idx, 1);
+  renderKpiOpsFileList();
+  renderKpiOpsList();
+}
+
+function renderKpiOpsFileList() {
+  const el = document.getElementById('kpi-ops-file-list');
+  const statusEl = document.getElementById('kpi-ops-status');
+  if (!el) return;
+  if (!kpiOpsFiles.length) {
+    el.innerHTML = '';
+    if (statusEl) statusEl.textContent = 'No files loaded';
+    return;
   }
+  if (statusEl) statusEl.textContent = `${kpiOpsFiles.length} date${kpiOpsFiles.length > 1 ? 's' : ''} loaded`;
+  el.innerHTML = kpiOpsFiles.map((f, i) => `
+    <div class="kpi-ops-file-item">
+      <div style="flex:1;min-width:0;">
+        <div class="kpi-ops-file-label">${esc(f.dateLabel)}</div>
+        <div class="kpi-ops-file-sub">${esc(f.fileName)} · ${f.count} operator${f.count !== 1 ? 's' : ''}</div>
+      </div>
+      <button class="kpi-ops-file-remove" onclick="kpiOpsRemoveFile(${i})" title="Remove"><i class="ti ti-x"></i></button>
+    </div>`).join('');
+}
+
+function _kpiOpsOperatorList() {
+  const map = new Map();
+  for (const f of kpiOpsFiles) {
+    for (const row of f.rows) {
+      const key = (row[0] || '').trim();
+      if (!key) continue;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push({ dateLabel: f.dateLabel, row, totals: f.totals });
+    }
+  }
+  return [...map.entries()];
 }
 
 function renderKpiOpsList() {
   const list = document.getElementById('kpi-ops-list');
   if (!list) return;
-  if (!kpiOpsRows.length) { list.innerHTML = ''; return; }
-  list.innerHTML = kpiOpsRows.map((row, i) => `
-    <div class="kpi-upload-row">
+  const ops = _kpiOpsOperatorList();
+  if (!ops.length) { list.innerHTML = ''; return; }
+  list.innerHTML = ops.map(([name, entries], i) => {
+    const email = entries[0].row[1] || '';
+    const dateSub = entries.map(e => e.dateLabel).join(' · ');
+    return `<div class="kpi-upload-row">
       <div class="kpi-upload-info">
-        <div class="kpi-upload-name">${esc(row[0])}</div>
-        <div class="kpi-upload-cols">${esc(row[1])}</div>
+        <div class="kpi-upload-name">${esc(name)}</div>
+        <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}</div>
       </div>
       <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">Preview &amp; copy</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function buildKpiOpsTableHtml(row) {
+function buildKpiOpsTableHtml(row, totals) {
   const baseStyle = 'border:1px solid #999999; padding:1px 4px; font-family:Calibri,sans-serif; font-size:11pt; text-align:center; line-height:1.2;';
   const thStyle = baseStyle + ' white-space:normal; word-wrap:break-word;';
   const tdStyle = baseStyle + ' white-space:nowrap;';
-
   let html = '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse; table-layout:fixed;">';
   html += '<colgroup>' + KPI_OPS_COL_WIDTHS.map(w => `<col style="width:${w}px;">`).join('') + '</colgroup>';
-  html += '<tr>' + KPI_OPS_COLUMNS.map(c => {
-    return `<th style="${thStyle} background:${c.headBg}; color:${c.headColor}; font-weight:bold;">${esc(c.header)}</th>`;
-  }).join('') + '</tr>';
-  html += '<tr>' + KPI_OPS_COLUMNS.map((c, i) => {
-    return `<td style="${tdStyle} background:${c.cellBg}; color:${c.cellColor};">${esc(row[i])}</td>`;
-  }).join('') + '</tr>';
-
-  if (kpiOpsTotals && kpiOpsTotals.some(v => v !== '')) {
+  html += '<tr>' + KPI_OPS_COLUMNS.map(c =>
+    `<th style="${thStyle} background:${c.headBg}; color:${c.headColor}; font-weight:bold;">${esc(c.header)}</th>`
+  ).join('') + '</tr>';
+  html += '<tr>' + KPI_OPS_COLUMNS.map((c, i) =>
+    `<td style="${tdStyle} background:${c.cellBg}; color:${c.cellColor};">${esc(row[i])}</td>`
+  ).join('') + '</tr>';
+  if (totals && totals.some(v => v !== '')) {
     html += '<tr>' + KPI_OPS_COLUMNS.map((c, i) => {
-      const val = kpiOpsTotals[i];
+      const val = totals[i];
       if (!val) return '<td style="border:none; padding:1px 4px;"></td>';
       return `<td style="${tdStyle} background:${c.cellBg}; color:${c.cellColor}; font-weight:bold;">${esc(val)}</td>`;
     }).join('') + '</tr>';
   }
-
   html += '</table>';
   return html;
 }
@@ -12945,27 +12985,51 @@ let kpiOpsCurrentIdx = 0;
 
 function kpiOpsCopy(i) {
   kpiOpsCurrentIdx = i;
-  const row = kpiOpsRows[i];
-  const firstName = row[0].split(/\s+/)[0] || row[0];
-  const table = buildKpiOpsTableHtml(row);
-  const html = `<div style="font-family:Aptos,sans-serif; font-size:12pt; margin:0; padding:0;">
+  const ops = _kpiOpsOperatorList();
+  if (i >= ops.length) return;
+  const [name, entries] = ops[i];
+  const firstName = name.split(/\s+/)[0] || name;
+
+  let html, text;
+  if (entries.length === 1) {
+    const { dateLabel, row, totals } = entries[0];
+    const table = buildKpiOpsTableHtml(row, totals);
+    html = `<div style="font-family:Aptos,sans-serif; font-size:12pt; margin:0; padding:0;">
     <div style="margin:0 0 12px 0;">Hi ${esc(firstName)},</div>
-    <div style="margin:0 0 12px 0;">Here are the KPI's from ${esc(kpiOpsDateLabel)}:</div>
+    <div style="margin:0 0 12px 0;">Here are the KPI's from ${esc(dateLabel)}:</div>
     ${table}
     <div style="margin:12px 0 0 0;">Kind regards,</div>
   </div>`;
-  let text = `Hi ${firstName},\n\nHere are the KPI's from ${kpiOpsDateLabel}:\n\n` +
-    KPI_OPS_COLUMNS.map(c => c.header).join('\t') + '\n' +
-    row.join('\t');
-  if (kpiOpsTotals && kpiOpsTotals.some(v => v !== '')) {
-    text += '\n' + kpiOpsTotals.join('\t');
+    text = `Hi ${firstName},\n\nHere are the KPI's from ${dateLabel}:\n\n` +
+      KPI_OPS_COLUMNS.map(c => c.header).join('\t') + '\n' + row.join('\t');
+    if (totals && totals.some(v => v !== '')) text += '\n' + totals.join('\t');
+    text += '\n\nKind regards,';
+  } else {
+    const sections = entries.map(({ dateLabel, row, totals }) =>
+      `<div style="margin:0 0 18px 0;">
+      <div style="margin:0 0 8px 0; font-weight:bold; color:#595959; font-size:11pt;">${esc(dateLabel)}</div>
+      ${buildKpiOpsTableHtml(row, totals)}
+    </div>`
+    ).join('');
+    html = `<div style="font-family:Aptos,sans-serif; font-size:12pt; margin:0; padding:0;">
+    <div style="margin:0 0 12px 0;">Hi ${esc(firstName)},</div>
+    <div style="margin:0 0 16px 0;">Here are your KPI's for the following dates:</div>
+    ${sections}
+    <div style="margin:4px 0 0 0;">Kind regards,</div>
+  </div>`;
+    const textSections = entries.map(({ dateLabel, row, totals }) => {
+      let s = `${dateLabel}:\n` + KPI_OPS_COLUMNS.map(c => c.header).join('\t') + '\n' + row.join('\t');
+      if (totals && totals.some(v => v !== '')) s += '\n' + totals.join('\t');
+      return s;
+    });
+    text = `Hi ${firstName},\n\nHere are your KPI's for the following dates:\n\n` +
+      textSections.join('\n\n') + '\n\nKind regards,';
   }
-  text += '\n\nKind regards,';
 
   kpiOpsCurrentHtml = html;
   kpiOpsCurrentText = text;
   document.getElementById('kpi-ops-modal-preview').innerHTML = html;
-  document.getElementById('kpi-ops-modal-pos').textContent = `${i + 1} of ${kpiOpsRows.length}`;
+  document.getElementById('kpi-ops-modal-pos').textContent = `${i + 1} of ${ops.length}`;
   document.getElementById('kpi-ops-modal-next-btn').style.display = 'none';
   const copyBtn = document.getElementById('kpi-ops-modal-copy-btn');
   copyBtn.innerHTML = '<i class="ti ti-copy" style="font-size:15px;"></i> Copy email';
@@ -12981,9 +13045,7 @@ function kpiOpsModalCopy() {
     const btn = document.getElementById('kpi-ops-modal-copy-btn');
     btn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Copied!';
     const nextBtn = document.getElementById('kpi-ops-modal-next-btn');
-    if (kpiOpsCurrentIdx < kpiOpsRows.length - 1) {
-      nextBtn.style.display = '';
-    }
+    if (kpiOpsCurrentIdx < _kpiOpsOperatorList().length - 1) nextBtn.style.display = '';
   });
 }
 
