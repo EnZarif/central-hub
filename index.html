@@ -8273,10 +8273,8 @@ const JL_ARCHIVE_AFTER_MS = 24 * 60 * 60 * 1000;
 function renderJobListSidebar() {
   const el = document.getElementById('jl-list');
   if (!el) return;
-  // Untagged jobs always show here; tagged jobs show here only when they have a due date
   // Time filter: jobs with no time slot always pass; jobs with a slot pass only if it matches
   const visible = jobLists.filter(j =>
-    (!j.amtekProjectId || j.date) &&
     (_jlTimeFilter === 'all' || !j.time || j.time === _jlTimeFilter)
   );
   if (!visible.length) {
