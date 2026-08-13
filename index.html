@@ -308,6 +308,11 @@
        (display: inline-flex) further down the stylesheet — a single-class selector can't beat it
        on source order alone */
     .clock-card.nav-clock { display: none; }
+    /* Tighter bento gap on tablet */
+    .bento-row { gap: 8px; }
+    /* Filter pills inside bento QA card: scroll horizontally on narrower tablets
+       so they never stack into 2 rows inside the card */
+    .bento-qa-card .hub-filter-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   }
 
   .page { display: none; }
@@ -586,7 +591,7 @@
   .unified-nav::-webkit-scrollbar { display: none; }
   .unified-nav .tab { flex: none; padding: 7px 10px; font-size: 12px; border-radius: 8px; }
   .unified-nav-sep { width: 1px; height: 20px; background: var(--border-md); flex-shrink: 0; margin: 0 4px; }
-  @media (max-width: 680px) { .bento-row { grid-template-columns: 1fr 1fr; } .bento-prog-card { flex-direction: row; padding: 10px 12px; } .bento-ring { width: 38px !important; height: 38px !important; } .bento-ring-hole { width: 28px !important; height: 28px !important; } }
+  @media (max-width: 680px) { .bento-row { grid-template-columns: 1fr 1fr; } .bento-qa-card { grid-column: 1 / -1; } .bento-prog-card { flex-direction: row; padding: 10px 12px; } .bento-ring { width: 38px !important; height: 38px !important; } .bento-ring-hole { width: 28px !important; height: 28px !important; } }
 
   /* TABS */
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
@@ -900,6 +905,8 @@
   .tasks-layout { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
   .tasks-main, .tasks-sidebar { min-width: 0; }
   @media (max-width: 900px) { .tasks-layout { grid-template-columns: 1fr; } }
+  /* Re-enable sidebar on tablet — overrides the rule above for the 761-900px range */
+  @media (max-width: 900px) and (min-width: 761px) { .tasks-layout { grid-template-columns: 1fr 280px; gap: 16px; } }
   .tasks-sidebar { position: sticky; top: 20px; }
   .jl-card { padding: 14px 16px; }
   .jl-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
