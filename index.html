@@ -914,12 +914,16 @@
   .jl-item { position: relative; display: flex; align-items: flex-start; gap: 10px; background: var(--surface2); border-radius: 8px; padding: 10px 12px 10px 14px; overflow: hidden; }
   .jl-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--teal); }
   .jl-item.done::before { background: var(--text-3); }
+  .jl-item.jl-stripe-ov::before { width: 4px; background: #E05858 !important; }
+  .jl-item.jl-stripe-td::before { width: 4px; background: #F5A449 !important; }
+  .jl-item.jl-stripe-ov { background: rgba(224,88,88,0.08); border: 0.5px solid rgba(224,88,88,0.2); }
+  .jl-item.jl-stripe-td { background: rgba(245,164,73,0.08); border: 0.5px solid rgba(245,164,73,0.18); }
   .jl-cb-wrap { position: relative; flex-shrink: 0; margin-top: 1px; width: 18px; height: 18px; display: inline-block; cursor: pointer; }
   .jl-cb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin: 0; border-radius: 50%; border: 1.5px solid var(--text-3); background: transparent; cursor: pointer; transition: all 0.15s; }
   .jl-cb:hover { border-color: var(--text-2); }
   .jl-cb:checked { background: var(--text-2); border-color: var(--text-2); box-shadow: 0 0 0 4px rgba(255,255,255,0.08); }
-  .jl-cb.jl-today-cb:checked { background: var(--amber-text); border-color: var(--amber-text); box-shadow: 0 0 0 4px rgba(239,159,39,0.22); }
-  .jl-cb.jl-overdue-cb:checked { background: var(--coral-text); border-color: var(--coral-text); box-shadow: 0 0 0 4px rgba(210,85,40,0.22); }
+  .jl-cb.jl-today-cb:checked { background: #F5A449; border-color: #F5A449; box-shadow: 0 0 0 4px rgba(245,164,73,0.22); }
+  .jl-cb.jl-overdue-cb:checked { background: #E05858; border-color: #E05858; box-shadow: 0 0 0 4px rgba(224,88,88,0.22); }
   .jl-cb-check { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.12s; }
   .jl-cb:checked ~ .jl-cb-check { opacity: 1; }
   .jl-body { flex: 1; min-width: 0; }
@@ -950,10 +954,10 @@
   .jl-today-label { font-size: 10.5px; font-weight: 700; color: var(--amber-text); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
   .jl-today-count { font-size: 10px; font-weight: 700; background: var(--amber-bg); color: var(--amber-text); border-radius: 8px; padding: 1px 7px; }
   .jl-today-items { display: flex; flex-direction: column; gap: 6px; }
-  .jl-today-items .jl-item { background: rgba(239,159,39,0.07); border: 0.5px solid rgba(239,159,39,0.18); }
-  .jl-today-items .jl-item::before { background: var(--amber-text) !important; }
-  .jl-cb.jl-today-cb { border-color: var(--amber-text); background: rgba(239,159,39,0.08); }
-  .jl-cb.jl-today-cb:checked { background: var(--amber-text); border-color: var(--amber-text); box-shadow: 0 0 0 4px rgba(239,159,39,0.2); }
+  .jl-today-items .jl-item { background: rgba(245,164,73,0.08); border: 0.5px solid rgba(245,164,73,0.18); }
+  .jl-today-items .jl-item::before { background: #F5A449 !important; }
+  .jl-cb.jl-today-cb { border-color: #F5A449; background: rgba(245,164,73,0.08); }
+  .jl-cb.jl-today-cb:checked { background: #F5A449; border-color: #F5A449; box-shadow: 0 0 0 4px rgba(245,164,73,0.2); }
   /* Overdue pinned group */
   .jl-overdue-group { margin: -8px -16px 4px; padding: 8px 16px 10px; background: rgba(210,85,40,0.06); border-bottom: 0.5px solid rgba(210,85,40,0.32); }
   .jl-overdue-header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
@@ -962,10 +966,10 @@
   .jl-overdue-label { font-size: 10.5px; font-weight: 700; color: var(--coral-text); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
   .jl-overdue-count { font-size: 10px; font-weight: 700; background: var(--coral-bg); color: var(--coral-text); border-radius: 8px; padding: 1px 7px; }
   .jl-overdue-items { display: flex; flex-direction: column; gap: 6px; }
-  .jl-overdue-items .jl-item { background: rgba(210,85,40,0.07); border: 0.5px solid rgba(210,85,40,0.22); }
-  .jl-overdue-items .jl-item::before { background: var(--coral-text) !important; }
-  .jl-cb.jl-overdue-cb { border-color: var(--coral-text); background: rgba(210,85,40,0.08); }
-  .jl-cb.jl-overdue-cb:checked { background: var(--coral-text); border-color: var(--coral-text); box-shadow: 0 0 0 4px rgba(210,85,40,0.2); }
+  .jl-overdue-items .jl-item { background: rgba(224,88,88,0.08); border: 0.5px solid rgba(224,88,88,0.2); }
+  .jl-overdue-items .jl-item::before { background: #E05858 !important; }
+  .jl-cb.jl-overdue-cb { border-color: #E05858; background: rgba(224,88,88,0.08); }
+  .jl-cb.jl-overdue-cb:checked { background: #E05858; border-color: #E05858; box-shadow: 0 0 0 4px rgba(224,88,88,0.2); }
   /* When overdue group is present, today group has no top margin bleed (it follows overdue) */
   .jl-overdue-group + .jl-today-group { margin-top: 0; }
   /* Amtek Projects card */
@@ -1790,17 +1794,17 @@
   .jl-tab-panel .jl-item:hover { border-color: rgba(255,255,255,0.14); }
   /* Accent bar colours — ID scope beats any class rule without needing !important tricks */
   #amtek-panel-jl .jl-item::before { background: var(--border-md) !important; }
-  #amtek-panel-jl .jl-item.jl-stripe-ov::before { background: var(--coral-text) !important; }
-  #amtek-panel-jl .jl-item.jl-stripe-td::before { background: var(--amber-text) !important; }
+  #amtek-panel-jl .jl-item.jl-stripe-ov::before { background: #E05858 !important; }
+  #amtek-panel-jl .jl-item.jl-stripe-td::before { background: #F5A449 !important; }
   #amtek-panel-jl .jl-item.done::before { background: var(--text-3) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(210,85,40,0.07); border-color: rgba(210,85,40,0.28); }
-  .jl-tab-panel .jl-item.jl-stripe-ov:hover { background: rgba(210,85,40,0.16) !important; border-color: rgba(210,85,40,0.42) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(239,159,39,0.07); border-color: rgba(239,159,39,0.28); }
-  .jl-tab-panel .jl-item.jl-stripe-td:hover { background: rgba(239,159,39,0.16) !important; border-color: rgba(239,159,39,0.42) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-td .jl-cb { border-color: var(--amber-text) !important; background: rgba(239,159,39,0.12) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-td .jl-cb:checked { background: var(--amber-text) !important; border-color: var(--amber-text) !important; box-shadow: 0 0 0 4px rgba(239,159,39,0.22); }
-  .jl-tab-panel .jl-item.jl-stripe-ov .jl-cb { border-color: var(--coral-text) !important; background: rgba(210,85,40,0.12) !important; }
-  .jl-tab-panel .jl-item.jl-stripe-ov .jl-cb:checked { background: var(--coral-text) !important; border-color: var(--coral-text) !important; box-shadow: 0 0 0 4px rgba(210,85,40,0.22); }
+  .jl-tab-panel .jl-item.jl-stripe-ov { background: rgba(224,88,88,0.08); border-color: rgba(224,88,88,0.2); }
+  .jl-tab-panel .jl-item.jl-stripe-ov:hover { background: rgba(224,88,88,0.16) !important; border-color: rgba(224,88,88,0.38) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-td { background: rgba(245,164,73,0.08); border-color: rgba(245,164,73,0.18); }
+  .jl-tab-panel .jl-item.jl-stripe-td:hover { background: rgba(245,164,73,0.16) !important; border-color: rgba(245,164,73,0.36) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-td .jl-cb { border-color: #F5A449 !important; background: rgba(245,164,73,0.12) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-td .jl-cb:checked { background: #F5A449 !important; border-color: #F5A449 !important; box-shadow: 0 0 0 4px rgba(245,164,73,0.22); }
+  .jl-tab-panel .jl-item.jl-stripe-ov .jl-cb { border-color: #E05858 !important; background: rgba(224,88,88,0.12) !important; }
+  .jl-tab-panel .jl-item.jl-stripe-ov .jl-cb:checked { background: #E05858 !important; border-color: #E05858 !important; box-shadow: 0 0 0 4px rgba(224,88,88,0.22); }
   /* Time filter pill bar */
   .jl-time-filter { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 8px 10px; border-bottom: 0.5px solid var(--border); }
   .jl-time-filter::-webkit-scrollbar { display: none; }
@@ -1810,8 +1814,8 @@
   /* Section labels inside job list */
   .jl-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.55px; color: var(--text-3); padding: 6px 14px 0; display: flex; align-items: center; gap: 5px; }
   .jl-section-label i { font-size: 11px; }
-  .jl-section-label.ov { color: var(--coral-text); }
-  .jl-section-label.td { color: var(--amber-text); }
+  .jl-section-label.ov { color: #E05858; }
+  .jl-section-label.td { color: #F5A449; }
   .jl-tab-panel .jl-empty { padding: 10px 14px; }
   .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
   .jl-tab-panel .jl-archive-list { gap: 7px; }
