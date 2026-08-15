@@ -939,7 +939,13 @@
   .jl-due.overdue { background: rgba(239,68,68,0.15); color: #ef4444; border-color: transparent; }
   .jl-due.stale { background: rgba(239,159,39,0.1); color: #d99a4a; border-color: transparent; }
   .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
-  .jl-actions { display: flex; gap: 2px; flex-shrink: 0; margin-left: auto; }
+  .jl-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: auto; }
+  .jl-action-panel { display: flex; align-items: center; gap: 1px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .jl-item:hover .jl-action-panel, .jl-item.jl-actions-open .jl-action-panel { opacity: 1; pointer-events: auto; }
+  .jl-action-trigger { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 5px; border-radius: 5px; flex-shrink: 0; font-family: inherit; display: flex; align-items: center; transition: color 0.12s, background 0.12s; }
+  .jl-action-trigger:hover, .jl-item.jl-actions-open .jl-action-trigger { color: var(--text-2); background: var(--bg); }
+  .jl-icon-btn.jl-del-btn:hover { color: #E05858 !important; background: rgba(224,88,88,0.1); }
+  .jl-icon-btn.jl-archive-btn:hover { color: var(--teal-text) !important; background: var(--teal-bg); }
   .jl-icon-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 5px; border-radius: 5px; }
   .jl-icon-btn:hover { color: var(--text-2); background: var(--bg); }
   .jl-move-col { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
@@ -8266,12 +8272,16 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
         <div class="jl-meta">${dueChip}${staleChip}${linkBadge}</div>
       </div>
       <div class="jl-actions">
-        <div class="jl-move-col">
-          <button class="jl-icon-btn" onclick="moveJobList('${j.id}', -1)"><i class="ti ti-chevron-up"></i></button>
-          <button class="jl-icon-btn" onclick="moveJobList('${j.id}', 1)"><i class="ti ti-chevron-down"></i></button>
+        <div class="jl-action-panel">
+          <div class="jl-move-col">
+            <button class="jl-icon-btn" onclick="moveJobList('${j.id}', -1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
+            <button class="jl-icon-btn" onclick="moveJobList('${j.id}', 1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
+          </div>
+          <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
+          <button class="jl-icon-btn jl-del-btn" onclick="deleteJobList('${j.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+          ${j.done && !j.amtekProjectId ? `<button class="jl-icon-btn jl-archive-btn" title="Move to Recently Completed" onclick="quickArchiveJobList('${j.id}')"><i class="ti ti-archive"></i></button>` : ''}
         </div>
-        <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')"><i class="ti ti-pencil"></i></button>
-        <button class="jl-icon-btn" onclick="deleteJobList('${j.id}')"><i class="ti ti-trash"></i></button>
+        <button class="jl-action-trigger" title="Actions" onclick="toggleJlActions(event,'${j.id}')"><i class="ti ti-dots-vertical"></i></button>
       </div>
     </div>`;
 }
@@ -8286,6 +8296,23 @@ function switchAmtekTab(btn, panelId) {
 
 function toggleJlArchive() {
   _jlArchiveOpen = !_jlArchiveOpen;
+  renderAmtekProjects();
+  renderJobListSidebar();
+}
+
+function toggleJlActions(event, id) {
+  event.stopPropagation();
+  const item = event.currentTarget.closest('.jl-item');
+  if (!item) return;
+  document.querySelectorAll('.jl-item.jl-actions-open').forEach(el => { if (el !== item) el.classList.remove('jl-actions-open'); });
+  item.classList.toggle('jl-actions-open');
+}
+
+function quickArchiveJobList(id) {
+  const j = jobLists.find(x => String(x.id) === String(id));
+  if (!j || !j.done || j.amtekProjectId) return;
+  j.completedAt = Date.now() - JL_ARCHIVE_AFTER_MS - 1000;
+  saveJobLists();
   renderAmtekProjects();
   renderJobListSidebar();
 }
@@ -13297,6 +13324,7 @@ function sdPick(id, val) {
 document.addEventListener('click', e => {
   if (_dpOpenId && !e.target.closest('.dp-wrap') && !e.target.closest('#dp-floating')) dpClose();
   if (_sdOpenId && !e.target.closest('.sd-wrap') && !e.target.closest('#sd-floating')) sdClose();
+  if (!e.target.closest('.jl-actions')) document.querySelectorAll('.jl-item.jl-actions-open').forEach(el => el.classList.remove('jl-actions-open'));
 });
 window.addEventListener('scroll', () => { if (_dpOpenId) dpClose(); if (_sdOpenId) sdClose(); }, true);
 window.addEventListener('resize', () => { dpClose(); sdClose(); });
