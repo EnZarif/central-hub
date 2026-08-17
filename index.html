@@ -958,9 +958,9 @@
   @keyframes jlNoteIn  { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
   .jl-item-wrap { display: flex; flex-direction: column; animation: jlItemIn 0.22s ease both; }
   /* ===== NOTES TOGGLE BUTTON ===== */
-  .jl-notes-btn { display: flex; align-items: center; gap: 3px; background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 3px 5px; border-radius: 5px; transition: color 0.12s, background 0.12s, opacity 0.12s; flex-shrink: 0; font-family: inherit; font-weight: 600; opacity: 0; pointer-events: none; }
-  .jl-notes-btn i { font-size: 12px; }
-  .jl-notes-count { font-size: 10px; font-weight: 700; }
+  .jl-notes-btn { position: relative; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-3); cursor: pointer; padding: 4px 5px; border-radius: 5px; transition: color 0.12s, background 0.12s, opacity 0.12s; flex-shrink: 0; opacity: 0; pointer-events: none; }
+  .jl-notes-btn i { font-size: 14px; }
+  .jl-notes-count { position: absolute; top: 1px; right: 1px; min-width: 13px; height: 13px; background: var(--teal); color: #fff; font-size: 8.5px; font-weight: 800; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 2.5px; box-sizing: border-box; pointer-events: none; line-height: 1; }
   .jl-notes-btn.has-notes { opacity: 1; pointer-events: auto; color: var(--teal-text); background: var(--teal-bg); }
   .jl-notes-btn.has-notes:hover { background: rgba(74,158,232,0.16); }
   .jl-item:hover .jl-notes-btn { opacity: 1; pointer-events: auto; }
@@ -979,7 +979,14 @@
   .jl-note.pinned { border-color: rgba(74,158,232,0.3); background: rgba(74,158,232,0.05); }
   .jl-note-pin-mark { font-size: 10px; color: var(--teal-text); flex-shrink: 0; margin-top: 2px; }
   .jl-note-body { flex: 1; min-width: 0; }
+  .jl-note-done-btn { width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--border-md); background: transparent; cursor: pointer; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; }
+  .jl-note-done-btn i { font-size: 9px; color: transparent; transition: color 0.15s; }
+  .jl-note-done-btn:hover { border-color: var(--teal); }
+  .jl-note-done-btn:hover i { color: var(--teal-text); }
+  .jl-note-done-btn.done { background: var(--teal); border-color: var(--teal); }
+  .jl-note-done-btn.done i { color: #fff; }
   .jl-note-text { font-size: 13px; color: var(--text-2); line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+  .jl-note.done .jl-note-text { text-decoration: line-through; color: var(--text-3); }
   .jl-note-foot { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
   .jl-note-time { font-size: 11px; color: var(--text-3); }
   .jl-note-act { display: flex; gap: 2px; margin-left: auto; flex-shrink: 0; }
@@ -6554,7 +6561,8 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
   });
   const notesBtn = `<button class="jl-notes-btn${notes.length > 0 ? ' has-notes' : ''}" onclick="jlToggleNotes(event,'${j.id}')" title="${notes.length > 0 ? `${notes.length} note${notes.length !== 1 ? 's' : ''}` : 'Add note'}"><i class="ti ti-notes"></i>${notes.length > 0 ? `<span class="jl-notes-count">${notes.length}</span>` : ''}</button>`;
   const previewHtml = previewNote ? `<div class="jl-note-preview" onclick="jlToggleNotes(event,'${j.id}')">${pinnedNote ? '<i class="ti ti-pin" style="font-size:9px;opacity:0.75;margin-right:3px;color:var(--teal-text)"></i>' : ''}<span>${esc(previewNote.text)}</span></div>` : '';
-  const notesListHtml = sortedNotes.map(n => `<div class="jl-note${n.pinned ? ' pinned' : ''}">
+  const notesListHtml = sortedNotes.map(n => `<div class="jl-note${n.pinned ? ' pinned' : ''}${n.done ? ' done' : ''}">
+      <button class="jl-note-done-btn${n.done ? ' done' : ''}" onclick="jlToggleNoteDone('${j.id}','${n.id}')" title="${n.done ? 'Mark undone' : 'Mark done'}"><i class="ti ti-check"></i></button>
       ${n.pinned ? '<i class="ti ti-pin jl-note-pin-mark"></i>' : ''}
       <div class="jl-note-body">
         <div class="jl-note-text">${esc(n.text)}</div>
@@ -6636,7 +6644,7 @@ function jlAddNote(id) {
   const j = jobLists.find(x => String(x.id) === String(id));
   if (!j) return;
   if (!j.notes) j.notes = [];
-  j.notes.push({ id: Date.now(), text, createdAt: Date.now(), pinned: false });
+  j.notes.push({ id: Date.now(), text, createdAt: Date.now(), pinned: false, done: false });
   saveJobLists();
   renderAmtekProjects();
   renderJobListSidebar();
@@ -6655,6 +6663,19 @@ function jlDeleteNote(jlId, noteId) {
     const panel = document.getElementById('jlnp-' + jlId);
     if (panel) panel.closest('.jl-item-wrap')?.classList.add('notes-open');
   }
+}
+
+function jlToggleNoteDone(jlId, noteId) {
+  const j = jobLists.find(x => String(x.id) === String(jlId));
+  if (!j) return;
+  const note = (j.notes || []).find(n => String(n.id) === String(noteId));
+  if (!note) return;
+  note.done = !note.done;
+  saveJobLists();
+  renderAmtekProjects();
+  renderJobListSidebar();
+  const panel = document.getElementById('jlnp-' + jlId);
+  if (panel) panel.closest('.jl-item-wrap')?.classList.add('notes-open');
 }
 
 function jlPinNote(jlId, noteId) {
