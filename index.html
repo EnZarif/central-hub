@@ -902,16 +902,16 @@
   .empty { text-align: center; padding: 3rem 1rem; color: var(--text-3); font-size: 14px; }
 
   /* KNOWLEDGE BASE SIDEBAR */
-  .tasks-layout { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
+  .tasks-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; align-items: start; }
   .tasks-main, .tasks-sidebar { min-width: 0; }
   @media (max-width: 900px) { .tasks-layout { grid-template-columns: 1fr; } }
   /* Re-enable sidebar on tablet — overrides the rule above for the 761-900px range */
-  @media (max-width: 900px) and (min-width: 761px) { .tasks-layout { grid-template-columns: 1fr 280px; gap: 16px; } }
+  @media (max-width: 900px) and (min-width: 761px) { .tasks-layout { grid-template-columns: 7fr 3fr; gap: 16px; } }
   .tasks-sidebar { position: sticky; top: 20px; }
-  .jl-card { padding: 14px 16px; }
+  .jl-card { padding: 16px 18px; }
   .jl-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
   .jl-empty { font-size: 12px; color: var(--text-3); padding: 6px 0; }
-  .jl-item { position: relative; display: flex; align-items: flex-start; gap: 10px; background: var(--surface2); border-radius: 8px; padding: 10px 12px 10px 14px; overflow: hidden; }
+  .jl-item { position: relative; display: flex; align-items: flex-start; gap: 10px; background: var(--surface2); border-radius: 8px; padding: 11px 12px 11px 16px; overflow: hidden; }
   .jl-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--teal); }
   .jl-item.done::before { background: var(--text-3); }
   .jl-item.jl-stripe-ov::before { width: 4px; background: #E05858 !important; }
@@ -929,7 +929,7 @@
   .jl-cb-check { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.12s; }
   .jl-cb:checked ~ .jl-cb-check { opacity: 1; }
   .jl-body { flex: 1; min-width: 0; }
-  .jl-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .jl-name { font-size: 14px; font-weight: 600; color: var(--text); }
   .jl-name.jl-clickable { cursor: pointer; }
   .jl-name.jl-clickable:hover { color: var(--teal-text); text-decoration: underline; }
   .jl-item.done .jl-name { color: var(--text-3); text-decoration: line-through; font-weight: 500; }
@@ -940,8 +940,8 @@
   .jl-due.stale { background: rgba(239,159,39,0.1); color: #d99a4a; border-color: transparent; }
   .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
   .jl-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: auto; }
-  .jl-action-panel { display: flex; align-items: center; gap: 1px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-  .jl-item:hover .jl-action-panel, .jl-item.jl-actions-open .jl-action-panel { opacity: 1; pointer-events: auto; }
+  .jl-action-panel { display: flex; align-items: center; gap: 1px; opacity: 0; pointer-events: none; transition: opacity 0.18s, transform 0.18s; transform: translateX(5px); }
+  .jl-item:hover .jl-action-panel, .jl-item.jl-actions-open .jl-action-panel { opacity: 1; pointer-events: auto; transform: translateX(0); }
   .jl-action-trigger { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 5px; border-radius: 5px; flex-shrink: 0; font-family: inherit; display: flex; align-items: center; transition: color 0.12s, background 0.12s; }
   .jl-action-trigger:hover, .jl-item.jl-actions-open .jl-action-trigger { color: var(--text-2); background: var(--bg); }
   .jl-icon-btn.jl-del-btn:hover { color: #E05858 !important; background: rgba(224,88,88,0.1); }
@@ -953,6 +953,49 @@
   .jl-archive-toggle { width: 100%; display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-3); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px 2px; font-family: inherit; }
   .jl-archive-toggle:hover { color: var(--text-2); }
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
+  /* ===== ITEM ANIMATIONS ===== */
+  @keyframes jlItemIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes jlNoteIn  { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .jl-item-wrap { display: flex; flex-direction: column; animation: jlItemIn 0.22s ease both; }
+  /* ===== NOTES TOGGLE BUTTON ===== */
+  .jl-notes-btn { display: flex; align-items: center; gap: 3px; background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 3px 5px; border-radius: 5px; transition: color 0.12s, background 0.12s, opacity 0.12s; flex-shrink: 0; font-family: inherit; font-weight: 600; opacity: 0; pointer-events: none; }
+  .jl-notes-btn i { font-size: 12px; }
+  .jl-notes-count { font-size: 10px; font-weight: 700; }
+  .jl-notes-btn.has-notes { opacity: 1; pointer-events: auto; color: var(--teal-text); background: var(--teal-bg); }
+  .jl-notes-btn.has-notes:hover { background: rgba(74,158,232,0.16); }
+  .jl-item:hover .jl-notes-btn { opacity: 1; pointer-events: auto; }
+  .jl-item-wrap.notes-open .jl-notes-btn { opacity: 1; pointer-events: auto; color: var(--teal-text); background: rgba(74,158,232,0.15); }
+  /* ===== NOTE PREVIEW (collapsed) ===== */
+  .jl-note-preview { font-size: 11.5px; color: var(--text-3); padding: 3px 12px 3px 42px; line-height: 1.4; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.12s; }
+  .jl-note-preview:hover { color: var(--text-2); }
+  .jl-item-wrap.notes-open .jl-note-preview { display: none; }
+  /* ===== NOTES EXPAND PANEL ===== */
+  .jl-notes-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s cubic-bezier(0.4,0,0.2,1); }
+  .jl-item-wrap.notes-open .jl-notes-panel { grid-template-rows: 1fr; }
+  .jl-notes-inner { min-height: 0; overflow: hidden; }
+  .jl-notes-panel-content { padding: 6px 6px 7px 40px; display: flex; flex-direction: column; gap: 5px; }
+  /* ===== INDIVIDUAL NOTE ===== */
+  .jl-note { display: flex; align-items: flex-start; gap: 6px; background: var(--bg); border-radius: 7px; padding: 7px 10px; border: 0.5px solid var(--border); animation: jlNoteIn 0.18s ease both; }
+  .jl-note.pinned { border-color: rgba(74,158,232,0.3); background: rgba(74,158,232,0.05); }
+  .jl-note-pin-mark { font-size: 10px; color: var(--teal-text); flex-shrink: 0; margin-top: 2px; }
+  .jl-note-body { flex: 1; min-width: 0; }
+  .jl-note-text { font-size: 12px; color: var(--text-2); line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+  .jl-note-foot { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .jl-note-time { font-size: 10px; color: var(--text-3); }
+  .jl-note-act { display: flex; gap: 2px; margin-left: auto; flex-shrink: 0; }
+  .jl-note-act button { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 2px 5px; border-radius: 4px; font-family: inherit; display: flex; align-items: center; gap: 2px; transition: color 0.12s, background 0.12s; white-space: nowrap; }
+  .jl-note-act button:hover { color: var(--text-2); background: var(--surface); }
+  .jl-note-act .pin-btn.pinned { color: var(--teal-text); }
+  .jl-note-act .del-btn:hover { color: #E05858 !important; background: rgba(224,88,88,0.1); }
+  /* ===== ADD NOTE FORM ===== */
+  .jl-note-add { display: flex; flex-direction: column; gap: 5px; padding-top: 1px; }
+  .jl-note-add textarea { width: 100%; background: var(--bg); border: 0.5px solid var(--border-md); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 12px; padding: 7px 9px; resize: none; outline: none; min-height: 52px; transition: border-color 0.15s; box-sizing: border-box; }
+  .jl-note-add textarea:focus { border-color: rgba(74,158,232,0.6); }
+  .jl-note-add textarea::placeholder { color: var(--text-3); }
+  .jl-note-add-actions { display: flex; justify-content: flex-end; }
+  .jl-note-save-btn { display: flex; align-items: center; gap: 4px; background: var(--teal-bg); border: 0.5px solid rgba(74,158,232,0.25); color: var(--teal-text); font-size: 11.5px; font-weight: 600; padding: 4px 13px; border-radius: 5px; cursor: pointer; font-family: inherit; transition: background 0.12s; }
+  .jl-note-save-btn:hover { background: rgba(74,158,232,0.18); }
+  .jl-note-save-btn i { font-size: 12px; }
   /* Due-today pinned group inside Amtek Job List */
   .jl-today-group { margin: -8px -16px 4px; padding: 8px 16px 10px; background: rgba(239,159,39,0.05); border-bottom: 0.5px solid rgba(239,159,39,0.28); }
   .jl-today-header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
@@ -6500,7 +6543,32 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
     const _sn = Math.round((_sd - _st) / 86400000);
     if (_sn > 0 && _sn <= 7) stripeClass = ' jl-stripe-sn';
   }
-  return `<div class="jl-item${j.done ? ' done' : ''}${stripeClass}">
+  // Notes
+  const notes = j.notes || [];
+  const pinnedNote = notes.find(n => n.pinned);
+  const previewNote = pinnedNote || [...notes].sort((a, b) => b.createdAt - a.createdAt)[0];
+  const sortedNotes = [...notes].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.createdAt - a.createdAt;
+  });
+  const notesBtn = `<button class="jl-notes-btn${notes.length > 0 ? ' has-notes' : ''}" onclick="jlToggleNotes(event,'${j.id}')" title="${notes.length > 0 ? `${notes.length} note${notes.length !== 1 ? 's' : ''}` : 'Add note'}"><i class="ti ti-notes"></i>${notes.length > 0 ? `<span class="jl-notes-count">${notes.length}</span>` : ''}</button>`;
+  const previewHtml = previewNote ? `<div class="jl-note-preview" onclick="jlToggleNotes(event,'${j.id}')">${pinnedNote ? '<i class="ti ti-pin" style="font-size:9px;opacity:0.75;margin-right:3px;color:var(--teal-text)"></i>' : ''}<span>${esc(previewNote.text)}</span></div>` : '';
+  const notesListHtml = sortedNotes.map(n => `<div class="jl-note${n.pinned ? ' pinned' : ''}">
+      ${n.pinned ? '<i class="ti ti-pin jl-note-pin-mark"></i>' : ''}
+      <div class="jl-note-body">
+        <div class="jl-note-text">${esc(n.text)}</div>
+        <div class="jl-note-foot">
+          <span class="jl-note-time">${jlNoteTimeAgo(n.createdAt)}</span>
+          <div class="jl-note-act">
+            <button class="pin-btn${n.pinned ? ' pinned' : ''}" onclick="jlPinNote('${j.id}','${n.id}')" title="${n.pinned ? 'Unpin' : 'Pin note'}"><i class="ti ti-pin"></i>${n.pinned ? 'Unpin' : 'Pin'}</button>
+            <button class="del-btn" onclick="jlDeleteNote('${j.id}','${n.id}')" title="Delete note"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+  return `<div class="jl-item-wrap">
+    <div class="jl-item${j.done ? ' done' : ''}${stripeClass}">
       <label class="jl-cb-wrap">
         <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : isOverdue ? ' jl-overdue-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
         <i class="ti ti-check jl-cb-check"></i>
@@ -6510,6 +6578,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
         <div class="jl-meta">${dueChip}${staleChip}${linkBadge}</div>
       </div>
       <div class="jl-actions">
+        ${notesBtn}
         <div class="jl-action-panel">
           <div class="jl-move-col">
             <button class="jl-icon-btn" onclick="moveJobList('${j.id}', -1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
@@ -6521,7 +6590,86 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
         </div>
         <button class="jl-action-trigger" title="Actions" onclick="toggleJlActions(event,'${j.id}')"><i class="ti ti-dots-vertical"></i></button>
       </div>
-    </div>`;
+    </div>
+    ${previewHtml}
+    <div class="jl-notes-panel" id="jlnp-${j.id}">
+      <div class="jl-notes-inner">
+        <div class="jl-notes-panel-content">
+          ${notesListHtml}
+          <div class="jl-note-add">
+            <textarea id="jlna-${j.id}" placeholder="Add a note… (Ctrl+Enter to save)" rows="2" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();jlAddNote('${j.id}');}"></textarea>
+            <div class="jl-note-add-actions">
+              <button class="jl-note-save-btn" onclick="jlAddNote('${j.id}')"><i class="ti ti-plus"></i> Add note</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function jlNoteTimeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? 'yesterday' : `${d}d ago`;
+}
+
+function jlToggleNotes(event, id) {
+  event.stopPropagation();
+  const panel = document.getElementById('jlnp-' + id);
+  if (!panel) return;
+  const wrap = panel.closest('.jl-item-wrap');
+  if (!wrap) return;
+  document.querySelectorAll('.jl-item-wrap.notes-open').forEach(w => { if (w !== wrap) w.classList.remove('notes-open'); });
+  wrap.classList.toggle('notes-open');
+}
+
+function jlAddNote(id) {
+  const ta = document.getElementById('jlna-' + id);
+  const text = ta ? ta.value.trim() : '';
+  if (!text) return;
+  const j = jobLists.find(x => String(x.id) === String(id));
+  if (!j) return;
+  if (!j.notes) j.notes = [];
+  j.notes.push({ id: Date.now(), text, createdAt: Date.now(), pinned: false });
+  saveJobLists();
+  renderAmtekProjects();
+  renderJobListSidebar();
+  const panel = document.getElementById('jlnp-' + id);
+  if (panel) panel.closest('.jl-item-wrap')?.classList.add('notes-open');
+}
+
+function jlDeleteNote(jlId, noteId) {
+  const j = jobLists.find(x => String(x.id) === String(jlId));
+  if (!j) return;
+  j.notes = (j.notes || []).filter(n => String(n.id) !== String(noteId));
+  saveJobLists();
+  renderAmtekProjects();
+  renderJobListSidebar();
+  if ((j.notes || []).length > 0) {
+    const panel = document.getElementById('jlnp-' + jlId);
+    if (panel) panel.closest('.jl-item-wrap')?.classList.add('notes-open');
+  }
+}
+
+function jlPinNote(jlId, noteId) {
+  const j = jobLists.find(x => String(x.id) === String(jlId));
+  if (!j) return;
+  const note = (j.notes || []).find(n => String(n.id) === String(noteId));
+  if (!note) return;
+  const wasPinned = note.pinned;
+  (j.notes || []).forEach(n => { n.pinned = false; });
+  if (!wasPinned) note.pinned = true;
+  saveJobLists();
+  renderAmtekProjects();
+  renderJobListSidebar();
+  const panel = document.getElementById('jlnp-' + jlId);
+  if (panel) panel.closest('.jl-item-wrap')?.classList.add('notes-open');
 }
 
 function switchAmtekTab(btn, panelId) {
@@ -11562,6 +11710,7 @@ document.addEventListener('click', e => {
   if (_dpOpenId && !e.target.closest('.dp-wrap') && !e.target.closest('#dp-floating')) dpClose();
   if (_sdOpenId && !e.target.closest('.sd-wrap') && !e.target.closest('#sd-floating')) sdClose();
   if (!e.target.closest('.jl-actions')) document.querySelectorAll('.jl-item.jl-actions-open').forEach(el => el.classList.remove('jl-actions-open'));
+  if (!e.target.closest('.jl-item-wrap')) document.querySelectorAll('.jl-item-wrap.notes-open').forEach(el => el.classList.remove('notes-open'));
 });
 window.addEventListener('scroll', () => { if (_dpOpenId) dpClose(); if (_sdOpenId) sdClose(); }, true);
 window.addEventListener('resize', () => { dpClose(); sdClose(); });
