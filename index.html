@@ -8279,7 +8279,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
           </div>
           <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
           <button class="jl-icon-btn jl-del-btn" onclick="deleteJobList('${j.id}')" title="Delete"><i class="ti ti-trash"></i></button>
-          ${j.done && !j.amtekProjectId ? `<button class="jl-icon-btn jl-archive-btn" title="Move to Recently Completed" onclick="quickArchiveJobList('${j.id}')"><i class="ti ti-archive"></i></button>` : ''}
+          ${j.done ? `<button class="jl-icon-btn jl-archive-btn" title="Move to Recently Completed" onclick="quickArchiveJobList('${j.id}')"><i class="ti ti-archive"></i></button>` : ''}
         </div>
         <button class="jl-action-trigger" title="Actions" onclick="toggleJlActions(event,'${j.id}')"><i class="ti ti-dots-vertical"></i></button>
       </div>
@@ -8310,8 +8310,9 @@ function toggleJlActions(event, id) {
 
 function quickArchiveJobList(id) {
   const j = jobLists.find(x => String(x.id) === String(id));
-  if (!j || !j.done || j.amtekProjectId) return;
+  if (!j || !j.done) return;
   j.completedAt = Date.now() - JL_ARCHIVE_AFTER_MS - 1000;
+  j._manualArchive = true;
   saveJobLists();
   renderAmtekProjects();
   renderJobListSidebar();
@@ -8334,7 +8335,7 @@ function renderJobListSidebar() {
   }
   const now = Date.now();
   // Only archive untagged done items; tagged items manage their lifecycle inside their project
-  const archived = visible.filter(j => !j.amtekProjectId && j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS);
+  const archived = visible.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive));
   const active = visible.filter(j => !archived.includes(j));
 
   const todayStr = ymd(new Date());
