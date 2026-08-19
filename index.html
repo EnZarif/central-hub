@@ -2481,7 +2481,7 @@
   .scratch-panel {
     position: fixed; right: -35%; top: 0; bottom: 0;
     width: 30%; min-width: 280px; max-width: 460px;
-    background: #0d1b2e; border-left: 0.5px solid rgba(74,158,232,0.18);
+    background: #050d18; border-left: 0.5px solid rgba(74,158,232,0.18);
     z-index: 1000; display: flex; flex-direction: column;
     box-shadow: -12px 0 48px rgba(0,0,0,0.55);
     transition: right .28s cubic-bezier(.16,1,.3,1);
@@ -2629,9 +2629,9 @@
   .nudge-btn-m.nb-snooze:hover { color: var(--text-2); }
 
   /* ── Scratchpad FAB: solid amber pencil when closed, solid teal when open ── */
-  .scratch-fab { color: #1a0f00 !important; background: #e8a84a !important; border-color: #d4943a !important; box-shadow: 0 4px 18px rgba(232,168,74,0.45) !important; }
-  .scratch-fab:hover { filter: brightness(1.1); transform: scale(1.08); }
-  .scratch-fab.sp-open { color: #fff !important; background: var(--teal) !important; border-color: var(--teal) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.45) !important; }
+  .scratch-fab { background: #050d18 !important; border-color: rgba(74,158,232,0.22) !important; box-shadow: 0 4px 18px rgba(0,0,0,0.55) !important; }
+  .scratch-fab:hover { border-color: rgba(74,158,232,0.45) !important; filter: brightness(1.15); transform: scale(1.08); }
+  .scratch-fab.sp-open { background: #0d1b2e !important; border-color: rgba(74,158,232,0.55) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.3) !important; }
   /* ── Sidebar Add Task (primary) / Add Job (secondary) ── */
   .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; font-size: 12.5px; font-weight: 700; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; }
   .sidebar-action-btn.sab-task { background: var(--teal); border-color: var(--teal); color: #fff; box-shadow: 0 3px 12px rgba(74,158,232,0.35); }
