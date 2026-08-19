@@ -2481,23 +2481,23 @@
   .scratch-panel {
     position: fixed; right: -35%; top: 0; bottom: 0;
     width: 30%; min-width: 280px; max-width: 460px;
-    background: var(--surface); border-left: 0.5px solid var(--border-md);
+    background: #0d1b2e; border-left: 0.5px solid rgba(74,158,232,0.18);
     z-index: 1000; display: flex; flex-direction: column;
-    box-shadow: -12px 0 48px rgba(0,0,0,0.35);
+    box-shadow: -12px 0 48px rgba(0,0,0,0.55);
     transition: right .28s cubic-bezier(.16,1,.3,1);
   }
   .scratch-panel.sp-open { right: 0; }
-  .scratch-panel-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 12px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
-  .scratch-panel-title { font-size: 13px; font-weight: 700; flex: 1; }
-  .scratch-panel-saved { font-size: 10.5px; color: var(--green-text); transition: color .2s; }
-  .scratch-panel-close { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 4px 7px; border-radius: 5px; font-size: 16px; transition: color .12s; font-family: inherit; line-height: 1; }
-  .scratch-panel-close:hover { color: var(--text); }
-  .scratch-panel-ta { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 13px; line-height: 1.65; padding: 16px 18px; resize: none; }
-  .scratch-panel-ta::placeholder { color: var(--text-3); }
-  .scratch-panel-foot { padding: 8px 16px; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .scratch-panel-chars { font-size: 10.5px; color: var(--text-3); }
-  .scratch-panel-clear { background: none; border: 0.5px solid var(--border-md); border-radius: 5px; color: var(--text-3); font-family: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer; transition: all .12s; }
-  .scratch-panel-clear:hover { color: var(--coral-text); border-color: rgba(232,88,88,0.28); }
+  .scratch-panel-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 12px; border-bottom: 0.5px solid rgba(74,158,232,0.14); flex-shrink: 0; }
+  .scratch-panel-title { font-size: 13px; font-weight: 700; flex: 1; color: #e2eaf6; }
+  .scratch-panel-saved { font-size: 10.5px; color: #4ae888; transition: color .2s; }
+  .scratch-panel-close { background: none; border: none; color: #6a8aaa; cursor: pointer; padding: 4px 7px; border-radius: 5px; font-size: 16px; transition: color .12s; font-family: inherit; line-height: 1; }
+  .scratch-panel-close:hover { color: #e2eaf6; }
+  .scratch-panel-ta { flex: 1; background: none; border: none; outline: none; color: #d4e3f5; font-family: inherit; font-size: 13px; line-height: 1.65; padding: 16px 18px; resize: none; caret-color: #4a9ee8; }
+  .scratch-panel-ta::placeholder { color: #3a5570; }
+  .scratch-panel-foot { padding: 8px 16px; border-top: 0.5px solid rgba(74,158,232,0.1); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .scratch-panel-chars { font-size: 10.5px; color: #3a5570; }
+  .scratch-panel-clear { background: none; border: 0.5px solid rgba(74,158,232,0.2); border-radius: 5px; color: #6a8aaa; font-family: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer; transition: all .12s; }
+  .scratch-panel-clear:hover { color: #e05858; border-color: rgba(224,88,88,0.35); }
 
   /* ── Inline task highlight badges (next-best / today's-highlight) ── */
   .task-inline-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 1.5px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px; letter-spacing: .02em; flex-shrink: 0; white-space: nowrap; }
@@ -2642,10 +2642,10 @@
   .show-done-btn { display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all .15s; flex-shrink: 0; }
   .show-done-btn:hover { color: var(--text-2); border-color: var(--text-2); }
   .show-done-btn.active { background: var(--surface2); color: var(--text-2); border-color: var(--border-md); }
-  /* ── Job list: denser, larger text in sidebar ── */
-  .jl-tab-panel .jl-name { font-size: 14.5px; }
-  .jl-tab-panel .jl-item { padding: 12px 12px 12px 15px; }
-  .jl-time-btn { padding: 4px 10px; font-size: 11.5px; }
+  /* ── Job list sidebar: original sizes restored ── */
+  .jl-tab-panel .jl-name { font-size: 14px; }
+  .jl-tab-panel .jl-item { padding: 10px 12px 10px 14px; }
+  .jl-time-btn { padding: 3px 9px; font-size: 11px; }
   /* ── Calendar shortcut button ── */
   .task-cal-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 8px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; margin-left: auto; }
   .task-cal-btn:hover { border-color: var(--text-2); color: var(--text); background: var(--surface2); }
