@@ -778,6 +778,32 @@
   .backlog-clear-btn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 3px 8px; border-radius: 5px; font-family: inherit; transition: color 0.12s; }
   .backlog-clear-btn:hover { color: #E05858; }
 
+  /* ── Quick tasks card ── */
+  .qt-card { background: var(--surface); border-radius: 10px; border: 0.5px solid var(--border-md); overflow: hidden; margin-bottom: 10px; position: relative; box-shadow: 0 4px 20px rgba(74,158,232,0.07); }
+  .qt-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--teal) 0%, rgba(74,158,232,0.25) 100%); }
+  .qt-card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px 8px; border-bottom: 0.5px solid var(--border); }
+  .qt-card-title { font-size: 12px; font-weight: 700; color: var(--teal-text); display: flex; align-items: center; gap: 6px; }
+  .qt-card-title i { font-size: 13px; }
+  .qt-count-chip { font-size: 10px; font-weight: 700; background: var(--teal-bg); color: var(--teal-text); border: 0.5px solid rgba(74,158,232,0.25); border-radius: 8px; padding: 1px 7px; }
+  .qt-add-row { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 0.5px solid var(--border); background: rgba(74,158,232,0.04); }
+  .qt-add-icon { width: 22px; height: 22px; border-radius: 6px; background: var(--teal-bg); border: 0.5px solid rgba(74,158,232,0.3); display: flex; align-items: center; justify-content: center; color: var(--teal-text); font-size: 13px; flex-shrink: 0; }
+  .qt-input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 13px; padding: 3px 0; }
+  .qt-input::placeholder { color: var(--text-3); }
+  .qt-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 0.5px solid var(--border); transition: background 0.12s; }
+  .qt-item:last-child { border-bottom: none; }
+  .qt-item:hover { background: rgba(255,255,255,0.015); }
+  .qt-cb { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border-md); background: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; }
+  .qt-cb i { font-size: 9px; color: transparent; transition: color 0.15s; }
+  .qt-cb:hover { border-color: var(--teal); }
+  .qt-cb:hover i { color: var(--teal-text); }
+  .qt-cb.done { background: var(--teal); border-color: var(--teal); }
+  .qt-cb.done i { color: #fff; }
+  .qt-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; word-break: break-word; }
+  .qt-name.done { text-decoration: line-through; color: var(--text-3); }
+  .qt-del { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 4px 5px; border-radius: 4px; font-size: 12px; opacity: 0; transition: opacity 0.12s, color 0.12s, background 0.12s; flex-shrink: 0; }
+  .qt-item:hover .qt-del { opacity: 1; }
+  .qt-del:hover { color: #E05858; background: rgba(224,88,88,0.1); }
+
   /* ── Bulk select + drag-to-reorder ── */
   .bulk-cb { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border-md); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: transparent; transition: all 0.15s; align-self: flex-start; margin-top: 2px; }
   .bulk-cb i { font-size: 12px; }
@@ -963,7 +989,8 @@
   .jl-due.overdue { background: rgba(239,68,68,0.15); color: #ef4444; border-color: transparent; }
   .jl-due.stale { background: rgba(239,159,39,0.1); color: #d99a4a; border-color: transparent; }
   .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
-  .jl-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: auto; }
+  .jl-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: auto; }
+  .jl-actions-row { display: flex; align-items: center; gap: 4px; }
   .jl-action-panel { display: flex; align-items: center; gap: 1px; opacity: 0; pointer-events: none; transition: opacity 0.18s, transform 0.18s; transform: translateX(5px); }
   .jl-item:hover .jl-action-panel, .jl-item.jl-actions-open .jl-action-panel { opacity: 1; pointer-events: auto; transform: translateX(0); }
   .jl-action-trigger { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 5px; border-radius: 5px; flex-shrink: 0; font-family: inherit; display: flex; align-items: center; transition: color 0.12s, background 0.12s; }
@@ -982,9 +1009,9 @@
   @keyframes jlNoteIn  { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
   .jl-item-wrap { display: flex; flex-direction: column; animation: jlItemIn 0.22s ease both; }
   /* ===== NOTES TOGGLE BUTTON ===== */
-  .jl-notes-btn { position: relative; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-3); cursor: pointer; padding: 4px 5px; border-radius: 5px; transition: color 0.12s, background 0.12s, opacity 0.12s; flex-shrink: 0; opacity: 0; pointer-events: none; }
-  .jl-notes-btn i { font-size: 14px; }
-  .jl-notes-count { position: absolute; top: 1px; right: 1px; min-width: 13px; height: 13px; background: var(--teal); color: #fff; font-size: 8.5px; font-weight: 800; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 2.5px; box-sizing: border-box; pointer-events: none; line-height: 1; }
+  .jl-notes-btn { display: flex; flex-direction: column; align-items: center; gap: 1px; background: none; border: none; color: var(--text-3); cursor: pointer; padding: 3px 6px; border-radius: 5px; transition: color 0.12s, background 0.12s, opacity 0.12s; flex-shrink: 0; opacity: 0; pointer-events: none; }
+  .jl-notes-btn i { font-size: 13px; }
+  .jl-notes-count { font-size: 8px; font-weight: 800; color: var(--teal-text); line-height: 1; pointer-events: none; }
   .jl-notes-btn.has-notes { opacity: 1; pointer-events: auto; color: var(--teal-text); background: var(--teal-bg); }
   .jl-notes-btn.has-notes:hover { background: rgba(74,158,232,0.16); }
   .jl-item:hover .jl-notes-btn { opacity: 1; pointer-events: auto; }
@@ -992,6 +1019,7 @@
   /* ===== NOTE PREVIEW (collapsed) ===== */
   .jl-note-preview { font-size: 13px; color: var(--text-3); padding: 3px 12px 3px 42px; line-height: 1.4; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.12s; }
   .jl-note-preview:hover { color: var(--text-2); }
+  .jl-note-preview.done span { text-decoration: line-through; opacity: 0.55; }
   .jl-item-wrap.notes-open .jl-note-preview { display: none; }
   /* ===== NOTES EXPAND PANEL ===== */
   .jl-notes-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s cubic-bezier(0.4,0,0.2,1); }
@@ -4730,6 +4758,7 @@ let done = {};
 let breaks = DEFAULT_BREAKS.map(r => ({...r}));
 let customTasks = [];
 let taskOverrides = {};
+let quickTasks = [];
 let taskOrder = {};
 let taskStreaks = {};
 // day-scoped "dismiss from Needs Attention" flags for recurring tasks snoozed today
@@ -4751,6 +4780,7 @@ function save() { dbSet('zarif_done_v2', done); }
 function saveBreaks() { dbSet('zarif_breaks', breaks); }
 function saveCustomTasks() { dbSet('zarif_custom_tasks', customTasks); }
 function saveTaskOverrides() { dbSet('zarif_task_overrides', taskOverrides); }
+function saveQuickTasks() { dbSet('zarif_quick_tasks', quickTasks); }
 function saveTaskOrder() { dbSet('zarif_task_order', taskOrder); }
 function getOrder(id) { return taskOrder[id] !== undefined ? taskOrder[id] : 0; }
 function saveTaskStreaks() { dbSet('zarif_task_streaks', taskStreaks); }
@@ -4835,7 +4865,8 @@ function renderTaskTagFilter() {
   </select>`;
 }
 function getAllTasks() {
-  const all = [...TASKS, ...customTasks].map(t => taskOverrides[t.id] ? {...t, ...taskOverrides[t.id]} : t);
+  const all = [...TASKS, ...customTasks].map(t => taskOverrides[t.id] ? {...t, ...taskOverrides[t.id]} : t)
+    .filter(t => !t.hidden);
   let filtered = taskHubFilter === 'all' ? all : all.filter(t => (t.hub || 'helpdesk') === taskHubFilter);
   if (taskTagFilter !== 'all') filtered = filtered.filter(t => (t.tags || []).includes(taskTagFilter));
   return filtered;
@@ -6581,14 +6612,14 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
   // Notes
   const notes = j.notes || [];
   const pinnedNote = notes.find(n => n.pinned);
-  const previewNote = pinnedNote || [...notes].sort((a, b) => b.createdAt - a.createdAt)[0];
+  const previewNote = pinnedNote || [...notes].sort((a, b) => (a.done === b.done ? b.createdAt - a.createdAt : a.done ? 1 : -1))[0];
   const sortedNotes = [...notes].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
     return b.createdAt - a.createdAt;
   });
   const notesBtn = `<button class="jl-notes-btn${notes.length > 0 ? ' has-notes' : ''}" onclick="jlToggleNotes(event,'${j.id}')" title="${notes.length > 0 ? `${notes.length} note${notes.length !== 1 ? 's' : ''}` : 'Add note'}"><i class="ti ti-notes"></i>${notes.length > 0 ? `<span class="jl-notes-count">${notes.length}</span>` : ''}</button>`;
-  const previewHtml = previewNote ? `<div class="jl-note-preview" onclick="jlToggleNotes(event,'${j.id}')">${pinnedNote ? '<i class="ti ti-pin" style="font-size:9px;opacity:0.75;margin-right:3px;color:var(--teal-text)"></i>' : ''}<span>${esc(previewNote.text)}</span></div>` : '';
+  const previewHtml = previewNote ? `<div class="jl-note-preview${previewNote.done ? ' done' : ''}" onclick="jlToggleNotes(event,'${j.id}')">${pinnedNote ? '<i class="ti ti-pin" style="font-size:9px;opacity:0.75;margin-right:3px;color:var(--teal-text)"></i>' : ''}<span>${esc(previewNote.text)}</span></div>` : '';
   const notesListHtml = sortedNotes.map(n => `<div class="jl-note${n.pinned ? ' pinned' : ''}${n.done ? ' done' : ''}">
       <button class="jl-note-done-btn${n.done ? ' done' : ''}" onclick="jlToggleNoteDone('${j.id}','${n.id}')" title="${n.done ? 'Mark undone' : 'Mark done'}"><i class="ti ti-check"></i></button>
       ${n.pinned ? '<i class="ti ti-pin jl-note-pin-mark"></i>' : ''}
@@ -6614,17 +6645,19 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
         <div class="jl-meta">${dueChip}${staleChip}${linkBadge}</div>
       </div>
       <div class="jl-actions">
-        ${notesBtn}
-        <div class="jl-action-panel">
-          <div class="jl-move-col">
-            <button class="jl-icon-btn" onclick="moveJobList('${j.id}', -1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
-            <button class="jl-icon-btn" onclick="moveJobList('${j.id}', 1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
+        <div class="jl-actions-row">
+          <div class="jl-action-panel">
+            <div class="jl-move-col">
+              <button class="jl-icon-btn" onclick="moveJobList('${j.id}', -1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
+              <button class="jl-icon-btn" onclick="moveJobList('${j.id}', 1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
+            </div>
+            <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
+            <button class="jl-icon-btn jl-del-btn" onclick="deleteJobList('${j.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+            ${j.done ? `<button class="jl-icon-btn jl-archive-btn" title="Move to Recently Completed" onclick="quickArchiveJobList('${j.id}')"><i class="ti ti-archive"></i></button>` : ''}
           </div>
-          <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
-          <button class="jl-icon-btn jl-del-btn" onclick="deleteJobList('${j.id}')" title="Delete"><i class="ti ti-trash"></i></button>
-          ${j.done ? `<button class="jl-icon-btn jl-archive-btn" title="Move to Recently Completed" onclick="quickArchiveJobList('${j.id}')"><i class="ti ti-archive"></i></button>` : ''}
+          <button class="jl-action-trigger" title="Actions" onclick="toggleJlActions(event,'${j.id}')"><i class="ti ti-dots-vertical"></i></button>
         </div>
-        <button class="jl-action-trigger" title="Actions" onclick="toggleJlActions(event,'${j.id}')"><i class="ti ti-dots-vertical"></i></button>
+        ${notesBtn}
       </div>
     </div>
     ${previewHtml}
@@ -7065,6 +7098,84 @@ function backlogDoToday(id) {
   saveCustomTasks(); renderTasks();
 }
 function backlogDeleteTask(id) { deleteCustomTask(id); renderTasks(); }
+
+function hideHardcodedTask(id) {
+  const t = TASKS.find(x => String(x.id) === String(id));
+  if (!t) return;
+  if (!confirm(`Delete "${t.name}"?`)) return;
+  taskOverrides[id] = { ...(taskOverrides[id] || {}), hidden: true };
+  saveTaskOverrides();
+  renderTasks();
+}
+
+function addQuickTask(text) {
+  if (!text || !text.trim()) return;
+  quickTasks.push({ id: 'qt' + Date.now(), text: text.trim(), done: false, date: todayInputDate() });
+  saveQuickTasks();
+  renderTasks();
+}
+
+function addQuickTaskFromInput() {
+  const el = document.getElementById('quick-task-input');
+  if (!el) return;
+  const val = el.value;
+  el.value = '';
+  addQuickTask(val);
+}
+
+function toggleQuickTaskDone(id) {
+  const t = quickTasks.find(q => q.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveQuickTasks();
+  renderTasks();
+}
+
+function deleteQuickTask(id) {
+  quickTasks = quickTasks.filter(q => q.id !== id);
+  saveQuickTasks();
+  renderTasks();
+}
+
+function checkQuickTaskCarryOver() {
+  const today = todayInputDate();
+  quickTasks = quickTasks.filter(q => q.date === today || !q.done);
+  const stale = quickTasks.filter(q => q.date !== today && !q.done);
+  if (!stale.length) { saveQuickTasks(); return; }
+  const msg = stale.length === 1
+    ? `You have 1 unfinished quick task from ${stale[0].date}. Carry it over to today?`
+    : `You have ${stale.length} unfinished quick tasks from previous days. Carry them over to today?`;
+  if (confirm(msg)) {
+    stale.forEach(q => { q.date = today; });
+  } else {
+    quickTasks = quickTasks.filter(q => q.date === today);
+  }
+  saveQuickTasks();
+}
+
+function renderQuickTasksCard() {
+  const today = todayInputDate();
+  const todayQ = quickTasks.filter(q => q.date === today);
+  const doneCount = todayQ.filter(q => q.done).length;
+  const countChip = todayQ.length ? `<span class="qt-count-chip">${doneCount}/${todayQ.length} done</span>` : '';
+  const itemsHtml = todayQ.map(q => `<div class="qt-item">
+      <button class="qt-cb${q.done ? ' done' : ''}" onclick="toggleQuickTaskDone('${q.id}')"><i class="ti ti-check"></i></button>
+      <span class="qt-name${q.done ? ' done' : ''}">${esc(q.text)}</span>
+      <button class="qt-del" onclick="event.stopPropagation(); deleteQuickTask('${q.id}')" title="Remove"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+  return `<div class="qt-card">
+    <div class="qt-card-header">
+      <span class="qt-card-title"><i class="ti ti-bolt"></i> Quick tasks</span>
+      ${countChip}
+    </div>
+    <div class="qt-add-row">
+      <div class="qt-add-icon"><i class="ti ti-plus"></i></div>
+      <input id="quick-task-input" class="qt-input" placeholder="What needs doing today? (Enter to add)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addQuickTaskFromInput();}">
+    </div>
+    ${itemsHtml}
+  </div>`;
+}
 function clearAllBacklog() {
   const stale = customTasks.filter(isTaskStale);
   if (!stale.length) return;
@@ -8178,7 +8289,9 @@ function taskHTML(t, showFreqPill) {
     ? `<span class="time-pill" title="Reminder set"><i class="ti ti-bell"></i>${fmtTime(t.reminderTime)}</span>`
     : '';
   const click = t.jobReminder ? `openJobReminderDetail('${t.id}')` : t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : `toggle('${t.id}')`;
-  const delBtn = t.custom ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>` : '';
+  const delBtn = t.custom
+    ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>`
+    : `<button class="task-del-btn" onclick="event.stopPropagation(); hideHardcodedTask('${t.id}')"><i class="ti ti-trash"></i></button>`;
   const aiBtn = `<button class="task-ai-btn" title="Ask AI about this task" onclick="event.stopPropagation(); openAiModal('task','${t.id}')"><i class="ti ti-sparkles"></i></button>`;
   const editBtn = t.jobReminder
     ? `<button class="task-edit-btn" onclick="event.stopPropagation(); openEditJobReminder('${t.id}')"><i class="ti ti-pencil"></i></button>`
@@ -8789,7 +8902,8 @@ function renderTasks() {
     const emptyMsg = statFilter === 'done' ? 'No completed tasks yet today.'
       : statFilter === 'high' ? 'No high-priority tasks today.'
       : 'No tasks for today.';
-    if (!tasks.length) { paintList(`<div class="empty">${emptyMsg}</div>`); return; }
+    const qtHtml = statFilter === 'all' ? renderQuickTasksCard() : '';
+    if (!tasks.length) { paintList(qtHtml + (qtHtml ? '' : `<div class="empty">${emptyMsg}</div>`)); return; }
 
     // Focus mode: hide everything except the next couple of pending tasks —
     // for when the full grouped list feels like too much.
@@ -8800,7 +8914,7 @@ function renderTasks() {
         return (aMin - bMin) || (PO[a.priority] - PO[b.priority]);
       }).slice(0, FOCUS_MODE_COUNT);
       const hidden = pending.length - next.length;
-      let fHtml = `<div class="focus-mode-banner"><i class="ti ti-focus-2"></i> Focus mode — showing what's next${hidden > 0 ? `, ${hidden} more hidden` : ''}. <button onclick="toggleFocusMode()">Show all</button></div>`;
+      let fHtml = qtHtml + `<div class="focus-mode-banner"><i class="ti ti-focus-2"></i> Focus mode — showing what's next${hidden > 0 ? `, ${hidden} more hidden` : ''}. <button onclick="toggleFocusMode()">Show all</button></div>`;
       if (!next.length) {
         fHtml += `<div class="empty">All done for today — nice work!</div>`;
       } else {
@@ -8809,6 +8923,7 @@ function renderTasks() {
       paintList(fHtml);
       return;
     }
+    html += qtHtml;
 
     if (statFilter === 'done') {
       // done filter: just show completed
@@ -15039,6 +15154,7 @@ async function initApp() {
   done          = dbGet('zarif_done_v2')        || {};
   breaks        = dbGet('zarif_breaks')         || DEFAULT_BREAKS.map(r => ({...r}));
   customTasks   = dbGet('zarif_custom_tasks')   || [];
+  quickTasks    = dbGet('zarif_quick_tasks')    || [];
   taskOverrides = dbGet('zarif_task_overrides') || {};
   taskOrder     = dbGet('zarif_task_order')     || {};
   taskStreaks   = dbGet('zarif_task_streaks')   || {};
@@ -15093,6 +15209,7 @@ async function initApp() {
   if (_doneMigrated) save();
 
   autoEscalateOverdueTasks();
+  checkQuickTaskCarryOver();
 
   // Hide loading overlay and render
   const loadEl = document.getElementById('app-loading');
