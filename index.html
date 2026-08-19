@@ -2479,14 +2479,17 @@
   .scratch-fab:hover { background: var(--surface3); color: var(--text); transform: scale(1.08); }
   .scratch-fab.sp-open { background: var(--teal-bg); border-color: rgba(74,158,232,0.45); color: var(--teal-text); box-shadow: 0 4px 22px rgba(74,158,232,0.22); }
   .scratch-panel {
-    position: fixed; right: -35%; top: 0; bottom: 0;
-    width: 30%; min-width: 280px; max-width: 460px;
-    background: #050d18; border-left: 0.5px solid rgba(74,158,232,0.18);
-    z-index: 1000; display: flex; flex-direction: column;
-    box-shadow: -12px 0 48px rgba(0,0,0,0.55);
-    transition: right .28s cubic-bezier(.16,1,.3,1);
+    position: fixed; right: -400px; bottom: 80px;
+    top: auto; width: 360px; height: 50vh; min-height: 320px; max-height: 560px;
+    background: #050d18;
+    border: 0.5px solid rgba(74,158,232,0.22);
+    border-radius: 18px;
+    z-index: 1000; display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 16px 56px rgba(0,0,0,0.65), 0 0 0 0.5px rgba(74,158,232,0.08);
+    transition: right .28s cubic-bezier(.16,1,.3,1), opacity .28s;
+    opacity: 0; pointer-events: none;
   }
-  .scratch-panel.sp-open { right: 0; }
+  .scratch-panel.sp-open { right: 24px; opacity: 1; pointer-events: auto; }
   .scratch-panel-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 12px; border-bottom: 0.5px solid rgba(74,158,232,0.14); flex-shrink: 0; }
   .scratch-panel-title { font-size: 13px; font-weight: 700; flex: 1; color: #e2eaf6; }
   .scratch-panel-saved { font-size: 10.5px; color: #4ae888; transition: color .2s; }
@@ -2726,16 +2729,18 @@
     .scratch-panel {
       right: 0 !important;
       top: auto !important;
-      bottom: calc(-80vh - env(safe-area-inset-bottom, 0px));
+      bottom: calc(-55vh - env(safe-area-inset-bottom, 0px));
       width: 100% !important;
       max-width: 100% !important;
       min-width: 0 !important;
-      height: 75vh;
-      border-left: none !important;
-      border-top: 0.5px solid var(--border-md);
+      min-height: 0 !important; max-height: none !important;
+      height: 50vh;
+      border-left: none !important; border-right: none !important; border-bottom: none !important;
+      border-top: 0.5px solid rgba(74,158,232,0.22) !important;
       border-radius: 20px 20px 0 0;
-      box-shadow: 0 -12px 48px rgba(0,0,0,0.45);
+      box-shadow: 0 -12px 48px rgba(0,0,0,0.55);
       transition: bottom .3s cubic-bezier(.16,1,.3,1) !important;
+      opacity: 1 !important; pointer-events: auto !important;
     }
     .scratch-panel.sp-open {
       right: 0 !important;
