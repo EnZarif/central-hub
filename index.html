@@ -2507,9 +2507,130 @@
   .task.task-is-focus { box-shadow: inset 3px 0 0 var(--amber); background: rgba(232,168,74,0.04) !important; }
   .task.task-is-next:hover, .task.task-is-focus:hover { opacity: 1 !important; }
 
-  /* ── Quick tasks inside bento ── */
-  .bento-qt-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 140px; }
+  /* ── Quick tasks inside bento (mockup style) ── */
+  .bento-qt-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 130px; }
   .bento-qt-empty { padding: 10px 14px; font-size: 11.5px; color: var(--text-3); }
+  .qt-bento-head { display: flex; align-items: center; gap: 8px; padding: 11px 14px 8px; }
+  .qt-bento-title { font-size: 12px; font-weight: 700; color: var(--green-text); flex: 1; display: flex; align-items: center; gap: 5px; }
+  .qt-bento-chip { font-size: 10.5px; color: var(--text-3); background: var(--surface2); padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+  .qt-add-bar { display: flex; align-items: center; gap: 8px; padding: 6px 13px; background: rgba(74,232,136,0.03); }
+  .qt-plus-icon { width: 20px; height: 20px; border-radius: 5px; background: rgba(74,232,136,0.13); border: 0.5px solid rgba(74,232,136,0.28); color: var(--green-text); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .qt-add-input { flex: 1; background: none; border: none; outline: none; font-family: inherit; font-size: 12.5px; color: var(--text); }
+  .qt-add-input::placeholder { color: var(--text-3); }
+
+  /* ── Mockup task filter row: tabs + hub pills inline ── */
+  .task-filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .task-tabs-pill { display: flex; align-items: center; gap: 2px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 9px; padding: 3px; flex-shrink: 0; }
+  .task-tabs-pill .tab { padding: 5px 14px; font-size: 12px; font-weight: 600; }
+  .task-hub-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+  .thp { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border-md); cursor: pointer; background: none; font-family: inherit; color: var(--text-3); transition: all .12s; display: flex; align-items: center; gap: 4px; }
+  .thp.active { background: var(--surface); color: var(--text); border-color: var(--border-md); }
+  .thp.thp-hd.active { background: var(--teal-bg); color: var(--teal-text); border-color: rgba(74,158,232,0.3); }
+  .thp.thp-pj.active { background: var(--amber-bg); color: var(--amber-text); border-color: rgba(232,168,74,0.3); }
+  .thp.thp-ps.active { background: var(--purple-bg); color: var(--purple-text); border-color: rgba(127,119,221,0.3); }
+
+  /* ── Scheduled tasks card (mockup format) ── */
+  .sched-card-m { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-lg); overflow: hidden; }
+  .sched-card-m-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px 8px; border-bottom: 0.5px solid var(--border); }
+  .sched-card-m-title { font-size: 11.5px; font-weight: 700; color: var(--text-2); flex: 1; display: flex; align-items: center; gap: 5px; }
+  .sched-card-m-count { font-size: 10.5px; color: var(--text-3); }
+  .sched-row-m { display: flex; align-items: center; padding: 7px 14px; border-bottom: 0.5px solid var(--border); cursor: default; transition: background .12s; }
+  .sched-row-m:last-child { border-bottom: none; }
+  .sched-row-m:hover { background: rgba(255,255,255,0.016); }
+  .sched-row-m.sr-next { background: rgba(74,158,232,0.04); }
+  .sched-row-m.sr-done .sched-task-name-m { text-decoration: line-through; color: var(--text-3); }
+  .sched-cb-m { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--border-md); background: none; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; color: transparent; transition: all .15s; padding: 0; font-family: inherit; margin-right: 8px; }
+  .sched-cb-m.on { background: var(--surface2); border-color: transparent; color: var(--text-3); }
+  .sched-time-m { width: 52px; font-size: 11px; font-weight: 600; color: var(--text-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .sched-row-m.sr-next .sched-time-m { color: var(--teal-text); }
+  .sched-div-m { width: 1px; height: 26px; background: var(--border-md); margin: 0 10px; flex-shrink: 0; }
+  .sched-row-m.sr-next .sched-div-m { background: rgba(74,158,232,0.3); }
+  .sched-dot-m { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-right: 8px; }
+  .sched-task-name-m { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--text); }
+  .sched-next-badge-m { font-size: 9.5px; font-weight: 700; background: var(--teal-bg); color: var(--teal-text); border: 0.5px solid rgba(74,158,232,0.25); border-radius: 4px; padding: 1px 6px; margin-left: 6px; flex-shrink: 0; }
+  .sched-hub-chip-m { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+  .sched-hub-chip-m.hd { background: var(--teal-bg); color: var(--teal-text); }
+  .sched-hub-chip-m.pj { background: var(--amber-bg); color: var(--amber-text); }
+  .sched-hub-chip-m.ps { background: var(--purple-bg); color: var(--purple-text); }
+
+  /* ── Hub task grid (3 columns: Helpdesk / Projects / Personal) ── */
+  .hub-task-grid-m { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 900px) { .hub-task-grid-m { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .hub-task-grid-m { grid-template-columns: 1fr; } }
+  .hub-task-card-m { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .hub-task-card-m::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 2.5px; }
+  .htcm-hd { border-color: rgba(74,158,232,0.22); background: linear-gradient(160deg, rgba(74,158,232,0.06) 0%, var(--surface) 56px); }
+  .htcm-hd::before { background: var(--teal); }
+  .htcm-pj { border-color: rgba(232,168,74,0.22); background: linear-gradient(160deg, rgba(232,168,74,0.06) 0%, var(--surface) 56px); }
+  .htcm-pj::before { background: var(--amber-text); }
+  .htcm-ps { border-color: rgba(127,119,221,0.22); background: linear-gradient(160deg, rgba(127,119,221,0.06) 0%, var(--surface) 56px); }
+  .htcm-ps::before { background: var(--purple-text); }
+  .htcm-head { display: flex; align-items: center; gap: 7px; padding: 11px 13px 9px; border-bottom: 0.5px solid var(--border); }
+  .htcm-lbl { font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; flex: 1; }
+  .htcm-hd .htcm-lbl { color: var(--teal-text); }
+  .htcm-pj .htcm-lbl { color: var(--amber-text); }
+  .htcm-ps .htcm-lbl { color: var(--purple-text); }
+  .htcm-stat { font-size: 10px; color: var(--text-3); font-weight: 600; }
+  .htcm-pgroup { display: flex; align-items: center; gap: 5px; padding: 5px 13px 2px; }
+  .htcm-pgroup-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .htcm-pgroup-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .htcm-pg-high .htcm-pgroup-dot { background: var(--coral-text); }
+  .htcm-pg-high .htcm-pgroup-lbl { color: rgba(240,120,120,0.7); }
+  .htcm-pg-med .htcm-pgroup-dot { background: var(--amber-text); }
+  .htcm-pg-med .htcm-pgroup-lbl { color: rgba(245,197,120,0.65); }
+  .htcm-pg-low .htcm-pgroup-dot { background: var(--border-md); }
+  .htcm-pg-low .htcm-pgroup-lbl { color: var(--text-3); }
+  .htcm-row { display: flex; align-items: center; gap: 8px; padding: 7px 13px; cursor: default; transition: background .12s; }
+  .htcm-row:hover { background: rgba(255,255,255,0.018); }
+  .htcm-cb { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--border-md); background: none; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; color: transparent; transition: all .15s; padding: 0; font-family: inherit; }
+  .htcm-cb:hover { border-color: var(--text-2); }
+  .htcm-cb.on { background: var(--surface2); border-color: transparent; color: var(--text-3); }
+  .htcm-name { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .htcm-row.htcm-done .htcm-name { text-decoration: line-through; color: var(--text-3); }
+  .htcm-row.htcm-is-next { background: rgba(74,158,232,0.05); box-shadow: inset 2px 0 0 var(--teal); }
+  .htcm-row.htcm-is-next:hover { background: rgba(74,158,232,0.09); }
+  .htcm-row.htcm-is-focus { background: rgba(232,168,74,0.05); box-shadow: inset 2px 0 0 var(--amber-text); }
+  .htcm-row.htcm-is-focus:hover { background: rgba(232,168,74,0.09); }
+  .htcm-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; white-space: nowrap; letter-spacing: .01em; }
+  .htcm-badge.badge-next { background: var(--teal-bg); color: var(--teal-text); border: 0.5px solid rgba(74,158,232,0.30); }
+  .htcm-badge.badge-focus { background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid rgba(232,168,74,0.30); }
+  .htcm-freq { font-size: 9.5px; color: var(--text-3); opacity: 0; transition: opacity .12s; white-space: nowrap; }
+  .htcm-row:hover .htcm-freq { opacity: 1; }
+  .htcm-foot { border-top: 0.5px solid var(--border); padding: 7px 13px; margin-top: auto; }
+  .htcm-add { background: none; border: none; font-family: inherit; font-size: 11px; color: var(--text-3); cursor: pointer; padding: 1px 0; display: flex; align-items: center; gap: 4px; transition: color .12s; }
+  .htcm-hd .htcm-add:hover { color: var(--teal-text); }
+  .htcm-pj .htcm-add:hover { color: var(--amber-text); }
+  .htcm-ps .htcm-add:hover { color: var(--purple-text); }
+
+  /* ── Mockup-style backlog section ── */
+  .backlog-section-m { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-lg); overflow: hidden; }
+  .backlog-toggle-m { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; transition: background .12s; user-select: none; }
+  .backlog-toggle-m:hover { background: rgba(255,255,255,0.02); }
+  .backlog-lbl-m { font-size: 12.5px; font-weight: 700; color: var(--text-2); flex: 1; }
+  .backlog-chip-m { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: rgba(232,168,74,0.12); color: var(--amber-text); border: 0.5px solid rgba(232,168,74,0.22); }
+  .backlog-caret-m { color: var(--text-3); font-size: 13px; transition: transform .2s; }
+  .backlog-caret-m.open { transform: rotate(90deg); }
+  .backlog-body-m { border-top: 0.5px solid var(--border); }
+  .backlog-item-m { border-bottom: 0.5px solid var(--border); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .backlog-item-m:last-child { border-bottom: none; }
+  .backlog-item-top-m { display: flex; align-items: center; gap: 8px; }
+  .backlog-item-name-m { flex: 1; font-size: 13px; font-weight: 600; }
+  .backlog-age-chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; background: rgba(232,168,74,0.09); color: var(--amber-text); border: 0.5px solid rgba(232,168,74,0.2); }
+  .backlog-age-chip.crit { background: rgba(232,88,88,0.09); color: var(--coral-text); border-color: rgba(232,88,88,0.2); }
+  .backlog-nudge-msg-m { font-size: 11.5px; color: var(--text-3); line-height: 1.45; }
+  .backlog-nudge-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .nudge-btn-m { font-family: inherit; font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 0.5px solid; transition: all .15s; }
+  .nudge-btn-m.nb-del { background: rgba(232,88,88,0.08); color: var(--coral-text); border-color: rgba(232,88,88,0.22); }
+  .nudge-btn-m.nb-del:hover { background: rgba(232,88,88,0.16); }
+  .nudge-btn-m.nb-plan { background: var(--teal-bg); color: var(--teal-text); border-color: rgba(74,158,232,0.25); }
+  .nudge-btn-m.nb-plan:hover { background: rgba(74,158,232,0.18); }
+  .nudge-btn-m.nb-snooze { background: none; color: var(--text-3); border-color: var(--border-md); }
+  .nudge-btn-m.nb-snooze:hover { color: var(--text-2); }
+
+  /* ── Scratchpad FAB: colored pencil (amber tint when closed, teal when open) ── */
+  .scratch-fab { color: var(--amber-text) !important; background: rgba(232,168,74,0.08) !important; border-color: rgba(232,168,74,0.25) !important; }
+  .scratch-fab:hover { color: var(--text) !important; background: var(--surface3) !important; border-color: var(--border-md) !important; transform: scale(1.08); }
+  .scratch-fab.sp-open { color: var(--teal-text) !important; background: var(--teal-bg) !important; border-color: rgba(74,158,232,0.45) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.22) !important; }
 
   /* ══════════════════════════════════════════════════════════════
      MOBILE BOTTOM TAB BAR  (iPhone 15 Pro — ≤760px)
@@ -3081,12 +3202,16 @@
           </div>
         </div>
 
-        <!-- Card 2: Quick tasks strip (replaces stats + qa-card) -->
+        <!-- Card 2: Quick tasks strip -->
         <div class="bento-card bento-qa-card" style="position:relative;">
-          <div style="position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,var(--green),rgba(74,232,136,0.08));border-radius:14px 14px 0 0;"></div>
-          <div class="slimh-qa" style="border-bottom:0.5px solid var(--border);padding:10px 14px;">
-            <i class="ti ti-bolt" style="color:var(--green-text);font-size:14px;"></i>
-            <input type="text" id="quick-task-input" class="slimh-qa-input" placeholder="What needs doing today? (Enter to add)" autocomplete="off"
+          <div style="position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,var(--green-text),rgba(74,232,136,0.08));border-radius:14px 14px 0 0;"></div>
+          <div class="qt-bento-head" style="border-bottom:0.5px solid var(--border);">
+            <span class="qt-bento-title"><i class="ti ti-bolt"></i> Quick tasks</span>
+            <span class="qt-bento-chip" id="qt-done-chip">0 of 0 done</span>
+          </div>
+          <div class="qt-add-bar" style="border-bottom:0.5px solid var(--border);">
+            <div class="qt-plus-icon">+</div>
+            <input type="text" id="quick-task-input" class="qt-add-input" placeholder="What needs doing today? Press Enter to add" autocomplete="off"
               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addQuickTaskFromInput();}">
           </div>
           <div id="qt-bento-list" class="bento-qt-list"></div>
@@ -3097,53 +3222,41 @@
           <span id="s-streak" style="display:none">0</span>
           <span id="s-streak-l" style="display:none">day streak</span>
           <div id="smart-sched-hint" style="display:none"><span id="smart-sched-chips"></span></div>
-          <div id="task-hub-filter-bar" style="display:none">
-            <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"></button>
-            <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"></button>
-            <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"></button>
-            <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"></button>
-            <div id="task-tag-filter-holder"></div>
-          </div>
           <div id="day-mode-banner" class="day-mode-banner" style="display:none;"></div>
         </div>
 
       </div>
     </div>
-    <div id="dash-upcoming" class="dash-upcoming" style="display:none;margin-bottom:12px" onclick="switchTab('date')"></div>
-
-    <div id="tasks-highlights"></div>
-    <div id="tasks-nextbest"></div>
-
-    <div id="today-banner" style="display:none" class="today-banner">
-      <i class="ti ti-calendar-event"></i>
-      <span id="banner-text"></span>
+    <!-- Mockup-style filter row: tabs + hub pills in one row -->
+    <div class="task-filter-row">
+      <div class="task-tabs-pill">
+        <button class="tab active" data-tab="today" onclick="switchTab('today')">⭐ Today</button>
+        <button class="tab" data-tab="daily" onclick="switchTab('daily')">☀️ Daily</button>
+        <button class="tab" data-tab="date" onclick="switchTab('date')">📅 Dates</button>
+        <button class="tab" data-tab="all" onclick="switchTab('all')">📋 All</button>
+      </div>
+      <div class="task-hub-pills" id="task-hub-pills-row">
+        <button class="thp active" data-hub="all" onclick="setTaskHubFilter('all')">All</button>
+        <button class="thp thp-hd" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')">📞 Helpdesk</button>
+        <button class="thp thp-pj" data-hub="projects" onclick="setTaskHubFilter('projects')">📁 Projects</button>
+        <button class="thp thp-ps" data-hub="personal" onclick="setTaskHubFilter('personal')">👤 Personal</button>
+      </div>
+      <!-- Keep hidden stat/filter elements JS still needs -->
+      <div id="task-hub-filter-bar" style="display:none">
+        <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"></button>
+        <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"></button>
+        <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"></button>
+        <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"></button>
+        <div id="task-tag-filter-holder"></div>
+      </div>
     </div>
 
-    <div class="tabs unified-nav">
-      <button class="check-tomorrow-btn tab-select-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()" title="Select multiple tasks to snooze or delete at once"><i class="ti ti-list-check"></i> Select</button>
-      <span class="unified-nav-sep"></span>
-      <button class="tab active" data-tab="today" onclick="switchTab('today')"><i class="ti ti-star"></i> Today</button>
-      <button class="tab" data-tab="daily" onclick="switchTab('daily')"><i class="ti ti-sun"></i> Daily</button>
-      <button class="tab" data-tab="weekly" onclick="switchTab('weekly')"><i class="ti ti-calendar-week"></i> Weekly</button>
-      <button class="tab" data-tab="monthly" onclick="switchTab('monthly')"><i class="ti ti-calendar-month"></i> Monthly</button>
-      <button class="tab" data-tab="date" onclick="switchTab('date')"><i class="ti ti-calendar-event"></i> By date</button>
-      <button class="tab" data-tab="all" onclick="switchTab('all')"><i class="ti ti-layout-list"></i> All</button>
-      <button class="tab" data-tab="calendar" onclick="switchTab('calendar')"><i class="ti ti-calendar-month"></i> Calendar</button>
-      <span style="flex:1"></span>
-      <span class="unified-nav-sep"></span>
-      <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
-    </div>
+    <!-- Today-tab containers (hidden for other tabs) -->
+    <div id="sched-card-container" style="display:none;"></div>
+    <div id="hub-task-grid-container" style="display:none;"></div>
+    <div id="backlog-container-m" style="display:none;"></div>
 
-    <!-- Hub filter bar (moved out of bento to below the tabs) -->
-    <div class="hub-filter-bar" id="task-hub-filter-bar-visible" style="margin-bottom:8px;">
-      <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
-      <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
-      <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
-      <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
-      <div id="task-tag-filter-holder-visible"></div>
-    </div>
-
-    <div id="due-soon-section"></div>
+    <!-- All/non-today tab list fallback -->
     <div id="list"></div>
 
     <div class="footer">
@@ -3157,9 +3270,6 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
         <button class="sidebar-tool-btn" style="padding:9px 0;font-size:12px;font-weight:700;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
         <button class="sidebar-tool-btn" style="padding:9px 0;font-size:12px;font-weight:700;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;background:var(--teal-bg);border-color:rgba(74,158,232,0.30);color:var(--teal-text);" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
-      </div>
-      <div class="sidebar-toolbar">
-        <button class="sidebar-tool-btn" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i>Reminder</button>
       </div>
       <div class="card amtek-card">
         <div class="amtek-card-hd">
@@ -5016,9 +5126,8 @@ function toggleFocusMode() {
 
 function setTaskHubFilter(hub) {
   taskHubFilter = hub;
-  document.querySelectorAll('.hub-pill').forEach(el => {
-    el.classList.toggle('active', el.dataset.hub === hub);
-  });
+  document.querySelectorAll('.hub-pill').forEach(el => el.classList.toggle('active', el.dataset.hub === hub));
+  document.querySelectorAll('.thp').forEach(el => el.classList.toggle('active', el.dataset.hub === hub));
   renderTasks();
 }
 
@@ -7274,6 +7383,147 @@ function isTaskStale(t) {
   return (Date.now() - taskCreatedMs(t)) > 14 * 24 * 60 * 60 * 1000;
 }
 function toggleBacklog() { _backlogOpen = !_backlogOpen; renderTasks(); }
+
+// ── Mockup-style backlog snooze (session-level; reappears next load) ──
+const _backlogSnoozed = new Set(JSON.parse(sessionStorage.getItem('blSnoozed') || '[]'));
+function backlogSnoozeTask(id) {
+  _backlogSnoozed.add(String(id));
+  sessionStorage.setItem('blSnoozed', JSON.stringify([..._backlogSnoozed]));
+  renderTasks();
+}
+
+// ── Render: Scheduled tasks card (timed tasks today) ──
+function renderSchedCardM(tasks) {
+  const el = document.getElementById('sched-card-container');
+  if (!el) return;
+  const timed = tasks.filter(t => t.time).sort((a,b) => timeToMin(a.time) - timeToMin(b.time));
+  if (!timed.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  const curMin = melbNowMinutes();
+  let nextId = null;
+  for (const t of timed) {
+    if (!isDone(t.id) && timeToMin(t.time) >= curMin) { nextId = String(t.id); break; }
+  }
+  const HUB_DOT = { helpdesk: 'var(--teal)', projects: 'var(--amber-text)', personal: 'var(--purple-text)' };
+  const HUB_CHIP = { helpdesk: ['hd','Helpdesk'], projects: ['pj','Projects'], personal: ['ps','Personal'] };
+  const rows = timed.map(t => {
+    const done = isDone(t.id);
+    const isNext = String(t.id) === nextId;
+    const hub = t.hub || 'helpdesk';
+    const dotColor = HUB_DOT[hub] || 'var(--teal)';
+    const [chipCls, chipLabel] = HUB_CHIP[hub] || ['hd','Helpdesk'];
+    return `<div class="sched-row-m${done?' sr-done':''}${isNext?' sr-next':''}">
+      <button class="sched-cb-m${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
+      <span class="sched-time-m">${fmtTime(t.time)}</span>
+      <div class="sched-div-m"></div>
+      <div class="sched-dot-m" style="background:${dotColor}"></div>
+      <span class="sched-task-name-m">${esc(t.name)}</span>
+      ${isNext ? '<span class="sched-next-badge-m">Next</span>' : ''}
+      <span class="sched-hub-chip-m ${chipCls}" style="margin-left:6px">${chipLabel}</span>
+    </div>`;
+  }).join('');
+  el.style.display = '';
+  el.innerHTML = `<div class="sched-card-m">
+    <div class="sched-card-m-head">
+      <span class="sched-card-m-title"><i class="ti ti-clock" style="font-size:13px"></i> Scheduled today</span>
+      <span class="sched-card-m-count">${timed.length} task${timed.length!==1?'s':''}</span>
+    </div>${rows}</div>`;
+}
+
+// ── Render: Hub task grid (3 columns) ──
+function renderHubTaskGridM(tasks) {
+  const el = document.getElementById('hub-task-grid-container');
+  if (!el) return;
+  const hubs = [
+    { id:'helpdesk', cls:'htcm-hd', lbl:'Helpdesk', icon:'ti-headset', addLbl:'+ Add helpdesk task' },
+    { id:'projects', cls:'htcm-pj', lbl:'Projects',  icon:'ti-folders', addLbl:'+ Add project task'  },
+    { id:'personal', cls:'htcm-ps', lbl:'Personal',  icon:'ti-user',    addLbl:'+ Add personal task' },
+  ];
+  const pGroups = [
+    { key:'HIGH',   cls:'htcm-pg-high', lbl:'High'   },
+    { key:'MEDIUM', cls:'htcm-pg-med',  lbl:'Normal' },
+    { key:'LOW',    cls:'htcm-pg-low',  lbl:'Low'    },
+  ];
+  const hubFilter = taskHubFilter !== 'all' ? taskHubFilter : null;
+  const visibleHubs = hubFilter ? hubs.filter(h => h.id === hubFilter) : hubs;
+  const cards = visibleHubs.map(hub => {
+    const hubTasks = tasks.filter(t => (t.hub || 'helpdesk') === hub.id);
+    const pending = hubTasks.filter(t => !isDone(t.id)).length;
+    let rows = '';
+    pGroups.forEach(pg => {
+      const group = hubTasks.filter(t => t.priority === pg.key)
+        .sort((a,b) => getOrder(a.id)-getOrder(b.id));
+      if (!group.length) return;
+      rows += `<div class="htcm-pgroup ${pg.cls}"><div class="htcm-pgroup-dot"></div><span class="htcm-pgroup-lbl">${pg.lbl}</span></div>`;
+      group.forEach(t => {
+        const done = isDone(t.id);
+        const isNext = _nextBestId !== null && String(t.id) === String(_nextBestId);
+        const isFocus = _highlightIds.has(String(t.id));
+        const badge = isNext ? `<span class="htcm-badge badge-next">⚡ Next up</span>`
+                    : isFocus ? `<span class="htcm-badge badge-focus">★ Today's focus</span>` : '';
+        const freqMap = { daily:'🔁', weekly:'📅 Weekly', monthly:'📅 Monthly', fortnightly:'📅 Fortnightly' };
+        const freqTag = freqMap[t.freq] ? `<span class="htcm-freq">${freqMap[t.freq]}</span>` : '';
+        const cls = ['htcm-row', done?'htcm-done':'', isNext?'htcm-is-next':'', isFocus?'htcm-is-focus':''].filter(Boolean).join(' ');
+        rows += `<div class="${cls}">
+          <button class="htcm-cb${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
+          <span class="htcm-name">${esc(t.name)}</span>
+          ${badge}${freqTag}
+        </div>`;
+      });
+    });
+    return `<div class="hub-task-card-m ${hub.cls}">
+      <div class="htcm-head">
+        <i class="ti ${hub.icon}" style="font-size:14px"></i>
+        <span class="htcm-lbl">${hub.lbl}</span>
+        <span class="htcm-stat">${pending} left</span>
+      </div>
+      ${rows || '<div style="padding:12px 13px;font-size:11.5px;color:var(--text-3)">No tasks today</div>'}
+      <div class="htcm-foot">
+        <button class="htcm-add" onclick="openAddTaskModal()"><i class="ti ti-plus"></i> ${hub.addLbl}</button>
+      </div>
+    </div>`;
+  });
+  el.style.display = '';
+  el.innerHTML = `<div class="hub-task-grid-m" style="${hubFilter?'grid-template-columns:1fr':''}">${cards.join('')}</div>`;
+}
+
+// ── Render: Mockup-style backlog section ──
+function renderBacklogM() {
+  const el = document.getElementById('backlog-container-m');
+  if (!el) return;
+  const stale = customTasks.filter(t => isTaskStale(t) && !_backlogSnoozed.has(String(t.id)));
+  if (!stale.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  const sorted = [...stale].sort((a,b) => taskCreatedMs(a)-taskCreatedMs(b));
+  const items = sorted.map(t => {
+    const age = Math.floor((Date.now()-taskCreatedMs(t))/86400000);
+    const ageCls = age > 21 ? 'crit' : '';
+    const msg = age > 30
+      ? "This task hasn't been actioned in over a month. Is it still relevant, or can it go?"
+      : "This crossed the 2-week mark. Commit to a date or remove it from your list.";
+    return `<div class="backlog-item-m">
+      <div class="backlog-item-top-m">
+        <span style="font-size:14px">⚠️</span>
+        <span class="backlog-item-name-m">${esc(t.name)}</span>
+        <span class="backlog-age-chip ${ageCls}">${age} days untouched</span>
+      </div>
+      <div class="backlog-nudge-msg-m">${msg}</div>
+      <div class="backlog-nudge-row">
+        <button class="nudge-btn-m nb-del" onclick="backlogDeleteTask('${t.id}')">Delete task</button>
+        <button class="nudge-btn-m nb-plan" onclick="openTaskEdit('${t.id}')">Update plan</button>
+        <button class="nudge-btn-m nb-snooze" onclick="backlogSnoozeTask('${t.id}')">Snooze 1 week</button>
+      </div>
+    </div>`;
+  }).join('');
+  el.style.display = '';
+  el.innerHTML = `<div class="backlog-section-m">
+    <div class="backlog-toggle-m" onclick="toggleBacklog()">
+      <span style="font-size:14px">📦</span>
+      <span class="backlog-lbl-m">Backlog</span>
+      <span class="backlog-chip-m">${stale.length} need${stale.length===1?'s':''} a decision</span>
+      <i class="ti ti-chevron-right backlog-caret-m${_backlogOpen?' open':''}"></i>
+    </div>
+    ${_backlogOpen ? `<div class="backlog-body-m">${items}</div>` : ''}
+  </div>`;
+}
 function backlogDoToday(id) {
   const t = customTasks.find(x => String(x.id) === String(id));
   if (!t) return;
@@ -7365,6 +7615,12 @@ function renderQuickTasksBento() {
   if (!el) return;
   const today = todayInputDate();
   const todayQ = quickTasks.filter(q => q.date === today);
+  // Update done chip
+  const chip = document.getElementById('qt-done-chip');
+  if (chip) {
+    const doneCount = todayQ.filter(q => q.done).length;
+    chip.textContent = `${doneCount} of ${todayQ.length} done`;
+  }
   if (!todayQ.length) {
     el.innerHTML = `<div class="bento-qt-empty">Nothing yet — type above and press Enter</div>`;
     return;
@@ -9044,9 +9300,6 @@ function animateGhostRing(el, pctEl, targetPct) {
 
 function renderTasks() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
-  renderDueSoon();
-  renderHighlightsBanner('tasks-highlights');
-  renderNextBestTask('tasks-nextbest');
   const fbtn = document.getElementById('focus-mode-btn');
   if (fbtn) fbtn.classList.toggle('active', focusMode);
   renderTaskTagFilter();
@@ -9076,135 +9329,37 @@ function renderTasks() {
   animateCount(document.getElementById('s-streak'), updateStreak(allDone));
   maybeFireConfetti(allDone, todayTotal);
 
-  const upEl = document.getElementById('dash-upcoming');
-  if (upEl) {
-    const today = todayInputDate();
-    const weekEnd = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate()+7));
-    const upcoming = getAllTasks()
-      .filter(t => t.freq === 'date' && t.date && t.date > today && t.date <= weekEnd && !isDone(t.id))
-      .sort((a,b) => a.date.localeCompare(b.date));
-    if (upcoming.length) {
-      const n = upcoming.length;
-      upEl.innerHTML = `<i class="ti ti-calendar-up"></i><span class="du-label">${n} task${n!==1?'s':''} due in the next 7 days</span>` +
-        `<span class="du-next">next: ${esc(upcoming[0].name)} · ${fmtShortDate(upcoming[0].date)}</span>`;
-      upEl.style.display = 'flex';
-    } else {
-      upEl.style.display = 'none';
-    }
-  }
-
-  const activeFilter = currentTab === 'today' ? statFilter : 'all';
-  document.getElementById('stat-all').classList.toggle('active', activeFilter === 'all');
-  document.getElementById('stat-done').classList.toggle('active', activeFilter === 'done');
-  document.getElementById('stat-high').classList.toggle('active', activeFilter === 'high');
-
   const remaining = todayTotal - todayDone;
-  document.getElementById('s-sub').textContent = remaining > 0 ? `${remaining} task${remaining!==1?'s':''} remaining today` : todayTotal > 0 ? 'All done for today!' : 'Nothing scheduled for today';
-
-  const banner = document.getElementById('today-banner');
-  if (currentTab === 'today' && todayDow === 1) {
-    banner.style.display = 'flex';
-    document.getElementById('banner-text').textContent = "It's Monday — your weekly Monday tasks are included below.";
-  } else { banner.style.display = 'none'; }
+  const subEl = document.getElementById('s-sub');
+  if (subEl) subEl.textContent = remaining > 0 ? `${remaining} task${remaining!==1?'s':''} remaining today` : todayTotal > 0 ? 'All done for today!' : 'Nothing scheduled for today';
 
   // Compute inline badge targets once per render pass
   _nextBestId = (() => { const nb = getNextBestTask(); return nb ? String(nb.id) : null; })();
   _highlightIds = new Set(getHighlightTasks().map(t => String(t.id)));
   renderQuickTasksBento();
 
-  let tasks, html = '';
+  // Show / hide the new Today containers vs the flat #list
+  const schedEl = document.getElementById('sched-card-container');
+  const hubEl   = document.getElementById('hub-task-grid-container');
+  const blEl    = document.getElementById('backlog-container-m');
+  const listEl  = document.getElementById('list');
+
   if (currentTab === 'today') {
-    tasks = todayTasks;
-    if (statFilter === 'done') tasks = tasks.filter(t => isDone(t.id));
-    else if (statFilter === 'high') tasks = tasks.filter(t => t.priority === 'HIGH');
-    const emptyMsg = statFilter === 'done' ? 'No completed tasks yet today.'
-      : statFilter === 'high' ? 'No high-priority tasks today.'
-      : 'No tasks for today.';
-    if (!tasks.length) { paintList(`<div class="empty">${emptyMsg}</div>`); return; }
+    if (listEl) listEl.style.display = 'none';
+    renderSchedCardM(todayTasks);
+    renderHubTaskGridM(todayTasks);
+    renderBacklogM();
+    return;
+  }
 
-    // Focus mode: hide everything except the next couple of pending tasks —
-    // for when the full grouped list feels like too much.
-    if (focusMode && statFilter === 'all') {
-      const pending = tasks.filter(t => !isDone(t.id));
-      const next = pending.slice().sort((a, b) => {
-        const aMin = a.time ? timeToMin(a.time) : 9999, bMin = b.time ? timeToMin(b.time) : 9999;
-        return (aMin - bMin) || (PO[a.priority] - PO[b.priority]);
-      }).slice(0, FOCUS_MODE_COUNT);
-      const hidden = pending.length - next.length;
-      let fHtml = `<div class="focus-mode-banner"><i class="ti ti-focus-2"></i> Focus mode — showing what's next${hidden > 0 ? `, ${hidden} more hidden` : ''}. <button onclick="toggleFocusMode()">Show all</button></div>`;
-      if (!next.length) {
-        fHtml += `<div class="empty">All done for today — nice work!</div>`;
-      } else {
-        next.forEach(t => { fHtml += taskHTML(t, true); });
-      }
-      paintList(fHtml);
-      return;
-    }
-    // quick tasks now live in the bento (qt-bento-list); nothing to prepend here
+  // Non-today tabs: hide new containers, show flat list
+  if (schedEl) schedEl.style.display = 'none';
+  if (hubEl)   hubEl.style.display   = 'none';
+  if (blEl)    blEl.style.display    = 'none';
+  if (listEl)  listEl.style.display  = '';
 
-    if (statFilter === 'done') {
-      // done filter: just show completed
-      tasks.forEach(t => { html += taskHTML(t, true); });
-    } else {
-      // Default today sort: pending timed → pending untimed → completed
-      const pendingTimed = tasks.filter(t => !isDone(t.id) && t.time)
-        .sort((a,b) => timeToMin(a.time) - timeToMin(b.time) || PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
-      const _staleIds = new Set(customTasks.filter(isTaskStale).map(t => String(t.id)));
-      const pendingUntimed = tasks.filter(t => !isDone(t.id) && !t.time && !_staleIds.has(String(t.id)))
-        .sort((a,b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
-      const completed = tasks.filter(t => isDone(t.id))
-        .sort((a,b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
-
-      if (pendingTimed.length) {
-        html += `<div class="freq-group-label"><i class="ti ti-clock"></i>Scheduled</div>`;
-        html += renderTimelineRail(pendingTimed);
-      }
-      if (pendingUntimed.length) {
-        html += `<div class="freq-group-label"><i class="ti ti-list"></i>Anytime</div>`;
-        pendingUntimed.forEach(t => { html += taskHTML(t, true); });
-      }
-      if (completed.length) {
-        html += `<div class="freq-group-label" style="opacity:0.5"><i class="ti ti-circle-check"></i>Completed</div>`;
-        completed.forEach(t => { html += taskHTML(t, true); });
-      }
-      // Drag-to-reschedule drop zone — always rendered on Today tab so it's available
-      // whenever the user is dragging; CSS hides it until body.is-dragging-task is set
-      html += `<div class="tomorrow-drop-zone"
-        ondragover="event.preventDefault(); this.classList.add('dz-over')"
-        ondragleave="this.classList.remove('dz-over')"
-        ondrop="event.preventDefault(); this.classList.remove('dz-over'); document.body.classList.remove('is-dragging-task'); rescheduleToTomorrow(_taskDragId); _taskDragId=null;">
-        <i class="ti ti-calendar-arrow-right"></i> Drop here to move to Tomorrow
-      </div>`;
-    }
-    // ── Backlog: stale untildone custom tasks (14+ days old) ──
-    const _staleBacklog = customTasks.filter(isTaskStale);
-    if (_staleBacklog.length) {
-      html += `<button class="backlog-toggle" onclick="toggleBacklog()">
-        <i class="ti ti-archive"></i> Backlog
-        <span class="backlog-count">${_staleBacklog.length}</span>
-        <span class="backlog-hint">— untouched 14+ days</span>
-        <i class="ti ti-chevron-${_backlogOpen ? 'up' : 'down'}" style="margin-left:auto;flex-shrink:0"></i>
-      </button>`;
-      if (_backlogOpen) {
-        html += `<div class="backlog-list">`;
-        [..._staleBacklog].sort((a, b) => taskCreatedMs(a) - taskCreatedMs(b)).forEach(t => {
-          const age = Math.floor((Date.now() - taskCreatedMs(t)) / 86400000);
-          html += `<div class="backlog-item">
-            <div class="backlog-item-body">
-              <span class="backlog-item-name">${esc(t.name)}</span>
-              <span class="backlog-item-age">${age}d old</span>
-            </div>
-            <div class="backlog-item-actions">
-              <button class="backlog-do-btn" onclick="backlogDoToday('${t.id}')">Do today</button>
-              <button class="backlog-del-btn" onclick="backlogDeleteTask('${t.id}')" title="Delete task"><i class="ti ti-trash"></i></button>
-            </div>
-          </div>`;
-        });
-        html += `<div class="backlog-footer"><button class="backlog-clear-btn" onclick="clearAllBacklog()"><i class="ti ti-trash"></i> Clear all (${_staleBacklog.length})</button></div>`;
-        html += `</div>`;
-      }
-    }
-  } else if (currentTab === 'date') {
+  let tasks, html = '';
+  if (currentTab === 'date') {
     const today = todayInputDate();
     const dated = getAllTasks().filter(t => t.freq === 'date' && t.date)
       .sort((a,b) => a.date.localeCompare(b.date) || PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
