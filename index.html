@@ -2510,6 +2510,133 @@
   /* ── Quick tasks inside bento ── */
   .bento-qt-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 140px; }
   .bento-qt-empty { padding: 10px 14px; font-size: 11.5px; color: var(--text-3); }
+
+  /* ══════════════════════════════════════════════════════════════
+     MOBILE BOTTOM TAB BAR  (iPhone 15 Pro — ≤760px)
+     iOS-style fixed tab bar with 5 destinations. Hidden on tablet+.
+     ══════════════════════════════════════════════════════════════ */
+  .mobile-bottom-bar { display: none; }
+
+  @media (max-width: 760px) {
+    /* ── Tab bar shell ── */
+    .mobile-bottom-bar {
+      display: flex;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 62;
+      background: rgba(22,26,29,0.92);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      backdrop-filter: blur(20px) saturate(160%);
+      border-top: 0.5px solid var(--border-md);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ── Tab buttons ── */
+    .mbb-btn {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px;
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      color: var(--text-3);
+      font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+      padding: 9px 4px 7px;
+      min-height: 54px;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.13s;
+    }
+    .mbb-btn i { font-size: 22px; display: block; transition: transform 0.13s; }
+    .mbb-btn:active i { transform: scale(0.85); }
+    .mbb-btn.mbb-active { color: var(--amber-text); }
+    .mbb-btn[data-mbb="more"] { color: var(--text-3); }
+    .mbb-btn[data-mbb="more"].mbb-active { color: var(--teal-text); }
+
+    /* ── Lift all bottom-anchored elements above the tab bar (54px) ── */
+    body {
+      padding-bottom: calc(54px + env(safe-area-inset-bottom, 0px));
+    }
+    .mobile-fab {
+      bottom: calc(18px + 54px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .pomo-float {
+      bottom: calc(16px + 54px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    /* When Pomodoro + FAB both visible, keep the pill above the FAB */
+    .pomo-float:not([style*="display: none"]):not([style*="display:none"]) {
+      bottom: calc(86px + 54px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .scratch-fab {
+      bottom: calc(20px + 54px + env(safe-area-inset-bottom, 0px));
+      right: 16px;
+    }
+    .undo-toast {
+      bottom: calc(16px + 54px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .bulk-action-bar {
+      bottom: calc(24px + 54px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── Scratchpad: bottom sheet on mobile ── */
+    .scratch-panel {
+      right: 0 !important;
+      top: auto !important;
+      bottom: calc(-80vh - env(safe-area-inset-bottom, 0px));
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      height: 75vh;
+      border-left: none !important;
+      border-top: 0.5px solid var(--border-md);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -12px 48px rgba(0,0,0,0.45);
+      transition: bottom .3s cubic-bezier(.16,1,.3,1) !important;
+    }
+    .scratch-panel.sp-open {
+      right: 0 !important;
+      bottom: 0 !important;
+    }
+    /* Drag handle pill at top of sheet */
+    .scratch-panel::before {
+      content: '';
+      display: block; flex-shrink: 0;
+      width: 36px; height: 4px;
+      background: var(--border-md);
+      border-radius: 2px;
+      margin: 10px auto 0;
+    }
+    .scratch-panel-ta { font-size: 16px; } /* prevent iOS auto-zoom */
+    /* On mobile the sheet sits above the bottom bar; textarea needs extra bottom padding */
+    .scratch-panel-foot {
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── iPad Pro 11 does NOT need these — handled by the 761-900 block ── */
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     IPAD PRO 11"  (portrait 834px — already in 761-900 tablet range)
+     Targeted touch-target and layout refinements for the 11" form factor.
+     ══════════════════════════════════════════════════════════════ */
+  @media (max-width: 900px) and (min-width: 761px) and (pointer: coarse) {
+    /* Larger tap targets for all task-row action buttons */
+    .task-ai-btn, .task-edit-btn, .task-del-btn { padding: 8px; font-size: 18px; }
+    .cb { width: 26px; height: 26px; border-radius: 8px; }
+    .cb i { font-size: 15px; }
+    /* Task rows: a bit more vertical breathing room */
+    .task { padding: 14px 16px; }
+    /* Quick task input — prevent iOS zoom */
+    #quick-task-input, input[type="text"], input[type="date"],
+    select, textarea { font-size: 16px !important; }
+    /* Bento ring — slightly larger on 11" */
+    .bento-prog-card { padding: 14px; }
+    /* Tab bar: slightly larger hit area */
+    .tab { padding: 10px 16px; font-size: 13px; }
+    /* Hub filter pills: more padding */
+    .hub-pill { padding: 7px 14px; font-size: 12px; }
+    /* Wrap horizontal padding: more room on 11" */
+    .wrap { padding: 1.75rem 1.75rem 4rem; }
+    /* Scratchpad panel stays as right-slide (not bottom sheet) — 30% of 834px = 250px, fine */
+    /* But raise bottom so it clears any iOS chrome */
+    .scratch-fab { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+    .scratch-panel { bottom: env(safe-area-inset-bottom, 0px); }
+  }
 </style>
 </head>
 <body>
@@ -2553,6 +2680,16 @@
   <button class="mobile-topbar-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
   <button class="mobile-theme-btn" onclick="toggleTheme()" aria-label="Cycle theme"><i class="ti ti-palette"></i></button>
 </header>
+
+<!-- iOS-style bottom tab bar — visible on ≤760px only -->
+<nav class="mobile-bottom-bar" id="mobile-bottom-bar" aria-label="Main navigation">
+  <button class="mbb-btn" data-mbb="home" onclick="showPage('home')" aria-label="Home"><i class="ti ti-home-2"></i>Home</button>
+  <button class="mbb-btn" data-mbb="tasks" onclick="showPage('tasks')" aria-label="Tasks"><i class="ti ti-checkbox"></i>Tasks</button>
+  <button class="mbb-btn" data-mbb="helpdesk" onclick="showPage('helpdesk')" aria-label="Helpdesk"><i class="ti ti-headset"></i>Helpdesk</button>
+  <button class="mbb-btn" data-mbb="projects" onclick="showPage('projects')" aria-label="Projects"><i class="ti ti-folders"></i>Projects</button>
+  <button class="mbb-btn" data-mbb="more" onclick="toggleMobileNav()" aria-label="More"><i class="ti ti-dots"></i>More</button>
+</nav>
+
 <div class="nav-scrim" id="nav-scrim" onclick="closeMobileNav()"></div>
 
 <nav class="nav">
@@ -8090,6 +8227,10 @@ function syncNavActive() {
   const activeNav = TOP_LEVEL.includes(currentPage) ? currentPage : currentHub;
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.page === activeNav));
   document.querySelectorAll('.nav-sublink').forEach(el => el.classList.toggle('active', el.dataset.sub === currentPage));
+  // Sync bottom tab bar active state
+  const mbbPages = ['home','tasks','helpdesk','projects'];
+  const mbbActive = mbbPages.includes(activeNav) ? activeNav : 'more';
+  document.querySelectorAll('.mbb-btn').forEach(el => el.classList.toggle('mbb-active', el.dataset.mbb === mbbActive));
 }
 
 function goBack() {
