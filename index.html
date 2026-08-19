@@ -2627,10 +2627,29 @@
   .nudge-btn-m.nb-snooze { background: none; color: var(--text-3); border-color: var(--border-md); }
   .nudge-btn-m.nb-snooze:hover { color: var(--text-2); }
 
-  /* ── Scratchpad FAB: colored pencil (amber tint when closed, teal when open) ── */
-  .scratch-fab { color: var(--amber-text) !important; background: rgba(232,168,74,0.08) !important; border-color: rgba(232,168,74,0.25) !important; }
-  .scratch-fab:hover { color: var(--text) !important; background: var(--surface3) !important; border-color: var(--border-md) !important; transform: scale(1.08); }
-  .scratch-fab.sp-open { color: var(--teal-text) !important; background: var(--teal-bg) !important; border-color: rgba(74,158,232,0.45) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.22) !important; }
+  /* ── Scratchpad FAB: solid amber pencil when closed, solid teal when open ── */
+  .scratch-fab { color: #1a0f00 !important; background: #e8a84a !important; border-color: #d4943a !important; box-shadow: 0 4px 18px rgba(232,168,74,0.45) !important; }
+  .scratch-fab:hover { filter: brightness(1.1); transform: scale(1.08); }
+  .scratch-fab.sp-open { color: #fff !important; background: var(--teal) !important; border-color: var(--teal) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.45) !important; }
+  /* ── Sidebar Add Job / Add Task: matching outlined buttons ── */
+  .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 0; font-size: 12px; font-weight: 700; border-radius: 9px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; }
+  .sidebar-action-btn.sab-job { background: none; border-color: var(--border-md); color: var(--text-2); }
+  .sidebar-action-btn.sab-job:hover { border-color: var(--text-2); color: var(--text); background: var(--surface2); }
+  .sidebar-action-btn.sab-task { background: var(--teal-bg); border-color: rgba(74,158,232,0.45); color: var(--teal-text); }
+  .sidebar-action-btn.sab-task:hover { background: rgba(74,158,232,0.15); border-color: rgba(74,158,232,0.65); }
+  /* ── Calendar shortcut button ── */
+  .task-cal-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 8px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; margin-left: auto; }
+  .task-cal-btn:hover { border-color: var(--text-2); color: var(--text); background: var(--surface2); }
+  /* ── Sched card: section labels + focus badge + unscheduled time + done name ── */
+  .sched-section-label-m { display: flex; align-items: center; gap: 6px; padding: 7px 14px 4px; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); border-bottom: 0.5px solid var(--border); }
+  .sched-time-unscheduled { color: var(--text-3) !important; font-style: italic; }
+  .sched-focus-badge-m { font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; background: var(--amber-bg); color: var(--amber-text); white-space: nowrap; flex-shrink: 0; }
+  .sched-row-m { cursor: pointer; }
+  .sched-row-m:hover { background: rgba(255,255,255,0.025); }
+  .sr-name-done { text-decoration: line-through; color: var(--text-3) !important; }
+  .sr-focus { background: rgba(232,168,74,0.04); }
+  /* ── Hub grid rows: pointer cursor ── */
+  .htcm-row { cursor: pointer; }
 
   /* ══════════════════════════════════════════════════════════════
      MOBILE BOTTOM TAB BAR  (iPhone 15 Pro — ≤760px)
@@ -3241,6 +3260,7 @@
         <button class="thp thp-pj" data-hub="projects" onclick="setTaskHubFilter('projects')">📁 Projects</button>
         <button class="thp thp-ps" data-hub="personal" onclick="setTaskHubFilter('personal')">👤 Personal</button>
       </div>
+      <button class="task-cal-btn" onclick="switchTab('date')" title="Upcoming dated tasks"><i class="ti ti-calendar-month"></i> Dates</button>
       <!-- Keep hidden stat/filter elements JS still needs -->
       <div id="task-hub-filter-bar" style="display:none">
         <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"></button>
@@ -3268,8 +3288,8 @@
     <div class="tasks-sidebar">
       <!-- Primary add buttons above the job list -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
-        <button class="sidebar-tool-btn" style="padding:9px 0;font-size:12px;font-weight:700;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
-        <button class="sidebar-tool-btn" style="padding:9px 0;font-size:12px;font-weight:700;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;background:var(--teal-bg);border-color:rgba(74,158,232,0.30);color:var(--teal-text);" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
+        <button class="sidebar-action-btn sab-job" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
+        <button class="sidebar-action-btn sab-task" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
       </div>
       <div class="card amtek-card">
         <div class="amtek-card-hd">
@@ -7392,41 +7412,63 @@ function backlogSnoozeTask(id) {
   renderTasks();
 }
 
-// ── Render: Scheduled tasks card (timed tasks today) ──
+// ── Render: Today task card (timed + untimed) ──
 function renderSchedCardM(tasks) {
   const el = document.getElementById('sched-card-container');
   if (!el) return;
-  const timed = tasks.filter(t => t.time).sort((a,b) => timeToMin(a.time) - timeToMin(b.time));
-  if (!timed.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
   const curMin = melbNowMinutes();
+  const timed = tasks.filter(t => t.time).sort((a,b) => timeToMin(a.time) - timeToMin(b.time));
+  const untimed = tasks.filter(t => !t.time).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
+  if (!timed.length && !untimed.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+
   let nextId = null;
   for (const t of timed) {
     if (!isDone(t.id) && timeToMin(t.time) >= curMin) { nextId = String(t.id); break; }
   }
-  const HUB_DOT = { helpdesk: 'var(--teal)', projects: 'var(--amber-text)', personal: 'var(--purple-text)' };
-  const HUB_CHIP = { helpdesk: ['hd','Helpdesk'], projects: ['pj','Projects'], personal: ['ps','Personal'] };
-  const rows = timed.map(t => {
+  const HUB_DOT  = { helpdesk:'var(--teal)', projects:'var(--amber-text)', personal:'var(--purple-text)' };
+  const HUB_CHIP = { helpdesk:['hd','Helpdesk'], projects:['pj','Projects'], personal:['ps','Personal'] };
+  const PRIO_CLR = { HIGH:'var(--coral-text)', MEDIUM:'var(--amber-text)', LOW:'var(--text-3)' };
+
+  function makeRow(t, showTime) {
     const done = isDone(t.id);
-    const isNext = String(t.id) === nextId;
+    const isNext  = String(t.id) === nextId;
+    const isFocus = _highlightIds.has(String(t.id));
     const hub = t.hub || 'helpdesk';
     const dotColor = HUB_DOT[hub] || 'var(--teal)';
     const [chipCls, chipLabel] = HUB_CHIP[hub] || ['hd','Helpdesk'];
-    return `<div class="sched-row-m${done?' sr-done':''}${isNext?' sr-next':''}">
+    const prioColor = done ? 'var(--border-md)' : (PRIO_CLR[t.priority] || 'var(--text-3)');
+    const timeLbl = showTime ? fmtTime(t.time) : '—';
+    const timeExtraCls = showTime ? '' : ' sched-time-unscheduled';
+    const badge = isNext  ? '<span class="sched-next-badge-m">⚡ Next</span>'
+                : isFocus ? '<span class="sched-focus-badge-m">★ Focus</span>' : '';
+    const rowCls = ['sched-row-m', done?'sr-done':'', isNext?'sr-next':'', isFocus?'sr-focus':''].filter(Boolean).join(' ');
+    return `<div class="${rowCls}" onclick="openTaskEdit('${t.id}')" style="border-left:2.5px solid ${prioColor}">
       <button class="sched-cb-m${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
-      <span class="sched-time-m">${fmtTime(t.time)}</span>
+      <span class="sched-time-m${timeExtraCls}">${timeLbl}</span>
       <div class="sched-div-m"></div>
       <div class="sched-dot-m" style="background:${dotColor}"></div>
-      <span class="sched-task-name-m">${esc(t.name)}</span>
-      ${isNext ? '<span class="sched-next-badge-m">Next</span>' : ''}
-      <span class="sched-hub-chip-m ${chipCls}" style="margin-left:6px">${chipLabel}</span>
+      <span class="sched-task-name-m${done?' sr-name-done':''}">${esc(t.name)}</span>
+      ${badge}
+      <span class="sched-hub-chip-m ${chipCls}">${chipLabel}</span>
     </div>`;
-  }).join('');
+  }
+
+  let html = '';
+  if (timed.length) {
+    html += `<div class="sched-section-label-m"><i class="ti ti-clock"></i> Scheduled</div>`;
+    timed.forEach(t => { html += makeRow(t, true); });
+  }
+  if (untimed.length) {
+    html += `<div class="sched-section-label-m"><i class="ti ti-list"></i> Anytime today</div>`;
+    untimed.forEach(t => { html += makeRow(t, false); });
+  }
+  const total = timed.length + untimed.length;
   el.style.display = '';
   el.innerHTML = `<div class="sched-card-m">
     <div class="sched-card-m-head">
-      <span class="sched-card-m-title"><i class="ti ti-clock" style="font-size:13px"></i> Scheduled today</span>
-      <span class="sched-card-m-count">${timed.length} task${timed.length!==1?'s':''}</span>
-    </div>${rows}</div>`;
+      <span class="sched-card-m-title"><i class="ti ti-calendar-today" style="font-size:13px"></i> Today's tasks</span>
+      <span class="sched-card-m-count">${total} task${total!==1?'s':''}</span>
+    </div>${html}</div>`;
 }
 
 // ── Render: Hub task grid (3 columns) ──
@@ -7463,7 +7505,8 @@ function renderHubTaskGridM(tasks) {
         const freqMap = { daily:'🔁', weekly:'📅 Weekly', monthly:'📅 Monthly', fortnightly:'📅 Fortnightly' };
         const freqTag = freqMap[t.freq] ? `<span class="htcm-freq">${freqMap[t.freq]}</span>` : '';
         const cls = ['htcm-row', done?'htcm-done':'', isNext?'htcm-is-next':'', isFocus?'htcm-is-focus':''].filter(Boolean).join(' ');
-        rows += `<div class="${cls}">
+        const prioClr = done ? 'transparent' : (t.priority==='HIGH'?'var(--coral-text)':t.priority==='MEDIUM'?'var(--amber-text)':'transparent');
+        rows += `<div class="${cls}" onclick="openTaskEdit('${t.id}')" style="border-left:2px solid ${prioClr}">
           <button class="htcm-cb${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
           <span class="htcm-name">${esc(t.name)}</span>
           ${badge}${freqTag}
