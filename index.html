@@ -561,7 +561,7 @@
 
   /* BENTO HEADER */
   .slim-header.bento-header { background: transparent; border: none; border-radius: 0; overflow: visible; padding: 0; margin-bottom: 0; }
-  .bento-row { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .bento-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; margin-bottom: 12px; }
   .bento-card { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 14px; overflow: hidden; }
   .bento-prog-card { padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: center; }
   .bento-ring { width: 58px !important; height: 58px !important; }
@@ -591,7 +591,7 @@
   .unified-nav::-webkit-scrollbar { display: none; }
   .unified-nav .tab { flex: none; padding: 7px 10px; font-size: 12px; border-radius: 8px; }
   .unified-nav-sep { width: 1px; height: 20px; background: var(--border-md); flex-shrink: 0; margin: 0 4px; }
-  @media (max-width: 680px) { .bento-row { grid-template-columns: 1fr 1fr; } .bento-qa-card { grid-column: 1 / -1; } .bento-prog-card { flex-direction: row; padding: 10px 12px; } .bento-ring { width: 38px !important; height: 38px !important; } .bento-ring-hole { width: 28px !important; height: 28px !important; } }
+  @media (max-width: 680px) { .bento-row { grid-template-columns: 1fr; } .bento-prog-card { flex-direction: row; padding: 10px 12px; } .bento-ring { width: 38px !important; height: 38px !important; } .bento-ring-hole { width: 28px !important; height: 28px !important; } }
 
   /* TABS */
   .today-banner { background: var(--teal-bg); border: 0.5px solid rgba(93,202,165,0.3); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--teal-text); font-weight: 500; }
@@ -2464,6 +2464,52 @@
     /* Very small phones: hub grid goes 1-column */
     .hub-grid { grid-template-columns: 1fr; }
   }
+
+  /* ── Floating scratchpad ── */
+  .scratch-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1001;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--surface2); border: 0.5px solid var(--border-md);
+    color: var(--text-2); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-family: inherit;
+    box-shadow: 0 4px 22px rgba(0,0,0,0.45);
+    transition: all .2s cubic-bezier(.16,1,.3,1);
+  }
+  .scratch-fab:hover { background: var(--surface3); color: var(--text); transform: scale(1.08); }
+  .scratch-fab.sp-open { background: var(--teal-bg); border-color: rgba(74,158,232,0.45); color: var(--teal-text); box-shadow: 0 4px 22px rgba(74,158,232,0.22); }
+  .scratch-panel {
+    position: fixed; right: -35%; top: 0; bottom: 0;
+    width: 30%; min-width: 280px; max-width: 460px;
+    background: var(--surface); border-left: 0.5px solid var(--border-md);
+    z-index: 1000; display: flex; flex-direction: column;
+    box-shadow: -12px 0 48px rgba(0,0,0,0.35);
+    transition: right .28s cubic-bezier(.16,1,.3,1);
+  }
+  .scratch-panel.sp-open { right: 0; }
+  .scratch-panel-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 12px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+  .scratch-panel-title { font-size: 13px; font-weight: 700; flex: 1; }
+  .scratch-panel-saved { font-size: 10.5px; color: var(--green-text); transition: color .2s; }
+  .scratch-panel-close { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 4px 7px; border-radius: 5px; font-size: 16px; transition: color .12s; font-family: inherit; line-height: 1; }
+  .scratch-panel-close:hover { color: var(--text); }
+  .scratch-panel-ta { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 13px; line-height: 1.65; padding: 16px 18px; resize: none; }
+  .scratch-panel-ta::placeholder { color: var(--text-3); }
+  .scratch-panel-foot { padding: 8px 16px; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .scratch-panel-chars { font-size: 10.5px; color: var(--text-3); }
+  .scratch-panel-clear { background: none; border: 0.5px solid var(--border-md); border-radius: 5px; color: var(--text-3); font-family: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer; transition: all .12s; }
+  .scratch-panel-clear:hover { color: var(--coral-text); border-color: rgba(232,88,88,0.28); }
+
+  /* ── Inline task highlight badges (next-best / today's-highlight) ── */
+  .task-inline-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 1.5px 6px; border-radius: 4px; vertical-align: middle; margin-left: 5px; letter-spacing: .02em; flex-shrink: 0; white-space: nowrap; }
+  .task-inline-badge.tib-next { background: var(--teal-bg); color: var(--teal-text); border: 0.5px solid rgba(74,158,232,0.30); }
+  .task-inline-badge.tib-focus { background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid rgba(232,168,74,0.30); }
+  .task.task-is-next { box-shadow: inset 3px 0 0 var(--teal); background: rgba(74,158,232,0.04) !important; }
+  .task.task-is-focus { box-shadow: inset 3px 0 0 var(--amber); background: rgba(232,168,74,0.04) !important; }
+  .task.task-is-next:hover, .task.task-is-focus:hover { opacity: 1 !important; }
+
+  /* ── Quick tasks inside bento ── */
+  .bento-qt-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 140px; }
+  .bento-qt-empty { padding: 10px 14px; font-size: 11.5px; color: var(--text-3); }
 </style>
 </head>
 <body>
@@ -2898,46 +2944,30 @@
           </div>
         </div>
 
-        <!-- Card 2: Stats 2×2 -->
-        <div class="bento-card bento-stats-card">
-          <button class="bstat" id="stat-done" onclick="setStatFilter('done')" title="Show completed tasks">
-            <div class="bstat-val" style="color:var(--green-text)"><span id="s-done">0</span></div>
-            <div class="bstat-label"><i class="ti ti-circle-check"></i> done</div>
-          </button>
-          <button class="bstat" id="stat-high" onclick="setStatFilter('high')" title="Show high-priority tasks">
-            <div class="bstat-val" style="color:var(--coral-text)"><span id="s-high">0</span></div>
-            <div class="bstat-label"><i class="ti ti-flame"></i> high</div>
-          </button>
-          <button class="bstat" id="stat-all" onclick="setStatFilter('all')" title="Show all of today's tasks">
-            <div class="bstat-val"><span id="s-total">0</span></div>
-            <div class="bstat-label"><i class="ti ti-list-check"></i> today</div>
-          </button>
-          <div class="bstat-no-btn">
-            <div class="bstat-val" style="color:var(--amber-text)"><span id="s-streak">0</span></div>
-            <div class="bstat-label"><i class="ti ti-bolt"></i> <span id="s-streak-l">day streak</span></div>
+        <!-- Card 2: Quick tasks strip (replaces stats + qa-card) -->
+        <div class="bento-card bento-qa-card" style="position:relative;">
+          <div style="position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,var(--green),rgba(74,232,136,0.08));border-radius:14px 14px 0 0;"></div>
+          <div class="slimh-qa" style="border-bottom:0.5px solid var(--border);padding:10px 14px;">
+            <i class="ti ti-bolt" style="color:var(--green-text);font-size:14px;"></i>
+            <input type="text" id="quick-task-input" class="slimh-qa-input" placeholder="What needs doing today? (Enter to add)" autocomplete="off"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addQuickTaskFromInput();}">
           </div>
-        </div>
-
-        <!-- Card 3: Quick-add + hub filter -->
-        <div class="bento-card bento-qa-card">
-          <div class="slimh-qa">
-            <i class="ti ti-bolt"></i>
-            <input type="text" id="quick-add-input" placeholder='Quick add — e.g. "Call vendor tomorrow 2pm high priority"' autocomplete="off" onkeydown="if(event.key==='Enter'){quickAddTask();}" oninput="onQuickAddInput()">
-            <button class="slimh-qa-btn" onclick="quickAddTask()" title="Add task"><i class="ti ti-plus"></i></button>
-          </div>
-          <div class="smart-sched-hint" id="smart-sched-hint">
-            <i class="ti ti-calendar-event"></i>
-            <span style="color:var(--text-3)">Light days:</span>
-            <span id="smart-sched-chips"></span>
-          </div>
-          <div class="hub-filter-bar" id="task-hub-filter-bar">
-            <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
-            <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
-            <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
-            <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
+          <div id="qt-bento-list" class="bento-qt-list"></div>
+          <!-- Stat elements kept hidden — still required by JS for counts & active-class toggling -->
+          <span id="stat-done" data-filter="done" style="display:none"><span id="s-done">0</span></span>
+          <span id="stat-high" data-filter="high" style="display:none"><span id="s-high">0</span></span>
+          <span id="stat-all" data-filter="all" style="display:none"><span id="s-total">0</span></span>
+          <span id="s-streak" style="display:none">0</span>
+          <span id="s-streak-l" style="display:none">day streak</span>
+          <div id="smart-sched-hint" style="display:none"><span id="smart-sched-chips"></span></div>
+          <div id="task-hub-filter-bar" style="display:none">
+            <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"></button>
+            <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"></button>
+            <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"></button>
+            <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"></button>
             <div id="task-tag-filter-holder"></div>
           </div>
-          <div id="day-mode-banner" class="day-mode-banner bento-dmb-strip"></div>
+          <div id="day-mode-banner" class="day-mode-banner" style="display:none;"></div>
         </div>
 
       </div>
@@ -2967,6 +2997,15 @@
       <button class="check-tomorrow-btn" onclick="openTomorrowModal()" title="Preview tomorrow's tasks and anything still until-done"><i class="ti ti-moon-stars"></i> Check tomorrow</button>
     </div>
 
+    <!-- Hub filter bar (moved out of bento to below the tabs) -->
+    <div class="hub-filter-bar" id="task-hub-filter-bar-visible" style="margin-bottom:8px;">
+      <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"><i class="ti ti-layout-grid"></i> All</button>
+      <button class="hub-pill hp-helpdesk" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')"><i class="ti ti-headset"></i> Helpdesk</button>
+      <button class="hub-pill hp-projects" data-hub="projects" onclick="setTaskHubFilter('projects')"><i class="ti ti-folders"></i> Projects</button>
+      <button class="hub-pill hp-personal" data-hub="personal" onclick="setTaskHubFilter('personal')"><i class="ti ti-user"></i> Personal</button>
+      <div id="task-tag-filter-holder-visible"></div>
+    </div>
+
     <div id="due-soon-section"></div>
     <div id="list"></div>
 
@@ -2977,10 +3016,13 @@
     </div>
 
     <div class="tasks-sidebar">
+      <!-- Primary add buttons above the job list -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
+        <button class="sidebar-tool-btn" style="padding:9px 0;font-size:12px;font-weight:700;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
+        <button class="sidebar-tool-btn" style="padding:9px 0;font-size:12px;font-weight:700;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;background:var(--teal-bg);border-color:rgba(74,158,232,0.30);color:var(--teal-text);" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
+      </div>
       <div class="sidebar-toolbar">
-        <button class="sidebar-tool-btn" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
         <button class="sidebar-tool-btn" onclick="openAddJobReminderModal()"><i class="ti ti-briefcase"></i>Reminder</button>
-        <button class="sidebar-tool-btn" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
       </div>
       <div class="card amtek-card">
         <div class="amtek-card-hd">
@@ -4855,14 +4897,18 @@ function getAllTaskTags() {
   return [...set].sort();
 }
 function renderTaskTagFilter() {
-  const holder = document.getElementById('task-tag-filter-holder');
-  if (!holder) return;
-  const tags = getAllTaskTags();
-  if (!tags.length) { holder.innerHTML = ''; return; }
-  holder.innerHTML = `<select class="hub-pill" id="task-tag-select" onchange="setTaskTagFilter(this.value)" style="padding:5px 10px;">
-    <option value="all">All tags</option>
-    ${tags.map(t => `<option value="${escAttr(t)}"${taskTagFilter === t ? ' selected' : ''}>#${esc(t)}</option>`).join('')}
-  </select>`;
+  const tagHtml = (() => {
+    const tags = getAllTaskTags();
+    if (!tags.length) return '';
+    return `<select class="hub-pill" onchange="setTaskTagFilter(this.value)" style="padding:5px 10px;">
+      <option value="all">All tags</option>
+      ${tags.map(t => `<option value="${escAttr(t)}"${taskTagFilter === t ? ' selected' : ''}>#${esc(t)}</option>`).join('')}
+    </select>`;
+  })();
+  ['task-tag-filter-holder', 'task-tag-filter-holder-visible'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = tagHtml;
+  });
 }
 function getAllTasks() {
   const all = [...TASKS, ...customTasks].map(t => taskOverrides[t.id] ? {...t, ...taskOverrides[t.id]} : t)
@@ -7176,6 +7222,23 @@ function renderQuickTasksCard() {
     ${itemsHtml}
   </div>`;
 }
+// Renders quick tasks into the bento card (replaces the old card-in-list approach)
+function renderQuickTasksBento() {
+  const el = document.getElementById('qt-bento-list');
+  if (!el) return;
+  const today = todayInputDate();
+  const todayQ = quickTasks.filter(q => q.date === today);
+  if (!todayQ.length) {
+    el.innerHTML = `<div class="bento-qt-empty">Nothing yet — type above and press Enter</div>`;
+    return;
+  }
+  el.innerHTML = todayQ.map(q => `<div class="qt-item">
+    <button class="qt-cb${q.done ? ' done' : ''}" onclick="toggleQuickTaskDone('${q.id}')"><i class="ti ti-check"></i></button>
+    <span class="qt-name${q.done ? ' done' : ''}">${esc(q.text)}</span>
+    <button class="qt-del" onclick="event.stopPropagation(); deleteQuickTask('${q.id}')" title="Remove"><i class="ti ti-trash"></i></button>
+  </div>`).join('');
+}
+
 function clearAllBacklog() {
   const stale = customTasks.filter(isTaskStale);
   if (!stale.length) return;
@@ -8266,8 +8329,17 @@ function switchTab(t) {
 const FREQ_ICONS = {daily:'ti-sun', weekly:'ti-calendar-week', fortnightly:'ti-calendar-week', monthly:'ti-calendar-month', once:'ti-calendar-event', date:'ti-calendar-event', untildone:'ti-clock-bolt'};
 const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', monthly:'Monthly', once:'Once', date:'By date', untildone:'Until done'};
 
+// Pre-computed IDs for the current render pass (set by renderTasks before the loop)
+let _nextBestId = null;
+let _highlightIds = new Set();
+
 function taskHTML(t, showFreqPill) {
   const d = isDone(t.id);
+  const isNext = !d && _nextBestId !== null && String(t.id) === String(_nextBestId);
+  const isFocus = !d && _highlightIds.has(String(t.id));
+  const nextBadge = isNext ? `<span class="task-inline-badge tib-next"><i class="ti ti-target-arrow"></i> Next up</span>` : '';
+  const focusBadge = isFocus ? `<span class="task-inline-badge tib-focus"><i class="ti ti-star"></i> Today's highlight</span>` : '';
+  const extraCls = isNext ? ' task-is-next' : isFocus ? ' task-is-focus' : '';
   const pCls = t.priority==='HIGH'?'p-high':t.priority==='MEDIUM'?'p-medium':'p-low';
   const bLbl = t.priority[0]+t.priority.slice(1).toLowerCase();
   const pills = t.assignees.map(a=>`<span class="pill${a==='Zarif'?' me':''}">${a}</span>`).join('');
@@ -8326,12 +8398,12 @@ function taskHTML(t, showFreqPill) {
     : '';
   const pinBtn = `<button class="task-move-btn${t.pinned?' pin-active':''}" title="${t.pinned?'Unpin':'Pin to top'}" onclick="event.stopPropagation(); toggleTaskPin('${t.id}')"><i class="ti ti-pin${t.pinned?'-filled':''}"></i></button>`;
   const pinIcon = t.pinned ? `<i class="ti ti-pin-filled task-pin-icon" title="Pinned"></i>` : '';
-  return `<div class="task ${pCls}${d?' done':''}${bulkSelected?' bulk-selected':''}" tabindex="0" onclick="${rowClick}" ondragover="taskDragOver(event,'${t.id}')" ondrop="taskDrop(event,'${t.id}')">
+  return `<div class="task ${pCls}${d?' done':''}${bulkSelected?' bulk-selected':''}${extraCls}" tabindex="0" onclick="${rowClick}" ondragover="taskDragOver(event,'${t.id}')" ondrop="taskDrop(event,'${t.id}')">
     ${bulkCb}
     ${dragHandle}
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
-      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span>${(t.autoEscalated && t.priority === 'HIGH') ? `<i class="ti ti-trending-up task-escalated-icon" title="Auto-escalated from Medium — overdue ${AUTO_ESCALATE_DAYS}+ days"></i>` : ''}</div>
+      <div class="trow1">${pinIcon}<span class="tname">${t.name}</span>${(t.autoEscalated && t.priority === 'HIGH') ? `<i class="ti ti-trending-up task-escalated-icon" title="Auto-escalated from Medium — overdue ${AUTO_ESCALATE_DAYS}+ days"></i>` : ''}${nextBadge}${focusBadge}</div>
       <div class="tmeta"><span class="tprio ${pCls}">${bLbl} priority</span>${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${tagChips}<div class="pills">${pills}</div></div>
       ${note}
     </div>
@@ -8894,6 +8966,11 @@ function renderTasks() {
     document.getElementById('banner-text').textContent = "It's Monday — your weekly Monday tasks are included below.";
   } else { banner.style.display = 'none'; }
 
+  // Compute inline badge targets once per render pass
+  _nextBestId = (() => { const nb = getNextBestTask(); return nb ? String(nb.id) : null; })();
+  _highlightIds = new Set(getHighlightTasks().map(t => String(t.id)));
+  renderQuickTasksBento();
+
   let tasks, html = '';
   if (currentTab === 'today') {
     tasks = todayTasks;
@@ -8902,8 +8979,7 @@ function renderTasks() {
     const emptyMsg = statFilter === 'done' ? 'No completed tasks yet today.'
       : statFilter === 'high' ? 'No high-priority tasks today.'
       : 'No tasks for today.';
-    const qtHtml = statFilter === 'all' ? renderQuickTasksCard() : '';
-    if (!tasks.length) { paintList(qtHtml + (qtHtml ? '' : `<div class="empty">${emptyMsg}</div>`)); return; }
+    if (!tasks.length) { paintList(`<div class="empty">${emptyMsg}</div>`); return; }
 
     // Focus mode: hide everything except the next couple of pending tasks —
     // for when the full grouped list feels like too much.
@@ -8914,7 +8990,7 @@ function renderTasks() {
         return (aMin - bMin) || (PO[a.priority] - PO[b.priority]);
       }).slice(0, FOCUS_MODE_COUNT);
       const hidden = pending.length - next.length;
-      let fHtml = qtHtml + `<div class="focus-mode-banner"><i class="ti ti-focus-2"></i> Focus mode — showing what's next${hidden > 0 ? `, ${hidden} more hidden` : ''}. <button onclick="toggleFocusMode()">Show all</button></div>`;
+      let fHtml = `<div class="focus-mode-banner"><i class="ti ti-focus-2"></i> Focus mode — showing what's next${hidden > 0 ? `, ${hidden} more hidden` : ''}. <button onclick="toggleFocusMode()">Show all</button></div>`;
       if (!next.length) {
         fHtml += `<div class="empty">All done for today — nice work!</div>`;
       } else {
@@ -8923,7 +8999,7 @@ function renderTasks() {
       paintList(fHtml);
       return;
     }
-    html += qtHtml;
+    // quick tasks now live in the bento (qt-bento-list); nothing to prepend here
 
     if (statFilter === 'done') {
       // done filter: just show completed
@@ -15463,6 +15539,70 @@ deleteCustomTask = function(id) {
     _origDeleteCustomTask.apply(this, arguments);
   }
 };
+
+// ===== FLOATING SCRATCHPAD =====
+(function initScratchpad() {
+  // Inject HTML
+  const fab = document.createElement('button');
+  fab.id = 'scratch-fab';
+  fab.className = 'scratch-fab';
+  fab.title = 'Scratchpad';
+  fab.innerHTML = '<i class="ti ti-pencil"></i>';
+  fab.onclick = toggleScratchpad;
+  document.body.appendChild(fab);
+
+  const panel = document.createElement('div');
+  panel.id = 'scratch-panel';
+  panel.className = 'scratch-panel';
+  panel.innerHTML = `
+    <div class="scratch-panel-head">
+      <span class="scratch-panel-title"><i class="ti ti-pencil" style="margin-right:5px;color:var(--teal-text)"></i>Scratchpad</span>
+      <span class="scratch-panel-saved" id="sp-saved">● saved</span>
+      <button class="scratch-panel-close" onclick="toggleScratchpad()" title="Close">✕</button>
+    </div>
+    <textarea class="scratch-panel-ta" id="sp-ta"
+      placeholder="Jot anything down — links, numbers, thoughts, follow-ups…&#10;&#10;Saves automatically and persists across sessions."
+      oninput="onScratchpadInput()"></textarea>
+    <div class="scratch-panel-foot">
+      <span class="scratch-panel-chars" id="sp-chars">0 chars</span>
+      <button class="scratch-panel-clear" onclick="clearScratchpad()">Clear</button>
+    </div>`;
+  document.body.appendChild(panel);
+
+  // Load persisted content
+  const saved = dbGet('zarif_scratchpad_note') || '';
+  const ta = document.getElementById('sp-ta');
+  if (ta) { ta.value = saved; document.getElementById('sp-chars').textContent = saved.length + ' chars'; }
+})();
+
+let _scratchOpen = false, _scratchTimer = null;
+function toggleScratchpad() {
+  _scratchOpen = !_scratchOpen;
+  document.getElementById('scratch-panel').classList.toggle('sp-open', _scratchOpen);
+  document.getElementById('scratch-fab').classList.toggle('sp-open', _scratchOpen);
+  if (_scratchOpen) setTimeout(() => { const ta = document.getElementById('sp-ta'); if (ta) ta.focus(); }, 260);
+}
+function onScratchpadInput() {
+  const ta = document.getElementById('sp-ta');
+  if (!ta) return;
+  const saved = document.getElementById('sp-saved');
+  document.getElementById('sp-chars').textContent = ta.value.length + ' chars';
+  if (saved) { saved.textContent = 'saving…'; saved.style.color = 'var(--text-3)'; }
+  clearTimeout(_scratchTimer);
+  _scratchTimer = setTimeout(() => {
+    dbSet('zarif_scratchpad_note', ta.value);
+    if (saved) { saved.textContent = '● saved'; saved.style.color = 'var(--green-text)'; }
+  }, 800);
+}
+function clearScratchpad() {
+  if (!confirm('Clear the scratchpad?')) return;
+  const ta = document.getElementById('sp-ta');
+  if (ta) ta.value = '';
+  document.getElementById('sp-chars').textContent = '0 chars';
+  const saved = document.getElementById('sp-saved');
+  if (saved) { saved.textContent = 'cleared'; saved.style.color = 'var(--text-3)'; }
+  dbSet('zarif_scratchpad_note', '');
+}
 
 // Button press feedback — subtle tap-down on any clickable control
 document.addEventListener('pointerdown', e => {
