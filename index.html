@@ -2539,8 +2539,9 @@
   .sched-row-m:hover { background: rgba(255,255,255,0.016); }
   .sched-row-m.sr-next { background: rgba(74,158,232,0.04); }
   .sched-row-m.sr-done .sched-task-name-m { text-decoration: line-through; color: var(--text-3); }
-  .sched-cb-m { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--border-md); background: none; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; color: transparent; transition: all .15s; padding: 0; font-family: inherit; margin-right: 8px; }
-  .sched-cb-m.on { background: var(--surface2); border-color: transparent; color: var(--text-3); }
+  .sched-cb-m { width: 21px; height: 21px; border-radius: 6px; border: 1.5px solid var(--border-md); background: none; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent; transition: all .15s; padding: 0; font-family: inherit; margin-right: 8px; }
+  .sched-cb-m:hover { border-color: var(--text-2); }
+  .sched-cb-m.on { background: var(--surface2); border-color: transparent; color: var(--text-3); font-weight: 700; }
   .sched-time-m { width: 52px; font-size: 11px; font-weight: 600; color: var(--text-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
   .sched-row-m.sr-next .sched-time-m { color: var(--teal-text); }
   .sched-div-m { width: 1px; height: 26px; background: var(--border-md); margin: 0 10px; flex-shrink: 0; }
@@ -2582,9 +2583,9 @@
   .htcm-pg-low .htcm-pgroup-lbl { color: var(--text-3); }
   .htcm-row { display: flex; align-items: center; gap: 8px; padding: 7px 13px; cursor: default; transition: background .12s; }
   .htcm-row:hover { background: rgba(255,255,255,0.018); }
-  .htcm-cb { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--border-md); background: none; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; color: transparent; transition: all .15s; padding: 0; font-family: inherit; }
+  .htcm-cb { width: 19px; height: 19px; border-radius: 5px; border: 1.5px solid var(--border-md); background: none; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; transition: all .15s; padding: 0; font-family: inherit; }
   .htcm-cb:hover { border-color: var(--text-2); }
-  .htcm-cb.on { background: var(--surface2); border-color: transparent; color: var(--text-3); }
+  .htcm-cb.on { background: var(--surface2); border-color: transparent; color: var(--text-3); font-weight: 700; }
   .htcm-name { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--text); line-height: 1.3; }
   .htcm-row.htcm-done .htcm-name { text-decoration: line-through; color: var(--text-3); }
   .htcm-row.htcm-is-next { background: rgba(74,158,232,0.05); box-shadow: inset 2px 0 0 var(--teal); }
@@ -2631,12 +2632,20 @@
   .scratch-fab { color: #1a0f00 !important; background: #e8a84a !important; border-color: #d4943a !important; box-shadow: 0 4px 18px rgba(232,168,74,0.45) !important; }
   .scratch-fab:hover { filter: brightness(1.1); transform: scale(1.08); }
   .scratch-fab.sp-open { color: #fff !important; background: var(--teal) !important; border-color: var(--teal) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.45) !important; }
-  /* ── Sidebar Add Job / Add Task: matching outlined buttons ── */
-  .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 0; font-size: 12px; font-weight: 700; border-radius: 9px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; }
-  .sidebar-action-btn.sab-job { background: none; border-color: var(--border-md); color: var(--text-2); }
-  .sidebar-action-btn.sab-job:hover { border-color: var(--text-2); color: var(--text); background: var(--surface2); }
-  .sidebar-action-btn.sab-task { background: var(--teal-bg); border-color: rgba(74,158,232,0.45); color: var(--teal-text); }
-  .sidebar-action-btn.sab-task:hover { background: rgba(74,158,232,0.15); border-color: rgba(74,158,232,0.65); }
+  /* ── Sidebar Add Task (primary) / Add Job (secondary) ── */
+  .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; font-size: 12.5px; font-weight: 700; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; }
+  .sidebar-action-btn.sab-task { background: var(--teal); border-color: var(--teal); color: #fff; box-shadow: 0 3px 12px rgba(74,158,232,0.35); }
+  .sidebar-action-btn.sab-task:hover { filter: brightness(1.1); }
+  .sidebar-action-btn.sab-job { background: rgba(245,164,73,0.1); border-color: rgba(245,164,73,0.45); color: #F5A449; }
+  .sidebar-action-btn.sab-job:hover { background: rgba(245,164,73,0.18); border-color: rgba(245,164,73,0.7); }
+  /* ── Show / hide done tasks toggle ── */
+  .show-done-btn { display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all .15s; flex-shrink: 0; }
+  .show-done-btn:hover { color: var(--text-2); border-color: var(--text-2); }
+  .show-done-btn.active { background: var(--surface2); color: var(--text-2); border-color: var(--border-md); }
+  /* ── Job list: denser, larger text in sidebar ── */
+  .jl-tab-panel .jl-name { font-size: 14.5px; }
+  .jl-tab-panel .jl-item { padding: 12px 12px 12px 15px; }
+  .jl-time-btn { padding: 4px 10px; font-size: 11.5px; }
   /* ── Calendar shortcut button ── */
   .task-cal-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 8px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; margin-left: auto; }
   .task-cal-btn:hover { border-color: var(--text-2); color: var(--text); background: var(--surface2); }
@@ -3181,7 +3190,7 @@
   <div class="page" id="page-notes">
     <div class="header">
       <div>
-        <h1><i class="ti ti-pencil" style="color:var(--pink-text);"></i> Personal Notes</h1>
+        <h1><span style="font-size:1.1em;vertical-align:middle;margin-right:4px">📝</span> Personal Notes</h1>
         <p>Grocery lists, errands, people to call — jot it down, then turn it into a personal task.</p>
       </div>
     </div>
@@ -3288,8 +3297,8 @@
     <div class="tasks-sidebar">
       <!-- Primary add buttons above the job list -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
-        <button class="sidebar-action-btn sab-job" onclick="openAddJobListModal()"><i class="ti ti-list-details"></i>Add job</button>
         <button class="sidebar-action-btn sab-task" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
+        <button class="sidebar-action-btn sab-job" onclick="openAddJobListModal()"><i class="ti ti-briefcase"></i>Add job</button>
       </div>
       <div class="card amtek-card">
         <div class="amtek-card-hd">
@@ -7404,6 +7413,9 @@ function isTaskStale(t) {
 }
 function toggleBacklog() { _backlogOpen = !_backlogOpen; renderTasks(); }
 
+let _showDone = false;
+function toggleShowDone() { _showDone = !_showDone; renderTasks(); }
+
 // ── Mockup-style backlog snooze (session-level; reappears next load) ──
 const _backlogSnoozed = new Set(JSON.parse(sessionStorage.getItem('blSnoozed') || '[]'));
 function backlogSnoozeTask(id) {
@@ -7417,9 +7429,11 @@ function renderSchedCardM(tasks) {
   const el = document.getElementById('sched-card-container');
   if (!el) return;
   const curMin = melbNowMinutes();
-  const timed = tasks.filter(t => t.time).sort((a,b) => timeToMin(a.time) - timeToMin(b.time));
-  const untimed = tasks.filter(t => !t.time).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
-  if (!timed.length && !untimed.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  const doneCount = tasks.filter(t => isDone(t.id)).length;
+  const visible = _showDone ? tasks : tasks.filter(t => !isDone(t.id));
+  const timed = visible.filter(t => t.time).sort((a,b) => timeToMin(a.time) - timeToMin(b.time));
+  const untimed = visible.filter(t => !t.time).sort((a,b) => PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
+  if (!timed.length && !untimed.length && !doneCount) { el.innerHTML = ''; el.style.display = 'none'; return; }
 
   let nextId = null;
   for (const t of timed) {
@@ -7463,12 +7477,14 @@ function renderSchedCardM(tasks) {
     untimed.forEach(t => { html += makeRow(t, false); });
   }
   const total = timed.length + untimed.length;
+  const doneBtnLabel = _showDone ? `Hide completed` : `Show completed (${doneCount})`;
   el.style.display = '';
   el.innerHTML = `<div class="sched-card-m">
     <div class="sched-card-m-head">
       <span class="sched-card-m-title"><i class="ti ti-calendar-today" style="font-size:13px"></i> Today's tasks</span>
-      <span class="sched-card-m-count">${total} task${total!==1?'s':''}</span>
-    </div>${html}</div>`;
+      <span class="sched-card-m-count" style="margin-right:8px">${total} task${total!==1?'s':''}</span>
+      ${doneCount > 0 ? `<button class="show-done-btn${_showDone?' active':''}" onclick="toggleShowDone()">${doneBtnLabel}</button>` : ''}
+    </div>${html || '<div style="padding:16px 14px;font-size:12px;color:var(--text-3)">All done for today 🎉</div>'}</div>`;
 }
 
 // ── Render: Hub task grid (3 columns) ──
@@ -7490,9 +7506,10 @@ function renderHubTaskGridM(tasks) {
   const cards = visibleHubs.map(hub => {
     const hubTasks = tasks.filter(t => (t.hub || 'helpdesk') === hub.id);
     const pending = hubTasks.filter(t => !isDone(t.id)).length;
+    const visibleHubTasks = _showDone ? hubTasks : hubTasks.filter(t => !isDone(t.id));
     let rows = '';
     pGroups.forEach(pg => {
-      const group = hubTasks.filter(t => t.priority === pg.key)
+      const group = visibleHubTasks.filter(t => t.priority === pg.key)
         .sort((a,b) => getOrder(a.id)-getOrder(b.id));
       if (!group.length) return;
       rows += `<div class="htcm-pgroup ${pg.cls}"><div class="htcm-pgroup-dot"></div><span class="htcm-pgroup-lbl">${pg.lbl}</span></div>`;
@@ -7519,7 +7536,7 @@ function renderHubTaskGridM(tasks) {
         <span class="htcm-lbl">${hub.lbl}</span>
         <span class="htcm-stat">${pending} left</span>
       </div>
-      ${rows || '<div style="padding:12px 13px;font-size:11.5px;color:var(--text-3)">No tasks today</div>'}
+      ${rows || `<div style="padding:12px 13px;font-size:11.5px;color:var(--text-3)">${pending > 0 && !_showDone ? `${pending} completed — <button style="background:none;border:none;color:var(--teal-text);cursor:pointer;font-size:11.5px;padding:0;font-family:inherit" onclick="toggleShowDone()">show</button>` : 'No tasks today'}</div>`}
       <div class="htcm-foot">
         <button class="htcm-add" onclick="openAddTaskModal()"><i class="ti ti-plus"></i> ${hub.addLbl}</button>
       </div>
@@ -15886,7 +15903,7 @@ deleteCustomTask = function(id) {
   fab.id = 'scratch-fab';
   fab.className = 'scratch-fab';
   fab.title = 'Scratchpad';
-  fab.innerHTML = '<i class="ti ti-pencil"></i>';
+  fab.innerHTML = '<span style="font-size:19px;line-height:1;display:block">✏️</span>';
   fab.onclick = toggleScratchpad;
   document.body.appendChild(fab);
 
