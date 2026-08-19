@@ -753,6 +753,30 @@
   .quick-add-bar input { flex: 1; background: none; border: none; outline: none; font-family: inherit; font-size: 13px; color: var(--text); min-width: 0; }
   .quick-add-bar button { flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--border-md); background: var(--teal-bg); color: var(--teal-text); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: background 0.15s, color 0.15s; }
   .quick-add-bar button:hover { background: var(--teal); color: #fff; }
+  /* ── Add-task modal details toggle ── */
+  .ct-details-toggle { display: flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text-3); font-family: inherit; font-size: 12px; cursor: pointer; padding: 4px 0 8px; width: 100%; transition: color 0.12s; }
+  .ct-details-toggle:hover { color: var(--text-2); }
+  .ct-details-toggle i { font-size: 11px; }
+  #ct-details .queue-block:first-child { margin-top: 4px; }
+  /* ── Backlog section ── */
+  .backlog-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 9px 13px; border-radius: 8px; background: var(--surface); border: 0.5px solid var(--border-md); margin-top: 14px; font-size: 12.5px; font-weight: 600; color: var(--text-3); transition: color 0.12s, background 0.12s; width: 100%; text-align: left; font-family: inherit; }
+  .backlog-toggle:hover { color: var(--text-2); background: var(--surface2); }
+  .backlog-count { font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--text-3); border-radius: 8px; padding: 1px 7px; border: 0.5px solid var(--border-md); }
+  .backlog-hint { font-size: 11px; font-weight: 400; color: var(--text-3); opacity: 0.7; }
+  .backlog-list { display: flex; flex-direction: column; gap: 3px; padding: 4px 0 2px; }
+  .backlog-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface); border-radius: 7px; border: 0.5px solid var(--border); opacity: 0.65; transition: opacity 0.12s; }
+  .backlog-item:hover { opacity: 1; }
+  .backlog-item-body { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; overflow: hidden; }
+  .backlog-item-name { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .backlog-item-age { flex-shrink: 0; font-size: 10px; color: var(--text-3); background: var(--surface2); border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+  .backlog-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .backlog-do-btn { background: var(--teal-bg); border: 0.5px solid rgba(74,158,232,0.25); color: var(--teal-text); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 5px; cursor: pointer; font-family: inherit; transition: background 0.12s; white-space: nowrap; }
+  .backlog-do-btn:hover { background: rgba(74,158,232,0.18); }
+  .backlog-del-btn { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 3px 6px; border-radius: 5px; transition: color 0.12s, background 0.12s; }
+  .backlog-del-btn:hover { color: #E05858 !important; background: rgba(224,88,88,0.1); }
+  .backlog-footer { display: flex; justify-content: flex-end; padding: 4px 0 2px; }
+  .backlog-clear-btn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 11px; padding: 3px 8px; border-radius: 5px; font-family: inherit; transition: color 0.12s; }
+  .backlog-clear-btn:hover { color: #E05858; }
 
   /* ── Bulk select + drag-to-reorder ── */
   .bulk-cb { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border-md); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: transparent; transition: all 0.15s; align-self: flex-start; margin-top: 2px; }
@@ -4100,49 +4124,52 @@
 <div class="kpi-modal-overlay" id="add-task-modal-overlay">
   <div class="kpi-modal">
     <div class="kpi-modal-header">
-      <strong>Add your own task</strong>
+      <strong>Add task</strong>
       <button class="icon-btn" onclick="closeAddTaskModal()"><i class="ti ti-x"></i></button>
     </div>
     <div class="kpi-modal-preview">
       <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Task name</div>
-        <input class="field-input" id="ct-name" placeholder="e.g. Check Xero invoices">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">What needs to be done?</div>
+        <input class="field-input" id="ct-name" placeholder='e.g. "Ask manager about roster"' onkeydown="if(event.key==='Enter'&&!event.shiftKey){addCustomTask();closeAddTaskModal();}">
       </div>
-      <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Priority</div>
-        <select class="field-input" id="ct-priority">
-          <option value="HIGH">High</option>
-          <option value="MEDIUM" selected>Medium</option>
-          <option value="LOW">Low</option>
-        </select>
-      </div>
-      <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Frequency</div>
-        <select class="field-input" id="ct-freq" onchange="renderCustomTaskDayField()">
-          <option value="untildone">Until completion</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="date">On a date</option>
-          <option value="once">Once (today only)</option>
-        </select>
-      </div>
-      <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Hub</div>
-        <select class="field-input" id="ct-hub">
-          <option value="helpdesk">Helpdesk</option>
-          <option value="projects">Projects</option>
-          <option value="personal">Personal</option>
-        </select>
-      </div>
-      <div class="queue-block" id="ct-day-wrap"></div>
-      <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due by time <span style="font-weight:400;">(optional)</span></div>
-        <div id="ct-time-holder"></div>
-      </div>
-      <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Tags <span style="font-weight:400;">(comma-separated, optional)</span></div>
-        <input class="field-input" id="ct-tags" placeholder="e.g. ANZ, urgent">
+      <button class="ct-details-toggle" id="ct-details-btn" onclick="toggleCtDetails()"><i class="ti ti-chevron-down"></i> More options</button>
+      <div id="ct-details" style="display:none">
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Priority</div>
+          <select class="field-input" id="ct-priority">
+            <option value="HIGH">High</option>
+            <option value="MEDIUM" selected>Medium</option>
+            <option value="LOW">Low</option>
+          </select>
+        </div>
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Frequency</div>
+          <select class="field-input" id="ct-freq" onchange="renderCustomTaskDayField()">
+            <option value="untildone">Until completion</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="date">On a date</option>
+            <option value="once">Once (today only)</option>
+          </select>
+        </div>
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Hub</div>
+          <select class="field-input" id="ct-hub">
+            <option value="helpdesk">Helpdesk</option>
+            <option value="projects">Projects</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
+        <div class="queue-block" id="ct-day-wrap"></div>
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Due by time <span style="font-weight:400;">(optional)</span></div>
+          <div id="ct-time-holder"></div>
+        </div>
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Tags <span style="font-weight:400;">(comma-separated, optional)</span></div>
+          <input class="field-input" id="ct-tags" placeholder="e.g. ANZ, urgent">
+        </div>
       </div>
     </div>
     <div class="kpi-modal-actions">
@@ -4769,6 +4796,7 @@ function settleRecurringStreaks() {
 let taskHubFilter = 'all';
 const FOCUS_MODE_COUNT = 2;
 let focusMode = false;
+let _backlogOpen = false;
 function toggleFocusMode() {
   focusMode = !focusMode;
   dbSet('zarif_focus_mode', focusMode);
@@ -6926,9 +6954,26 @@ function closeTaskEditModal() {
   editingTaskId = null;
 }
 
+function toggleCtDetails() {
+  const el = document.getElementById('ct-details');
+  const btn = document.getElementById('ct-details-btn');
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : '';
+  if (btn) btn.innerHTML = open ? '<i class="ti ti-chevron-down"></i> More options' : '<i class="ti ti-chevron-up"></i> Fewer options';
+}
 function openAddTaskModal() {
   renderCustomTaskDayField();
+  const nameEl = document.getElementById('ct-name');
+  if (nameEl) nameEl.value = '';
+  const tagsEl = document.getElementById('ct-tags');
+  if (tagsEl) tagsEl.value = '';
+  const details = document.getElementById('ct-details');
+  if (details) details.style.display = 'none';
+  const dtBtn = document.getElementById('ct-details-btn');
+  if (dtBtn) dtBtn.innerHTML = '<i class="ti ti-chevron-down"></i> More options';
   document.getElementById('add-task-modal-overlay').classList.add('active');
+  setTimeout(() => nameEl && nameEl.focus(), 80);
 }
 function closeAddTaskModal() {
   document.getElementById('add-task-modal-overlay').classList.remove('active');
@@ -7001,6 +7046,38 @@ function isToday(task) {
   if (task.freq === 'untildone') return !isDone(task.id);
   return false;
 }
+
+// ===== BACKLOG — stale untildone custom tasks =====
+function taskCreatedMs(t) {
+  const raw = String(t.id).replace(/^[a-z]+/, '');
+  const ms = parseInt(raw, 10);
+  return isNaN(ms) ? 0 : ms;
+}
+function isTaskStale(t) {
+  if (!t.custom || isDone(t.id) || t.freq !== 'untildone') return false;
+  return (Date.now() - taskCreatedMs(t)) > 14 * 24 * 60 * 60 * 1000;
+}
+function toggleBacklog() { _backlogOpen = !_backlogOpen; renderTasks(); }
+function backlogDoToday(id) {
+  const t = customTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  t.freq = 'once'; t.date = todayInputDate();
+  saveCustomTasks(); renderTasks();
+}
+function backlogDeleteTask(id) { deleteCustomTask(id); renderTasks(); }
+function clearAllBacklog() {
+  const stale = customTasks.filter(isTaskStale);
+  if (!stale.length) return;
+  if (!confirm(`Delete all ${stale.length} backlog task${stale.length !== 1 ? 's' : ''}? This can't be undone.`)) return;
+  stale.forEach(t => {
+    customTasks = customTasks.filter(x => x.id !== t.id);
+    delete done[taskKey(t.id)];
+    delete taskOverrides[t.id];
+  });
+  saveCustomTasks(); saveTaskOverrides();
+  _backlogOpen = false; renderTasks();
+}
+
 // Format ISO timestamp → "18 Jun · 2:34 pm"
 function fmtTs(iso) {
   if (!iso) return '';
@@ -8740,7 +8817,8 @@ function renderTasks() {
       // Default today sort: pending timed → pending untimed → completed
       const pendingTimed = tasks.filter(t => !isDone(t.id) && t.time)
         .sort((a,b) => timeToMin(a.time) - timeToMin(b.time) || PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
-      const pendingUntimed = tasks.filter(t => !isDone(t.id) && !t.time)
+      const _staleIds = new Set(customTasks.filter(isTaskStale).map(t => String(t.id)));
+      const pendingUntimed = tasks.filter(t => !isDone(t.id) && !t.time && !_staleIds.has(String(t.id)))
         .sort((a,b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
       const completed = tasks.filter(t => isDone(t.id))
         .sort((a,b) => PO[a.priority] - PO[b.priority] || getOrder(a.id) - getOrder(b.id));
@@ -8765,6 +8843,34 @@ function renderTasks() {
         ondrop="event.preventDefault(); this.classList.remove('dz-over'); document.body.classList.remove('is-dragging-task'); rescheduleToTomorrow(_taskDragId); _taskDragId=null;">
         <i class="ti ti-calendar-arrow-right"></i> Drop here to move to Tomorrow
       </div>`;
+    }
+    // ── Backlog: stale untildone custom tasks (14+ days old) ──
+    const _staleBacklog = customTasks.filter(isTaskStale);
+    if (_staleBacklog.length) {
+      html += `<button class="backlog-toggle" onclick="toggleBacklog()">
+        <i class="ti ti-archive"></i> Backlog
+        <span class="backlog-count">${_staleBacklog.length}</span>
+        <span class="backlog-hint">— untouched 14+ days</span>
+        <i class="ti ti-chevron-${_backlogOpen ? 'up' : 'down'}" style="margin-left:auto;flex-shrink:0"></i>
+      </button>`;
+      if (_backlogOpen) {
+        html += `<div class="backlog-list">`;
+        [..._staleBacklog].sort((a, b) => taskCreatedMs(a) - taskCreatedMs(b)).forEach(t => {
+          const age = Math.floor((Date.now() - taskCreatedMs(t)) / 86400000);
+          html += `<div class="backlog-item">
+            <div class="backlog-item-body">
+              <span class="backlog-item-name">${esc(t.name)}</span>
+              <span class="backlog-item-age">${age}d old</span>
+            </div>
+            <div class="backlog-item-actions">
+              <button class="backlog-do-btn" onclick="backlogDoToday('${t.id}')">Do today</button>
+              <button class="backlog-del-btn" onclick="backlogDeleteTask('${t.id}')" title="Delete task"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>`;
+        });
+        html += `<div class="backlog-footer"><button class="backlog-clear-btn" onclick="clearAllBacklog()"><i class="ti ti-trash"></i> Clear all (${_staleBacklog.length})</button></div>`;
+        html += `</div>`;
+      }
     }
   } else if (currentTab === 'date') {
     const today = todayInputDate();
