@@ -6926,8 +6926,7 @@ function renderEscSidebar() {
         <div class="esc-item-body">
           <div class="esc-item-name">${h(item.name)}</div>
           <div class="esc-item-meta">
-            ${item.jobId ? `<span class="esc-job-id">${h(item.jobId)}</span>` : ''}
-            ${item.subj  ? `<span class="esc-subject">${h(item.subj)}</span>` : ''}
+            ${item.subj ? `<span class="esc-subject">${h(item.subj)}</span>` : ''}
           </div>
         </div>
         <div class="esc-item-actions" onclick="event.stopPropagation()">
