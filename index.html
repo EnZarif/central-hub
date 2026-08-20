@@ -6912,11 +6912,14 @@ function renderEscSidebar() {
   function h(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   list.innerHTML = escItems.map(item => {
-    const notesOpen = escNotesOpen === item.id;
-    const hasNotes  = !!(item.notes && item.notes.trim());
+    const notesOpen  = escNotesOpen === item.id;
+    const hasNotes   = !!(item.notes && item.notes.trim());
+    const hasUrl     = !!(item.jobId);
+    const rowClick   = hasUrl ? `onclick="escOpenUrl('${h(item.jobId)}','${h(item.name)}')"` : '';
+    const rowCursor  = hasUrl ? ' style="cursor:pointer"' : '';
     return `<div class="esc-item${item.done ? ' esc-done' : ''}" id="esc-item-${item.id}">
-      <div class="esc-item-main">
-        <div class="esc-cb-wrap">
+      <div class="esc-item-main" ${rowClick}${rowCursor}>
+        <div class="esc-cb-wrap" onclick="event.stopPropagation()">
           <input type="checkbox" class="esc-cb" ${item.done ? 'checked' : ''}
             onchange="escToggleDone(${item.id}, this.checked)">
         </div>
@@ -6927,13 +6930,10 @@ function renderEscSidebar() {
             ${item.subj  ? `<span class="esc-subject">${h(item.subj)}</span>` : ''}
           </div>
         </div>
-        <div class="esc-item-actions">
+        <div class="esc-item-actions" onclick="event.stopPropagation()">
           <button class="esc-note-btn${hasNotes ? ' has-notes' : ''}"
             onclick="escToggleNotes(${item.id})"
             title="${hasNotes ? 'View / edit notes' : 'Add notes'}">✎</button>
-          <button class="esc-url-btn"
-            onclick="escOpenUrl('${h(item.jobId)}','${h(item.name)}')"
-            title="Open job link">↗</button>
         </div>
       </div>
       <div class="esc-notes-panel${notesOpen ? ' open' : ''}">
