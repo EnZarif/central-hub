@@ -1939,6 +1939,70 @@
   .amtek-proj-subhd { display: flex; align-items: center; gap: 6px; padding: 8px 14px 0; }
   .kpi-modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
 
+  /* EMAIL ESCALATION CARD */
+  .esc-card { position: relative; overflow: hidden; }
+  .esc-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, #E05858, rgba(224,88,88,0.15)); border-radius: var(--radius-lg) var(--radius-lg) 0 0; pointer-events: none; }
+  .esc-hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px 10px; cursor: pointer; user-select: none; border-bottom: 0.5px solid var(--border); transition: background .12s; }
+  .esc-hd:hover { background: rgba(255,255,255,0.02); }
+  .esc-hd-icon { width: 22px; height: 22px; border-radius: 6px; background: var(--coral-bg); border: 0.5px solid rgba(224,88,88,0.22); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--coral-text); flex-shrink: 0; }
+  .esc-hd-title { font-size: 12.5px; font-weight: 700; color: var(--text); flex: 1; }
+  .esc-count-chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: var(--coral-bg); border: 0.5px solid rgba(224,88,88,0.22); color: var(--coral-text); flex-shrink: 0; }
+  .esc-caret { font-size: 13px; color: var(--text-3); transition: transform .2s; flex-shrink: 0; line-height: 1; }
+  .esc-caret.open { transform: rotate(90deg); }
+  .esc-body { display: none; }
+  .esc-body.open { display: block; }
+  .esc-add-row { display: flex; align-items: center; padding: 8px 14px; border-bottom: 0.5px solid var(--border); }
+  .esc-add-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 7px; background: var(--coral-bg); border: 0.5px solid rgba(224,88,88,0.22); color: var(--coral-text); font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .15s; }
+  .esc-add-btn:hover { background: rgba(224,88,88,0.16); border-color: rgba(224,88,88,0.38); }
+  .esc-form { display: none; flex-direction: column; background: var(--surface2); border-bottom: 0.5px solid var(--border); }
+  .esc-form.open { display: flex; }
+  .esc-form-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--coral-text); padding: 10px 14px 4px; }
+  .esc-field { display: flex; flex-direction: column; gap: 3px; padding: 4px 14px; }
+  .esc-field label { font-size: 10px; font-weight: 600; color: var(--text-3); letter-spacing: .05em; text-transform: uppercase; }
+  .esc-field input, .esc-field textarea { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 6px; padding: 6px 9px; font-family: inherit; font-size: 12.5px; color: var(--text); outline: none; transition: border-color .15s; }
+  .esc-field input:focus, .esc-field textarea:focus { border-color: #E05858; box-shadow: 0 0 0 2px rgba(224,88,88,0.12); }
+  .esc-field input::placeholder, .esc-field textarea::placeholder { color: var(--text-3); }
+  .esc-field textarea { resize: vertical; min-height: 52px; max-height: 120px; line-height: 1.5; font-size: 12px; }
+  .esc-form-actions { display: flex; gap: 7px; padding: 8px 14px 12px; }
+  .esc-save-btn { flex: 1; padding: 7px 0; border-radius: 8px; background: #E05858; border: none; color: #fff; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: filter .15s; }
+  .esc-save-btn:hover { filter: brightness(1.1); }
+  .esc-cancel-btn { padding: 7px 14px; border-radius: 8px; background: none; border: 0.5px solid var(--border-md); color: var(--text-3); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: color .15s; }
+  .esc-cancel-btn:hover { color: var(--text); }
+  .esc-list { display: flex; flex-direction: column; }
+  .esc-item { border-bottom: 0.5px solid var(--border); position: relative; }
+  .esc-item:last-child { border-bottom: none; }
+  .esc-item-main { display: flex; align-items: flex-start; gap: 9px; padding: 9px 14px 9px 16px; transition: background .12s; }
+  .esc-item-main:hover { background: rgba(255,255,255,0.018); }
+  .esc-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5px; background: #E05858; border-radius: 0 1px 1px 0; opacity: .7; }
+  .esc-item.esc-done::before { background: var(--text-3); opacity: .4; }
+  .esc-cb-wrap { flex-shrink: 0; margin-top: 1px; }
+  .esc-cb { width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--border-md); background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; transition: all .15s; display: block; }
+  .esc-cb:hover { border-color: #E05858; }
+  .esc-cb:checked { background: #E05858; border-color: #E05858; box-shadow: 0 0 0 3px rgba(224,88,88,0.18); }
+  .esc-item-body { flex: 1; min-width: 0; }
+  .esc-item-name { font-size: 12.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .15s; }
+  .esc-item.esc-done .esc-item-name { text-decoration: line-through; color: var(--text-3); }
+  .esc-item-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+  .esc-job-id { font-size: 10px; font-weight: 700; letter-spacing: .03em; background: var(--surface2); border: 0.5px solid var(--border-md); color: var(--text-2); padding: 1px 6px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+  .esc-subject { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+  .esc-item-actions { display: flex; align-items: center; gap: 5px; flex-shrink: 0; margin-top: 1px; }
+  .esc-url-btn, .esc-note-btn { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; text-decoration: none; transition: all .15s; border: 0.5px solid; flex-shrink: 0; background: none; font-family: inherit; }
+  .esc-url-btn { background: var(--teal-bg); border-color: rgba(74,158,232,0.24); color: var(--teal-text); }
+  .esc-url-btn:hover { background: rgba(74,158,232,0.18); border-color: rgba(74,158,232,0.42); }
+  .esc-note-btn { border-color: var(--border-md); color: var(--text-3); }
+  .esc-note-btn:hover { color: var(--text-2); background: rgba(255,255,255,0.06); }
+  .esc-note-btn.has-notes { color: var(--amber-text); border-color: rgba(232,168,74,0.3); background: var(--amber-bg); }
+  .esc-notes-panel { display: none; padding: 0 14px 10px 16px; background: rgba(0,0,0,0.12); border-top: 0.5px solid var(--border); }
+  .esc-notes-panel.open { display: block; }
+  .esc-notes-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); padding: 8px 0 5px; }
+  .esc-notes-ta { width: 100%; background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: 6px; padding: 7px 9px; font-family: inherit; font-size: 12px; color: var(--text); outline: none; resize: none; min-height: 56px; max-height: 140px; line-height: 1.55; transition: border-color .15s; }
+  .esc-notes-ta:focus { border-color: rgba(232,168,74,0.5); box-shadow: 0 0 0 2px rgba(232,168,74,0.10); }
+  .esc-notes-ta::placeholder { color: var(--text-3); }
+  .esc-notes-save { margin-top: 6px; padding: 5px 12px; border-radius: 6px; background: var(--amber-bg); border: 0.5px solid rgba(232,168,74,0.3); color: var(--amber-text); font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .esc-notes-save:hover { background: rgba(232,168,74,0.2); }
+  .esc-archive-note { padding: 8px 14px; font-size: 10.5px; color: var(--text-3); font-style: italic; border-top: 0.5px solid var(--border); }
+  .esc-empty { padding: 14px; font-size: 11.5px; color: var(--text-3); text-align: center; }
+
   /* SETTINGS PAGE */
   #page-settings .card-title i { color: var(--teal); }
   .settings-section { margin-bottom: 8px; }
@@ -3343,6 +3407,45 @@
             <button class="jl-proj-filter-btn" data-apf="all" onclick="setAmtekProjFilter('all')">All</button>
           </div>
           <div class="jl-proj-items" id="amtek-proj-list"></div>
+        </div>
+      </div>
+      <!-- Email Escalation Jobs card -->
+      <div class="card esc-card" id="esc-sidebar-card">
+        <div class="esc-hd" onclick="escToggleCard()">
+          <div class="esc-hd-icon">⚠</div>
+          <span class="esc-hd-title">Email Escalations</span>
+          <span class="esc-count-chip" id="esc-chip"></span>
+          <span class="esc-caret" id="esc-caret">›</span>
+        </div>
+        <div class="esc-body" id="esc-body">
+          <div class="esc-add-row" id="esc-add-row">
+            <button class="esc-add-btn" onclick="escOpenForm()">+ Add escalation</button>
+          </div>
+          <div class="esc-form" id="esc-form">
+            <div class="esc-form-title">New escalation</div>
+            <div class="esc-field">
+              <label>Job / URL ID</label>
+              <input type="text" id="esc-f-id" placeholder="e.g. JOB-4421 or paste URL" autocomplete="off">
+            </div>
+            <div class="esc-field">
+              <label>Name</label>
+              <input type="text" id="esc-f-name" placeholder="e.g. ANZ SmartPay – follow up" autocomplete="off">
+            </div>
+            <div class="esc-field">
+              <label>Email subject</label>
+              <input type="text" id="esc-f-subj" placeholder="e.g. RE: SmartPay batch failure" autocomplete="off">
+            </div>
+            <div class="esc-field">
+              <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional)</span></label>
+              <textarea id="esc-f-notes" placeholder="Context, follow-up actions…" rows="2"></textarea>
+            </div>
+            <div class="esc-form-actions">
+              <button class="esc-cancel-btn" onclick="escCloseForm()">Cancel</button>
+              <button class="esc-save-btn" onclick="escSaveItem()">Add escalation</button>
+            </div>
+          </div>
+          <div class="esc-list" id="esc-list"></div>
+          <div class="esc-archive-note" id="esc-archive-note" style="display:none">Completed items archive automatically after 24 hours.</div>
         </div>
       </div>
       <div class="card kb-card">
@@ -6701,6 +6804,146 @@ async function pasteJlUrlFromClipboard() {
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-clipboard"></i>'; }
   }
+}
+
+// ===== EMAIL ESCALATION JOBS =====
+let escItems = [];
+let escNextId = 1;
+let escNotesOpen = null;
+
+function saveEscItems() { dbSet('zarif_esc_jobs', escItems); }
+
+function escAutoArchive() {
+  const now24 = Date.now() - 24 * 60 * 60 * 1000;
+  const before = escItems.length;
+  escItems = escItems.filter(i => !(i.done && i.doneAt && i.doneAt < now24));
+  if (escItems.length !== before) saveEscItems();
+}
+
+function escToggleCard() {
+  const body  = document.getElementById('esc-body');
+  const caret = document.getElementById('esc-caret');
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  caret.classList.toggle('open', isOpen);
+  dbSet('zarif_esc_card_open', isOpen);
+}
+
+function escOpenForm() {
+  document.getElementById('esc-add-row').style.display = 'none';
+  document.getElementById('esc-form').classList.add('open');
+  const f = document.getElementById('esc-f-id');
+  if (f) f.focus();
+}
+
+function escCloseForm() {
+  document.getElementById('esc-add-row').style.display = '';
+  document.getElementById('esc-form').classList.remove('open');
+  ['esc-f-id','esc-f-name','esc-f-subj','esc-f-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function escSaveItem() {
+  const jobId = (document.getElementById('esc-f-id').value || '').trim();
+  const name  = (document.getElementById('esc-f-name').value || '').trim();
+  const subj  = (document.getElementById('esc-f-subj').value || '').trim();
+  const notes = (document.getElementById('esc-f-notes').value || '').trim();
+  if (!name) { document.getElementById('esc-f-name').focus(); return; }
+  escItems.push({ id: escNextId++, name, jobId, subj, notes, done: false, doneAt: null, createdAt: Date.now() });
+  saveEscItems();
+  escCloseForm();
+  renderEscSidebar();
+}
+
+function escToggleDone(id, checked) {
+  const item = escItems.find(i => i.id === id);
+  if (!item) return;
+  item.done   = checked;
+  item.doneAt = checked ? Date.now() : null;
+  saveEscItems();
+  renderEscSidebar();
+}
+
+function escToggleNotes(id) {
+  escNotesOpen = escNotesOpen === id ? null : id;
+  renderEscSidebar();
+  if (escNotesOpen === id) {
+    const ta = document.getElementById('esc-notes-ta-' + id);
+    if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
+  }
+}
+
+function escSaveNotes(id) {
+  const ta = document.getElementById('esc-notes-ta-' + id);
+  if (!ta) return;
+  const item = escItems.find(i => i.id === id);
+  if (!item) return;
+  item.notes = ta.value.trim();
+  escNotesOpen = null;
+  saveEscItems();
+  renderEscSidebar();
+}
+
+function escOpenUrl(jobId, name) {
+  const raw = jobId || '';
+  if (raw.startsWith('http')) { window.open(raw, '_blank'); }
+  else if (raw) { window.open('https://jobs.amtekco.com.au/jobs/' + raw, '_blank'); }
+}
+
+function renderEscSidebar() {
+  const chip        = document.getElementById('esc-chip');
+  const list        = document.getElementById('esc-list');
+  const archiveNote = document.getElementById('esc-archive-note');
+  if (!chip || !list) return;
+
+  const openCount = escItems.filter(i => !i.done).length;
+  chip.textContent = openCount === 0 ? 'all done' : openCount + ' open';
+
+  const hasDone = escItems.some(i => i.done);
+  if (archiveNote) archiveNote.style.display = hasDone ? '' : 'none';
+
+  if (!escItems.length) {
+    list.innerHTML = '<div class="esc-empty">No escalations — tap + to add one</div>';
+    return;
+  }
+
+  function h(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  list.innerHTML = escItems.map(item => {
+    const notesOpen = escNotesOpen === item.id;
+    const hasNotes  = !!(item.notes && item.notes.trim());
+    return `<div class="esc-item${item.done ? ' esc-done' : ''}" id="esc-item-${item.id}">
+      <div class="esc-item-main">
+        <div class="esc-cb-wrap">
+          <input type="checkbox" class="esc-cb" ${item.done ? 'checked' : ''}
+            onchange="escToggleDone(${item.id}, this.checked)">
+        </div>
+        <div class="esc-item-body">
+          <div class="esc-item-name">${h(item.name)}</div>
+          <div class="esc-item-meta">
+            ${item.jobId ? `<span class="esc-job-id">${h(item.jobId)}</span>` : ''}
+            ${item.subj  ? `<span class="esc-subject">${h(item.subj)}</span>` : ''}
+          </div>
+        </div>
+        <div class="esc-item-actions">
+          <button class="esc-note-btn${hasNotes ? ' has-notes' : ''}"
+            onclick="escToggleNotes(${item.id})"
+            title="${hasNotes ? 'View / edit notes' : 'Add notes'}">✎</button>
+          <button class="esc-url-btn"
+            onclick="escOpenUrl('${h(item.jobId)}','${h(item.name)}')"
+            title="Open job link">↗</button>
+        </div>
+      </div>
+      <div class="esc-notes-panel${notesOpen ? ' open' : ''}">
+        <div class="esc-notes-label">Notes</div>
+        <textarea class="esc-notes-ta" id="esc-notes-ta-${item.id}"
+          placeholder="Context, follow-up actions, links…">${h(item.notes)}</textarea>
+        <button class="esc-notes-save" onclick="escSaveNotes(${item.id})">Save notes</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function openAddJobListModal() {
@@ -15633,6 +15876,15 @@ async function initApp() {
 
   jobLists       = dbGet('zarif_job_lists')      || [];
 
+  escItems   = dbGet('zarif_esc_jobs') || [];
+  escNextId  = escItems.reduce((m, i) => Math.max(m, i.id || 0), 0) + 1;
+  escAutoArchive();
+  const escCardOpen = dbGet('zarif_esc_card_open') !== false;
+  const escBody  = document.getElementById('esc-body');
+  const escCaret = document.getElementById('esc-caret');
+  if (escBody && escCardOpen)  { escBody.classList.add('open'); }
+  if (escCaret && escCardOpen) { escCaret.classList.add('open'); }
+
   // Filter expired once-tasks
   const _before = customTasks.length;
   customTasks = customTasks.filter(t => !(t.freq === 'once' && t.date !== todayInputDate()));
@@ -15686,6 +15938,7 @@ async function initApp() {
   renderProjects();
   renderAmtekProjects();
   renderJobListSidebar();
+  renderEscSidebar();
   renderHomeDashboard();
   const mdh = document.getElementById('mtg-date-holder');
   if (mdh) mdh.innerHTML = makeDatePicker('mtg-date', todayInputDate(), null, 'Pick a date');
