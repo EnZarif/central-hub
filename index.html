@@ -7421,6 +7421,14 @@ function toggleBacklog() { _backlogOpen = !_backlogOpen; renderTasks(); }
 let _showDone = false;
 function toggleShowDone() { _showDone = !_showDone; renderTasks(); }
 
+// Special-page tasks: clicking navigates to a page instead of opening edit modal
+function taskRowClick(t) {
+  if (t.jobReminder) return `openJobReminderDetail('${t.id}')`;
+  const map = { 1:'message', 3:'awjobs', 7:'standup', 8:'calldata' };
+  if (map[t.id]) return `showPage('${map[t.id]}')`;
+  return `openTaskEdit('${t.id}')`;
+}
+
 // ── Mockup-style backlog snooze (session-level; reappears next load) ──
 const _backlogSnoozed = new Set(JSON.parse(sessionStorage.getItem('blSnoozed') || '[]'));
 function backlogSnoozeTask(id) {
@@ -7461,7 +7469,7 @@ function renderSchedCardM(tasks) {
     const badge = isNext  ? '<span class="sched-next-badge-m">⚡ Next</span>'
                 : isFocus ? '<span class="sched-focus-badge-m">★ Focus</span>' : '';
     const rowCls = ['sched-row-m', done?'sr-done':'', isNext?'sr-next':'', isFocus?'sr-focus':''].filter(Boolean).join(' ');
-    return `<div class="${rowCls}" onclick="openTaskEdit('${t.id}')" style="border-left:2.5px solid ${prioColor}">
+    return `<div class="${rowCls}" onclick="${taskRowClick(t)}" style="border-left:2.5px solid ${prioColor}">
       <button class="sched-cb-m${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
       <span class="sched-time-m${timeExtraCls}">${timeLbl}</span>
       <div class="sched-div-m"></div>
@@ -7528,7 +7536,7 @@ function renderHubTaskGridM(tasks) {
         const freqTag = freqMap[t.freq] ? `<span class="htcm-freq">${freqMap[t.freq]}</span>` : '';
         const cls = ['htcm-row', done?'htcm-done':'', isNext?'htcm-is-next':'', isFocus?'htcm-is-focus':''].filter(Boolean).join(' ');
         const prioClr = done ? 'transparent' : (t.priority==='HIGH'?'var(--coral-text)':t.priority==='MEDIUM'?'var(--amber-text)':'transparent');
-        rows += `<div class="${cls}" onclick="openTaskEdit('${t.id}')" style="border-left:2px solid ${prioClr}">
+        rows += `<div class="${cls}" onclick="${taskRowClick(t)}" style="border-left:2px solid ${prioClr}">
           <button class="htcm-cb${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
           <span class="htcm-name">${esc(t.name)}</span>
           ${badge}${freqTag}
