@@ -2031,6 +2031,12 @@
   .sv-undo-btn:hover { color:var(--text-2); }
   .sv-no-suggestion { font-size:12px; color:var(--text-3); font-style:italic; padding:6px 0; }
   .sv-no-mismatches { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-2); padding:8px 0; }
+  .sv-col-warnings { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .sv-col-warning { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.08); border:0.5px solid rgba(var(--amber-rgb,220,152,40),0.25); border-radius:7px; padding:7px 10px; flex-wrap:wrap; }
+  .sv-col-warning .ti { font-size:13px; flex-shrink:0; }
+  .sv-col-warning span { flex:1; min-width:0; }
+  .sv-swap-btn { padding:4px 10px; border-radius:6px; background:rgba(var(--amber-rgb,220,152,40),0.15); border:0.5px solid rgba(var(--amber-rgb,220,152,40),0.35); color:var(--amber-text); font-family:inherit; font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0; transition:all .15s; }
+  .sv-swap-btn:hover { background:rgba(var(--amber-rgb,220,152,40),0.28); }
 
   /* SETTINGS PAGE */
   #page-settings .card-title i { color: var(--teal); }
@@ -7017,13 +7023,84 @@ function svRenderColFields() {
   const el = document.getElementById('sv-col-fields');
   if (!el) return;
   const blankOpt = '<option value="">— select column —</option>';
-  const sel = (id, val) => `<select class="sv-col-select field-input" id="${id}" onchange="svUpdateValidateBtn()">
+  const sel = (id, val) => `<select class="sv-col-select field-input" id="${id}" onchange="svUpdateValidateBtn(); svRenderColWarnings()">
     ${blankOpt}${svAllHeaders.map(h => `<option value="${h}"${h===val?' selected':''}>${h}</option>`).join('')}
   </select>`;
   el.innerHTML =
     `<div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('sv-sel-suburb', svSuburbCol)}</div>
      <div class="sv-col-row"><span class="sv-col-label">Postcode column</span>${sel('sv-sel-postcode', svPostcodeCol)}</div>
-     <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('sv-sel-state', svStateCol)}</div>`;
+     <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('sv-sel-state', svStateCol)}</div>
+     <div class="sv-col-warnings" id="sv-col-warnings"></div>`;
+  svRenderColWarnings();
+}
+
+function svDetectFlippedCols() {
+  const subCol   = document.getElementById('sv-sel-suburb')?.value;
+  const pcodeCol = document.getElementById('sv-sel-postcode')?.value;
+  const stateCol = document.getElementById('sv-sel-state')?.value;
+  if (!subCol && !pcodeCol && !stateCol) return [];
+
+  const AU_STATES = new Set(['VIC','NSW','QLD','SA','WA','TAS','NT','ACT',
+    'VICTORIA','NEW SOUTH WALES','QUEENSLAND','SOUTH AUSTRALIA',
+    'WESTERN AUSTRALIA','TASMANIA','NORTHERN TERRITORY','AUSTRALIAN CAPITAL TERRITORY']);
+  const isPostcode = v => /^\d{4}$/.test(String(v).trim());
+  const isState    = v => AU_STATES.has(String(v).trim().toUpperCase());
+  const isSuburb   = v => { const s = String(v).trim(); return s.length > 2 && !isPostcode(s) && !isState(s) && /[a-zA-Z]/.test(s); };
+
+  const sample = svDataRows.slice(0, 200).map(r => ({
+    sub:   subCol   ? String(r[subCol]   || '').trim() : '',
+    pcode: pcodeCol ? String(r[pcodeCol] || '').trim() : '',
+    state: stateCol ? String(r[stateCol] || '').trim() : '',
+  })).filter(r => r.sub || r.pcode || r.state);
+
+  if (!sample.length) return [];
+  const pct = fn => sample.filter(fn).length / sample.length;
+  const issues = [];
+
+  if (pcodeCol && stateCol && pct(r => isState(r.pcode)) > 0.4)
+    issues.push({ msg: `"${pcodeCol}" looks like it contains state codes — may be swapped with "${stateCol}"`, swap: ['sv-sel-postcode','sv-sel-state'] });
+
+  if (stateCol && pcodeCol && pct(r => isPostcode(r.state)) > 0.4)
+    issues.push({ msg: `"${stateCol}" looks like it contains postcodes — may be swapped with "${pcodeCol}"`, swap: ['sv-sel-state','sv-sel-postcode'] });
+
+  if (subCol && pcodeCol && pct(r => isPostcode(r.sub)) > 0.4)
+    issues.push({ msg: `"${subCol}" looks like it contains postcodes — may be swapped with "${pcodeCol}"`, swap: ['sv-sel-suburb','sv-sel-postcode'] });
+
+  if (subCol && stateCol && pct(r => isState(r.sub)) > 0.4)
+    issues.push({ msg: `"${subCol}" looks like it contains state codes — may be swapped with "${stateCol}"`, swap: ['sv-sel-suburb','sv-sel-state'] });
+
+  if (pcodeCol && subCol && pct(r => isSuburb(r.pcode)) > 0.4)
+    issues.push({ msg: `"${pcodeCol}" looks like it contains suburb names — may be swapped with "${subCol}"`, swap: ['sv-sel-postcode','sv-sel-suburb'] });
+
+  if (stateCol && subCol && pct(r => isSuburb(r.state) && r.state.length > 3) > 0.4)
+    issues.push({ msg: `"${stateCol}" looks like it contains suburb names — may be swapped with "${subCol}"`, swap: ['sv-sel-state','sv-sel-suburb'] });
+
+  return issues;
+}
+
+function svRenderColWarnings() {
+  const el = document.getElementById('sv-col-warnings');
+  if (!el) return;
+  const issues = svDetectFlippedCols();
+  if (!issues.length) { el.innerHTML = ''; return; }
+  el.innerHTML = issues.map(iss =>
+    `<div class="sv-col-warning">
+       <i class="ti ti-alert-triangle"></i>
+       <span>${iss.msg}</span>
+       ${iss.swap ? `<button class="sv-swap-btn" onclick="svSwapCols('${iss.swap[0]}','${iss.swap[1]}')">Swap columns</button>` : ''}
+     </div>`
+  ).join('');
+}
+
+function svSwapCols(id1, id2) {
+  const s1 = document.getElementById(id1);
+  const s2 = document.getElementById(id2);
+  if (!s1 || !s2) return;
+  const tmp = s1.value;
+  s1.value = s2.value;
+  s2.value = tmp;
+  svUpdateValidateBtn();
+  svRenderColWarnings();
 }
 
 function svChangeSheet(name) {
