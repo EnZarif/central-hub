@@ -15975,6 +15975,14 @@ async function initApp() {
   renderAmtekProjects();
   renderJobListSidebar();
   renderEscSidebar();
+  // Re-populate scratchpad after async DB load (IIFE ran before dbLoad completed)
+  const _spTa = document.getElementById('sp-ta');
+  if (_spTa) {
+    const _spVal = dbGet('zarif_scratchpad_note') || '';
+    _spTa.value = _spVal;
+    const _spChars = document.getElementById('sp-chars');
+    if (_spChars) _spChars.textContent = _spVal.length + ' chars';
+  }
   renderHomeDashboard();
   const mdh = document.getElementById('mtg-date-holder');
   if (mdh) mdh.innerHTML = makeDatePicker('mtg-date', todayInputDate(), null, 'Pick a date');
