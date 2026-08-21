@@ -6815,6 +6815,27 @@ let escNotesOpen = null;
 
 function saveEscItems() { dbSet('zarif_esc_jobs', escItems); }
 
+function escMigrateUrls() {
+  let changed = false;
+  escItems.forEach(item => {
+    const raw = (item.jobId || '').trim();
+    if (!raw || !raw.startsWith('http')) return;
+    let normalized = raw;
+    const multiMatch = raw.match(/job_id=([0-9%20\s]+)/i);
+    const singleMatch = raw.match(/\/jobs\/(\d+)/);
+    if (multiMatch) {
+      normalized = multiMatch[1].replace(/%20/g, ',').replace(/\s+/g, ',');
+    } else if (singleMatch) {
+      normalized = singleMatch[1];
+    } else {
+      return;
+    }
+    item.jobId = normalized;
+    changed = true;
+  });
+  if (changed) saveEscItems();
+}
+
 function escAutoArchive() {
   const now24 = Date.now() - 24 * 60 * 60 * 1000;
   const before = escItems.length;
@@ -15892,6 +15913,7 @@ async function initApp() {
 
   escItems   = dbGet('zarif_esc_jobs') || [];
   escNextId  = escItems.reduce((m, i) => Math.max(m, i.id || 0), 0) + 1;
+  escMigrateUrls();
   escAutoArchive();
   const escCardOpen = dbGet('zarif_esc_card_open') !== false;
   const escBody  = document.getElementById('esc-body');
