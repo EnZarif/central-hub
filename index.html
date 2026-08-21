@@ -3427,7 +3427,7 @@
             <div class="esc-form-title">New escalation</div>
             <div class="esc-field">
               <label>Job ID(s) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(comma-separate multiple)</span></label>
-              <input type="text" id="esc-f-id" placeholder="e.g. 4421 or 4421, 4422, 4423" autocomplete="off">
+              <input type="text" id="esc-f-id" placeholder="e.g. 4421, or 4421, 4422, or paste any URL" autocomplete="off">
             </div>
             <div class="esc-field">
               <label>Name</label>
@@ -4701,7 +4701,7 @@
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Job ID(s) <span style="font-weight:400;color:var(--text-3)">(comma-separate multiple)</span></div>
         <div style="display:flex; gap:6px;">
-          <input class="field-input" id="jl-url" placeholder="e.g. 4421 or 4421, 4422, 4423" oninput="document.getElementById('jl-fetch-status').textContent=''">
+          <input class="field-input" id="jl-url" placeholder="e.g. 4421, or 4421, 4422, or paste any URL" oninput="document.getElementById('jl-fetch-status').textContent=''">
           <button class="task-edit-btn" type="button" title="Paste link from clipboard and try to fill the name from the page title" id="jl-paste-btn" onclick="pasteJlUrlFromClipboard()"><i class="ti ti-clipboard"></i></button>
         </div>
         <div id="jl-fetch-status" style="font-size:11px; color:var(--text-3); margin-top:4px;"></div>
@@ -6913,11 +6913,13 @@ function buildHelpdeskUrl(input) {
   const raw = (input || '').trim();
   if (!raw) return '';
   if (raw.startsWith('http')) {
-    const multi  = raw.match(/job_id=([0-9%20\s]+)/i);
-    const single = raw.match(/\/jobs\/(\d+)/);
-    if (multi)  return buildHelpdeskUrl(multi[1].replace(/%20/g, ',').replace(/\s+/g, ','));
-    if (single) return buildHelpdeskUrl(single[1]);
-    return raw;
+    if (raw.includes('helpdesk.servicesupport.com.au')) {
+      const multi  = raw.match(/job_id=([0-9%20\s]+)/i);
+      const single = raw.match(/\/jobs\/(\d+)/);
+      if (multi)  return buildHelpdeskUrl(multi[1].replace(/%20/g, ',').replace(/\s+/g, ','));
+      if (single) return buildHelpdeskUrl(single[1]);
+    }
+    return raw; // any other URL — use as-is
   }
   const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
   if (!ids.length) return '';
