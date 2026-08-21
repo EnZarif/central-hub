@@ -6986,8 +6986,28 @@ function svLoadRefFromStorage() {
 
 function svParseSheet() {
   const ws = svWorkbook.Sheets[svSheetName];
-  svDataRows = XLSX.utils.sheet_to_json(ws, {defval: ''});
-  svAllHeaders = svDataRows.length ? Object.keys(svDataRows[0]) : [];
+
+  // Scan first 30 rows as raw arrays to find whichever row contains header keywords
+  const raw = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
+  const headerKeywords = ['suburb','locality','postcode','post code','state','pcode','postalcode'];
+  let headerRowIdx = 0; // default: row 0 is headers
+  for (let i = 0; i < Math.min(raw.length, 30); i++) {
+    const rowLower = raw[i].map(c => String(c).toLowerCase().trim());
+    const hits = rowLower.filter(c => headerKeywords.some(k => c === k || c.includes(k)));
+    if (hits.length >= 2) { headerRowIdx = i; break; }
+  }
+
+  // Re-parse using the detected header row
+  const headers = raw[headerRowIdx].map(c => String(c));
+  svDataRows = raw.slice(headerRowIdx + 1)
+    .map(row => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });
+      return obj;
+    })
+    .filter(row => headers.some(h => String(row[h] || '').trim() !== ''));
+
+  svAllHeaders = headers.filter(h => h.trim() !== '');
   svSuburbCol   = svAutoDetect(svAllHeaders, ['Suburb','suburb','SUBURB','Locality','locality'], ['suburb','locality','suburbname']);
   svPostcodeCol = svAutoDetect(svAllHeaders, ['Postcode','postcode','POSTCODE','Post Code','PostCode'], ['postcode','pcode','postalcode']);
   svStateCol    = svAutoDetect(svAllHeaders, ['State','state','STATE','State Code'], ['state','stateabbrev','statecode']);
