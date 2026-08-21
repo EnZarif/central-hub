@@ -6922,12 +6922,19 @@ function svLev(a, b) {
   return row[n];
 }
 
-function svAutoDetect(headers, candidates) {
+function svAutoDetect(headers, exactNames, fuzzyFallback) {
+  // 1. Exact case-insensitive match
   for (const h of headers) {
-    const hl = h.toLowerCase().replace(/[^a-z]/g, '');
-    if (candidates.some(c => hl === c || hl.includes(c))) return h;
+    if (exactNames.some(n => h.toLowerCase() === n.toLowerCase())) return h;
   }
-  return headers[0] || '';
+  // 2. Substring fallback
+  if (fuzzyFallback) {
+    for (const h of headers) {
+      const hl = h.toLowerCase().replace(/[^a-z]/g, '');
+      if (fuzzyFallback.some(c => hl.includes(c))) return h;
+    }
+  }
+  return '';
 }
 
 function svBuildIndex() {
@@ -6951,9 +6958,9 @@ async function svLoadRef(file) {
     const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
     if (!rows.length) { svShowStatus('sv-ref-status', 'No data found in file', 'error'); return; }
     const keys = Object.keys(rows[0]);
-    const lKey = svAutoDetect(keys, ['locality','suburb','localityname','suburbname']);
-    const pKey = svAutoDetect(keys, ['postcode','pcode','postalcode','zip']);
-    const sKey = svAutoDetect(keys, ['state','stateabbrev','statecode']);
+    const lKey = svAutoDetect(keys, ['Locality','locality','LOCALITY','Suburb','suburb'], ['locality','suburb','localityname']);
+    const pKey = svAutoDetect(keys, ['Postcode','postcode','POSTCODE','Post Code'], ['postcode','pcode','postalcode']);
+    const sKey = svAutoDetect(keys, ['State','state','STATE','State Abbreviation'], ['state','stateabbrev','statecode']);
     svRef = rows.map(r => ({
       locality: String(r[lKey] || '').trim(),
       postcode: String(r[pKey] || '').trim(),
@@ -6977,34 +6984,77 @@ function svLoadRefFromStorage() {
   } catch(e) {}
 }
 
+function svParseSheet() {
+  const ws = svWorkbook.Sheets[svSheetName];
+  svDataRows = XLSX.utils.sheet_to_json(ws, {defval: ''});
+  svAllHeaders = svDataRows.length ? Object.keys(svDataRows[0]) : [];
+  svSuburbCol   = svAutoDetect(svAllHeaders, ['Suburb','suburb','SUBURB','Locality','locality'], ['suburb','locality','suburbname']);
+  svPostcodeCol = svAutoDetect(svAllHeaders, ['Postcode','postcode','POSTCODE','Post Code','PostCode'], ['postcode','pcode','postalcode']);
+  svStateCol    = svAutoDetect(svAllHeaders, ['State','state','STATE','State Code'], ['state','stateabbrev','statecode']);
+}
+
+function svRenderColFields() {
+  const el = document.getElementById('sv-col-fields');
+  if (!el) return;
+  const blankOpt = '<option value="">— select column —</option>';
+  const sel = (id, val) => `<select class="sv-col-select field-input" id="${id}" onchange="svUpdateValidateBtn()">
+    ${blankOpt}${svAllHeaders.map(h => `<option value="${h}"${h===val?' selected':''}>${h}</option>`).join('')}
+  </select>`;
+  el.innerHTML =
+    `<div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('sv-sel-suburb', svSuburbCol)}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Postcode column</span>${sel('sv-sel-postcode', svPostcodeCol)}</div>
+     <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('sv-sel-state', svStateCol)}</div>`;
+}
+
+function svChangeSheet(name) {
+  svSheetName = name;
+  svParseSheet();
+  svRenderColFields();
+  svResults = []; svAccepted = {};
+  const rc = document.getElementById('sv-results-card');
+  if (rc) rc.style.display = 'none';
+  svShowStatus('sv-work-status', `${svDataRows.length.toLocaleString()} rows — sheet "${name}"`, 'ok');
+  svUpdateValidateBtn();
+}
+
 async function svLoadWork(file) {
   if (!file) return;
   try {
     const buf = await file.arrayBuffer();
-    svWorkbook = XLSX.read(buf, {type:'array'});
-    svSheetName = svWorkbook.SheetNames[0];
-    const ws = svWorkbook.Sheets[svSheetName];
-    svDataRows = XLSX.utils.sheet_to_json(ws, {defval:''});
-    svAllHeaders = svDataRows.length ? Object.keys(svDataRows[0]) : [];
-    svSuburbCol   = svAutoDetect(svAllHeaders, ['suburb','locality','suburbname','localityname']);
-    svPostcodeCol = svAutoDetect(svAllHeaders, ['postcode','pcode','postalcode','zip']);
-    svStateCol    = svAutoDetect(svAllHeaders, ['state','stateabbrev','statecode']);
+    svWorkbook = XLSX.read(buf, {type: 'array'});
+
+    // Build sheet list with visibility info
+    const sheetMeta = svWorkbook.SheetNames.map((name, i) => {
+      const vis = svWorkbook.Workbook?.Sheets?.[i]?.Hidden ?? 0;
+      return {name, hidden: vis !== 0};
+    });
+
+    // Default to first visible sheet
+    const firstVisible = sheetMeta.find(s => !s.hidden);
+    svSheetName = (firstVisible || sheetMeta[0]).name;
+    svParseSheet();
+
+    // Render sheet selector + column mapper
     const mapper = document.getElementById('sv-col-mapper');
     if (mapper) {
-      const opts = svAllHeaders.map(h => `<option value="${h}">${h}</option>`).join('');
-      const sel = (id, val) => `<select class="sv-col-select field-input" id="${id}" onchange="svUpdateValidateBtn()">
-        ${svAllHeaders.map(h => `<option value="${h}"${h===val?' selected':''}>${h}</option>`).join('')}
-      </select>`;
-      mapper.innerHTML = `
-        <div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('sv-sel-suburb', svSuburbCol)}</div>
-        <div class="sv-col-row"><span class="sv-col-label">Postcode column</span>${sel('sv-sel-postcode', svPostcodeCol)}</div>
-        <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('sv-sel-state', svStateCol)}</div>`;
+      const sheetOpts = sheetMeta.map(s =>
+        `<option value="${s.name}"${s.name === svSheetName ? ' selected' : ''}>${s.name}${s.hidden ? ' (hidden)' : ''}</option>`
+      ).join('');
+      mapper.innerHTML =
+        `<div class="sv-col-row">
+           <span class="sv-col-label">Sheet</span>
+           <select class="sv-col-select field-input" id="sv-sel-sheet" onchange="svChangeSheet(this.value)">${sheetOpts}</select>
+         </div>
+         <div style="height:0.5px;background:var(--border);margin:10px 0;"></div>
+         <div id="sv-col-fields"></div>`;
       mapper.style.display = '';
+      svRenderColFields();
     }
-    svShowStatus('sv-work-status', `${svDataRows.length.toLocaleString()} rows from "${file.name}"`, 'ok');
+
     svResults = []; svAccepted = {};
     const rc = document.getElementById('sv-results-card');
     if (rc) rc.style.display = 'none';
+    svShowStatus('sv-work-status', `${svDataRows.length.toLocaleString()} rows from "${file.name}"`, 'ok');
     svUpdateValidateBtn();
   } catch(e) { svShowStatus('sv-work-status', 'Failed to read file: ' + e.message, 'error'); }
 }
