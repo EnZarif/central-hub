@@ -6912,15 +6912,7 @@ function escSaveNotes(id) {
 function buildHelpdeskUrl(input) {
   const raw = (input || '').trim();
   if (!raw) return '';
-  if (raw.startsWith('http')) {
-    if (raw.includes('helpdesk.servicesupport.com.au')) {
-      const multi  = raw.match(/job_id=([0-9%20\s]+)/i);
-      const single = raw.match(/\/jobs\/(\d+)/);
-      if (multi)  return buildHelpdeskUrl(multi[1].replace(/%20/g, ',').replace(/\s+/g, ','));
-      if (single) return buildHelpdeskUrl(single[1]);
-    }
-    return raw; // any other URL — use as-is
-  }
+  if (raw.startsWith('http')) return raw;
   const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
   if (!ids.length) return '';
   return ids.length === 1
@@ -6930,11 +6922,11 @@ function buildHelpdeskUrl(input) {
 
 function extractJobIds(url) {
   if (!url || !url.startsWith('http')) return url || '';
-  const multi  = url.match(/job_id=([0-9%20\s]+)/i);
-  const single = url.match(/\/jobs\/(\d+)/);
+  const multi  = url.match(/[?&]job_id=([\d%20\s]+)/i);
+  const single = url.match(/\/jobs\/(\d+)$/);
   if (multi)  return multi[1].replace(/%20/g, ', ').trim();
   if (single) return single[1];
-  return url;
+  return url; // any other URL — show as-is for editing
 }
 
 function escCopySubj(subj) {
