@@ -3426,8 +3426,8 @@
           <div class="esc-form" id="esc-form">
             <div class="esc-form-title">New escalation</div>
             <div class="esc-field">
-              <label>Job / URL ID</label>
-              <input type="text" id="esc-f-id" placeholder="e.g. JOB-4421 or paste URL" autocomplete="off">
+              <label>Job ID(s) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(comma-separate multiple)</span></label>
+              <input type="text" id="esc-f-id" placeholder="e.g. 4421 or 4421, 4422, 4423" autocomplete="off">
             </div>
             <div class="esc-field">
               <label>Name</label>
@@ -6899,9 +6899,13 @@ function escCopySubj(subj) {
 }
 
 function escOpenUrl(jobId, name) {
-  const raw = jobId || '';
-  if (raw.startsWith('http')) { window.open(raw, '_blank'); }
-  else if (raw) { window.open('https://jobs.amtekco.com.au/jobs/' + raw, '_blank'); }
+  const raw = (jobId || '').trim();
+  if (!raw) return;
+  const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const url = ids.length === 1
+    ? 'https://helpdesk.servicesupport.com.au/jobs/' + ids[0]
+    : 'https://helpdesk.servicesupport.com.au/jobs/index?job_id=' + ids.join('%20');
+  window.open(url, '_blank');
 }
 
 function renderEscSidebar() {
