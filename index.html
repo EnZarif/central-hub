@@ -2005,6 +2005,33 @@
   .esc-archive-note { padding: 8px 14px; font-size: 10.5px; color: var(--text-3); font-style: italic; border-top: 0.5px solid var(--border); }
   .esc-empty { padding: 14px; font-size: 11.5px; color: var(--text-3); text-align: center; }
 
+  /* SUBURB CHECKER */
+  .sv-col-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .sv-col-label { font-size:12px; font-weight:600; color:var(--text-2); width:140px; flex-shrink:0; }
+  .sv-col-select { flex:1; min-width:0; }
+  .sv-status-ok { color:var(--green-text) !important; }
+  .sv-status-error { color:var(--coral-text) !important; }
+  .sv-sum-ok { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; color:var(--green-text); font-weight:600; }
+  .sv-sum-err { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; color:var(--coral-text); font-weight:600; }
+  .sv-result-item { background:var(--surface2); border-radius:8px; border:0.5px solid var(--border-md); padding:12px 14px; margin-bottom:8px; }
+  .sv-result-item.sv-accepted { border-color:rgba(74,232,136,0.25); background:rgba(74,232,136,0.04); }
+  .sv-result-hd { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+  .sv-row-num { font-size:11px; font-weight:700; color:var(--text-3); background:var(--surface); border:0.5px solid var(--border-md); padding:2px 7px; border-radius:4px; }
+  .sv-mismatch-type { font-size:11px; font-weight:700; }
+  .sv-accepted-badge { font-size:11px; font-weight:700; color:var(--green-text); display:inline-flex; align-items:center; gap:3px; }
+  .sv-current-val { font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px; line-height:1.8; }
+  .sv-field-chip { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); background:var(--surface); border:0.5px solid var(--border-md); padding:1px 6px; border-radius:4px; flex-shrink:0; }
+  .sv-suggestion { background:rgba(0,0,0,0.15); border-radius:6px; padding:10px 12px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .sv-suggestion-changes { font-size:12px; color:var(--text-2); line-height:1.8; flex:1; min-width:0; }
+  .sv-old { color:var(--coral-text); text-decoration:line-through; opacity:.8; }
+  .sv-new { color:var(--green-text); font-weight:600; }
+  .sv-accept-btn { padding:6px 12px; border-radius:7px; background:rgba(74,232,136,0.12); border:0.5px solid rgba(74,232,136,0.3); color:var(--green-text); font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+  .sv-accept-btn:hover { background:rgba(74,232,136,0.22); }
+  .sv-undo-btn { padding:6px 12px; border-radius:7px; background:rgba(255,255,255,0.05); border:0.5px solid var(--border-md); color:var(--text-3); font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+  .sv-undo-btn:hover { color:var(--text-2); }
+  .sv-no-suggestion { font-size:12px; color:var(--text-3); font-style:italic; padding:6px 0; }
+  .sv-no-mismatches { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-2); padding:8px 0; }
+
   /* SETTINGS PAGE */
   #page-settings .card-title i { color: var(--teal); }
   .settings-section { margin-bottom: 8px; }
@@ -3125,6 +3152,63 @@
       <p>Everything for running the helpdesk day to day.</p>
     </div>
     <div class="hub-grid" id="hub-grid-helpdesk"></div>
+  </div>
+
+  <!-- SUBURB CHECKER PAGE -->
+  <div class="page" id="page-suburbcheck">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-map-pin"></i> Suburb Checker</h1>
+        <p>Validate suburb, postcode and state data against a reference localities file</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-database" style="font-size:13px;"></i> Reference localities file</div>
+      <div class="kpi-template-row">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Locality · Postcode · State reference</div>
+          <div class="kpi-tpl-status" id="sv-ref-status">No reference loaded</div>
+        </div>
+        <input type="file" id="sv-ref-input" class="kpi-file-input" accept=".xlsx,.csv" onchange="svLoadRef(this.files[0])">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('sv-ref-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload reference</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:6px;">Expects columns named Locality (or Suburb), Postcode, State. Saved to your browser until replaced.</div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title"><i class="ti ti-file-spreadsheet" style="font-size:13px;"></i> Work file</div>
+      <div class="kpi-template-row">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Excel file to validate</div>
+          <div class="kpi-tpl-status" id="sv-work-status">No file loaded</div>
+        </div>
+        <input type="file" id="sv-work-input" class="kpi-file-input" accept=".xlsx" onchange="svLoadWork(this.files[0])">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('sv-work-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+      </div>
+      <div id="sv-col-mapper" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;"></div>
+      <button class="generate-btn" id="sv-validate-btn" style="margin-top:16px;" onclick="svValidate()" disabled>
+        <i class="ti ti-search" style="font-size:16px;"></i> Validate data
+      </button>
+    </div>
+
+    <div class="card" id="sv-results-card" style="display:none;margin-top:12px;">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span><i class="ti ti-list-check" style="font-size:13px;"></i> Results</span>
+        <div id="sv-summary" style="display:flex;gap:12px;align-items:center;"></div>
+      </div>
+      <div id="sv-results-body"></div>
+      <div id="sv-apply-all-row" style="display:none;margin-top:12px;">
+        <button class="generate-btn" onclick="svAcceptAll()" style="background:var(--teal-bg);border:1.5px solid var(--teal-text);color:var(--teal-text);box-shadow:none;">
+          <i class="ti ti-checks" style="font-size:16px;"></i> Accept all suggestions
+        </button>
+      </div>
+      <div id="sv-download-row" style="display:none;margin-top:8px;">
+        <button class="generate-btn" onclick="svDownload()">
+          <i class="ti ti-download" style="font-size:16px;"></i> Download corrected file
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- PROJECTS HUB -->
@@ -6808,6 +6892,284 @@ async function pasteJlUrlFromClipboard() {
   }
 }
 
+// ===== SUBURB CHECKER =====
+let svRef = [], svRefByPcode = {}, svRefNorm = {};
+let svWorkbook = null, svSheetName = '', svDataRows = [], svAllHeaders = [];
+let svSuburbCol = '', svPostcodeCol = '', svStateCol = '';
+let svResults = [], svAccepted = {};
+
+function svNorm(s) {
+  return String(s || '').toLowerCase()
+    .replace(/\bmt\b/g, 'mount').replace(/\bmnt\b/g, 'mount')
+    .replace(/\bst\b/g, 'saint')
+    .replace(/\bnth\b/g, 'north').replace(/\bsth\b/g, 'south')
+    .replace(/[-'`]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function svLev(a, b) {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const row = Array.from({length: n + 1}, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    let prev = i;
+    for (let j = 1; j <= n; j++) {
+      const cur = a[i-1] === b[j-1] ? row[j-1] : 1 + Math.min(row[j], prev, row[j-1]);
+      row[j-1] = prev; prev = cur;
+    }
+    row[n] = prev;
+  }
+  return row[n];
+}
+
+function svAutoDetect(headers, candidates) {
+  for (const h of headers) {
+    const hl = h.toLowerCase().replace(/[^a-z]/g, '');
+    if (candidates.some(c => hl === c || hl.includes(c))) return h;
+  }
+  return headers[0] || '';
+}
+
+function svBuildIndex() {
+  svRefByPcode = {}; svRefNorm = {};
+  for (const r of svRef) {
+    const pc = r.postcode;
+    if (!svRefByPcode[pc]) svRefByPcode[pc] = [];
+    svRefByPcode[pc].push(r);
+    const norm = svNorm(r.locality);
+    if (!svRefNorm[norm]) svRefNorm[norm] = [];
+    svRefNorm[norm].push(r);
+  }
+}
+
+async function svLoadRef(file) {
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+    if (!rows.length) { svShowStatus('sv-ref-status', 'No data found in file', 'error'); return; }
+    const keys = Object.keys(rows[0]);
+    const lKey = svAutoDetect(keys, ['locality','suburb','localityname','suburbname']);
+    const pKey = svAutoDetect(keys, ['postcode','pcode','postalcode','zip']);
+    const sKey = svAutoDetect(keys, ['state','stateabbrev','statecode']);
+    svRef = rows.map(r => ({
+      locality: String(r[lKey] || '').trim(),
+      postcode: String(r[pKey] || '').trim(),
+      state:    String(r[sKey] || '').trim().toUpperCase(),
+    })).filter(r => r.locality && r.postcode);
+    svBuildIndex();
+    try { localStorage.setItem('zarif_suburb_ref', JSON.stringify(svRef)); } catch(e) {}
+    svShowStatus('sv-ref-status', `${svRef.length.toLocaleString()} localities loaded`, 'ok');
+    svUpdateValidateBtn();
+  } catch(e) { svShowStatus('sv-ref-status', 'Failed to read file: ' + e.message, 'error'); }
+}
+
+function svLoadRefFromStorage() {
+  try {
+    const raw = localStorage.getItem('zarif_suburb_ref');
+    if (!raw) return;
+    svRef = JSON.parse(raw);
+    svBuildIndex();
+    svShowStatus('sv-ref-status', `${svRef.length.toLocaleString()} localities loaded (saved reference)`, 'ok');
+    svUpdateValidateBtn();
+  } catch(e) {}
+}
+
+async function svLoadWork(file) {
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    svWorkbook = XLSX.read(buf, {type:'array'});
+    svSheetName = svWorkbook.SheetNames[0];
+    const ws = svWorkbook.Sheets[svSheetName];
+    svDataRows = XLSX.utils.sheet_to_json(ws, {defval:''});
+    svAllHeaders = svDataRows.length ? Object.keys(svDataRows[0]) : [];
+    svSuburbCol   = svAutoDetect(svAllHeaders, ['suburb','locality','suburbname','localityname']);
+    svPostcodeCol = svAutoDetect(svAllHeaders, ['postcode','pcode','postalcode','zip']);
+    svStateCol    = svAutoDetect(svAllHeaders, ['state','stateabbrev','statecode']);
+    const mapper = document.getElementById('sv-col-mapper');
+    if (mapper) {
+      const opts = svAllHeaders.map(h => `<option value="${h}">${h}</option>`).join('');
+      const sel = (id, val) => `<select class="sv-col-select field-input" id="${id}" onchange="svUpdateValidateBtn()">
+        ${svAllHeaders.map(h => `<option value="${h}"${h===val?' selected':''}>${h}</option>`).join('')}
+      </select>`;
+      mapper.innerHTML = `
+        <div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('sv-sel-suburb', svSuburbCol)}</div>
+        <div class="sv-col-row"><span class="sv-col-label">Postcode column</span>${sel('sv-sel-postcode', svPostcodeCol)}</div>
+        <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('sv-sel-state', svStateCol)}</div>`;
+      mapper.style.display = '';
+    }
+    svShowStatus('sv-work-status', `${svDataRows.length.toLocaleString()} rows from "${file.name}"`, 'ok');
+    svResults = []; svAccepted = {};
+    const rc = document.getElementById('sv-results-card');
+    if (rc) rc.style.display = 'none';
+    svUpdateValidateBtn();
+  } catch(e) { svShowStatus('sv-work-status', 'Failed to read file: ' + e.message, 'error'); }
+}
+
+function svFindBest(suburb, postcode, state) {
+  const normS = svNorm(suburb);
+  const pc    = String(postcode || '').trim();
+  const st    = String(state    || '').toUpperCase().trim();
+  const pool  = svRefByPcode[pc] || [];
+
+  // 1. Exact normalized match — same postcode + state
+  for (const r of pool) {
+    if (svNorm(r.locality) === normS && r.state === st) return {match: r, type: 'ok'};
+  }
+  // 2. Exact normalized match — same postcode, wrong state
+  for (const r of pool) {
+    if (svNorm(r.locality) === normS) return {match: r, type: 'state_mismatch'};
+  }
+  // 3. Exact normalized name exists in reference — wrong postcode
+  const byName = svRefNorm[normS] || [];
+  if (byName.length) {
+    const stMatch = byName.find(r => r.state === st);
+    return {match: stMatch || byName[0], type: 'postcode_mismatch'};
+  }
+  // 4. Fuzzy — closest name within same postcode pool (or same state if no postcode match)
+  const fuzzyPool = pool.length ? pool : (st ? svRef.filter(r => r.state === st) : svRef);
+  let best = null, bestD = Infinity;
+  for (const r of fuzzyPool) {
+    const d = svLev(normS, svNorm(r.locality));
+    if (d < bestD) { bestD = d; best = r; }
+  }
+  const threshold = Math.max(2, Math.floor(normS.length * 0.4));
+  if (best && bestD <= threshold) return {match: best, type: 'fuzzy', dist: bestD};
+  return {match: null, type: 'unknown'};
+}
+
+function svValidate() {
+  const subCol   = document.getElementById('sv-sel-suburb')?.value;
+  const pcodeCol = document.getElementById('sv-sel-postcode')?.value;
+  const stateCol = document.getElementById('sv-sel-state')?.value;
+  if (!subCol || !pcodeCol || !stateCol || !svRef.length || !svDataRows.length) return;
+  svResults = []; svAccepted = {};
+  for (let i = 0; i < svDataRows.length; i++) {
+    const row = svDataRows[i];
+    const suburb   = String(row[subCol]   || '').trim();
+    const postcode = String(row[pcodeCol] || '').trim();
+    const state    = String(row[stateCol] || '').trim();
+    if (!suburb && !postcode && !state) continue;
+    const r = svFindBest(suburb, postcode, state);
+    if (r.type !== 'ok') svResults.push({rowIdx: i, suburb, postcode, state, match: r.match, matchType: r.type, dist: r.dist || 0, subCol, pcodeCol, stateCol});
+  }
+  svRenderResults();
+}
+
+function svRenderResults() {
+  const card = document.getElementById('sv-results-card');
+  const body = document.getElementById('sv-results-body');
+  if (!card || !body) return;
+  card.style.display = '';
+  const miscount = svResults.length;
+  const okcount  = svDataRows.length - miscount;
+  document.getElementById('sv-summary').innerHTML =
+    `<span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${okcount} matched</span>` +
+    (miscount ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${miscount} mismatch${miscount !== 1 ? 'es' : ''}</span>` : '');
+  if (!miscount) {
+    body.innerHTML = '<div class="sv-no-mismatches"><i class="ti ti-circle-check" style="color:var(--green-text);font-size:20px;"></i><div>All rows match — no issues found.</div></div>';
+    document.getElementById('sv-apply-all-row').style.display = 'none';
+    document.getElementById('sv-download-row').style.display = '';
+    return;
+  }
+  document.getElementById('sv-apply-all-row').style.display = '';
+  document.getElementById('sv-download-row').style.display = 'none';
+  function h(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  const typeLabel = {state_mismatch:'State mismatch', postcode_mismatch:'Postcode mismatch', fuzzy:'Name mismatch', unknown:'No match found'};
+  const typeColor = {state_mismatch:'var(--amber-text)', postcode_mismatch:'var(--amber-text)', fuzzy:'var(--coral-text)', unknown:'var(--coral-text)'};
+  body.innerHTML = svResults.map(r => {
+    const accepted = svAccepted[r.rowIdx];
+    const rowNum   = r.rowIdx + 2;
+    let suggHtml = '';
+    if (r.match) {
+      const changes = [];
+      if (svNorm(r.suburb) !== svNorm(r.match.locality)) changes.push(`Suburb: <span class="sv-old">${h(r.suburb)}</span> → <span class="sv-new">${h(r.match.locality)}</span>`);
+      if (String(r.postcode) !== String(r.match.postcode)) changes.push(`Postcode: <span class="sv-old">${h(r.postcode)}</span> → <span class="sv-new">${h(r.match.postcode)}</span>`);
+      if (r.state.toUpperCase() !== r.match.state.toUpperCase()) changes.push(`State: <span class="sv-old">${h(r.state)}</span> → <span class="sv-new">${h(r.match.state)}</span>`);
+      if (!changes.length) changes.push(`Suburb: <span class="sv-old">${h(r.suburb)}</span> → <span class="sv-new">${h(r.match.locality)}</span>`);
+      const fixArgs = `${r.rowIdx},'${r.match.locality.replace(/'/g,"\\'")}','${r.match.postcode}','${r.match.state}'`;
+      suggHtml = `<div class="sv-suggestion">
+        <div class="sv-suggestion-changes">${changes.join('<br>')}</div>
+        ${accepted
+          ? `<button class="sv-undo-btn" onclick="svUndoFix(${r.rowIdx})"><i class="ti ti-x"></i> Undo</button>`
+          : `<button class="sv-accept-btn" onclick="svAcceptFix(${fixArgs})"><i class="ti ti-check"></i> Use suggestion</button>`}
+      </div>`;
+    } else {
+      suggHtml = '<div class="sv-no-suggestion">No suggestion found — manual review needed</div>';
+    }
+    return `<div class="sv-result-item${accepted ? ' sv-accepted' : ''}" id="sv-row-${r.rowIdx}">
+      <div class="sv-result-hd">
+        <span class="sv-row-num">Row ${rowNum}</span>
+        <span class="sv-mismatch-type" style="color:${typeColor[r.matchType]}">${typeLabel[r.matchType]}</span>
+        ${accepted ? '<span class="sv-accepted-badge"><i class="ti ti-check"></i> Fixed</span>' : ''}
+      </div>
+      <div class="sv-current-val">
+        <span class="sv-field-chip">Suburb</span>${h(r.suburb)}
+        <span class="sv-field-chip">Postcode</span>${h(r.postcode)}
+        <span class="sv-field-chip">State</span>${h(r.state)}
+      </div>
+      ${suggHtml}
+    </div>`;
+  }).join('');
+}
+
+function svAcceptFix(rowIdx, suburb, postcode, state) {
+  svAccepted[rowIdx] = {suburb, postcode, state};
+  svRenderResults();
+  const fixable = svResults.filter(r => r.match);
+  if (fixable.length && fixable.every(r => svAccepted[r.rowIdx])) document.getElementById('sv-download-row').style.display = '';
+}
+
+function svUndoFix(rowIdx) {
+  delete svAccepted[rowIdx];
+  svRenderResults();
+  document.getElementById('sv-download-row').style.display = 'none';
+}
+
+function svAcceptAll() {
+  svResults.forEach(r => {
+    if (r.match) svAccepted[r.rowIdx] = {suburb: r.match.locality, postcode: r.match.postcode, state: r.match.state};
+  });
+  svRenderResults();
+  document.getElementById('sv-download-row').style.display = '';
+}
+
+function svDownload() {
+  if (!svWorkbook) return;
+  const subCol   = document.getElementById('sv-sel-suburb')?.value;
+  const pcodeCol = document.getElementById('sv-sel-postcode')?.value;
+  const stateCol = document.getElementById('sv-sel-state')?.value;
+  const data = svDataRows.map((row, i) => {
+    const fix = svAccepted[i];
+    if (!fix) return row;
+    const newRow = {...row};
+    if (fix.suburb   && subCol)   newRow[subCol]   = fix.suburb;
+    if (fix.postcode && pcodeCol) newRow[pcodeCol] = fix.postcode;
+    if (fix.state    && stateCol) newRow[stateCol] = fix.state;
+    return newRow;
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  svWorkbook.Sheets[svSheetName] = ws;
+  XLSX.writeFile(svWorkbook, 'corrected_' + svSheetName + '.xlsx');
+}
+
+function svShowStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status sv-status-' + type; }
+}
+
+function svUpdateValidateBtn() {
+  const btn = document.getElementById('sv-validate-btn');
+  if (!btn) return;
+  btn.disabled = !(svRef.length && svDataRows.length &&
+    document.getElementById('sv-sel-suburb')?.value &&
+    document.getElementById('sv-sel-postcode')?.value &&
+    document.getElementById('sv-sel-state')?.value);
+}
+
 // ===== EMAIL ESCALATION JOBS =====
 let escItems = [];
 let escNextId = 1;
@@ -8770,6 +9132,7 @@ const PAGES = {
   insights:       { title:'Insights',        icon:'ti-chart-pie',       color:'c-green',  desc:'At-a-glance productivity dashboard: completions, streak, meetings & AI usage.' },
   notes:          { title:'Personal Notes',   icon:'ti-pencil',          color:'c-pink',   desc:'Grocery lists, errands, calls — jot it down and turn it into a personal task. Separate from the Scratch Pad widget.' },
   learning:       { title:'Learning',          icon:'ti-school',           color:'c-teal',   desc:'Courses, books, tutorials and things you want to learn.' },
+  suburbcheck:    { title:'Suburb Checker',    icon:'ti-map-pin',          color:'c-amber',  desc:'Validate suburb, postcode and state data against a reference localities file.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -8794,6 +9157,7 @@ function loadHubLayout() {
     if (h === 'personal' && !list.includes('learning')) list.push('learning');
     // Migration: existing saved layouts predate the NSLA Report page — add it to Helpdesk once.
     if (h === 'helpdesk' && !list.includes('nsla')) list.push('nsla');
+    if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
     layout[h] = list;
   });
   return layout;
@@ -15990,6 +16354,7 @@ async function initApp() {
   renderAmtekProjects();
   renderJobListSidebar();
   renderEscSidebar();
+  svLoadRefFromStorage();
   // Re-populate scratchpad after async DB load (IIFE ran before dbLoad completed)
   const _spTa = document.getElementById('sp-ta');
   if (_spTa) {
