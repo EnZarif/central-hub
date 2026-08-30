@@ -7363,7 +7363,9 @@ function purgeCompletedDateTasks() {
     if (t.freq !== 'date' && t.freq !== 'once') return false;
     if (!isDone(t.id)) return false;
     const ts = doneAt[String(t.id)];
-    return ts && (now - ts) > sevenDays;
+    // No timestamp = completed before this feature existed → delete immediately
+    if (!ts) return true;
+    return (now - ts) > sevenDays;
   });
   if (!toDelete.length) return;
   toDelete.forEach(t => {
