@@ -5294,7 +5294,9 @@ let kbFacts = DEFAULT_KB_FACTS.slice();
 let kbIndex = 0;
 let kbTimer = null;
 
+let doneAt = {}; // { [taskId]: timestamp } — when a date/once task was marked complete
 function save() { dbSet('zarif_done_v2', done); }
+function saveDoneAt() { dbSet('zarif_done_at', doneAt); }
 function saveBreaks() { dbSet('zarif_breaks', breaks); }
 function saveCustomTasks() { dbSet('zarif_custom_tasks', customTasks); }
 function saveTaskOverrides() { dbSet('zarif_task_overrides', taskOverrides); }
@@ -5413,6 +5415,14 @@ function toggle(id) {
     logActivity('task', t0 ? t0.name : '');
     if (t0) bumpTaskStreak(id, t0.freq);
     playChimeDone();
+    // Record completion time for date/once custom tasks (used by 7-day purge)
+    if (t0 && t0.custom && (t0.freq === 'date' || t0.freq === 'once')) {
+      doneAt[String(id)] = Date.now();
+      saveDoneAt();
+    }
+  } else {
+    // Unmarking done — clear the completion timestamp
+    if (doneAt[String(id)]) { delete doneAt[String(id)]; saveDoneAt(); }
   }
   justToggledId = !wasDone ? id : null;
   skipListAnim = true;
@@ -6515,6 +6525,7 @@ function deleteCustomTask(id) {
   customTasks = customTasks.filter(t => t.id !== id);
   delete done[taskKey(id)];
   delete taskOverrides[id];
+  if (doneAt[String(id)]) { delete doneAt[String(id)]; saveDoneAt(); }
   saveCustomTasks();
   saveTaskOverrides();
   save();
@@ -7343,6 +7354,26 @@ function escMigrateUrls() {
     changed = true;
   });
   if (changed) saveEscItems();
+}
+
+function purgeCompletedDateTasks() {
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const toDelete = customTasks.filter(t => {
+    if (t.freq !== 'date' && t.freq !== 'once') return false;
+    if (!isDone(t.id)) return false;
+    const ts = doneAt[String(t.id)];
+    return ts && (now - ts) > sevenDays;
+  });
+  if (!toDelete.length) return;
+  toDelete.forEach(t => {
+    customTasks = customTasks.filter(x => x.id !== t.id);
+    delete done[taskKey(t.id)];
+    delete doneAt[String(t.id)];
+  });
+  saveCustomTasks();
+  save();
+  saveDoneAt();
 }
 
 function escAutoArchive() {
@@ -16401,6 +16432,7 @@ async function initApp() {
 
   // Reinitialize all variables from db
   done          = dbGet('zarif_done_v2')        || {};
+  doneAt        = dbGet('zarif_done_at')        || {};
   breaks        = dbGet('zarif_breaks')         || DEFAULT_BREAKS.map(r => ({...r}));
   customTasks   = dbGet('zarif_custom_tasks')   || [];
   quickTasks    = dbGet('zarif_quick_tasks')    || [];
@@ -16441,6 +16473,7 @@ async function initApp() {
   escNextId  = escItems.reduce((m, i) => Math.max(m, i.id || 0), 0) + 1;
   escMigrateUrls();
   escAutoArchive();
+  purgeCompletedDateTasks();
   const escCardOpen = dbGet('zarif_esc_card_open') !== false;
   const escBody  = document.getElementById('esc-body');
   const escCaret = document.getElementById('esc-caret');
