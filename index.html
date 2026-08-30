@@ -10242,10 +10242,10 @@ function renderTasks() {
       .sort((a,b) => a.date.localeCompare(b.date) || PO[a.priority]-PO[b.priority] || getOrder(a.id)-getOrder(b.id));
     if (!dated.length) { paintList('<div class="empty">No dated tasks yet. Add one below with frequency “On a date”.</div>'); return; }
     const groups = [
-      { label:'Overdue',          icon:'ti-alert-triangle', test: t => t.date < today && !isDone(t.id) },
-      { label:'Today',            icon:'ti-star',           test: t => t.date === today },
-      { label:'Upcoming',         icon:'ti-calendar-up',    test: t => t.date > today },
-      { label:'Completed & past', icon:'ti-check',          test: t => t.date < today && isDone(t.id) },
+      { label:'Overdue',   icon:'ti-alert-triangle', test: t => t.date < today  && !isDone(t.id) },
+      { label:'Today',     icon:'ti-star',           test: t => t.date === today && !isDone(t.id) },
+      { label:'Upcoming',  icon:'ti-calendar-up',    test: t => t.date > today  && !isDone(t.id) },
+      { label:'Completed', icon:'ti-check',          test: t => isDone(t.id) },
     ];
     groups.forEach(g => {
       const grp = dated.filter(g.test);
