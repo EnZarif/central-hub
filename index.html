@@ -2040,6 +2040,18 @@
 
   /* SETTINGS PAGE */
   #page-settings .card-title i { color: var(--teal); }
+  .loc-place-card { background:var(--surface2); border:0.5px solid var(--border-md); border-radius:10px; padding:12px 14px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px; }
+  .loc-place-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .loc-name-input { flex:1; min-width:120px; }
+  .loc-del-btn { padding:6px 8px; border-radius:7px; background:transparent; border:0.5px solid var(--border-md); color:var(--coral-text); cursor:pointer; font-size:13px; flex-shrink:0; transition:background .15s; }
+  .loc-del-btn:hover { background:var(--coral-bg,rgba(255,100,80,.1)); }
+  .loc-coords-chip { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:var(--text-2); background:var(--surface); border:0.5px solid var(--border-md); border-radius:6px; padding:4px 9px; }
+  .loc-coords-empty { color:var(--text-3); font-style:italic; }
+  .loc-status-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .loc-status-chip { font-size:12px; display:inline-flex; align-items:center; gap:6px; flex:1; min-width:0; }
+  .loc-status-ok { color:var(--green-text); }
+  .loc-status-neutral { color:var(--amber-text); }
+  .loc-status-error { color:var(--coral-text); }
   .settings-section { margin-bottom: 8px; }
   .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 0; border-bottom: 0.5px solid var(--border); }
   .settings-row:last-child { border-bottom: none; }
@@ -4428,6 +4440,23 @@
           <button class="settings-save-btn" onclick="saveHubOrganiser()"><i class="ti ti-device-floppy"></i> Save layout</button>
           <button class="settings-save-btn" onclick="resetHubOrganiser()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-refresh"></i> Reset to default</button>
         </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('s-location'); renderLocPlaces()">
+        <i class="ti ti-map-pin"></i> Location Routing
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="s-location">
+        <div class="ai-hint" style="margin-bottom:14px;">On load the app checks your GPS and jumps to the matching page. Requires browser location permission. Capture each location while you're physically there.</div>
+        <div class="loc-status-row">
+          <span class="loc-status-chip" id="loc-status-chip"><i class="ti ti-map-pin-off"></i> Not checked yet</span>
+          <button class="settings-save-btn" onclick="locCheckNow()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;padding:5px 12px;font-size:11.5px;"><i class="ti ti-crosshair"></i> Check now</button>
+        </div>
+        <div id="loc-places-list"></div>
+        <button class="settings-save-btn" id="loc-add-btn" onclick="locAddPlace()" style="margin-top:6px;"><i class="ti ti-plus"></i> Add place</button>
+        <div class="ai-hint" style="margin-top:10px;"><strong>Tip:</strong> Radius of 100–300 m works well on mobile. Use 400–600 m on desktop where GPS accuracy is lower.</div>
       </div>
     </div>
 
@@ -15206,6 +15235,130 @@ const APP_VERSION = CHANGELOG[0].ver;
 
 let changelogFilter = 'all';
 
+// ===== LOCATION ROUTING =====
+let locationPlaces = []; // [{ id, name, lat, lng, radius, page }]
+function saveLocationPlaces() { dbSet('zarif_location_places', locationPlaces); }
+
+function haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6371000, toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function locMatchPlace(lat, lng) {
+  for (const p of locationPlaces) {
+    if (p.lat == null || p.lng == null || !p.page) continue;
+    if (haversineM(lat, lng, p.lat, p.lng) <= (p.radius || 200)) return p;
+  }
+  return null;
+}
+
+function initLocationRouting() {
+  if (!locationPlaces.some(p => p.lat != null && p.page)) return;
+  if (!('geolocation' in navigator)) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    const match = locMatchPlace(lat, lng);
+    if (match) showPage(match.page);
+    locSetStatusChip(match ? `At: ${match.name}` : 'No match', match ? 'ok' : 'neutral', lat, lng);
+  }, () => locSetStatusChip('Location access denied', 'error'), { timeout: 8000, maximumAge: 60000 });
+}
+
+function locSetStatusChip(label, type, lat, lng) {
+  const chip = document.getElementById('loc-status-chip');
+  if (!chip) return;
+  const icon = { ok:'ti-map-pin', neutral:'ti-map-pin-question', error:'ti-map-pin-off' }[type] || 'ti-map-pin';
+  const cls  = { ok:'loc-status-ok', neutral:'loc-status-neutral', error:'loc-status-error' }[type] || '';
+  chip.className = `loc-status-chip ${cls}`;
+  chip.innerHTML = `<i class="ti ${icon}"></i> ${label}${lat != null ? ` <span style="color:var(--text-3);font-size:11px">(${lat.toFixed(4)}, ${lng.toFixed(4)})</span>` : ''}`;
+}
+
+function locCheckNow() {
+  if (!('geolocation' in navigator)) { locSetStatusChip('Geolocation not supported', 'error'); return; }
+  locSetStatusChip('Checking…', 'neutral');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    const match = locMatchPlace(lat, lng);
+    locSetStatusChip(match ? `At: ${match.name}` : 'No matching place', match ? 'ok' : 'neutral', lat, lng);
+  }, () => locSetStatusChip('Access denied or timed out', 'error'), { timeout: 10000 });
+}
+
+function locAddPlace() {
+  if (locationPlaces.length >= 5) return;
+  locationPlaces.push({ id: 'loc' + Date.now(), name: '', lat: null, lng: null, radius: 200, page: 'tasks' });
+  saveLocationPlaces();
+  renderLocPlaces();
+}
+
+function locDeletePlace(id) {
+  locationPlaces = locationPlaces.filter(p => p.id !== id);
+  saveLocationPlaces();
+  renderLocPlaces();
+}
+
+function locUpdatePlace(id, field, value) {
+  const p = locationPlaces.find(x => x.id === id);
+  if (!p) return;
+  p[field] = field === 'radius' ? (parseInt(value) || 200) : value;
+  saveLocationPlaces();
+}
+
+function locCaptureCoords(id) {
+  if (!('geolocation' in navigator)) { alert('Geolocation not supported in this browser.'); return; }
+  const btn = document.querySelector(`[data-loc-capture="${id}"]`);
+  if (btn) { btn.innerHTML = '<i class="ti ti-loader-2"></i> Getting…'; btn.disabled = true; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const p = locationPlaces.find(x => x.id === id);
+    if (!p) return;
+    p.lat = pos.coords.latitude;
+    p.lng = pos.coords.longitude;
+    saveLocationPlaces();
+    renderLocPlaces();
+  }, () => {
+    if (btn) { btn.innerHTML = '<i class="ti ti-crosshair"></i> Capture'; btn.disabled = false; }
+    alert('Could not get location. Please check browser permissions.');
+  }, { timeout: 12000 });
+}
+
+function renderLocPlaces() {
+  const el = document.getElementById('loc-places-list');
+  const addBtn = document.getElementById('loc-add-btn');
+  if (!el) return;
+  if (addBtn) addBtn.style.display = locationPlaces.length >= 5 ? 'none' : '';
+  if (!locationPlaces.length) { el.innerHTML = '<div class="ai-hint">No places configured yet.</div>'; return; }
+  el.innerHTML = locationPlaces.map(p => `
+    <div class="loc-place-card">
+      <div class="loc-place-row">
+        <input class="settings-input loc-name-input" placeholder="Place name (e.g. Work, Grocery Store)"
+          value="${esc(p.name || '')}" oninput="locUpdatePlace('${p.id}','name',this.value)">
+        <button class="loc-del-btn" onclick="locDeletePlace('${p.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+      <div class="loc-place-row">
+        <div class="loc-coords-chip${p.lat == null ? ' loc-coords-empty' : ''}">
+          <i class="ti ${p.lat != null ? 'ti-map-pin' : 'ti-map-pin-off'}"></i>
+          ${p.lat != null ? `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}` : 'No location captured'}
+        </div>
+        <button class="settings-save-btn" data-loc-capture="${p.id}" onclick="locCaptureCoords('${p.id}')"
+          style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;padding:5px 10px;font-size:11.5px;">
+          <i class="ti ti-crosshair"></i> ${p.lat != null ? 'Recapture' : 'Capture location'}
+        </button>
+      </div>
+      <div class="loc-place-row">
+        <span class="settings-row-label" style="width:110px;flex-shrink:0;">Landing page</span>
+        <select class="settings-input" style="flex:1;" onchange="locUpdatePlace('${p.id}','page',this.value)">
+          ${Object.entries(PAGES).map(([k,v]) => `<option value="${k}"${k===p.page?' selected':''}>${v.title}</option>`).join('')}
+        </select>
+      </div>
+      <div class="loc-place-row">
+        <span class="settings-row-label" style="width:110px;flex-shrink:0;">Radius</span>
+        <input type="range" min="50" max="1000" step="50" value="${p.radius||200}" style="flex:1;"
+          oninput="locUpdatePlace('${p.id}','radius',this.value); document.getElementById('loc-r-${p.id}').textContent=this.value+'m'">
+        <span id="loc-r-${p.id}" style="font-size:12px;color:var(--text-2);min-width:40px;text-align:right;">${p.radius||200}m</span>
+      </div>
+    </div>`).join('');
+}
+
 function toggleSettingsSection(id) {
   const body = document.getElementById(id);
   if (!body) return;
@@ -16433,8 +16586,9 @@ async function initApp() {
   }
 
   // Reinitialize all variables from db
-  done          = dbGet('zarif_done_v2')        || {};
-  doneAt        = dbGet('zarif_done_at')        || {};
+  done             = dbGet('zarif_done_v2')           || {};
+  doneAt           = dbGet('zarif_done_at')           || {};
+  locationPlaces   = dbGet('zarif_location_places')   || [];
   breaks        = dbGet('zarif_breaks')         || DEFAULT_BREAKS.map(r => ({...r}));
   customTasks   = dbGet('zarif_custom_tasks')   || [];
   quickTasks    = dbGet('zarif_quick_tasks')    || [];
@@ -16560,6 +16714,7 @@ async function initApp() {
   renderWeekAtAGlance();
   renderAccountSettings();
   initWidgetReorder();
+  initLocationRouting();
 }
 
 // ===== AUTH GATE =====
