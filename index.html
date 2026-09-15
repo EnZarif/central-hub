@@ -2649,6 +2649,12 @@
   .sched-card-m-title { font-size: 11.5px; font-weight: 700; color: var(--text-2); flex: 1; display: flex; align-items: center; gap: 5px; }
   .sched-card-m-count { font-size: 10.5px; color: var(--text-3); }
   .sched-row-m { display: flex; align-items: center; padding: 7px 14px; border-bottom: 0.5px solid var(--border); cursor: default; transition: background .12s; }
+  .sched-del-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:13px; padding:3px 5px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:4px; }
+  .sched-row-m:hover .sched-del-btn { color:var(--text-3); }
+  .sched-del-btn:hover { color:var(--coral-text) !important; background:rgba(255,80,60,.08); }
+  .htcm-del-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:12px; padding:2px 4px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:auto; }
+  .htcm-row:hover .htcm-del-btn { color:var(--text-3); }
+  .htcm-del-btn:hover { color:var(--coral-text) !important; background:rgba(255,80,60,.08); }
   .sched-row-m:last-child { border-bottom: none; }
   .sched-row-m:hover { background: rgba(255,255,255,0.016); }
   .sched-row-m.sr-next { background: rgba(74,158,232,0.04); }
@@ -8333,6 +8339,7 @@ function renderSchedCardM(tasks) {
     const badge = isNext  ? '<span class="sched-next-badge-m">⚡ Next</span>'
                 : isFocus ? '<span class="sched-focus-badge-m">★ Focus</span>' : '';
     const rowCls = ['sched-row-m', done?'sr-done':'', isNext?'sr-next':'', isFocus?'sr-focus':''].filter(Boolean).join(' ');
+    const delFn = t.custom ? `deleteCustomTask('${t.id}')` : `hideHardcodedTask('${t.id}')`;
     return `<div class="${rowCls}" onclick="${taskRowClick(t)}" style="border-left:2.5px solid ${prioColor}">
       <button class="sched-cb-m${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
       <span class="sched-time-m${timeExtraCls}">${timeLbl}</span>
@@ -8341,6 +8348,7 @@ function renderSchedCardM(tasks) {
       <span class="sched-task-name-m${done?' sr-name-done':''}">${esc(t.name)}</span>
       ${badge}
       <span class="sched-hub-chip-m ${chipCls}">${chipLabel}</span>
+      <button class="sched-del-btn" title="Delete task" onclick="event.stopPropagation();${delFn}"><i class="ti ti-trash"></i></button>
     </div>`;
   }
 
@@ -8400,10 +8408,12 @@ function renderHubTaskGridM(tasks) {
         const freqTag = freqMap[t.freq] ? `<span class="htcm-freq">${freqMap[t.freq]}</span>` : '';
         const cls = ['htcm-row', done?'htcm-done':'', isNext?'htcm-is-next':'', isFocus?'htcm-is-focus':''].filter(Boolean).join(' ');
         const prioClr = done ? 'transparent' : (t.priority==='HIGH'?'var(--coral-text)':t.priority==='MEDIUM'?'var(--amber-text)':'transparent');
+        const htDelFn = t.custom ? `deleteCustomTask('${t.id}')` : `hideHardcodedTask('${t.id}')`;
         rows += `<div class="${cls}" onclick="${taskRowClick(t)}" style="border-left:2px solid ${prioClr}">
           <button class="htcm-cb${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
           <span class="htcm-name">${esc(t.name)}</span>
           ${badge}${freqTag}
+          <button class="htcm-del-btn" title="Delete task" onclick="event.stopPropagation();${htDelFn}"><i class="ti ti-trash"></i></button>
         </div>`;
       });
     });
