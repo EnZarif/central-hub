@@ -8282,29 +8282,46 @@ function renderJobListSidebar() {
   const hasSections = active.some(j => j.type === 'section');
 
   if (hasSections) {
-    // Sections mode: group by sectionId field, render sections then unassigned zone.
+    // Sections mode: overdue/today jobs always pinned to top, then sections, then unassigned.
     const sections = active.filter(j => j.type === 'section');
     const activeJobs = active.filter(j => j.type !== 'section');
+
+    // Collect urgent jobs across all sections and unassigned
+    const urgentOv = [...activeJobs.filter(j => !j.done && j.date && j.date < todayStr)]
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const urgentTd = activeJobs.filter(j => !j.done && j.date === todayStr);
+    const urgentIds = new Set([...urgentOv, ...urgentTd].map(j => String(j.id)));
+
+    if (urgentOv.length) {
+      html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
+      html += urgentOv.map(j => jlRowHtml(j, false, true, !!j.sectionId)).join('');
+    }
+    if (urgentTd.length) {
+      html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
+      html += urgentTd.map(j => jlRowHtml(j, true, false, !!j.sectionId)).join('');
+    }
+
     if (!sections.length && !activeJobs.length) {
       html += '<div class="jl-empty">Nothing active — add one above.</div>';
     } else {
       for (const sec of sections) {
-        const secJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
-        const hasUrgent = secJobs.some(j => !j.done && j.date && j.date <= todayStr);
-        const isCollapsed = jlCollapsedSections.has(String(sec.id)) && !hasUrgent;
-        html += jlRowHtml(sec, false, false, false, isCollapsed, hasUrgent);
+        const allSecJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
+        const secJobs = allSecJobs.filter(j => !urgentIds.has(String(j.id)));
+        const isCollapsed = jlCollapsedSections.has(String(sec.id));
+        html += jlRowHtml(sec, false, false, false, isCollapsed, false);
         if (!isCollapsed) {
           for (const j of secJobs) {
-            const isOv = !j.done && j.date && j.date < todayStr;
-            const isTd = !j.done && j.date === todayStr;
-            html += jlRowHtml(j, isTd, isOv, true);
+            html += jlRowHtml(j, false, false, true);
           }
           if (!secJobs.length) {
-            html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">No jobs yet — hover the section to add one.</div>`;
+            const msg = allSecJobs.length > 0
+              ? 'All jobs are overdue or due today — shown above.'
+              : 'No jobs yet — hover the section to add one.';
+            html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">${msg}</div>`;
           }
         }
       }
-      const unassigned = activeJobs.filter(j => !j.sectionId);
+      const unassigned = activeJobs.filter(j => !j.sectionId && !urgentIds.has(String(j.id)));
       if (unassigned.length) {
         html += `<div class="jl-unassigned-zone">
           <div class="jl-unassigned-header">
@@ -8312,9 +8329,7 @@ function renderJobListSidebar() {
             <div class="jl-sec-line"></div>
           </div>`;
         for (const j of unassigned) {
-          const isOv = !j.done && j.date && j.date < todayStr;
-          const isTd = !j.done && j.date === todayStr;
-          html += jlRowHtml(j, isTd, isOv, false);
+          html += jlRowHtml(j, false, false, false);
         }
         html += '</div>';
       }
