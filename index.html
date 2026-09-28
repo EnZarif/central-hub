@@ -1939,9 +1939,21 @@
   .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
   .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
   .jl-sec-add-btn { color:var(--teal-text) !important; }
-  .jl-unassigned-divider { display:flex; align-items:center; gap:8px; padding:4px 10px; margin:6px 0 2px; }
-  .jl-unassigned-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); white-space:nowrap; }
   #jl-section-block { display:none; }
+  /* Section edit modal */
+  .jl-sec-checklist { max-height:280px; overflow-y:auto; }
+  .jl-sec-check-item { display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background .1s; border-radius:4px; }
+  .jl-sec-check-item:last-child { border-bottom:none; }
+  .jl-sec-check-item input[type=checkbox] { width:15px; height:15px; accent-color:var(--teal); flex-shrink:0; cursor:pointer; }
+  .jl-sec-check-name { font-size:13px; color:var(--text); flex:1; line-height:1.3; }
+  .jl-sec-check-tag { font-size:10px; color:var(--text-3); white-space:nowrap; background:var(--surface2); border-radius:3px; padding:1px 5px; }
+  .jl-sec-check-group-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); padding:10px 2px 4px; }
+  /* In-section job indicator */
+  .jl-item-wrap.in-section { border-left:2px solid var(--teal); margin-left:6px; padding-left:0; }
+  /* Unassigned zone */
+  .jl-unassigned-zone { margin-top:8px; }
+  .jl-unassigned-header { display:flex; align-items:center; gap:8px; padding:6px 10px 4px; border-top:2px dashed var(--border-md); margin-bottom:2px; }
+  .jl-unassigned-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); white-space:nowrap; }
   .jl-tab-panel .jl-empty { padding: 10px 14px; }
   .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
   .jl-tab-panel .jl-archive-list { gap: 7px; }
@@ -7605,12 +7617,101 @@ function fillJlSectionSelect(selectedId) {
 }
 
 function jlFindParentSection(id) {
-  let lastSection = '';
-  for (const j of jobLists) {
-    if (j.type === 'section') lastSection = String(j.id);
-    if (String(j.id) === String(id)) return lastSection;
+  const j = jobLists.find(x => String(x.id) === String(id));
+  return (j && j.sectionId) ? String(j.sectionId) : '';
+}
+
+function jlGetSectionJobs(sectionId) {
+  const now = Date.now();
+  const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive)).map(j => j.id));
+  return jobLists.filter(j => j.type !== 'section' && !archivedIds.has(j.id) && String(j.sectionId || '') === String(sectionId));
+}
+
+function jlMoveToSection(jobId, sectionId) {
+  const j = jobLists.find(x => String(x.id) === String(jobId));
+  if (j) j.sectionId = sectionId || null;
+}
+
+function jlRemoveFromSection(jobId) {
+  const j = jobLists.find(x => String(x.id) === String(jobId));
+  if (j) j.sectionId = null;
+  saveJobLists();
+  renderJobListSidebar();
+}
+
+let _jlEditingSectionId = null;
+
+function jlOpenSectionEdit(sectionId) {
+  _jlEditingSectionId = sectionId;
+  const section = jobLists.find(j => String(j.id) === String(sectionId));
+  if (!section) return;
+  document.getElementById('jl-sec-edit-name').value = section.label || '';
+  const now = Date.now();
+  const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive)).map(j => j.id));
+  const allJobs = jobLists.filter(j => j.type !== 'section' && !archivedIds.has(j.id));
+  const inThis = allJobs.filter(j => String(j.sectionId || '') === String(sectionId));
+  const unassigned = allJobs.filter(j => !j.sectionId);
+  const inOther = allJobs.filter(j => j.sectionId && String(j.sectionId) !== String(sectionId));
+  const listEl = document.getElementById('jl-sec-edit-list');
+  if (!listEl) return;
+  if (!allJobs.length) {
+    listEl.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">No jobs yet — add one first.</div>';
+  } else {
+    const renderRow = (j, checked, tag) => `
+      <label class="jl-sec-check-item">
+        <input type="checkbox" value="${j.id}" ${checked ? 'checked' : ''}>
+        <span class="jl-sec-check-name">${esc(j.name)}</span>
+        ${j.date ? `<span style="font-size:11px;color:var(--text-3)">${j.date}</span>` : ''}
+        ${tag ? `<span class="jl-sec-check-tag">${esc(tag)}</span>` : ''}
+      </label>`;
+    let html = '';
+    if (inThis.length) {
+      html += '<div class="jl-sec-check-group-label">In this section</div>';
+      html += inThis.map(j => renderRow(j, true, '')).join('');
+    }
+    if (unassigned.length) {
+      html += '<div class="jl-sec-check-group-label">Unassigned</div>';
+      html += unassigned.map(j => renderRow(j, false, '')).join('');
+    }
+    if (inOther.length) {
+      html += '<div class="jl-sec-check-group-label">In other sections</div>';
+      html += inOther.map(j => {
+        const sec = jobLists.find(s => s.type === 'section' && String(s.id) === String(j.sectionId));
+        return renderRow(j, false, sec ? (sec.label || 'Section') : '');
+      }).join('');
+    }
+    listEl.innerHTML = html;
   }
-  return '';
+  document.getElementById('jl-sec-edit-overlay').classList.add('active');
+}
+
+function jlCloseSectionEdit() {
+  document.getElementById('jl-sec-edit-overlay').classList.remove('active');
+  _jlEditingSectionId = null;
+}
+
+function jlSaveSectionEdit() {
+  if (!_jlEditingSectionId) return;
+  const section = jobLists.find(j => String(j.id) === String(_jlEditingSectionId));
+  if (section) {
+    const newName = document.getElementById('jl-sec-edit-name').value.trim();
+    if (newName) section.label = newName;
+  }
+  const listEl = document.getElementById('jl-sec-edit-list');
+  if (listEl) {
+    listEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      const j = jobLists.find(x => String(x.id) === cb.value);
+      if (!j) return;
+      if (cb.checked) {
+        j.sectionId = _jlEditingSectionId;
+      } else if (String(j.sectionId || '') === String(_jlEditingSectionId)) {
+        j.sectionId = null;
+      }
+    });
+  }
+  saveJobLists();
+  jlCloseSectionEdit();
+  renderJobListSidebar();
 }
 
 function openAddJobListModalInSection(sectionId) {
@@ -7697,30 +7798,16 @@ function saveJobList() {
       j.name = name; j.url = url; j.date = date; j.time = time || null;
       j.projId = projId || null; j.subId = subId || null;
       j.amtekProjectId = amtekProjectId || null;
+      const chosenSectionEdit = document.getElementById('jl-section')?.value || null;
+      j.sectionId = chosenSectionEdit || null;
       if (projId && subId && (linkChanged || !j.todoId)) linkJobListTodo(j);
       else if (!projId) j.todoId = null;
     }
   } else {
-    const j = { id: 'jl' + Date.now(), name, url, date, time: time || null, done: false, projId: projId || null, subId: subId || null, amtekProjectId: amtekProjectId || null, todoId: null, createdAt: Date.now() };
+    const chosenSection = document.getElementById('jl-section')?.value || null;
+    const j = { id: 'jl' + Date.now(), name, url, date, time: time || null, done: false, projId: projId || null, subId: subId || null, amtekProjectId: amtekProjectId || null, todoId: null, sectionId: chosenSection || null, createdAt: Date.now() };
     if (projId && subId) linkJobListTodo(j);
-    const chosenSection = document.getElementById('jl-section')?.value;
-    if (chosenSection) {
-      const secIdx = jobLists.findIndex(x => String(x.id) === String(chosenSection));
-      if (secIdx !== -1) {
-        const nowMs = Date.now();
-        let insertAt = secIdx + 1;
-        while (insertAt < jobLists.length &&
-               jobLists[insertAt].type !== 'section' &&
-               !(jobLists[insertAt].done && jobLists[insertAt].completedAt && (nowMs - jobLists[insertAt].completedAt) >= JL_ARCHIVE_AFTER_MS)) {
-          insertAt++;
-        }
-        jobLists.splice(insertAt, 0, j);
-      } else {
-        jobLists.push(j);
-      }
-    } else {
-      jobLists.push(j);
-    }
+    jobLists.push(j);
   }
   saveJobLists();
 
@@ -7832,14 +7919,23 @@ function jlDueChip(dateStr) {
 // renderJobListSidebar already applies — archived (collapsed) entries aren't movable
 function moveJobList(id, dir) {
   const now = Date.now();
-  const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS).map(j => j.id));
+  const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive)).map(j => j.id));
   const target = jobLists.find(j => String(j.id) === String(id));
   if (!target || archivedIds.has(target.id)) return;
   const hasSections = jobLists.some(j => j.type === 'section');
-  // In sections mode, items and sections move freely among all active items
-  const group = hasSections
-    ? jobLists.filter(j => !archivedIds.has(j.id))
-    : jobLists.filter(j => !archivedIds.has(j.id) && j.done === target.done);
+  let group;
+  if (hasSections) {
+    if (target.type === 'section') {
+      // Sections reorder only among other sections
+      group = jobLists.filter(j => !archivedIds.has(j.id) && j.type === 'section');
+    } else {
+      // Jobs reorder within their sectionId group (or within unassigned)
+      const sid = target.sectionId || null;
+      group = jobLists.filter(j => !archivedIds.has(j.id) && j.type !== 'section' && (j.sectionId || null) === sid);
+    }
+  } else {
+    group = jobLists.filter(j => !archivedIds.has(j.id) && j.done === target.done);
+  }
   const idx = group.findIndex(j => String(j.id) === String(id));
   const swapIdx = idx + dir;
   if (idx === -1 || swapIdx < 0 || swapIdx >= group.length) return;
@@ -7871,6 +7967,8 @@ function jlAddSection() {
 }
 
 function jlDeleteSection(id) {
+  // Unassign jobs belonging to this section
+  jobLists.forEach(j => { if (String(j.sectionId || '') === String(id)) j.sectionId = null; });
   jobLists = jobLists.filter(j => String(j.id) !== String(id));
   saveJobLists();
   renderJobListSidebar();
@@ -7901,7 +7999,7 @@ function jlSaveSection(id) {
   renderJobListSidebar();
 }
 
-function jlRowHtml(j, isToday = false, isOverdue = false) {
+function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false) {
   if (j.type === 'section') {
     return `<div class="jl-section-divider">
       <span class="jl-sec-label" id="jlseclbl-${j.id}" onclick="jlRenameSection('${j.id}')">${esc(j.label || 'Section')}</span>
@@ -7910,7 +8008,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
         <button class="jl-icon-btn jl-sec-add-btn" onclick="openAddJobListModalInSection('${j.id}')" title="Add job to this section"><i class="ti ti-plus"></i></button>
         <button class="jl-icon-btn" onclick="moveJobList('${j.id}',-1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
         <button class="jl-icon-btn" onclick="moveJobList('${j.id}',1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
-        <button class="jl-icon-btn" onclick="jlRenameSection('${j.id}')" title="Rename"><i class="ti ti-pencil"></i></button>
+        <button class="jl-icon-btn" onclick="jlOpenSectionEdit('${j.id}')" title="Edit section — manage jobs"><i class="ti ti-edit"></i></button>
         <button class="jl-icon-btn jl-del-btn" onclick="jlDeleteSection('${j.id}')" title="Delete section"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
@@ -7962,7 +8060,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
         </div>
       </div>
     </div>`).join('');
-  return `<div class="jl-item-wrap">
+  return `<div class="jl-item-wrap${inSection ? ' in-section' : ''}">
     <div class="jl-item${j.done ? ' done' : ''}${stripeClass}">
       <label class="jl-cb-wrap">
         <input type="checkbox" class="jl-cb${isToday ? ' jl-today-cb' : isOverdue ? ' jl-overdue-cb' : ''}" ${j.done ? 'checked' : ''} onchange="toggleJobListDone('${j.id}')">
@@ -7980,6 +8078,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
               <button class="jl-icon-btn" onclick="moveJobList('${j.id}', 1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
             </div>
             <button class="jl-icon-btn" onclick="openEditJobList('${j.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
+            ${inSection ? `<button class="jl-icon-btn" onclick="jlRemoveFromSection('${j.id}')" title="Remove from section"><i class="ti ti-circle-minus"></i></button>` : ''}
             <button class="jl-icon-btn jl-del-btn" onclick="deleteJobList('${j.id}')" title="Delete"><i class="ti ti-trash"></i></button>
             ${j.done ? `<button class="jl-icon-btn jl-archive-btn" title="Move to Recently Completed" onclick="quickArchiveJobList('${j.id}')"><i class="ti ti-archive"></i></button>` : ''}
           </div>
@@ -8160,27 +8259,38 @@ function renderJobListSidebar() {
   const hasSections = active.some(j => j.type === 'section');
 
   if (hasSections) {
-    // Sections mode: render everything in stored order, per-item overdue/today stripes.
-    // Jobs that come before the first section header get an "Unassigned" label.
-    if (active.length) {
-      let sawSection = false;
-      let addedUnassignedHeader = false;
-      for (const j of active) {
-        if (j.type === 'section') {
-          sawSection = true;
-          html += jlRowHtml(j);
-        } else {
-          if (!sawSection && !addedUnassignedHeader) {
-            html += `<div class="jl-unassigned-divider"><span class="jl-unassigned-label"><i class="ti ti-inbox" style="font-size:11px;margin-right:3px;"></i>Unassigned</span><div class="jl-sec-line"></div></div>`;
-            addedUnassignedHeader = true;
-          }
+    // Sections mode: group by sectionId field, render sections then unassigned zone.
+    const sections = active.filter(j => j.type === 'section');
+    const activeJobs = active.filter(j => j.type !== 'section');
+    if (!sections.length && !activeJobs.length) {
+      html += '<div class="jl-empty">Nothing active — add one above.</div>';
+    } else {
+      for (const sec of sections) {
+        html += jlRowHtml(sec);
+        const secJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
+        for (const j of secJobs) {
           const isOv = !j.done && j.date && j.date < todayStr;
           const isTd = !j.done && j.date === todayStr;
-          html += jlRowHtml(j, isTd, isOv);
+          html += jlRowHtml(j, isTd, isOv, true);
+        }
+        if (!secJobs.length) {
+          html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">No jobs yet — hover the section to add one.</div>`;
         }
       }
-    } else {
-      html += '<div class="jl-empty">Nothing active — add one above.</div>';
+      const unassigned = activeJobs.filter(j => !j.sectionId);
+      if (unassigned.length) {
+        html += `<div class="jl-unassigned-zone">
+          <div class="jl-unassigned-header">
+            <span class="jl-unassigned-title"><i class="ti ti-inbox" style="font-size:11px;margin-right:4px;"></i>Unassigned</span>
+            <div class="jl-sec-line"></div>
+          </div>`;
+        for (const j of unassigned) {
+          const isOv = !j.done && j.date && j.date < todayStr;
+          const isTd = !j.done && j.date === todayStr;
+          html += jlRowHtml(j, isTd, isOv, false);
+        }
+        html += '</div>';
+      }
     }
   } else {
     if (overdue.length) {
@@ -17170,5 +17280,29 @@ document.addEventListener('pointerup', e => {
   _M.animate(btn, { scale: [0.96, 1] }, { duration: 0.18, easing: [0.2, 0.85, 0.25, 1] });
 });
 </script>
+
+<!-- Section edit modal -->
+<div class="kpi-modal-overlay" id="jl-sec-edit-overlay" onclick="if(event.target===this)jlCloseSectionEdit()">
+  <div class="kpi-modal" style="max-width:420px;">
+    <div class="kpi-modal-header">
+      <strong id="jl-sec-edit-title">Edit Section</strong>
+      <button class="icon-btn" onclick="jlCloseSectionEdit()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="kpi-modal-preview">
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">Section name</div>
+        <input class="field-input" id="jl-sec-edit-name" maxlength="60" placeholder="e.g. Day 4">
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">Jobs in this section <span style="font-weight:400">(tick to add, untick to remove)</span></div>
+        <div id="jl-sec-edit-list" class="jl-sec-checklist"></div>
+      </div>
+    </div>
+    <div class="kpi-modal-actions">
+      <button class="kpi-file-btn" onclick="jlCloseSectionEdit()">Cancel</button>
+      <button class="generate-btn" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="jlSaveSectionEdit()"><i class="ti ti-check" style="font-size:15px"></i> Save</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
