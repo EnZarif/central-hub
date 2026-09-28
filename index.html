@@ -1929,6 +1929,15 @@
   .jl-section-label i { font-size: 11px; }
   .jl-section-label.ov { color: #E05858; }
   .jl-section-label.td { color: #F5A449; }
+  .jl-section-divider { display:flex; align-items:center; gap:8px; padding:4px 10px; margin:8px 0 2px; }
+  .jl-sec-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--teal-text); white-space:nowrap; cursor:pointer; line-height:1.4; }
+  .jl-sec-label:hover { opacity:.8; }
+  .jl-sec-line { flex:1; height:1px; background:var(--border-md); }
+  .jl-sec-actions { display:flex; gap:2px; opacity:0; transition:opacity .15s; flex-shrink:0; }
+  .jl-section-divider:hover .jl-sec-actions { opacity:1; }
+  .jl-sec-rename-input { background:transparent; border:none; border-bottom:1px solid var(--teal); color:var(--teal-text); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:0 2px; min-width:60px; max-width:160px; outline:none; font-family:inherit; }
+  .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
+  .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
   .jl-tab-panel .jl-empty { padding: 10px 14px; }
   .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
   .jl-tab-panel .jl-archive-list { gap: 7px; }
@@ -3502,6 +3511,7 @@
             <button class="jl-time-btn auto-btn" onclick="setJlTimeFilterAuto()" title="Auto-detect Melbourne time">🕐 Now</button>
           </div>
           <div class="jl-list" id="jl-list"></div>
+          <button class="jl-add-section-btn" onclick="jlAddSection()"><i class="ti ti-layout-rows" style="font-size:13px"></i> Add section</button>
         </div>
         <div class="amtek-tab-panel" id="amtek-panel-proj">
           <div class="amtek-proj-subhd">
@@ -7770,7 +7780,11 @@ function moveJobList(id, dir) {
   const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS).map(j => j.id));
   const target = jobLists.find(j => String(j.id) === String(id));
   if (!target || archivedIds.has(target.id)) return;
-  const group = jobLists.filter(j => !archivedIds.has(j.id) && j.done === target.done);
+  const hasSections = jobLists.some(j => j.type === 'section');
+  // In sections mode, items and sections move freely among all active items
+  const group = hasSections
+    ? jobLists.filter(j => !archivedIds.has(j.id))
+    : jobLists.filter(j => !archivedIds.has(j.id) && j.done === target.done);
   const idx = group.findIndex(j => String(j.id) === String(id));
   const swapIdx = idx + dir;
   if (idx === -1 || swapIdx < 0 || swapIdx >= group.length) return;
@@ -7782,7 +7796,69 @@ function moveJobList(id, dir) {
   renderJobListSidebar();
 }
 
+function jlAddSection() {
+  const id = Date.now();
+  const hasSections = jobLists.some(j => j.type === 'section');
+  // Insert at end of active (non-archived) items
+  const now = Date.now();
+  const lastActive = (() => {
+    for (let i = jobLists.length - 1; i >= 0; i--) {
+      const j = jobLists[i];
+      if (!(j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS)) return i;
+    }
+    return jobLists.length - 1;
+  })();
+  jobLists.splice(lastActive + 1, 0, { id, type: 'section', label: 'New Section' });
+  saveJobLists();
+  renderJobListSidebar();
+  // Immediately enter rename mode for the new section
+  setTimeout(() => jlRenameSection(id), 50);
+}
+
+function jlDeleteSection(id) {
+  jobLists = jobLists.filter(j => String(j.id) !== String(id));
+  saveJobLists();
+  renderJobListSidebar();
+}
+
+function jlRenameSection(id) {
+  const lbl = document.getElementById('jlseclbl-' + id);
+  if (!lbl) return;
+  const current = lbl.textContent.trim();
+  lbl.innerHTML = `<input class="jl-sec-rename-input" id="jlsecinput-${id}" value="${esc(current)}" maxlength="60" />`;
+  const inp = document.getElementById('jlsecinput-' + id);
+  if (!inp) return;
+  inp.focus();
+  inp.select();
+  inp.addEventListener('blur', () => jlSaveSection(id));
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); jlSaveSection(id); }
+    if (e.key === 'Escape') { renderJobListSidebar(); }
+  });
+}
+
+function jlSaveSection(id) {
+  const inp = document.getElementById('jlsecinput-' + id);
+  const newLabel = inp ? inp.value.trim() : '';
+  const j = jobLists.find(x => String(x.id) === String(id));
+  if (j) j.label = newLabel || 'Section';
+  saveJobLists();
+  renderJobListSidebar();
+}
+
 function jlRowHtml(j, isToday = false, isOverdue = false) {
+  if (j.type === 'section') {
+    return `<div class="jl-section-divider">
+      <span class="jl-sec-label" id="jlseclbl-${j.id}" onclick="jlRenameSection('${j.id}')">${esc(j.label || 'Section')}</span>
+      <div class="jl-sec-line"></div>
+      <div class="jl-sec-actions">
+        <button class="jl-icon-btn" onclick="moveJobList('${j.id}',-1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
+        <button class="jl-icon-btn" onclick="moveJobList('${j.id}',1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
+        <button class="jl-icon-btn" onclick="jlRenameSection('${j.id}')" title="Rename"><i class="ti ti-pencil"></i></button>
+        <button class="jl-icon-btn jl-del-btn" onclick="jlDeleteSection('${j.id}')" title="Delete section"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }
   let linkBadge = '';
   if (j.projId && j.subId) {
     const p = projects.find(x => x.id === j.projId);
@@ -8025,22 +8101,38 @@ function renderJobListSidebar() {
 
   let html = '';
 
-  if (overdue.length) {
-    const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
-    html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
-    html += sortedOverdue.map(j => jlRowHtml(j, false, true)).join('');
-  }
+  const hasSections = active.some(j => j.type === 'section');
 
-  if (dueToday.length) {
-    html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
-    html += dueToday.map(j => jlRowHtml(j, true)).join('');
-  }
+  if (hasSections) {
+    // Sections mode: render everything in stored order, per-item overdue/today stripes
+    if (active.length) {
+      html += active.map(j => {
+        if (j.type === 'section') return jlRowHtml(j);
+        const isOv = !j.done && j.date && j.date < todayStr;
+        const isTd = !j.done && j.date === todayStr;
+        return jlRowHtml(j, isTd, isOv);
+      }).join('');
+    } else {
+      html += '<div class="jl-empty">Nothing active — add one above.</div>';
+    }
+  } else {
+    if (overdue.length) {
+      const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
+      html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
+      html += sortedOverdue.map(j => jlRowHtml(j, false, true)).join('');
+    }
 
-  if (sortedRest.length) {
-    if (pinnedIds.size) html += `<div class="jl-section-label"><i class="ti ti-clock"></i> Upcoming</div>`;
-    html += sortedRest.map(j => jlRowHtml(j)).join('');
-  } else if (!pinnedIds.size) {
-    html += '<div class="jl-empty">Nothing active — add one above.</div>';
+    if (dueToday.length) {
+      html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
+      html += dueToday.map(j => jlRowHtml(j, true)).join('');
+    }
+
+    if (sortedRest.length) {
+      if (pinnedIds.size) html += `<div class="jl-section-label"><i class="ti ti-clock"></i> Upcoming</div>`;
+      html += sortedRest.map(j => jlRowHtml(j)).join('');
+    } else if (!pinnedIds.size) {
+      html += '<div class="jl-empty">Nothing active — add one above.</div>';
+    }
   }
 
   if (archived.length) {
