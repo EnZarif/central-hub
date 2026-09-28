@@ -1940,6 +1940,9 @@
   .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
   .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
   .jl-sec-add-btn { color:var(--teal-text) !important; }
+  .jl-sec-chevron { background:none; border:none; padding:2px 3px; cursor:pointer; color:var(--text-3); display:flex; align-items:center; font-size:13px; transition:color .12s, transform .15s; flex-shrink:0; border-radius:3px; }
+  .jl-sec-chevron:hover { color:var(--teal-text); }
+  .jl-sec-urgent-dot { width:6px; height:6px; background:var(--amber-text); border-radius:50%; flex-shrink:0; margin-right:-2px; }
   #jl-section-block { display:none; }
   /* Section edit modal */
   .jl-sec-checklist { max-height:280px; overflow-y:auto; }
@@ -7642,6 +7645,23 @@ function jlRemoveFromSection(jobId) {
 
 let _jlEditingSectionId = null;
 
+let jlCollapsedSections = (() => {
+  try { return new Set(JSON.parse(localStorage.getItem('jl_collapsed_sections') || '[]')); }
+  catch(e) { return new Set(); }
+})();
+
+function jlSaveCollapsed() {
+  try { localStorage.setItem('jl_collapsed_sections', JSON.stringify([...jlCollapsedSections])); } catch(e) {}
+}
+
+function jlToggleSection(id) {
+  const sid = String(id);
+  if (jlCollapsedSections.has(sid)) { jlCollapsedSections.delete(sid); }
+  else { jlCollapsedSections.add(sid); }
+  jlSaveCollapsed();
+  renderJobListSidebar();
+}
+
 function jlOpenSectionEdit(sectionId) {
   _jlEditingSectionId = sectionId;
   const section = jobLists.find(j => String(j.id) === String(sectionId));
@@ -8000,9 +8020,11 @@ function jlSaveSection(id) {
   renderJobListSidebar();
 }
 
-function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false) {
+function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, collapsed = false, hasUrgent = false) {
   if (j.type === 'section') {
     return `<div class="jl-section-divider">
+      <button class="jl-sec-chevron" onclick="jlToggleSection('${j.id}')" title="${collapsed ? 'Expand section' : 'Collapse section'}"><i class="ti ti-chevron-${collapsed ? 'right' : 'down'}"></i></button>
+      ${hasUrgent ? `<span class="jl-sec-urgent-dot" title="Auto-expanded — has overdue or due-today jobs"></span>` : ''}
       <span class="jl-sec-label" id="jlseclbl-${j.id}" onclick="jlRenameSection('${j.id}')">${esc(j.label || 'Section')}</span>
       <div class="jl-sec-line"></div>
       <div class="jl-sec-actions">
@@ -8267,15 +8289,19 @@ function renderJobListSidebar() {
       html += '<div class="jl-empty">Nothing active — add one above.</div>';
     } else {
       for (const sec of sections) {
-        html += jlRowHtml(sec);
         const secJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
-        for (const j of secJobs) {
-          const isOv = !j.done && j.date && j.date < todayStr;
-          const isTd = !j.done && j.date === todayStr;
-          html += jlRowHtml(j, isTd, isOv, true);
-        }
-        if (!secJobs.length) {
-          html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">No jobs yet — hover the section to add one.</div>`;
+        const hasUrgent = secJobs.some(j => !j.done && j.date && j.date <= todayStr);
+        const isCollapsed = jlCollapsedSections.has(String(sec.id)) && !hasUrgent;
+        html += jlRowHtml(sec, false, false, false, isCollapsed, hasUrgent);
+        if (!isCollapsed) {
+          for (const j of secJobs) {
+            const isOv = !j.done && j.date && j.date < todayStr;
+            const isTd = !j.done && j.date === todayStr;
+            html += jlRowHtml(j, isTd, isOv, true);
+          }
+          if (!secJobs.length) {
+            html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">No jobs yet — hover the section to add one.</div>`;
+          }
         }
       }
       const unassigned = activeJobs.filter(j => !j.sectionId);
