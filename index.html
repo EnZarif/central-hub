@@ -1938,6 +1938,10 @@
   .jl-sec-rename-input { background:transparent; border:none; border-bottom:1px solid var(--teal); color:var(--teal-text); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:0 2px; min-width:60px; max-width:160px; outline:none; font-family:inherit; }
   .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
   .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
+  .jl-sec-add-btn { color:var(--teal-text) !important; }
+  .jl-unassigned-divider { display:flex; align-items:center; gap:8px; padding:4px 10px; margin:6px 0 2px; }
+  .jl-unassigned-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); white-space:nowrap; }
+  #jl-section-block { display:none; }
   .jl-tab-panel .jl-empty { padding: 10px 14px; }
   .jl-tab-panel .jl-archive-toggle { padding: 6px 14px; }
   .jl-tab-panel .jl-archive-list { gap: 7px; }
@@ -4833,6 +4837,12 @@
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Name</div>
         <input class="field-input" id="jl-name" placeholder="e.g. June dispatch job list">
       </div>
+      <div class="queue-block" id="jl-section-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Place in section</div>
+        <select class="field-input" id="jl-section">
+          <option value="">— No section (add at end) —</option>
+        </select>
+      </div>
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Job ID(s) <span style="font-weight:400;color:var(--text-3)">(comma-separate multiple)</span></div>
         <div style="display:flex; gap:6px;">
@@ -7583,6 +7593,32 @@ function renderEscSidebar() {
   }).join('');
 }
 
+function fillJlSectionSelect(selectedId) {
+  const el = document.getElementById('jl-section');
+  const block = document.getElementById('jl-section-block');
+  if (!el || !block) return;
+  const sections = jobLists.filter(j => j.type === 'section');
+  if (!sections.length) { block.style.display = 'none'; return; }
+  block.style.display = '';
+  el.innerHTML = '<option value="">— No section (add at end) —</option>' +
+    sections.map(s => `<option value="${s.id}"${String(s.id) === String(selectedId) ? ' selected' : ''}>${esc(s.label || 'Section')}</option>`).join('');
+}
+
+function jlFindParentSection(id) {
+  let lastSection = '';
+  for (const j of jobLists) {
+    if (j.type === 'section') lastSection = String(j.id);
+    if (String(j.id) === String(id)) return lastSection;
+  }
+  return '';
+}
+
+function openAddJobListModalInSection(sectionId) {
+  openAddJobListModal();
+  const el = document.getElementById('jl-section');
+  if (el) el.value = String(sectionId);
+}
+
 function openAddJobListModal() {
   editingJobListId = null;
   document.getElementById('jl-modal-title').textContent = 'Amtek Job List';
@@ -7594,6 +7630,7 @@ function openAddJobListModal() {
   document.getElementById('jl-time').value = '';
   fillAmtekProjSelect('');
   fillJlSubProjectSelect('');
+  fillJlSectionSelect('');
   document.getElementById('add-joblist-modal-overlay').classList.add('active');
 }
 
@@ -7610,6 +7647,7 @@ function openEditJobList(id) {
   document.getElementById('jl-time').value = j.time || '';
   fillAmtekProjSelect(j.amtekProjectId || '');
   fillJlSubProjectSelect((j.projId != null && j.subId != null) ? `${j.projId}:${j.subId}` : '');
+  fillJlSectionSelect(jlFindParentSection(id));
   document.getElementById('add-joblist-modal-overlay').classList.add('active');
 }
 
@@ -7665,7 +7703,24 @@ function saveJobList() {
   } else {
     const j = { id: 'jl' + Date.now(), name, url, date, time: time || null, done: false, projId: projId || null, subId: subId || null, amtekProjectId: amtekProjectId || null, todoId: null, createdAt: Date.now() };
     if (projId && subId) linkJobListTodo(j);
-    jobLists.push(j);
+    const chosenSection = document.getElementById('jl-section')?.value;
+    if (chosenSection) {
+      const secIdx = jobLists.findIndex(x => String(x.id) === String(chosenSection));
+      if (secIdx !== -1) {
+        const nowMs = Date.now();
+        let insertAt = secIdx + 1;
+        while (insertAt < jobLists.length &&
+               jobLists[insertAt].type !== 'section' &&
+               !(jobLists[insertAt].done && jobLists[insertAt].completedAt && (nowMs - jobLists[insertAt].completedAt) >= JL_ARCHIVE_AFTER_MS)) {
+          insertAt++;
+        }
+        jobLists.splice(insertAt, 0, j);
+      } else {
+        jobLists.push(j);
+      }
+    } else {
+      jobLists.push(j);
+    }
   }
   saveJobLists();
 
@@ -7852,6 +7907,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false) {
       <span class="jl-sec-label" id="jlseclbl-${j.id}" onclick="jlRenameSection('${j.id}')">${esc(j.label || 'Section')}</span>
       <div class="jl-sec-line"></div>
       <div class="jl-sec-actions">
+        <button class="jl-icon-btn jl-sec-add-btn" onclick="openAddJobListModalInSection('${j.id}')" title="Add job to this section"><i class="ti ti-plus"></i></button>
         <button class="jl-icon-btn" onclick="moveJobList('${j.id}',-1)" title="Move up"><i class="ti ti-chevron-up"></i></button>
         <button class="jl-icon-btn" onclick="moveJobList('${j.id}',1)" title="Move down"><i class="ti ti-chevron-down"></i></button>
         <button class="jl-icon-btn" onclick="jlRenameSection('${j.id}')" title="Rename"><i class="ti ti-pencil"></i></button>
@@ -8104,14 +8160,25 @@ function renderJobListSidebar() {
   const hasSections = active.some(j => j.type === 'section');
 
   if (hasSections) {
-    // Sections mode: render everything in stored order, per-item overdue/today stripes
+    // Sections mode: render everything in stored order, per-item overdue/today stripes.
+    // Jobs that come before the first section header get an "Unassigned" label.
     if (active.length) {
-      html += active.map(j => {
-        if (j.type === 'section') return jlRowHtml(j);
-        const isOv = !j.done && j.date && j.date < todayStr;
-        const isTd = !j.done && j.date === todayStr;
-        return jlRowHtml(j, isTd, isOv);
-      }).join('');
+      let sawSection = false;
+      let addedUnassignedHeader = false;
+      for (const j of active) {
+        if (j.type === 'section') {
+          sawSection = true;
+          html += jlRowHtml(j);
+        } else {
+          if (!sawSection && !addedUnassignedHeader) {
+            html += `<div class="jl-unassigned-divider"><span class="jl-unassigned-label"><i class="ti ti-inbox" style="font-size:11px;margin-right:3px;"></i>Unassigned</span><div class="jl-sec-line"></div></div>`;
+            addedUnassignedHeader = true;
+          }
+          const isOv = !j.done && j.date && j.date < todayStr;
+          const isTd = !j.done && j.date === todayStr;
+          html += jlRowHtml(j, isTd, isOv);
+        }
+      }
     } else {
       html += '<div class="jl-empty">Nothing active — add one above.</div>';
     }
