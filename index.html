@@ -8590,6 +8590,19 @@ function quickArchiveJobList(id) {
 
 const JL_ARCHIVE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
 
+// Ticked jobs sink to the bottom of their group; everything else runs nearest
+// due date first, with undated jobs trailing the dated ones.
+function jlSortJobs(list) {
+  return [...list].sort((a, b) => {
+    const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
+    if (doneDiff !== 0) return doneDiff;
+    if (a.date && !b.date) return -1;
+    if (!a.date && b.date) return 1;
+    if (a.date && b.date && a.date !== b.date) return a.date.localeCompare(b.date);
+    return 0;
+  });
+}
+
 function renderJobListSidebar() {
   const el = document.getElementById('jl-list');
   if (!el) return;
@@ -8614,14 +8627,7 @@ function renderJobListSidebar() {
   const pinnedIds = new Set([...overdue, ...dueToday].map(j => j.id));
   const rest = active.filter(j => !pinnedIds.has(j.id));
 
-  const sortedRest = [...rest].sort((a, b) => {
-    const doneDiff = (a.done ? 1 : 0) - (b.done ? 1 : 0);
-    if (doneDiff !== 0) return doneDiff;
-    if (a.date && b.date) return a.date.localeCompare(b.date);
-    if (a.date) return -1;
-    if (b.date) return 1;
-    return 0;
-  });
+  const sortedRest = jlSortJobs(rest);
 
   // Update header chips
   const ovChipEl = document.getElementById('jl-chip-ov');
@@ -8658,7 +8664,7 @@ function renderJobListSidebar() {
     } else {
       for (const sec of sections) {
         const allSecJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
-        const secJobs = allSecJobs.filter(j => !urgentIds.has(String(j.id)));
+        const secJobs = jlSortJobs(allSecJobs.filter(j => !urgentIds.has(String(j.id))));
         const isCollapsed = jlCollapsedSections.has(String(sec.id));
         html += jlRowHtml(sec, false, false, false, isCollapsed, false);
         if (!isCollapsed) {
@@ -8673,7 +8679,7 @@ function renderJobListSidebar() {
           }
         }
       }
-      const unassigned = activeJobs.filter(j => !j.sectionId && !urgentIds.has(String(j.id)));
+      const unassigned = jlSortJobs(activeJobs.filter(j => !j.sectionId && !urgentIds.has(String(j.id))));
       if (unassigned.length) {
         html += `<div class="jl-unassigned-zone">
           <div class="jl-unassigned-header">
