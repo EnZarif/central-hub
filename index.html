@@ -2067,6 +2067,59 @@
   .sv-swap-btn { padding:4px 10px; border-radius:6px; background:rgba(var(--amber-rgb,220,152,40),0.15); border:0.5px solid rgba(var(--amber-rgb,220,152,40),0.35); color:var(--amber-text); font-family:inherit; font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0; transition:all .15s; }
   .sv-swap-btn:hover { background:rgba(var(--amber-rgb,220,152,40),0.28); }
 
+  /* ALLOCATION LOOKUP */
+  .al-search-row { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; }
+  .al-input-wrap { position:relative; flex:1; min-width:200px; display:flex; align-items:center; }
+  .al-input-ico { position:absolute; left:11px; font-size:15px; color:var(--text-3); pointer-events:none; }
+  .al-input { width:100%; padding:11px 34px 11px 33px; border-radius:9px; border:1px solid var(--border-md); background:var(--surface2); color:var(--text); font-family:inherit; font-size:14px; outline:none; transition:border-color .15s, box-shadow .15s; }
+  .al-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px color-mix(in srgb, var(--teal) 18%, transparent); }
+  .al-input::placeholder { color:var(--text-3); }
+  .al-clear-btn { position:absolute; right:7px; background:none; border:none; color:var(--text-3); cursor:pointer; font-size:14px; padding:4px; display:none; border-radius:5px; line-height:1; }
+  .al-clear-btn:hover { color:var(--text); }
+  .al-clear-btn.show { display:block; }
+  .al-state-sel { padding:11px 10px; border-radius:9px; border:1px solid var(--border-md); background:var(--surface2); color:var(--text); font-family:inherit; font-size:13px; outline:none; cursor:pointer; flex-shrink:0; }
+  .al-hint { font-size:11.5px; color:var(--text-3); margin-top:8px; }
+  .al-sugg { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .al-sugg-chip { padding:5px 11px; border-radius:20px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-size:12px; font-family:inherit; cursor:pointer; transition:all .13s; }
+  .al-sugg-chip:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
+  .al-answer-card { margin-top:12px; }
+  .al-matched { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .al-matched-name { font-size:17px; font-weight:650; color:var(--text); letter-spacing:-0.01em; }
+  .al-matched-meta { font-size:12px; color:var(--text-3); }
+  .al-alloc-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(178px,1fr)); gap:10px; }
+  .al-alloc { background:var(--surface2); border:0.5px solid var(--border-md); border-radius:10px; padding:12px 13px; display:flex; flex-direction:column; gap:5px; min-width:0; }
+  .al-alloc.primary { border:1.5px solid var(--teal); background:var(--teal-bg); }
+  .al-alloc-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); }
+  .al-alloc.primary .al-alloc-label { color:var(--teal-text); }
+  .al-alloc-val { font-size:14.5px; font-weight:600; color:var(--text); line-height:1.3; overflow-wrap:anywhere; }
+  .al-alloc.primary .al-alloc-val { color:var(--teal-text); font-size:15.5px; }
+  .al-alloc-val.empty { color:var(--text-3); font-weight:400; font-style:italic; font-size:13px; }
+  .al-alloc-sub { font-size:10.5px; color:var(--text-3); }
+  .al-warn { display:flex; align-items:flex-start; gap:7px; font-size:11.5px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.08); border:0.5px solid rgba(var(--amber-rgb,220,152,40),0.25); border-radius:7px; padding:7px 10px; margin-top:10px; }
+  .al-warn .ti { font-size:13px; flex-shrink:0; margin-top:1px; }
+  .al-copy-btn { margin-top:12px; padding:7px 13px; border-radius:7px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s; }
+  .al-copy-btn:hover { border-color:var(--teal); color:var(--teal-text); }
+  .al-rows-wrap { overflow-x:auto; margin-top:4px; }
+  .al-rows { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .al-rows th { text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); padding:7px 9px; border-bottom:1px solid var(--border-md); white-space:nowrap; }
+  .al-rows td { padding:7px 9px; border-bottom:0.5px solid var(--border); color:var(--text-2); white-space:nowrap; }
+  .al-rows tr:last-child td { border-bottom:none; }
+  .al-rows tr:hover td { background:var(--surface2); }
+  .al-rows td.pc { font-variant-numeric:tabular-nums; color:var(--text); font-weight:600; }
+  .al-pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10.5px; font-weight:600; }
+  .al-pill.metro { background:var(--teal-bg); color:var(--teal-text); }
+  .al-pill.regional { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
+  .al-pill.remote { background:var(--coral-bg); color:var(--coral-text); }
+  .al-pill.none { background:var(--surface2); color:var(--text-3); }
+  .al-more { font-size:11.5px; color:var(--text-3); padding:8px 9px; }
+  .al-empty { text-align:center; padding:26px 16px; color:var(--text-3); font-size:13px; }
+  .al-empty i { font-size:26px; display:block; margin-bottom:8px; opacity:.55; }
+  .al-group { border:0.5px solid var(--border-md); border-radius:9px; padding:10px 12px; margin-bottom:8px; }
+  .al-group-hd { display:flex; align-items:center; gap:8px; margin-bottom:7px; flex-wrap:wrap; }
+  .al-group-name { font-size:13.5px; font-weight:650; color:var(--text); }
+  .al-group-count { font-size:11px; color:var(--text-3); }
+  .al-group-allocs { font-size:12px; color:var(--text-2); line-height:1.5; }
+
   /* SETTINGS PAGE */
   #page-settings .card-title i { color: var(--teal); }
   .loc-place-card { background:var(--surface2); border:0.5px solid var(--border-md); border-radius:10px; padding:12px 14px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px; }
@@ -3262,6 +3315,35 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- ALLOCATION LOOKUP PAGE -->
+  <div class="page" id="page-alloccheck">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-map-search"></i> Allocation Lookup</h1>
+        <p>Find Allocation 1, 2, 3 and Region Type by suburb, zone, postcode or state</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="al-search-row">
+        <div class="al-input-wrap">
+          <i class="ti ti-search al-input-ico"></i>
+          <input type="text" id="al-q" class="al-input" autocomplete="off" spellcheck="false"
+                 placeholder="e.g. NT Darwin · 3000 · DARWIN CITY · Melbourne"
+                 oninput="alOnInput()" onkeydown="alOnKey(event)">
+          <button class="al-clear-btn" id="al-clear" onclick="alClear()" title="Clear"><i class="ti ti-x"></i></button>
+        </div>
+        <select class="al-state-sel" id="al-state" onchange="alRun()">
+          <option value="">All states</option>
+        </select>
+      </div>
+      <div class="al-hint" id="al-hint">Type a zone name, suburb, postcode or state. Results update as you type.</div>
+      <div class="al-sugg" id="al-sugg"></div>
+    </div>
+
+    <div id="al-result"></div>
   </div>
 
   <!-- PROJECTS HUB -->
@@ -7399,6 +7481,287 @@ function svUpdateValidateBtn() {
     document.getElementById('sv-sel-state')?.value);
 }
 
+// ===== ALLOCATION LOOKUP =====
+// Reference data lives in assets/postcode-alloc-data.js (~400KB) and is fetched
+// lazily the first time this page is opened, so it never slows the initial load.
+let alRows = null;          // [{pc, loc, st, geo, rt, a1, a2, a3, com}]
+let alLoading = false;
+let alGeoNames = [];
+const AL_MAX_TABLE_ROWS = 60;
+
+function alInit() {
+  if (alRows || alLoading) { alRenderSuggestions(); return; }
+  alLoading = true;
+  const hint = document.getElementById('al-hint');
+  if (hint) hint.textContent = 'Loading allocation data…';
+  const s = document.createElement('script');
+  s.src = 'assets/postcode-alloc-data.js';
+  s.onload = () => {
+    alLoading = false;
+    try { alBuild(); } catch (e) { if (hint) hint.textContent = 'Could not read allocation data.'; return; }
+    if (hint) hint.textContent = `${alRows.length.toLocaleString()} localities · ${alGeoNames.length} zones loaded. Results update as you type.`;
+    alFillStates();
+    alRenderSuggestions();
+    alRun();
+  };
+  s.onerror = () => {
+    alLoading = false;
+    if (hint) hint.textContent = 'Could not load assets/postcode-alloc-data.js.';
+  };
+  document.head.appendChild(s);
+}
+
+function alBuild() {
+  const D = window.POSTCODE_ALLOC_DATA;
+  const combos = D.combos, states = D.states, comments = D.comments;
+  alRows = D.rows.split('\n').map(line => {
+    const p = line.split('|');
+    const c = combos[+p[3]];
+    return {
+      pc: p[0], loc: p[1], st: states[+p[2]], com: comments[+p[4]] || '',
+      geo: c[0], rt: c[1], a1: c[2], a2: c[3], a3: c[4],
+      _l: p[1].toLowerCase(), _g: c[0].toLowerCase()
+    };
+  });
+  alGeoNames = [...new Set(alRows.map(r => r.geo))].filter(Boolean).sort();
+}
+
+function alFillStates() {
+  const sel = document.getElementById('al-state');
+  if (!sel || sel.options.length > 1) return;
+  [...new Set(alRows.map(r => r.st))].filter(Boolean).sort().forEach(st => {
+    const o = document.createElement('option');
+    o.value = st; o.textContent = st;
+    sel.appendChild(o);
+  });
+}
+
+function alRenderSuggestions() {
+  const el = document.getElementById('al-sugg');
+  if (!el || !alRows) return;
+  const picks = ['NT Darwin', 'VIC Melbourne CBD', 'NSW Sydney CBD', 'SA Adelaide CBD', 'QLD Brisbane CBD']
+    .filter(g => alGeoNames.includes(g));
+  el.innerHTML = picks.map(g =>
+    `<button class="al-sugg-chip" onclick="alSet('${esc(g).replace(/'/g, "\\'")}')">${esc(g)}</button>`
+  ).join('');
+}
+
+function alSet(v) {
+  const q = document.getElementById('al-q');
+  if (q) { q.value = v; alOnInput(); }
+}
+
+function alClear() {
+  const q = document.getElementById('al-q');
+  if (q) { q.value = ''; q.focus(); alOnInput(); }
+}
+
+function alOnKey(e) { if (e.key === 'Escape') alClear(); }
+
+function alOnInput() {
+  const q = document.getElementById('al-q');
+  const clr = document.getElementById('al-clear');
+  if (clr) clr.classList.toggle('show', !!(q && q.value));
+  alRun();
+}
+
+// Search precedence: exact zone > exact suburb > postcode > partial zone/suburb.
+// Picking the narrowest match that actually hits avoids "Melbourne" dragging in
+// every zone that merely contains the word.
+function alSearch(raw, stateFilter) {
+  const q = raw.trim().toLowerCase();
+  if (!q) return { rows: [], mode: '' };
+  let pool = alRows;
+  if (stateFilter) pool = pool.filter(r => r.st === stateFilter);
+
+  const exactGeo = pool.filter(r => r._g === q);
+  if (exactGeo.length) return { rows: exactGeo, mode: 'zone' };
+
+  const exactLoc = pool.filter(r => r._l === q);
+  if (exactLoc.length) return { rows: exactLoc, mode: 'suburb' };
+
+  if (/^\d{3,4}$/.test(q)) {
+    const pc = q.padStart(4, '0');
+    const byPc = pool.filter(r => r.pc === pc);
+    if (byPc.length) return { rows: byPc, mode: 'postcode' };
+  }
+
+  if (/^[a-z]{2,3}$/.test(q)) {
+    const byState = pool.filter(r => r.st.toLowerCase() === q);
+    if (byState.length) return { rows: byState, mode: 'state' };
+  }
+
+  const partial = pool.filter(r => r._g.includes(q) || r._l.includes(q));
+  return { rows: partial, mode: partial.length ? 'partial' : '' };
+}
+
+// Per-field consensus rather than per-combo: Allocation 1 can be unanimous even
+// when Region Type varies across the same zone, and that is the common case.
+function alConsensus(rows, field) {
+  const counts = new Map();
+  rows.forEach(r => {
+    const v = r[field] || '';
+    counts.set(v, (counts.get(v) || 0) + 1);
+  });
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return { value: sorted[0][0], count: sorted[0][1], total: rows.length, variants: sorted };
+}
+
+function alPillClass(rt) {
+  const k = (rt || '').toLowerCase();
+  return k === 'metro' ? 'metro' : k === 'regional' ? 'regional' : k === 'remote' ? 'remote' : 'none';
+}
+
+function alRun() {
+  const out = document.getElementById('al-result');
+  if (!out) return;
+  if (!alRows) { out.innerHTML = ''; return; }
+  const raw = (document.getElementById('al-q')?.value || '').trim();
+  const stateFilter = document.getElementById('al-state')?.value || '';
+  if (!raw) { out.innerHTML = ''; return; }
+
+  const { rows, mode } = alSearch(raw, stateFilter);
+  if (!rows.length) {
+    out.innerHTML = `<div class="card al-answer-card"><div class="al-empty">
+      <i class="ti ti-map-off"></i>No match for “${esc(raw)}”${stateFilter ? ` in ${esc(stateFilter)}` : ''}.<br>
+      Try a zone name (NT Darwin), a suburb, or a 4-digit postcode.
+    </div></div>`;
+    return;
+  }
+
+  const geos = [...new Set(rows.map(r => r.geo))];
+  // A partial match spanning several zones can't have one answer — list the zones instead.
+  if (geos.length > 1 && mode !== 'zone') {
+    out.innerHTML = alRenderMultiZone(rows, geos, raw, mode);
+    return;
+  }
+  out.innerHTML = alRenderAnswer(rows, raw, mode, stateFilter);
+}
+
+function alRenderAnswer(rows, raw, mode, stateFilter) {
+  const a1 = alConsensus(rows, 'a1');
+  const a2 = alConsensus(rows, 'a2');
+  const a3 = alConsensus(rows, 'a3');
+  const rt = alConsensus(rows, 'rt');
+  const geo = rows[0].geo;
+  const states = [...new Set(rows.map(r => r.st))];
+
+  const label = { zone:'Zone', suburb:'Suburb', postcode:'Postcode', state:'State', partial:'Match' }[mode] || 'Match';
+
+  const cell = (lbl, c, primary) => {
+    const empty = !c.value;
+    const mixed = c.count < c.total;
+    return `<div class="al-alloc${primary ? ' primary' : ''}">
+      <div class="al-alloc-label">${lbl}</div>
+      <div class="al-alloc-val${empty ? ' empty' : ''}">${empty ? '— none —' : esc(c.value)}</div>
+      ${mixed ? `<div class="al-alloc-sub">${c.count} of ${c.total} rows</div>` : ''}
+    </div>`;
+  };
+
+  const rtCell = `<div class="al-alloc">
+    <div class="al-alloc-label">Region Type</div>
+    <div class="al-alloc-val${rt.value ? '' : ' empty'}">${rt.value
+      ? `<span class="al-pill ${alPillClass(rt.value)}">${esc(rt.value)}</span>`
+      : '— none —'}</div>
+    ${rt.count < rt.total ? `<div class="al-alloc-sub">${rt.count} of ${rt.total} rows</div>` : ''}
+  </div>`;
+
+  let warn = '';
+  const rtOthers = rt.variants.slice(1).filter(v => v[1] > 0);
+  if (rtOthers.length) {
+    const exceptions = rows.filter(r => r.rt !== rt.value);
+    const sample = exceptions.slice(0, 6).map(r => `${r.pc} ${r.loc}`).join(', ');
+    warn += `<div class="al-warn"><i class="ti ti-alert-triangle"></i><span>
+      <b>Region Type is not uniform here.</b> ${rtOthers.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')} —
+      ${esc(sample)}${exceptions.length > 6 ? ` +${exceptions.length - 6} more` : ''}.
+    </span></div>`;
+  }
+  if (a1.count < a1.total) {
+    warn += `<div class="al-warn"><i class="ti ti-alert-triangle"></i><span>
+      <b>Allocation 1 varies.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
+    </span></div>`;
+  }
+  if (!a1.value && a1.count === a1.total) {
+    warn += `<div class="al-warn"><i class="ti ti-info-circle"></i><span>
+      No Allocation 1 on file for this ${mode === 'zone' ? 'zone' : 'match'}${geo === 'NAT Helpdesk' ? ' — it routes to NAT Helpdesk.' : '.'}
+    </span></div>`;
+  }
+
+  const shown = rows.slice(0, AL_MAX_TABLE_ROWS);
+  const table = `<div class="al-rows-wrap"><table class="al-rows">
+    <thead><tr><th>Postcode</th><th>Locality</th><th>State</th><th>Region</th><th>Allocation 1</th>${a2.variants.some(v=>v[0])?'<th>Allocation 2</th>':''}${a3.variants.some(v=>v[0])?'<th>Allocation 3</th>':''}<th>Comments</th></tr></thead>
+    <tbody>${shown.map(r => `<tr>
+      <td class="pc">${esc(r.pc)}</td>
+      <td>${esc(r.loc)}</td>
+      <td>${esc(r.st)}</td>
+      <td><span class="al-pill ${alPillClass(r.rt)}">${esc(r.rt || '—')}</span></td>
+      <td>${esc(r.a1 || '—')}</td>
+      ${a2.variants.some(v=>v[0]) ? `<td>${esc(r.a2 || '—')}</td>` : ''}
+      ${a3.variants.some(v=>v[0]) ? `<td>${esc(r.a3 || '—')}</td>` : ''}
+      <td>${esc(r.com || '')}</td>
+    </tr>`).join('')}</tbody></table>
+    ${rows.length > AL_MAX_TABLE_ROWS ? `<div class="al-more">Showing ${AL_MAX_TABLE_ROWS} of ${rows.length} matching rows.</div>` : ''}
+  </div>`;
+
+  const copyPayload = [
+    `${geo || raw}`,
+    `Allocation 1: ${a1.value || '—'}`,
+    `Allocation 2: ${a2.value || '—'}`,
+    `Allocation 3: ${a3.value || '—'}`,
+    `Region Type: ${rt.value || '—'}`
+  ].join('\n');
+
+  return `<div class="card al-answer-card">
+    <div class="al-matched">
+      <span class="al-matched-name">${esc(geo || raw)}</span>
+      <span class="al-matched-meta">${label} match · ${rows.length} row${rows.length !== 1 ? 's' : ''} · ${esc(states.join(', '))}${stateFilter ? ' · filtered' : ''}</span>
+    </div>
+    <div class="al-alloc-grid">
+      ${cell('Allocation 1', a1, true)}
+      ${cell('Allocation 2', a2, false)}
+      ${cell('Allocation 3', a3, false)}
+      ${rtCell}
+    </div>
+    ${warn}
+    <button class="al-copy-btn" onclick="alCopy(this,${jsAttr(copyPayload)})"><i class="ti ti-copy"></i> Copy result</button>
+  </div>
+  <div class="card al-answer-card">
+    <div class="card-title"><i class="ti ti-table" style="font-size:13px;"></i> Matching rows</div>
+    ${table}
+  </div>`;
+}
+
+function alRenderMultiZone(rows, geos, raw, mode) {
+  const byGeo = geos.map(g => {
+    const rs = rows.filter(r => r.geo === g);
+    return { geo: g, rows: rs, a1: alConsensus(rs, 'a1'), rt: alConsensus(rs, 'rt') };
+  }).sort((a, b) => b.rows.length - a.rows.length);
+
+  return `<div class="card al-answer-card">
+    <div class="al-matched">
+      <span class="al-matched-name">“${esc(raw)}”</span>
+      <span class="al-matched-meta">matches ${geos.length} zones · ${rows.length} rows — pick one to see its allocations</span>
+    </div>
+    ${byGeo.map(g => `<div class="al-group">
+      <div class="al-group-hd">
+        <span class="al-group-name">${esc(g.geo || '(no zone)')}</span>
+        <span class="al-group-count">${g.rows.length} row${g.rows.length !== 1 ? 's' : ''}</span>
+        <span class="al-pill ${alPillClass(g.rt.value)}">${esc(g.rt.value || '—')}${g.rt.count < g.rt.total ? ' +mixed' : ''}</span>
+        <button class="al-sugg-chip" style="margin-left:auto;" onclick="alSet('${esc(g.geo).replace(/'/g, "\\'")}')">View</button>
+      </div>
+      <div class="al-group-allocs"><b>Allocation 1:</b> ${esc(g.a1.value || '— none —')}${g.a1.count < g.a1.total ? ` <span style="color:var(--text-3)">(${g.a1.count}/${g.a1.total})</span>` : ''}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function alCopy(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const old = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check"></i> Copied';
+    setTimeout(() => { btn.innerHTML = old; }, 1400);
+  });
+}
+
 // ===== EMAIL ESCALATION JOBS =====
 let escItems = [];
 let escNextId = 1;
@@ -9663,6 +10026,7 @@ const PAGES = {
   notes:          { title:'Personal Notes',   icon:'ti-pencil',          color:'c-pink',   desc:'Grocery lists, errands, calls — jot it down and turn it into a personal task. Separate from the Scratch Pad widget.' },
   learning:       { title:'Learning',          icon:'ti-school',           color:'c-teal',   desc:'Courses, books, tutorials and things you want to learn.' },
   suburbcheck:    { title:'Suburb Checker',    icon:'ti-map-pin',          color:'c-amber',  desc:'Validate suburb, postcode and state data against a reference localities file.' },
+  alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up Allocation 1/2/3 and Region Type by suburb, zone, postcode or state.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -9688,6 +10052,7 @@ function loadHubLayout() {
     // Migration: existing saved layouts predate the NSLA Report page — add it to Helpdesk once.
     if (h === 'helpdesk' && !list.includes('nsla')) list.push('nsla');
     if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
+    if (h === 'helpdesk' && !list.includes('alloccheck')) list.push('alloccheck');
     layout[h] = list;
   });
   return layout;
@@ -9791,6 +10156,7 @@ function showPage(p, hub) {
   if (p === 'tasks' && typeof checkEodWrap === 'function') checkEodWrap(melbNowMinutes());
   if (p === 'widgets' && typeof renderWeekAtAGlance === 'function') renderWeekAtAGlance();
   if (p === 'learning' && typeof renderLearning === 'function') renderLearning();
+  if (p === 'alloccheck' && typeof alInit === 'function') alInit();
   window.scrollTo(0, 0);
 }
 
