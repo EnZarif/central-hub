@@ -3322,7 +3322,7 @@
     <div class="header">
       <div>
         <h1><i class="ti ti-map-search"></i> Allocation Lookup</h1>
-        <p>Find Allocation 1, 2, 3 and Region Type by suburb, zone, postcode or state</p>
+        <p>Find the technician allocation and zone type by suburb, zone, postcode or state</p>
       </div>
     </div>
 
@@ -7482,9 +7482,9 @@ function svUpdateValidateBtn() {
 }
 
 // ===== ALLOCATION LOOKUP =====
-// Reference data lives in assets/postcode-alloc-data.js (~400KB) and is fetched
-// lazily the first time this page is opened, so it never slows the initial load.
-let alRows = null;          // [{pc, loc, st, geo, rt, a1, a2, a3, com}]
+// Reference data is generated from the ANZ WL POSTCODE_ALLOCATOR sheet into
+// assets/postcode-alloc-data.js, fetched lazily on first visit to this page.
+let alRows = null;          // [{pc, loc, st, geo (zone), rt (zone type), a1 (allocation)}]
 let alLoading = false;
 let alGeoNames = [];
 const AL_MAX_TABLE_ROWS = 60;
@@ -7499,7 +7499,7 @@ function alInit() {
   s.onload = () => {
     alLoading = false;
     try { alBuild(); } catch (e) { if (hint) hint.textContent = 'Could not read allocation data.'; return; }
-    if (hint) hint.textContent = `${alRows.length.toLocaleString()} localities · ${alGeoNames.length} zones loaded. Results update as you type.`;
+    if (hint) hint.textContent = `${alRows.length.toLocaleString()} ANZ WL sites · ${alGeoNames.length} zones loaded. Results update as you type.`;
     alFillStates();
     alRenderSuggestions();
     alRun();
@@ -7513,13 +7513,13 @@ function alInit() {
 
 function alBuild() {
   const D = window.POSTCODE_ALLOC_DATA;
-  const combos = D.combos, states = D.states, comments = D.comments;
+  const combos = D.combos, states = D.states;
   alRows = D.rows.split('\n').map(line => {
     const p = line.split('|');
     const c = combos[+p[3]];
     return {
-      pc: p[0], loc: p[1], st: states[+p[2]], com: comments[+p[4]] || '',
-      geo: c[0], rt: c[1], a1: c[2], a2: c[3], a3: c[4],
+      pc: p[0], loc: p[1], st: states[+p[2]],
+      geo: c[0], rt: c[1], a1: c[2],
       _l: p[1].toLowerCase(), _g: c[0].toLowerCase()
     };
   });
@@ -7539,7 +7539,7 @@ function alFillStates() {
 function alRenderSuggestions() {
   const el = document.getElementById('al-sugg');
   if (!el || !alRows) return;
-  const picks = ['NT Darwin', 'VIC Melbourne CBD', 'NSW Sydney CBD', 'SA Adelaide CBD', 'QLD Brisbane CBD']
+  const picks = ['NT Darwin', 'VIC Melbourne CBD', 'NSW Sydney CBD', 'SA Adelaide CBD', 'QLD Brisbane CBD', 'NAT Helpdesk']
     .filter(g => alGeoNames.includes(g));
   el.innerHTML = picks.map(g =>
     `<button class="al-sugg-chip" onclick="alSet('${esc(g).replace(/'/g, "\\'")}')">${esc(g)}</button>`
@@ -7640,30 +7640,29 @@ function alRun() {
 
 function alRenderAnswer(rows, raw, mode, stateFilter) {
   const a1 = alConsensus(rows, 'a1');
-  const a2 = alConsensus(rows, 'a2');
-  const a3 = alConsensus(rows, 'a3');
   const rt = alConsensus(rows, 'rt');
   const geo = rows[0].geo;
   const states = [...new Set(rows.map(r => r.st))];
 
   const label = { zone:'Zone', suburb:'Suburb', postcode:'Postcode', state:'State', partial:'Match' }[mode] || 'Match';
 
-  const cell = (lbl, c, primary) => {
-    const empty = !c.value;
-    const mixed = c.count < c.total;
-    return `<div class="al-alloc${primary ? ' primary' : ''}">
-      <div class="al-alloc-label">${lbl}</div>
-      <div class="al-alloc-val${empty ? ' empty' : ''}">${empty ? '— none —' : esc(c.value)}</div>
-      ${mixed ? `<div class="al-alloc-sub">${c.count} of ${c.total} rows</div>` : ''}
-    </div>`;
-  };
+  const allocCell = `<div class="al-alloc primary">
+    <div class="al-alloc-label">Technician Allocation</div>
+    <div class="al-alloc-val${a1.value ? '' : ' empty'}">${a1.value ? esc(a1.value) : '— none —'}</div>
+    ${a1.count < a1.total ? `<div class="al-alloc-sub">${a1.count} of ${a1.total} sites</div>` : ''}
+  </div>`;
+
+  const zoneCell = `<div class="al-alloc">
+    <div class="al-alloc-label">Zone</div>
+    <div class="al-alloc-val">${esc(geo || '—')}</div>
+  </div>`;
 
   const rtCell = `<div class="al-alloc">
-    <div class="al-alloc-label">Region Type</div>
+    <div class="al-alloc-label">Zone Type</div>
     <div class="al-alloc-val${rt.value ? '' : ' empty'}">${rt.value
       ? `<span class="al-pill ${alPillClass(rt.value)}">${esc(rt.value)}</span>`
       : '— none —'}</div>
-    ${rt.count < rt.total ? `<div class="al-alloc-sub">${rt.count} of ${rt.total} rows</div>` : ''}
+    ${rt.count < rt.total ? `<div class="al-alloc-sub">${rt.count} of ${rt.total} sites</div>` : ''}
   </div>`;
 
   let warn = '';
@@ -7672,61 +7671,51 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
     const exceptions = rows.filter(r => r.rt !== rt.value);
     const sample = exceptions.slice(0, 6).map(r => `${r.pc} ${r.loc}`).join(', ');
     warn += `<div class="al-warn"><i class="ti ti-alert-triangle"></i><span>
-      <b>Region Type is not uniform here.</b> ${rtOthers.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')} —
+      <b>Zone Type is not uniform here.</b> ${rtOthers.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')} —
       ${esc(sample)}${exceptions.length > 6 ? ` +${exceptions.length - 6} more` : ''}.
     </span></div>`;
   }
   if (a1.count < a1.total) {
     warn += `<div class="al-warn"><i class="ti ti-alert-triangle"></i><span>
-      <b>Allocation 1 varies.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
-    </span></div>`;
-  }
-  if (!a1.value && a1.count === a1.total) {
-    warn += `<div class="al-warn"><i class="ti ti-info-circle"></i><span>
-      No Allocation 1 on file for this ${mode === 'zone' ? 'zone' : 'match'}${geo === 'NAT Helpdesk' ? ' — it routes to NAT Helpdesk.' : '.'}
+      <b>Allocation varies across these sites.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
     </span></div>`;
   }
 
   const shown = rows.slice(0, AL_MAX_TABLE_ROWS);
   const table = `<div class="al-rows-wrap"><table class="al-rows">
-    <thead><tr><th>Postcode</th><th>Locality</th><th>State</th><th>Region</th><th>Allocation 1</th>${a2.variants.some(v=>v[0])?'<th>Allocation 2</th>':''}${a3.variants.some(v=>v[0])?'<th>Allocation 3</th>':''}<th>Comments</th></tr></thead>
+    <thead><tr><th>Postcode</th><th>Suburb</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician Allocation</th></tr></thead>
     <tbody>${shown.map(r => `<tr>
       <td class="pc">${esc(r.pc)}</td>
       <td>${esc(r.loc)}</td>
       <td>${esc(r.st)}</td>
+      <td>${esc(r.geo || '—')}</td>
       <td><span class="al-pill ${alPillClass(r.rt)}">${esc(r.rt || '—')}</span></td>
       <td>${esc(r.a1 || '—')}</td>
-      ${a2.variants.some(v=>v[0]) ? `<td>${esc(r.a2 || '—')}</td>` : ''}
-      ${a3.variants.some(v=>v[0]) ? `<td>${esc(r.a3 || '—')}</td>` : ''}
-      <td>${esc(r.com || '')}</td>
     </tr>`).join('')}</tbody></table>
-    ${rows.length > AL_MAX_TABLE_ROWS ? `<div class="al-more">Showing ${AL_MAX_TABLE_ROWS} of ${rows.length} matching rows.</div>` : ''}
+    ${rows.length > AL_MAX_TABLE_ROWS ? `<div class="al-more">Showing ${AL_MAX_TABLE_ROWS} of ${rows.length} matching sites.</div>` : ''}
   </div>`;
 
   const copyPayload = [
     `${geo || raw}`,
-    `Allocation 1: ${a1.value || '—'}`,
-    `Allocation 2: ${a2.value || '—'}`,
-    `Allocation 3: ${a3.value || '—'}`,
-    `Region Type: ${rt.value || '—'}`
+    `Technician Allocation: ${a1.value || '—'}`,
+    `Zone Type: ${rt.value || '—'}`
   ].join('\n');
 
   return `<div class="card al-answer-card">
     <div class="al-matched">
       <span class="al-matched-name">${esc(geo || raw)}</span>
-      <span class="al-matched-meta">${label} match · ${rows.length} row${rows.length !== 1 ? 's' : ''} · ${esc(states.join(', '))}${stateFilter ? ' · filtered' : ''}</span>
+      <span class="al-matched-meta">${label} match · ${rows.length} site${rows.length !== 1 ? 's' : ''} · ${esc(states.join(', '))}${stateFilter ? ' · filtered' : ''}</span>
     </div>
     <div class="al-alloc-grid">
-      ${cell('Allocation 1', a1, true)}
-      ${cell('Allocation 2', a2, false)}
-      ${cell('Allocation 3', a3, false)}
+      ${allocCell}
+      ${zoneCell}
       ${rtCell}
     </div>
     ${warn}
     <button class="al-copy-btn" onclick="alCopy(this,${jsAttr(copyPayload)})"><i class="ti ti-copy"></i> Copy result</button>
   </div>
   <div class="card al-answer-card">
-    <div class="card-title"><i class="ti ti-table" style="font-size:13px;"></i> Matching rows</div>
+    <div class="card-title"><i class="ti ti-table" style="font-size:13px;"></i> Matching sites</div>
     ${table}
   </div>`;
 }
@@ -7740,16 +7729,16 @@ function alRenderMultiZone(rows, geos, raw, mode) {
   return `<div class="card al-answer-card">
     <div class="al-matched">
       <span class="al-matched-name">“${esc(raw)}”</span>
-      <span class="al-matched-meta">matches ${geos.length} zones · ${rows.length} rows — pick one to see its allocations</span>
+      <span class="al-matched-meta">matches ${geos.length} zones · ${rows.length} sites — pick one to see its allocation</span>
     </div>
     ${byGeo.map(g => `<div class="al-group">
       <div class="al-group-hd">
         <span class="al-group-name">${esc(g.geo || '(no zone)')}</span>
-        <span class="al-group-count">${g.rows.length} row${g.rows.length !== 1 ? 's' : ''}</span>
+        <span class="al-group-count">${g.rows.length} site${g.rows.length !== 1 ? 's' : ''}</span>
         <span class="al-pill ${alPillClass(g.rt.value)}">${esc(g.rt.value || '—')}${g.rt.count < g.rt.total ? ' +mixed' : ''}</span>
         <button class="al-sugg-chip" style="margin-left:auto;" onclick="alSet('${esc(g.geo).replace(/'/g, "\\'")}')">View</button>
       </div>
-      <div class="al-group-allocs"><b>Allocation 1:</b> ${esc(g.a1.value || '— none —')}${g.a1.count < g.a1.total ? ` <span style="color:var(--text-3)">(${g.a1.count}/${g.a1.total})</span>` : ''}</div>
+      <div class="al-group-allocs"><b>Allocation:</b> ${esc(g.a1.value || '— none —')}${g.a1.count < g.a1.total ? ` <span style="color:var(--text-3)">(${g.a1.count}/${g.a1.total})</span>` : ''}</div>
     </div>`).join('')}
   </div>`;
 }
@@ -10026,7 +10015,7 @@ const PAGES = {
   notes:          { title:'Personal Notes',   icon:'ti-pencil',          color:'c-pink',   desc:'Grocery lists, errands, calls — jot it down and turn it into a personal task. Separate from the Scratch Pad widget.' },
   learning:       { title:'Learning',          icon:'ti-school',           color:'c-teal',   desc:'Courses, books, tutorials and things you want to learn.' },
   suburbcheck:    { title:'Suburb Checker',    icon:'ti-map-pin',          color:'c-amber',  desc:'Validate suburb, postcode and state data against a reference localities file.' },
-  alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up Allocation 1/2/3 and Region Type by suburb, zone, postcode or state.' },
+  alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up the technician allocation and zone type by suburb, zone, postcode or state.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
