@@ -2123,8 +2123,26 @@
   .al-add-btn { margin-top:14px; padding:9px 16px; border-radius:8px; background:var(--teal-bg); border:1.5px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .15s; }
   .al-add-btn:hover { background:var(--teal); color:#fff; }
   .al-custom-tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:4px; background:var(--teal-bg); color:var(--teal-text); font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; vertical-align:middle; }
+  .al-custom-tag.edited { background:rgba(var(--amber-rgb,220,152,40),0.16); color:var(--amber-text); }
+  .al-was { display:block; font-size:10px; color:var(--text-3); font-style:italic; margin-top:1px; }
+  .al-row-acts { white-space:nowrap; text-align:right; }
+  .al-edit-row { background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:4px; line-height:1; }
+  .al-edit-row:hover { color:var(--teal-text); background:var(--teal-bg); }
   .al-del-row { background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:4px; line-height:1; }
   .al-del-row:hover { color:var(--coral-text); background:var(--coral-bg); }
+  .al-lock-note { display:flex; align-items:flex-start; gap:7px; font-size:11.5px; color:var(--text-3); background:var(--surface); border-radius:7px; padding:8px 10px; margin-bottom:12px; }
+  .al-lock-note .ti { font-size:13px; flex-shrink:0; margin-top:1px; }
+  .al-manage-card { margin-top:12px; padding:0; overflow:hidden; }
+  .al-manage-hd { width:100%; background:none; border:none; color:var(--text-2); font-family:inherit; font-size:12.5px; padding:11px 14px; display:flex; align-items:center; gap:8px; cursor:pointer; text-align:left; transition:background .12s; }
+  .al-manage-hd:hover { background:var(--surface2); color:var(--text); }
+  .al-manage-count { margin-left:auto; font-size:11px; color:var(--text-3); }
+  .al-manage-list { border-top:0.5px solid var(--border); padding:4px 0; }
+  .al-manage-row { display:flex; align-items:center; gap:9px; padding:7px 14px; font-size:12.5px; border-bottom:0.5px solid var(--border); }
+  .al-manage-row:last-child { border-bottom:none; }
+  .al-manage-row .al-custom-tag { margin-left:0; flex-shrink:0; }
+  .al-manage-name { color:var(--text); font-weight:600; white-space:nowrap; }
+  .al-manage-pc { color:var(--text-3); font-weight:400; font-variant-numeric:tabular-nums; }
+  .al-manage-alloc { color:var(--text-3); font-size:11.5px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-field { margin-bottom:12px; }
   .al-field:last-child { margin-bottom:0; }
   .al-field label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); margin-bottom:5px; }
@@ -3359,6 +3377,7 @@
       <div class="al-sugg" id="al-sugg"></div>
     </div>
 
+    <div id="al-manage"></div>
     <div id="al-result"></div>
   </div>
 
@@ -7532,30 +7551,51 @@ function alInit() {
   document.head.appendChild(s);
 }
 
-// Base rows come from the generated contract file; user-added rows live in
-// Supabase and are merged on top so both are searchable identically. Rebuilt
-// whenever a custom row is added or removed.
+// Base rows come from the generated contract file. User changes live in Supabase
+// as either an 'add' (a brand new site) or an 'edit' (an override layered on top
+// of a contract row, keyed by its postcode+suburb). Overrides rather than
+// in-place changes, because the contract file is regenerated wholesale whenever
+// a new allocator sheet arrives — edits have to survive that.
 function alBuild() {
   const D = window.POSTCODE_ALLOC_DATA;
   const combos = D.combos, states = D.states;
   alBaseStates = states.slice();
+
+  const edits = new Map();
+  const adds = [];
+  (allocCustom || []).forEach(c => {
+    if (c.kind === 'edit') edits.set(c.pc + '|' + (c.loc || '').toLowerCase(), c);
+    else adds.push(c);   // entries saved before 'kind' existed are adds
+  });
+
   const base = D.rows.split('\n').map(line => {
     const p = line.split('|');
     const c = combos[+p[3]];
-    return {
+    const row = {
       pc: p[0], loc: p[1], st: states[+p[2]],
-      geo: c[0], rt: c[1], a1: c[2], custom: false,
-      _l: p[1].toLowerCase(), _g: c[0].toLowerCase()
+      geo: c[0], rt: c[1], a1: c[2], custom: false, edited: false
     };
+    const ov = edits.get(row.pc + '|' + row.loc.toLowerCase());
+    if (ov) {
+      row.orig = { st: row.st, geo: row.geo, rt: row.rt, a1: row.a1 };
+      row.st = ov.st; row.geo = ov.geo; row.rt = ov.rt; row.a1 = ov.a1;
+      row.edited = true; row.cid = ov.id;
+    }
+    row._l = row.loc.toLowerCase();
+    row._g = (row.geo || '').toLowerCase();
+    return row;
   });
-  const extra = (allocCustom || []).map(c => ({
+
+  const extra = adds.map(c => ({
     pc: c.pc, loc: c.loc, st: c.st, geo: c.geo, rt: c.rt, a1: c.a1,
-    custom: true, cid: c.id,
+    custom: true, edited: false, cid: c.id,
     _l: (c.loc || '').toLowerCase(), _g: (c.geo || '').toLowerCase()
   }));
+
   alRows = base.concat(extra);
   alGeoNames = [...new Set(alRows.map(r => r.geo))].filter(Boolean).sort();
   alAllocNames = [...new Set(alRows.map(r => r.a1))].filter(Boolean).sort();
+  alRenderManage();
 }
 
 function alFillStates() {
@@ -7713,25 +7753,33 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
       <b>Allocation varies across these sites.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
     </span></div>`;
   }
-  const customCount = rows.filter(r => r.custom).length;
-  if (customCount) {
+  const addedCount  = rows.filter(r => r.custom).length;
+  const editedCount = rows.filter(r => r.edited).length;
+  if (addedCount || editedCount) {
+    const bits = [];
+    if (addedCount)  bits.push(`${addedCount} added manually`);
+    if (editedCount) bits.push(`${editedCount} edited from the allocator sheet`);
     warn += `<div class="al-warn"><i class="ti ti-info-circle"></i><span>
-      ${customCount === rows.length
-        ? `This ${customCount === 1 ? 'entry was' : 'result is'} added manually — not from the ANZ WL allocator sheet.`
-        : `${customCount} of these ${rows.length} sites ${customCount === 1 ? 'was' : 'were'} added manually.`}
+      ${bits.join(' · ')}${rows.length > 1 ? ` (of ${rows.length} sites)` : ''}.
+      These are your own changes, not contract data.
     </span></div>`;
   }
 
   const shown = rows.slice(0, AL_MAX_TABLE_ROWS);
   const table = `<div class="al-rows-wrap"><table class="al-rows">
-    <thead><tr><th>Postcode</th><th>Suburb</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician Allocation</th></tr></thead>
+    <thead><tr><th>Postcode</th><th>Suburb</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician Allocation</th><th></th></tr></thead>
     <tbody>${shown.map(r => `<tr>
       <td class="pc">${esc(r.pc)}</td>
-      <td>${esc(r.loc)}${r.custom ? `<span class="al-custom-tag">Added</span><button class="al-del-row" onclick="alDeleteCustom('${r.cid}')" title="Remove this added allocation"><i class="ti ti-x"></i></button>` : ''}</td>
+      <td>${esc(r.loc)}${r.custom ? '<span class="al-custom-tag">Added</span>' : r.edited ? '<span class="al-custom-tag edited">Edited</span>' : ''}</td>
       <td>${esc(r.st)}</td>
       <td>${esc(r.geo || '—')}</td>
       <td><span class="al-pill ${alPillClass(r.rt)}">${esc(r.rt || '—')}</span></td>
-      <td>${esc(r.a1 || '—')}</td>
+      <td>${esc(r.a1 || '—')}${r.edited ? `<span class="al-was">was ${esc(r.orig.a1 || '—')}</span>` : ''}</td>
+      <td class="al-row-acts">
+        <button class="al-edit-row" onclick="alOpenEdit(${jsAttr(r.pc)},${jsAttr(r.loc)})" title="Update this allocation"><i class="ti ti-pencil"></i></button>
+        ${r.custom ? `<button class="al-del-row" onclick="alDeleteCustom('${r.cid}')" title="Remove this added site"><i class="ti ti-trash"></i></button>` : ''}
+        ${r.edited ? `<button class="al-del-row" onclick="alRevertEdit('${r.cid}')" title="Revert to allocator sheet"><i class="ti ti-arrow-back-up"></i></button>` : ''}
+      </td>
     </tr>`).join('')}</tbody></table>
     ${rows.length > AL_MAX_TABLE_ROWS ? `<div class="al-more">Showing ${AL_MAX_TABLE_ROWS} of ${rows.length} matching sites.</div>` : ''}
   </div>`;
@@ -7792,14 +7840,10 @@ function alCopy(btn, text) {
   });
 }
 
-// ---- Quick add ----
-function alOpenAdd() {
-  const raw = (document.getElementById('al-q')?.value || '').trim();
-  const stateFilter = document.getElementById('al-state')?.value || '';
-  const err = document.getElementById('al-add-err');
-  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+// ---- Quick add / update ----
+let _alEditing = null;   // null = adding; otherwise the row being changed
 
-  // Datalists from whatever is already known, so most adds are a pick not a type
+function alFillPickers() {
   const zl = document.getElementById('al-zone-list');
   if (zl) zl.innerHTML = alGeoNames.map(g => `<option value="${esc(g)}"></option>`).join('');
   const al = document.getElementById('al-alloc-list');
@@ -7807,6 +7851,35 @@ function alOpenAdd() {
   const stSel = document.getElementById('al-f-st');
   if (stSel) stSel.innerHTML = alBaseStates.slice().sort()
     .map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+function alSetModalMode(mode, row) {
+  const title = document.getElementById('al-add-title');
+  const btn   = document.getElementById('al-add-save-btn');
+  const lock  = mode === 'contract';   // pc+suburb identify the contract row
+  document.getElementById('al-f-loc').readOnly = lock;
+  document.getElementById('al-f-pc').readOnly  = lock;
+  document.getElementById('al-f-loc').style.opacity = lock ? '0.6' : '';
+  document.getElementById('al-f-pc').style.opacity  = lock ? '0.6' : '';
+  const note = document.getElementById('al-lock-note');
+  if (note) note.style.display = lock ? '' : 'none';
+  if (mode === 'add') {
+    title.innerHTML = '<i class="ti ti-map-pin-plus" style="margin-right:6px;"></i>Add allocation';
+    btn.innerHTML = '<i class="ti ti-plus" style="font-size:15px"></i> Add allocation';
+  } else {
+    title.innerHTML = '<i class="ti ti-pencil" style="margin-right:6px;"></i>Update allocation';
+    btn.innerHTML = '<i class="ti ti-check" style="font-size:15px"></i> Save changes';
+  }
+}
+
+function alOpenAdd() {
+  const raw = (document.getElementById('al-q')?.value || '').trim();
+  const stateFilter = document.getElementById('al-state')?.value || '';
+  const err = document.getElementById('al-add-err');
+  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+  _alEditing = null;
+  alFillPickers();
+  alSetModalMode('add');
 
   // Prefill from whatever they searched for
   const isPc = /^\d{3,4}$/.test(raw);
@@ -7816,6 +7889,7 @@ function alOpenAdd() {
   document.getElementById('al-f-zone').value = looksLikeZone ? raw : '';
   document.getElementById('al-f-a1').value   = '';
   document.getElementById('al-f-rt').value   = 'Regional';
+  const stSel = document.getElementById('al-f-st');
   if (stSel && stateFilter) stSel.value = stateFilter;
   alZoneAutofill();
 
@@ -7824,6 +7898,34 @@ function alOpenAdd() {
     const first = document.getElementById(isPc ? 'al-f-loc' : (looksLikeZone ? 'al-f-loc' : 'al-f-pc'));
     if (first) first.focus();
   }, 60);
+}
+
+function alOpenEdit(pc, loc) {
+  const row = alRows.find(r => r.pc === pc && r._l === (loc || '').toLowerCase());
+  if (!row) return;
+  const err = document.getElementById('al-add-err');
+  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+  _alEditing = row;
+  alFillPickers();
+  alSetModalMode(row.custom ? 'custom' : 'contract', row);
+
+  document.getElementById('al-f-loc').value  = row.loc;
+  document.getElementById('al-f-pc').value   = row.pc;
+  document.getElementById('al-f-zone').value = row.geo || '';
+  document.getElementById('al-f-a1').value   = row.a1 || '';
+  document.getElementById('al-f-rt').value   = row.rt || 'Regional';
+  const stSel = document.getElementById('al-f-st');
+  if (stSel) stSel.value = row.st;
+
+  const hint = document.getElementById('al-zone-hint');
+  if (hint) {
+    hint.textContent = row.custom
+      ? 'This is a manually added site — every field is editable.'
+      : 'Saving creates an override that survives future allocator-sheet updates.';
+    hint.style.color = 'var(--text-3)';
+  }
+  document.getElementById('al-add-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('al-f-a1')?.focus(), 60);
 }
 
 function alCloseAdd() {
@@ -7875,10 +7977,35 @@ function alSaveAdd() {
   if (!geo) return fail('Zone is required.');
   if (!a1) return fail('Technician allocation is required.');
 
+  if (_alEditing) {
+    const target = _alEditing;
+    // Moving an added row onto an identity that already exists would shadow it
+    if (target.custom && (pc !== target.pc || loc.toLowerCase() !== target._l)) {
+      const clash = alRows.find(r => r.pc === pc && r._l === loc.toLowerCase() && r !== target);
+      if (clash) return fail(`${loc} ${pc} already exists — zone ${clash.geo}, allocated to ${clash.a1 || 'nobody'}.`);
+    }
+    if (target.custom) {
+      const rec = allocCustom.find(c => String(c.id) === String(target.cid));
+      if (rec) Object.assign(rec, { pc, loc, st, geo, rt, a1, updatedAt: Date.now() });
+    } else {
+      // Override on a contract row, keyed by its original postcode+suburb
+      const existing = allocCustom.find(c => c.kind === 'edit' && c.pc === target.pc && (c.loc || '').toLowerCase() === target._l);
+      if (existing) Object.assign(existing, { st, geo, rt, a1, updatedAt: Date.now() });
+      else allocCustom.push({ id: 'ae' + Date.now(), kind: 'edit', pc: target.pc, loc: target.loc, st, geo, rt, a1, addedAt: Date.now() });
+    }
+    saveAllocCustom();
+    alBuild();
+    alCloseAdd();
+    const q = document.getElementById('al-q');
+    if (q) { q.value = loc; alOnInput(); }
+    if (typeof showToast === 'function') showToast(`<i class="ti ti-pencil"></i>Updated <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+    return;
+  }
+
   const dupe = alRows.find(r => r.pc === pc && r._l === loc.toLowerCase());
   if (dupe) return fail(`${loc} ${pc} already exists — zone ${dupe.geo}, allocated to ${dupe.a1 || 'nobody'}.`);
 
-  allocCustom.push({ id: 'ac' + Date.now(), pc, loc, st, geo, rt, a1, addedAt: Date.now() });
+  allocCustom.push({ id: 'ac' + Date.now(), kind: 'add', pc, loc, st, geo, rt, a1, addedAt: Date.now() });
   saveAllocCustom();
   alBuild();
   alFillStates();
@@ -7888,6 +8015,59 @@ function alSaveAdd() {
   const q = document.getElementById('al-q');
   if (q) { q.value = loc; alOnInput(); }
   if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Added <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+}
+
+// Manual changes silently alter what this tool reports, so keep a running
+// summary on the page rather than leaving them to be stumbled on in search.
+let _alManageOpen = false;
+function alToggleManage() { _alManageOpen = !_alManageOpen; alRenderManage(); }
+
+function alRenderManage() {
+  const el = document.getElementById('al-manage');
+  if (!el) return;
+  const list = allocCustom || [];
+  if (!list.length) { el.innerHTML = ''; return; }
+  const adds  = list.filter(c => c.kind !== 'edit');
+  const edits = list.filter(c => c.kind === 'edit');
+  const bits = [];
+  if (adds.length)  bits.push(`${adds.length} added`);
+  if (edits.length) bits.push(`${edits.length} edited`);
+
+  let rows = '';
+  if (_alManageOpen) {
+    rows = '<div class="al-manage-list">' + list.slice().sort((a, b) =>
+      (a.loc || '').localeCompare(b.loc || '')).map(c => {
+      const isEdit = c.kind === 'edit';
+      return `<div class="al-manage-row">
+        <span class="al-custom-tag${isEdit ? ' edited' : ''}">${isEdit ? 'Edited' : 'Added'}</span>
+        <span class="al-manage-name">${esc(c.loc)} <span class="al-manage-pc">${esc(c.pc)}</span></span>
+        <span class="al-manage-alloc">${esc(c.geo || '—')} → ${esc(c.a1 || '—')}</span>
+        <button class="al-edit-row" onclick="alOpenEdit(${jsAttr(c.pc)},${jsAttr(c.loc)})" title="Update"><i class="ti ti-pencil"></i></button>
+        <button class="al-del-row" onclick="${isEdit ? `alRevertEdit('${c.id}')` : `alDeleteCustom('${c.id}')`}" title="${isEdit ? 'Revert to allocator sheet' : 'Remove'}"><i class="ti ti-${isEdit ? 'arrow-back-up' : 'trash'}"></i></button>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  el.innerHTML = `<div class="card al-manage-card">
+    <button class="al-manage-hd" onclick="alToggleManage()">
+      <i class="ti ti-chevron-${_alManageOpen ? 'down' : 'right'}"></i>
+      <i class="ti ti-pencil-cog"></i>
+      <span>Your changes</span>
+      <span class="al-manage-count">${bits.join(' · ')}</span>
+    </button>
+    ${rows}
+  </div>`;
+}
+
+// Drops the override so the row returns to whatever the allocator sheet says
+function alRevertEdit(cid) {
+  const rec = allocCustom.find(c => String(c.id) === String(cid));
+  if (!rec) return;
+  if (!confirm(`Revert ${rec.loc} ${rec.pc} back to the allocator sheet values?`)) return;
+  allocCustom = allocCustom.filter(c => String(c.id) !== String(cid));
+  saveAllocCustom();
+  alBuild();
+  alRun();
 }
 
 function alDeleteCustom(cid) {
@@ -17862,11 +18042,14 @@ document.addEventListener('pointerup', e => {
 <div class="kpi-modal-overlay" id="al-add-overlay" onclick="if(event.target===this)alCloseAdd()">
   <div class="kpi-modal" style="max-width:440px;">
     <div class="kpi-modal-header">
-      <strong><i class="ti ti-map-pin-plus" style="margin-right:6px;"></i>Add allocation</strong>
+      <strong id="al-add-title"><i class="ti ti-map-pin-plus" style="margin-right:6px;"></i>Add allocation</strong>
       <button class="icon-btn" onclick="alCloseAdd()"><i class="ti ti-x"></i></button>
     </div>
     <div class="kpi-modal-preview">
       <div class="al-add-err" id="al-add-err"></div>
+      <div class="al-lock-note" id="al-lock-note" style="display:none;">
+        <i class="ti ti-lock"></i><span>Suburb and postcode identify this site in the allocator sheet, so they stay fixed. Everything below can be changed.</span>
+      </div>
       <div class="al-field-row">
         <div class="al-field">
           <label>Suburb</label>
@@ -17903,7 +18086,7 @@ document.addEventListener('pointerup', e => {
     </div>
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="alCloseAdd()">Cancel</button>
-      <button class="generate-btn" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="alSaveAdd()"><i class="ti ti-plus" style="font-size:15px"></i> Add allocation</button>
+      <button class="generate-btn" id="al-add-save-btn" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="alSaveAdd()"><i class="ti ti-plus" style="font-size:15px"></i> Add allocation</button>
     </div>
   </div>
 </div>
