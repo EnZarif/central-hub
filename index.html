@@ -1869,7 +1869,8 @@
   #add-joblist-modal-overlay .kpi-modal-preview,
   #activity-modal-overlay .kpi-modal-preview,
   #shortcuts-modal-overlay .kpi-modal-preview,
-  #jl-sec-edit-overlay .kpi-modal-preview { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
+  #jl-sec-edit-overlay .kpi-modal-preview,
+  #al-add-overlay .kpi-modal-preview { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
   .shortcut-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; color: var(--text-2); }
   .shortcut-row:last-child { border-bottom: none; }
   .shortcut-row kbd { flex-shrink: 0; min-width: 28px; text-align: center; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text); background: var(--surface); border: 1px solid var(--border-md); border-radius: 6px; padding: 3px 7px; box-shadow: 0 1px 0 var(--border-md); }
@@ -2119,6 +2120,21 @@
   .al-group-name { font-size:13.5px; font-weight:650; color:var(--text); }
   .al-group-count { font-size:11px; color:var(--text-3); }
   .al-group-allocs { font-size:12px; color:var(--text-2); line-height:1.5; }
+  .al-add-btn { margin-top:14px; padding:9px 16px; border-radius:8px; background:var(--teal-bg); border:1.5px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .15s; }
+  .al-add-btn:hover { background:var(--teal); color:#fff; }
+  .al-custom-tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:4px; background:var(--teal-bg); color:var(--teal-text); font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; vertical-align:middle; }
+  .al-del-row { background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:4px; line-height:1; }
+  .al-del-row:hover { color:var(--coral-text); background:var(--coral-bg); }
+  .al-field { margin-bottom:12px; }
+  .al-field:last-child { margin-bottom:0; }
+  .al-field label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); margin-bottom:5px; }
+  .al-field input, .al-field select { width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--border-md); background:var(--surface); color:var(--text); font-family:inherit; font-size:13.5px; outline:none; transition:border-color .15s; }
+  .al-field input:focus, .al-field select:focus { border-color:var(--teal); }
+  .al-field-row { display:flex; gap:10px; }
+  .al-field-row > .al-field { flex:1; }
+  .al-field-hint { font-size:10.5px; color:var(--text-3); margin-top:4px; }
+  .al-add-err { font-size:12px; color:var(--coral-text); background:var(--coral-bg); border-radius:7px; padding:8px 11px; margin-bottom:12px; display:none; }
+  .al-add-err.show { display:block; }
 
   /* SETTINGS PAGE */
   #page-settings .card-title i { color: var(--teal); }
@@ -7487,7 +7503,12 @@ function svUpdateValidateBtn() {
 let alRows = null;          // [{pc, loc, st, geo (zone), rt (zone type), a1 (allocation)}]
 let alLoading = false;
 let alGeoNames = [];
+let alAllocNames = [];
+let alBaseStates = [];
+let allocCustom = [];       // user-added rows, persisted to Supabase
 const AL_MAX_TABLE_ROWS = 60;
+
+function saveAllocCustom() { dbSet('zarif_alloc_custom', allocCustom); }
 
 function alInit() {
   if (alRows || alLoading) { alRenderSuggestions(); return; }
@@ -7511,19 +7532,30 @@ function alInit() {
   document.head.appendChild(s);
 }
 
+// Base rows come from the generated contract file; user-added rows live in
+// Supabase and are merged on top so both are searchable identically. Rebuilt
+// whenever a custom row is added or removed.
 function alBuild() {
   const D = window.POSTCODE_ALLOC_DATA;
   const combos = D.combos, states = D.states;
-  alRows = D.rows.split('\n').map(line => {
+  alBaseStates = states.slice();
+  const base = D.rows.split('\n').map(line => {
     const p = line.split('|');
     const c = combos[+p[3]];
     return {
       pc: p[0], loc: p[1], st: states[+p[2]],
-      geo: c[0], rt: c[1], a1: c[2],
+      geo: c[0], rt: c[1], a1: c[2], custom: false,
       _l: p[1].toLowerCase(), _g: c[0].toLowerCase()
     };
   });
+  const extra = (allocCustom || []).map(c => ({
+    pc: c.pc, loc: c.loc, st: c.st, geo: c.geo, rt: c.rt, a1: c.a1,
+    custom: true, cid: c.id,
+    _l: (c.loc || '').toLowerCase(), _g: (c.geo || '').toLowerCase()
+  }));
+  alRows = base.concat(extra);
   alGeoNames = [...new Set(alRows.map(r => r.geo))].filter(Boolean).sort();
+  alAllocNames = [...new Set(alRows.map(r => r.a1))].filter(Boolean).sort();
 }
 
 function alFillStates() {
@@ -7625,6 +7657,7 @@ function alRun() {
     out.innerHTML = `<div class="card al-answer-card"><div class="al-empty">
       <i class="ti ti-map-off"></i>No match for “${esc(raw)}”${stateFilter ? ` in ${esc(stateFilter)}` : ''}.<br>
       Try a zone name (NT Darwin), a suburb, or a 4-digit postcode.
+      <div><button class="al-add-btn" onclick="alOpenAdd()"><i class="ti ti-map-pin-plus"></i> Add allocation</button></div>
     </div></div>`;
     return;
   }
@@ -7680,13 +7713,21 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
       <b>Allocation varies across these sites.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
     </span></div>`;
   }
+  const customCount = rows.filter(r => r.custom).length;
+  if (customCount) {
+    warn += `<div class="al-warn"><i class="ti ti-info-circle"></i><span>
+      ${customCount === rows.length
+        ? `This ${customCount === 1 ? 'entry was' : 'result is'} added manually — not from the ANZ WL allocator sheet.`
+        : `${customCount} of these ${rows.length} sites ${customCount === 1 ? 'was' : 'were'} added manually.`}
+    </span></div>`;
+  }
 
   const shown = rows.slice(0, AL_MAX_TABLE_ROWS);
   const table = `<div class="al-rows-wrap"><table class="al-rows">
     <thead><tr><th>Postcode</th><th>Suburb</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician Allocation</th></tr></thead>
     <tbody>${shown.map(r => `<tr>
       <td class="pc">${esc(r.pc)}</td>
-      <td>${esc(r.loc)}</td>
+      <td>${esc(r.loc)}${r.custom ? `<span class="al-custom-tag">Added</span><button class="al-del-row" onclick="alDeleteCustom('${r.cid}')" title="Remove this added allocation"><i class="ti ti-x"></i></button>` : ''}</td>
       <td>${esc(r.st)}</td>
       <td>${esc(r.geo || '—')}</td>
       <td><span class="al-pill ${alPillClass(r.rt)}">${esc(r.rt || '—')}</span></td>
@@ -7749,6 +7790,114 @@ function alCopy(btn, text) {
     btn.innerHTML = '<i class="ti ti-check"></i> Copied';
     setTimeout(() => { btn.innerHTML = old; }, 1400);
   });
+}
+
+// ---- Quick add ----
+function alOpenAdd() {
+  const raw = (document.getElementById('al-q')?.value || '').trim();
+  const stateFilter = document.getElementById('al-state')?.value || '';
+  const err = document.getElementById('al-add-err');
+  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+
+  // Datalists from whatever is already known, so most adds are a pick not a type
+  const zl = document.getElementById('al-zone-list');
+  if (zl) zl.innerHTML = alGeoNames.map(g => `<option value="${esc(g)}"></option>`).join('');
+  const al = document.getElementById('al-alloc-list');
+  if (al) al.innerHTML = alAllocNames.map(a => `<option value="${esc(a)}"></option>`).join('');
+  const stSel = document.getElementById('al-f-st');
+  if (stSel) stSel.innerHTML = alBaseStates.slice().sort()
+    .map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+
+  // Prefill from whatever they searched for
+  const isPc = /^\d{3,4}$/.test(raw);
+  const looksLikeZone = !isPc && alGeoNames.some(g => g.toLowerCase().includes(raw.toLowerCase()));
+  document.getElementById('al-f-pc').value   = isPc ? raw.padStart(4, '0') : '';
+  document.getElementById('al-f-loc').value  = (!isPc && !looksLikeZone) ? raw.toUpperCase() : '';
+  document.getElementById('al-f-zone').value = looksLikeZone ? raw : '';
+  document.getElementById('al-f-a1').value   = '';
+  document.getElementById('al-f-rt').value   = 'Regional';
+  if (stSel && stateFilter) stSel.value = stateFilter;
+  alZoneAutofill();
+
+  document.getElementById('al-add-overlay').classList.add('active');
+  setTimeout(() => {
+    const first = document.getElementById(isPc ? 'al-f-loc' : (looksLikeZone ? 'al-f-loc' : 'al-f-pc'));
+    if (first) first.focus();
+  }, 60);
+}
+
+function alCloseAdd() {
+  document.getElementById('al-add-overlay').classList.remove('active');
+}
+
+// Adding a suburb to an existing zone almost always inherits that zone's
+// type and technician, so fill them in rather than making them retype.
+function alZoneAutofill() {
+  const zone = (document.getElementById('al-f-zone')?.value || '').trim().toLowerCase();
+  const hint = document.getElementById('al-zone-hint');
+  if (!zone || !alRows) return;
+  const match = alRows.filter(r => r._g === zone);
+  if (!match.length) {
+    if (hint) { hint.textContent = 'New zone — set its type and allocation below.'; hint.style.color = 'var(--amber-text)'; }
+    return;
+  }
+  const rt = alConsensus(match, 'rt').value;
+  const a1 = alConsensus(match, 'a1').value;
+  const st = alConsensus(match, 'st').value;
+  const rtEl = document.getElementById('al-f-rt');
+  const a1El = document.getElementById('al-f-a1');
+  const stEl = document.getElementById('al-f-st');
+  if (rtEl && rt) rtEl.value = rt;
+  if (a1El && a1 && !a1El.value) a1El.value = a1;
+  if (stEl && st && [...stEl.options].some(o => o.value === st)) stEl.value = st;
+  if (hint) {
+    hint.textContent = `Existing zone — ${match.length} site${match.length !== 1 ? 's' : ''}, filled from its current allocation.`;
+    hint.style.color = 'var(--teal-text)';
+  }
+}
+
+function alSaveAdd() {
+  const err = document.getElementById('al-add-err');
+  if (err) { err.textContent = ''; err.className = 'al-add-err'; }
+  const fail = msg => { if (err) { err.textContent = msg; err.className = 'al-add-err show'; } };
+
+  const loc  = (document.getElementById('al-f-loc').value || '').trim().toUpperCase();
+  let   pc   = (document.getElementById('al-f-pc').value || '').trim();
+  const st   = document.getElementById('al-f-st').value;
+  const geo  = (document.getElementById('al-f-zone').value || '').trim();
+  const rt   = document.getElementById('al-f-rt').value;
+  const a1   = (document.getElementById('al-f-a1').value || '').trim();
+
+  if (!loc) return fail('Suburb is required.');
+  if (!/^\d{3,4}$/.test(pc)) return fail('Postcode must be 3 or 4 digits.');
+  pc = pc.padStart(4, '0');
+  if (!st) return fail('State is required.');
+  if (!geo) return fail('Zone is required.');
+  if (!a1) return fail('Technician allocation is required.');
+
+  const dupe = alRows.find(r => r.pc === pc && r._l === loc.toLowerCase());
+  if (dupe) return fail(`${loc} ${pc} already exists — zone ${dupe.geo}, allocated to ${dupe.a1 || 'nobody'}.`);
+
+  allocCustom.push({ id: 'ac' + Date.now(), pc, loc, st, geo, rt, a1, addedAt: Date.now() });
+  saveAllocCustom();
+  alBuild();
+  alFillStates();
+  alCloseAdd();
+
+  // Jump the search to the thing they just added so they see it land
+  const q = document.getElementById('al-q');
+  if (q) { q.value = loc; alOnInput(); }
+  if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Added <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+}
+
+function alDeleteCustom(cid) {
+  const row = allocCustom.find(c => String(c.id) === String(cid));
+  if (!row) return;
+  if (!confirm(`Remove the added allocation for ${row.loc} ${row.pc}?`)) return;
+  allocCustom = allocCustom.filter(c => String(c.id) !== String(cid));
+  saveAllocCustom();
+  alBuild();
+  alRun();
 }
 
 // ===== EMAIL ESCALATION JOBS =====
@@ -17306,6 +17455,7 @@ async function initApp() {
   nextProjectId  = projects.reduce((m,p) => Math.max(m, p.id || 0), 0) + 1;
 
   jobLists       = dbGet('zarif_job_lists')      || [];
+  allocCustom    = dbGet('zarif_alloc_custom')   || [];
 
   escItems   = dbGet('zarif_esc_jobs') || [];
   escNextId  = escItems.reduce((m, i) => Math.max(m, i.id || 0), 0) + 1;
@@ -17704,6 +17854,56 @@ document.addEventListener('pointerup', e => {
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="jlCloseSectionEdit()">Cancel</button>
       <button class="generate-btn" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="jlSaveSectionEdit()"><i class="ti ti-check" style="font-size:15px"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Allocation quick-add modal -->
+<div class="kpi-modal-overlay" id="al-add-overlay" onclick="if(event.target===this)alCloseAdd()">
+  <div class="kpi-modal" style="max-width:440px;">
+    <div class="kpi-modal-header">
+      <strong><i class="ti ti-map-pin-plus" style="margin-right:6px;"></i>Add allocation</strong>
+      <button class="icon-btn" onclick="alCloseAdd()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="kpi-modal-preview">
+      <div class="al-add-err" id="al-add-err"></div>
+      <div class="al-field-row">
+        <div class="al-field">
+          <label>Suburb</label>
+          <input type="text" id="al-f-loc" placeholder="e.g. KEPERRA" autocomplete="off">
+        </div>
+        <div class="al-field" style="max-width:110px;">
+          <label>Postcode</label>
+          <input type="text" id="al-f-pc" placeholder="4054" maxlength="4" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+      <div class="al-field">
+        <label>State</label>
+        <select id="al-f-st"></select>
+      </div>
+      <div class="al-field">
+        <label>Zone</label>
+        <input type="text" id="al-f-zone" list="al-zone-list" placeholder="Pick an existing zone or type a new one" autocomplete="off" oninput="alZoneAutofill()">
+        <datalist id="al-zone-list"></datalist>
+        <div class="al-field-hint" id="al-zone-hint">Choosing an existing zone fills in its type and allocation.</div>
+      </div>
+      <div class="al-field">
+        <label>Zone Type</label>
+        <select id="al-f-rt">
+          <option value="Metro">Metro</option>
+          <option value="Regional">Regional</option>
+          <option value="Remote">Remote</option>
+        </select>
+      </div>
+      <div class="al-field">
+        <label>Technician Allocation</label>
+        <input type="text" id="al-f-a1" list="al-alloc-list" placeholder="e.g. Amtek Brisbane" autocomplete="off">
+        <datalist id="al-alloc-list"></datalist>
+      </div>
+    </div>
+    <div class="kpi-modal-actions">
+      <button class="kpi-file-btn" onclick="alCloseAdd()">Cancel</button>
+      <button class="generate-btn" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="alSaveAdd()"><i class="ti ti-plus" style="font-size:15px"></i> Add allocation</button>
     </div>
   </div>
 </div>
