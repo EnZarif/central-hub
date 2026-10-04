@@ -2087,6 +2087,9 @@
   .sv-cov-section-label.err { color:var(--amber-text); }
   .sv-cov-section-label.ok  { color:var(--green-text); }
   .sv-cov-tech-sum { margin-left:auto; font-size:10.5px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-3); }
+  .al-lookup-btn { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; padding:4px 10px; border-radius:6px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:11px; font-weight:600; text-decoration:none; transition:all .13s; }
+  .al-lookup-btn:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
+  .al-lookup-btn .ti { font-size:12px; }
   .sv-cov-table-wrap { overflow:auto; max-height:420px; }
   .sv-cov-table-wrap thead th { position:sticky; top:0; background:var(--surface); z-index:1; }
 
@@ -7679,7 +7682,7 @@ function svRenderCoverage() {
     const rows = [...allocated].sort((a, b) =>
       (a.geo || '').localeCompare(b.geo || '') || a.suburb.localeCompare(b.suburb));
     html += `<div class="sv-cov-table-wrap"><table class="al-rows">
-      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Rows</th></tr></thead>
+      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Rows</th><th></th></tr></thead>
       <tbody>${rows.map(s => `<tr>
         <td>${esc(s.suburb)}${s.isCustom ? '<span class="al-custom-tag">Added</span>' : s.isEdited ? '<span class="al-custom-tag edited">Edited</span>' : ''}</td>
         <td class="pc">${esc(s.pc)}</td>
@@ -7688,6 +7691,7 @@ function svRenderCoverage() {
         <td><span class="al-pill ${alPillClass(s.rt)}">${esc(s.rt || '—')}</span></td>
         <td><b>${esc(s.a1 || '—')}</b></td>
         <td class="pc">${s.count}</td>
+        <td>${alHelpdeskLink(s.suburb)}</td>
       </tr>`).join('')}</tbody></table></div>`;
   }
 
@@ -7950,6 +7954,19 @@ function alConsensus(rows, field) {
   });
   const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
   return { value: sorted[0][0], count: sorted[0][1], total: rows.length, variants: sorted };
+}
+
+// Opens the helpdesk job search for a suburb. encodeURIComponent gives the
+// %20 spacing the helpdesk expects — "BELCONNEN DC" -> "BELCONNEN%20DC".
+const AL_HELPDESK_SEARCH = 'https://helpdesk.servicesupport.com.au/jobs/index?multi_search=';
+function alHelpdeskUrl(suburb) {
+  return AL_HELPDESK_SEARCH + encodeURIComponent(String(suburb || '').trim());
+}
+function alHelpdeskLink(suburb) {
+  const name = String(suburb || '').trim();
+  if (!name) return '';
+  return `<a class="al-lookup-btn" href="${esc(alHelpdeskUrl(name))}" target="_blank" rel="noopener"
+             title="Search the helpdesk for jobs in ${esc(name)}"><i class="ti ti-external-link"></i> Lookup</a>`;
 }
 
 function alPillClass(rt) {
