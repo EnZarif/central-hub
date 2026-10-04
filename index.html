@@ -2861,8 +2861,12 @@
   .nudge-btn-m.nb-del:hover { background: rgba(232,88,88,0.16); }
   .nudge-btn-m.nb-plan { background: var(--teal-bg); color: var(--teal-text); border-color: rgba(74,158,232,0.25); }
   .nudge-btn-m.nb-plan:hover { background: rgba(74,158,232,0.18); }
+  .nudge-btn-m.nb-keep { background: var(--green-bg); color: var(--green-text); border-color: color-mix(in srgb, var(--green-text) 28%, transparent); }
+  .nudge-btn-m.nb-keep:hover { background: color-mix(in srgb, var(--green-text) 18%, transparent); }
   .nudge-btn-m.nb-snooze { background: none; color: var(--text-3); border-color: var(--border-md); }
   .nudge-btn-m.nb-snooze:hover { color: var(--text-2); }
+  .toast-undo-btn { background: none; border: none; border-bottom: 1px solid currentColor; color: inherit; font-family: inherit; font-size: inherit; padding: 0; margin-left: 6px; cursor: pointer; opacity: 0.85; }
+  .toast-undo-btn:hover { opacity: 1; }
 
   /* ── Scratchpad FAB: solid amber pencil when closed, solid teal when open ── */
   .scratch-fab { background: #050d18 !important; border-color: rgba(74,158,232,0.22) !important; box-shadow: 0 4px 18px rgba(0,0,0,0.55) !important; }
@@ -9282,6 +9286,7 @@ function taskCreatedMs(t) {
 }
 function isTaskStale(t) {
   if (!t.custom || isDone(t.id) || t.freq !== 'untildone') return false;
+  if (t.backlogKeep) return false;   // decision already made — stop nudging
   return (Date.now() - taskCreatedMs(t)) > 14 * 24 * 60 * 60 * 1000;
 }
 function toggleBacklog() { _backlogOpen = !_backlogOpen; renderTasks(); }
@@ -9302,6 +9307,30 @@ const _backlogSnoozed = new Set(JSON.parse(sessionStorage.getItem('blSnoozed') |
 function backlogSnoozeTask(id) {
   _backlogSnoozed.add(String(id));
   sessionStorage.setItem('blSnoozed', JSON.stringify([..._backlogSnoozed]));
+  renderTasks();
+}
+
+// "Keep as is" — the task stays in the list untouched but stops being nudged.
+// Unlike snooze this is a decision, so it persists on the task itself rather
+// than in sessionStorage, and also exempts it from Clear all backlog.
+function backlogKeepTask(id) {
+  const t = customTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  t.backlogKeep = true;
+  t.backlogKeptAt = Date.now();
+  saveCustomTasks();
+  renderTasks();
+  if (typeof showToast === 'function') {
+    showToast(`<i class="ti ti-check"></i>Keeping <b>${esc(t.name)}</b> — still in your list, out of the backlog. <button class="toast-undo-btn" onclick="backlogUnkeepTask('${t.id}')">Undo</button>`);
+  }
+}
+
+function backlogUnkeepTask(id) {
+  const t = customTasks.find(x => String(x.id) === String(id));
+  if (!t) return;
+  delete t.backlogKeep;
+  delete t.backlogKeptAt;
+  saveCustomTasks();
   renderTasks();
 }
 
@@ -9454,7 +9483,8 @@ function renderBacklogM() {
       <div class="backlog-nudge-row">
         <button class="nudge-btn-m nb-del" onclick="backlogDeleteTask('${t.id}')">Delete task</button>
         <button class="nudge-btn-m nb-plan" onclick="openTaskEdit('${t.id}')">Update plan</button>
-        <button class="nudge-btn-m nb-snooze" onclick="backlogSnoozeTask('${t.id}')">Snooze 1 week</button>
+        <button class="nudge-btn-m nb-keep" onclick="backlogKeepTask('${t.id}')" title="Keeps the task in your list but stops it appearing here">Keep as is</button>
+        <button class="nudge-btn-m nb-snooze" onclick="backlogSnoozeTask('${t.id}')" title="Hides it for this session — it comes back next time you reload">Snooze</button>
       </div>
     </div>`;
   }).join('');
