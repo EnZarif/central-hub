@@ -2165,6 +2165,22 @@
   .al-manage-name { color:var(--text); font-weight:600; white-space:nowrap; }
   .al-manage-pc { color:var(--text-3); font-weight:400; font-variant-numeric:tabular-nums; }
   .al-manage-alloc { color:var(--text-3); font-size:11.5px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-unalloc-ctrl { display:flex; align-items:center; gap:6px; padding:9px 14px; border-top:0.5px solid var(--border); font-size:11px; color:var(--text-3); }
+  .al-grp-btn { background:none; border:0.5px solid var(--border-md); color:var(--text-3); font-family:inherit; font-size:11px; padding:3px 10px; border-radius:20px; cursor:pointer; transition:all .13s; }
+  .al-grp-btn:hover { color:var(--text-2); }
+  .al-grp-btn.on { background:var(--teal-bg); border-color:var(--teal); color:var(--teal-text); font-weight:600; }
+  .al-unalloc-grp { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); padding:10px 14px 5px; background:var(--surface2); border-top:0.5px solid var(--border); display:flex; gap:7px; }
+  .al-unalloc-grp span { color:var(--text-3); opacity:.7; font-weight:600; }
+  .al-unalloc-row { display:grid; grid-template-columns:1fr auto; gap:3px 12px; padding:10px 14px; border-bottom:0.5px solid var(--border); align-items:center; }
+  .al-unalloc-row:last-child { border-bottom:none; }
+  .al-unalloc-main { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .al-unalloc-name { font-size:13.5px; font-weight:600; color:var(--text); }
+  .al-unalloc-pc { font-size:12px; color:var(--text-2); font-variant-numeric:tabular-nums; }
+  .al-unalloc-st { font-size:10.5px; color:var(--text-3); background:var(--surface2); border-radius:4px; padding:1px 6px; }
+  .al-unalloc-src { font-size:10px; color:var(--text-3); font-style:italic; }
+  .al-unalloc-sub { grid-column:1; font-size:11.5px; color:var(--text-3); line-height:1.4; }
+  .al-unalloc-sub b { color:var(--text-2); font-weight:600; }
+  .al-unalloc-acts { grid-column:2; grid-row:1 / span 2; align-self:center; display:flex; align-items:center; gap:4px; }
   .al-field { margin-bottom:12px; }
   .al-field:last-child { margin-bottom:0; }
   .al-field label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); margin-bottom:5px; }
@@ -3417,6 +3433,7 @@
       <div class="al-sugg" id="al-sugg"></div>
     </div>
 
+    <div id="al-unalloc"></div>
     <div id="al-manage"></div>
     <div id="al-result"></div>
   </div>
@@ -7590,6 +7607,8 @@ function svCheckCoverage() {
       }
       svCoverage.push(site);
     }
+    // Feed the gaps through to the Allocation Lookup's Unallocated list
+    alRecordGaps(svCoverage.filter(s => !s.covered));
     svRenderCoverage();
   }).catch(() => {
     if (body) body.innerHTML = '<div class="sv-no-mismatches">Could not load allocation data.</div>';
@@ -7715,9 +7734,47 @@ let alGeoNames = [];
 let alAllocNames = [];
 let alBaseStates = [];
 let allocCustom = [];       // user-added rows, persisted to Supabase
+// Known gaps: suburbs seen in real work files that the allocator has no
+// technician for. Persisted so they accumulate into a list worth working
+// through, rather than disappearing when the Suburb Checker page is left.
+let allocGaps = [];
 const AL_MAX_TABLE_ROWS = 60;
 
 function saveAllocCustom() { dbSet('zarif_alloc_custom', allocCustom); }
+function saveAllocGaps() { dbSet('zarif_alloc_gaps', allocGaps); }
+
+// A gap stops being a gap once something allocates it — drop those rather than
+// letting the list fill with things already dealt with.
+function alPruneGaps() {
+  if (!alRows || !allocGaps.length) return false;
+  const before = allocGaps.length;
+  allocGaps = allocGaps.filter(g =>
+    !alRows.some(r => r.pc === g.pc && r._l === (g.loc || '').toLowerCase() && r.a1));
+  if (allocGaps.length !== before) { saveAllocGaps(); return true; }
+  return false;
+}
+
+function alRecordGaps(sites) {
+  let added = 0;
+  sites.forEach(s => {
+    const key = s.pc + '|' + (s.suburb || '').toLowerCase();
+    if (allocGaps.some(g => g.pc + '|' + (g.loc || '').toLowerCase() === key)) return;
+    allocGaps.push({
+      id: 'ag' + Date.now() + '_' + (added++),
+      pc: s.pc, loc: s.suburb, st: s.st || '',
+      sugGeo: s.suggest?.geo || '', sugA1: s.suggest?.a1 || '', sugRt: s.suggest?.rt || '',
+      seenAt: Date.now()
+    });
+  });
+  if (added) saveAllocGaps();
+  return added;
+}
+
+function alDismissGap(id) {
+  allocGaps = allocGaps.filter(g => String(g.id) !== String(id));
+  saveAllocGaps();
+  alRenderUnallocated();
+}
 
 // Shared loader — the Suburb Checker's coverage report needs this data too, so
 // the fetch is a promise both pages await rather than a page-init side effect.
@@ -7736,7 +7793,9 @@ function alEnsureData() {
 }
 
 function alInit() {
-  if (alRows || alLoading) { alRenderSuggestions(); return; }
+  // Data may already be loaded by the Suburb Checker's coverage run, in which
+  // case the panels still need rendering for this page.
+  if (alRows || alLoading) { alRenderSuggestions(); alPruneGaps(); alRenderUnallocated(); alRenderManage(); return; }
   alLoading = true;
   const hint = document.getElementById('al-hint');
   if (hint) hint.textContent = 'Loading allocation data…';
@@ -7745,6 +7804,7 @@ function alInit() {
     if (hint) hint.textContent = `${alRows.length.toLocaleString()} ANZ WL sites · ${alGeoNames.length} zones loaded. Results update as you type.`;
     alFillStates();
     alRenderSuggestions();
+    alRenderUnallocated();
     alRun();
   }).catch(() => {
     alLoading = false;
@@ -7797,7 +7857,9 @@ function alBuild() {
   alRows = base.concat(extra);
   alGeoNames = [...new Set(alRows.map(r => r.geo))].filter(Boolean).sort();
   alAllocNames = [...new Set(alRows.map(r => r.a1))].filter(Boolean).sort();
+  alPruneGaps();
   alRenderManage();
+  alRenderUnallocated();
 }
 
 function alFillStates() {
@@ -8043,7 +8105,8 @@ function alCopy(btn, text) {
 }
 
 // ---- Quick add / update ----
-let _alEditing = null;   // null = adding; otherwise the row being changed
+let _alEditing = null;      // null = adding; otherwise the row being changed
+let _alAddReturnTo = null;  // 'unalloc' when opened from the Unallocated list
 
 function alFillPickers() {
   const zl = document.getElementById('al-zone-list');
@@ -8132,6 +8195,7 @@ function alOpenEdit(pc, loc) {
 
 function alCloseAdd() {
   document.getElementById('al-add-overlay').classList.remove('active');
+  _alAddReturnTo = null;
 }
 
 // Adding a suburb to an existing zone almost always inherits that zone's
@@ -8164,6 +8228,7 @@ function alSaveAdd() {
   const err = document.getElementById('al-add-err');
   if (err) { err.textContent = ''; err.className = 'al-add-err'; }
   const fail = msg => { if (err) { err.textContent = msg; err.className = 'al-add-err show'; } };
+  const returnTo = _alAddReturnTo;   // alCloseAdd() clears this, so read it now
 
   const loc  = (document.getElementById('al-f-loc').value || '').trim().toUpperCase();
   let   pc   = (document.getElementById('al-f-pc').value || '').trim();
@@ -8198,9 +8263,10 @@ function alSaveAdd() {
     saveAllocCustom();
     alBuild();
     alCloseAdd();
+    if (typeof showToast === 'function') showToast(`<i class="ti ti-pencil"></i>Updated <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+    if (returnTo === 'unalloc') return;
     const q = document.getElementById('al-q');
     if (q) { q.value = loc; alOnInput(); }
-    if (typeof showToast === 'function') showToast(`<i class="ti ti-pencil"></i>Updated <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
     return;
   }
 
@@ -8220,11 +8286,130 @@ function alSaveAdd() {
     if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Added <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
     return;
   }
+  // Added from the Unallocated list — stay there so the rest can be worked through
+  if (returnTo === 'unalloc') {
+    if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Allocated <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+    return;
+  }
 
   // Jump the search to the thing they just added so they see it land
   const q = document.getElementById('al-q');
   if (q) { q.value = loc; alOnInput(); }
   if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Added <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+}
+
+// ---- Unallocated: everything with no technician ----
+// Two sources: rows the allocator sheet itself leaves blank, and suburbs the
+// Suburb Checker found in real work files that the sheet has never heard of.
+let _alUnallocOpen = false;
+let _alUnallocGroup = 'st';   // st | geo | none
+
+function alToggleUnalloc() { _alUnallocOpen = !_alUnallocOpen; alRenderUnallocated(); }
+function alSetUnallocGroup(g) { _alUnallocGroup = g; alRenderUnallocated(); }
+
+function alGetUnallocated() {
+  if (!alRows) return [];
+  const out = [];
+  // Sites the sheet lists but leaves without a technician
+  alRows.forEach(r => {
+    if (!r.a1) out.push({ kind:'blank', pc:r.pc, loc:r.loc, st:r.st, geo:r.geo, rt:r.rt });
+  });
+  // Suburbs seen in work files that aren't in the sheet at all
+  allocGaps.forEach(g => {
+    const hit = alRows.find(r => r.pc === g.pc && r._l === (g.loc || '').toLowerCase());
+    if (hit && hit.a1) return;                     // already resolved
+    out.push({ kind:'gap', id:g.id, pc:g.pc, loc:g.loc, st:g.st,
+               geo:g.sugGeo, rt:g.sugRt, sugA1:g.sugA1, seenAt:g.seenAt });
+  });
+  return out;
+}
+
+function alRenderUnallocated() {
+  const el = document.getElementById('al-unalloc');
+  if (!el) return;
+  const list = alGetUnallocated();
+  if (!list.length) { el.innerHTML = ''; return; }
+
+  const blanks = list.filter(u => u.kind === 'blank').length;
+  const gaps   = list.length - blanks;
+  const bits = [];
+  if (gaps)   bits.push(`${gaps} not in the sheet`);
+  if (blanks) bits.push(`${blanks} blank in the sheet`);
+
+  let inner = '';
+  if (_alUnallocOpen) {
+    const keyFor = u => _alUnallocGroup === 'st'  ? (u.st  || 'No state')
+                      : _alUnallocGroup === 'geo' ? (u.geo || 'No zone')
+                      : '';
+    const groups = new Map();
+    list.forEach(u => {
+      const k = keyFor(u);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(u);
+    });
+    const sortedKeys = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+
+    inner = `<div class="al-unalloc-ctrl">
+      <span>Group by</span>
+      ${[['st','State'],['geo','Zone'],['none','Nothing']].map(([k,lbl]) =>
+        `<button class="al-grp-btn${_alUnallocGroup===k?' on':''}" onclick="alSetUnallocGroup('${k}')">${lbl}</button>`).join('')}
+    </div>`;
+
+    inner += sortedKeys.map(k => {
+      const rows = groups.get(k).sort((a,b) => (a.loc||'').localeCompare(b.loc||''));
+      return `${k ? `<div class="al-unalloc-grp">${esc(k)} <span>${rows.length}</span></div>` : ''}
+        ${rows.map(u => `<div class="al-unalloc-row">
+          <div class="al-unalloc-main">
+            <span class="al-unalloc-name">${esc(u.loc || '(no suburb)')}</span>
+            <span class="al-unalloc-pc">${esc(u.pc || '—')}</span>
+            ${u.st ? `<span class="al-unalloc-st">${esc(u.st)}</span>` : ''}
+            ${u.kind === 'blank'
+              ? '<span class="al-custom-tag edited">Blank in sheet</span>'
+              : '<span class="al-unalloc-src">from a work file</span>'}
+          </div>
+          <div class="al-unalloc-sub">${u.geo
+            ? `${u.kind === 'blank' ? 'Zone' : 'Likely zone'}: <b>${esc(u.geo)}</b>${u.sugA1 ? ` → suggested ${esc(u.sugA1)}` : ''}`
+            : 'No zone known — set one when allocating.'}</div>
+          <div class="al-unalloc-acts">
+            <button class="sv-cov-add" onclick="alAllocateUnalloc(${jsAttr(u.pc)},${jsAttr(u.loc || '')})"><i class="ti ti-map-pin-plus"></i> Allocate</button>
+            ${u.kind === 'gap' ? `<button class="al-del-row" onclick="alDismissGap('${u.id}')" title="Not a real site — remove from this list"><i class="ti ti-x"></i></button>` : ''}
+          </div>
+        </div>`).join('')}`;
+    }).join('');
+  }
+
+  el.innerHTML = `<div class="card al-manage-card">
+    <button class="al-manage-hd" onclick="alToggleUnalloc()">
+      <i class="ti ti-chevron-${_alUnallocOpen ? 'down' : 'right'}"></i>
+      <i class="ti ti-user-off"></i>
+      <span>Unallocated</span>
+      <span class="al-manage-count">${list.length} site${list.length !== 1 ? 's' : ''} · ${bits.join(' · ')}</span>
+    </button>
+    ${inner}
+  </div>`;
+}
+
+// Allocate straight from the Unallocated list, prefilled with whatever is known
+function alAllocateUnalloc(pc, loc) {
+  const u = alGetUnallocated().find(x => x.pc === pc && (x.loc || '').toLowerCase() === (loc || '').toLowerCase());
+  if (!u) return;
+  const existing = alRows.find(r => r.pc === pc && r._l === (loc || '').toLowerCase());
+  _alAddReturnTo = 'unalloc';
+  if (existing) { alOpenEdit(pc, loc); return; }   // blank row in the sheet — edit it
+  _alEditing = null;
+  alFillPickers();
+  alSetModalMode('add');
+  const err = document.getElementById('al-add-err');
+  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+  document.getElementById('al-f-loc').value  = (u.loc || '').toUpperCase();
+  document.getElementById('al-f-pc').value   = u.pc;
+  document.getElementById('al-f-zone').value = u.geo || '';
+  document.getElementById('al-f-rt').value   = u.rt || 'Regional';
+  document.getElementById('al-f-a1').value   = u.sugA1 || '';
+  const stSel = document.getElementById('al-f-st');
+  if (stSel && u.st && [...stSel.options].some(o => o.value === u.st)) stSel.value = u.st;
+  document.getElementById('al-add-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('al-f-a1')?.focus(), 60);
 }
 
 // Manual changes silently alter what this tool reports, so keep a running
@@ -17868,6 +18053,7 @@ async function initApp() {
 
   jobLists       = dbGet('zarif_job_lists')      || [];
   allocCustom    = dbGet('zarif_alloc_custom')   || [];
+  allocGaps      = dbGet('zarif_alloc_gaps')     || [];
 
   escItems   = dbGet('zarif_esc_jobs') || [];
   escNextId  = escItems.reduce((m, i) => Math.max(m, i.id || 0), 0) + 1;
