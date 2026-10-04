@@ -2181,6 +2181,13 @@
   .al-unalloc-sub { grid-column:1; font-size:11.5px; color:var(--text-3); line-height:1.4; }
   .al-unalloc-sub b { color:var(--text-2); font-weight:600; }
   .al-unalloc-acts { grid-column:2; grid-row:1 / span 2; align-self:center; display:flex; align-items:center; gap:4px; }
+  .al-ref-warn { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--amber-text); margin-top:2px; }
+  .al-ref-warn .ti { font-size:12px; }
+  .al-sib-btn { margin-left:auto; display:inline-flex; align-items:center; gap:5px; }
+  .al-sib-btn .ti { font-size:12px; }
+  .al-unalloc-noref { margin-left:auto; font-size:10.5px; color:var(--text-3); font-style:italic; }
+  .al-unalloc-more { font-size:11.5px; color:var(--text-3); padding:10px 14px; border-top:0.5px solid var(--border); }
+  .al-unalloc-empty { font-size:12px; color:var(--text-3); padding:14px; text-align:center; }
   .al-field { margin-bottom:12px; }
   .al-field:last-child { margin-bottom:0; }
   .al-field label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); margin-bottom:5px; }
@@ -7232,6 +7239,7 @@ async function svLoadRef(file) {
     try { localStorage.setItem('zarif_suburb_ref', JSON.stringify(svRef)); } catch(e) {}
     svShowStatus('sv-ref-status', `${svRef.length.toLocaleString()} localities loaded`, 'ok');
     svUpdateValidateBtn();
+    if (typeof _alSiblingCache !== 'undefined') _alSiblingCache = null;
   } catch(e) { svShowStatus('sv-ref-status', 'Failed to read file: ' + e.message, 'error'); }
 }
 
@@ -7857,6 +7865,7 @@ function alBuild() {
   alRows = base.concat(extra);
   alGeoNames = [...new Set(alRows.map(r => r.geo))].filter(Boolean).sort();
   alAllocNames = [...new Set(alRows.map(r => r.a1))].filter(Boolean).sort();
+  _alSiblingCache = null;   // allocations changed, so siblings must be recomputed
   alPruneGaps();
   alRenderManage();
   alRenderUnallocated();
@@ -8303,9 +8312,52 @@ function alSaveAdd() {
 // Suburb Checker found in real work files that the sheet has never heard of.
 let _alUnallocOpen = false;
 let _alUnallocGroup = 'st';   // st | geo | none
+let _alIncludeSiblings = false;
+const AL_UNALLOC_MAX = 250;
 
 function alToggleUnalloc() { _alUnallocOpen = !_alUnallocOpen; alRenderUnallocated(); }
 function alSetUnallocGroup(g) { _alUnallocGroup = g; alRenderUnallocated(); }
+function alToggleSiblings() { _alIncludeSiblings = !_alIncludeSiblings; alRenderUnallocated(); }
+
+// Cross-check one site against the Suburb Checker's reference localities file.
+// Catches the PRESTONS-at-2070 class of error — a real suburb paired with the
+// wrong postcode — before anyone allocates it.
+function alRefCheck(pc, loc) {
+  if (!svRef || !svRef.length) return null;
+  const name = (loc || '').trim();
+  if (!name) return null;
+  const atPc = (svRefByPcode[pc] || []).some(r => svNorm(r.locality) === svNorm(name));
+  if (atPc) return { status:'ok' };
+  const elsewhere = svRefNorm[svNorm(name)] || [];
+  if (elsewhere.length) {
+    return { status:'wrong-pc', pcs:[...new Set(elsewhere.map(r => r.postcode))].slice(0, 3),
+             st: elsewhere[0].state };
+  }
+  return { status:'unknown' };
+}
+
+// Localities the reference file puts on a postcode we already service, but
+// which have no allocation of their own. Opt-in: mostly rural sub-localities
+// that will never see a job, so thousands of rows by default would be noise.
+let _alSiblingCache = null;
+function alGetSiblings() {
+  if (!alRows || !svRef || !svRef.length) return [];
+  if (_alSiblingCache) return _alSiblingCache;
+  const allocPcs = new Set(alRows.map(r => r.pc));
+  const allocKey = new Set(alRows.map(r => r.pc + '|' + r._l));
+  const out = [];
+  for (const r of svRef) {
+    const pc = r.postcode;
+    if (!allocPcs.has(pc)) continue;
+    const key = pc + '|' + r.locality.toLowerCase();
+    if (allocKey.has(key)) continue;
+    const near = alRows.find(x => x.pc === pc && x.a1);
+    out.push({ kind:'sibling', pc, loc:r.locality, st:r.state,
+               geo:near?.geo || '', rt:near?.rt || '', sugA1:near?.a1 || '' });
+  }
+  _alSiblingCache = out;
+  return out;
+}
 
 function alGetUnallocated() {
   if (!alRows) return [];
@@ -8318,9 +8370,12 @@ function alGetUnallocated() {
   allocGaps.forEach(g => {
     const hit = alRows.find(r => r.pc === g.pc && r._l === (g.loc || '').toLowerCase());
     if (hit && hit.a1) return;                     // already resolved
-    out.push({ kind:'gap', id:g.id, pc:g.pc, loc:g.loc, st:g.st,
-               geo:g.sugGeo, rt:g.sugRt, sugA1:g.sugA1, seenAt:g.seenAt });
+    const ref = alRefCheck(g.pc, g.loc);
+    out.push({ kind:'gap', id:g.id, pc:g.pc, loc:g.loc,
+               st: g.st || (ref?.status === 'wrong-pc' ? ref.st : ''),
+               geo:g.sugGeo, rt:g.sugRt, sugA1:g.sugA1, seenAt:g.seenAt, ref });
   });
+  if (_alIncludeSiblings) out.push(...alGetSiblings());
   return out;
 }
 
@@ -8328,13 +8383,17 @@ function alRenderUnallocated() {
   const el = document.getElementById('al-unalloc');
   if (!el) return;
   const list = alGetUnallocated();
-  if (!list.length) { el.innerHTML = ''; return; }
+  // Keep the panel when a reference file is loaded even with nothing outstanding,
+  // otherwise the reference-localities toggle becomes unreachable.
+  if (!list.length && !(svRef && svRef.length)) { el.innerHTML = ''; return; }
 
   const blanks = list.filter(u => u.kind === 'blank').length;
-  const gaps   = list.length - blanks;
+  const sibs   = list.filter(u => u.kind === 'sibling').length;
+  const gaps   = list.filter(u => u.kind === 'gap').length;
   const bits = [];
-  if (gaps)   bits.push(`${gaps} not in the sheet`);
-  if (blanks) bits.push(`${blanks} blank in the sheet`);
+  if (gaps)   bits.push(`${gaps.toLocaleString()} from work files`);
+  if (blanks) bits.push(`${blanks.toLocaleString()} blank in the sheet`);
+  if (sibs)   bits.push(`${sibs.toLocaleString()} from reference`);
 
   let inner = '';
   if (_alUnallocOpen) {
@@ -8349,33 +8408,58 @@ function alRenderUnallocated() {
     });
     const sortedKeys = [...groups.keys()].sort((a, b) => a.localeCompare(b));
 
+    const sibCount = (svRef && svRef.length) ? alGetSiblings().length : 0;
     inner = `<div class="al-unalloc-ctrl">
       <span>Group by</span>
       ${[['st','State'],['geo','Zone'],['none','Nothing']].map(([k,lbl]) =>
         `<button class="al-grp-btn${_alUnallocGroup===k?' on':''}" onclick="alSetUnallocGroup('${k}')">${lbl}</button>`).join('')}
+      ${(svRef && svRef.length)
+        ? `<button class="al-grp-btn al-sib-btn${_alIncludeSiblings?' on':''}" onclick="alToggleSiblings()" title="Localities your reference file puts on a postcode you already service, with no allocation of their own. Mostly rural sub-localities.">
+             <i class="ti ti-${_alIncludeSiblings?'check':'plus'}"></i> Reference localities (${sibCount.toLocaleString()})
+           </button>`
+        : `<span class="al-unalloc-noref">Load a reference file in Suburb Checker to cross-match suburb names</span>`}
     </div>`;
 
+    let shown = 0, truncated = false;
     inner += sortedKeys.map(k => {
-      const rows = groups.get(k).sort((a,b) => (a.loc||'').localeCompare(b.loc||''));
-      return `${k ? `<div class="al-unalloc-grp">${esc(k)} <span>${rows.length}</span></div>` : ''}
-        ${rows.map(u => `<div class="al-unalloc-row">
-          <div class="al-unalloc-main">
-            <span class="al-unalloc-name">${esc(u.loc || '(no suburb)')}</span>
-            <span class="al-unalloc-pc">${esc(u.pc || '—')}</span>
-            ${u.st ? `<span class="al-unalloc-st">${esc(u.st)}</span>` : ''}
-            ${u.kind === 'blank'
-              ? '<span class="al-custom-tag edited">Blank in sheet</span>'
-              : '<span class="al-unalloc-src">from a work file</span>'}
-          </div>
-          <div class="al-unalloc-sub">${u.geo
-            ? `${u.kind === 'blank' ? 'Zone' : 'Likely zone'}: <b>${esc(u.geo)}</b>${u.sugA1 ? ` → suggested ${esc(u.sugA1)}` : ''}`
-            : 'No zone known — set one when allocating.'}</div>
-          <div class="al-unalloc-acts">
-            <button class="sv-cov-add" onclick="alAllocateUnalloc(${jsAttr(u.pc)},${jsAttr(u.loc || '')})"><i class="ti ti-map-pin-plus"></i> Allocate</button>
-            ${u.kind === 'gap' ? `<button class="al-del-row" onclick="alDismissGap('${u.id}')" title="Not a real site — remove from this list"><i class="ti ti-x"></i></button>` : ''}
-          </div>
-        </div>`).join('')}`;
+      if (shown >= AL_UNALLOC_MAX) { truncated = true; return ''; }
+      const all = groups.get(k).sort((a,b) => (a.loc||'').localeCompare(b.loc||''));
+      const rows = all.slice(0, Math.max(0, AL_UNALLOC_MAX - shown));
+      if (rows.length < all.length) truncated = true;
+      shown += rows.length;
+      return `${k ? `<div class="al-unalloc-grp">${esc(k)} <span>${all.length}</span></div>` : ''}
+        ${rows.map(u => {
+          const ref = u.ref;
+          let refNote = '';
+          if (ref?.status === 'unknown') {
+            refNote = `<span class="al-ref-warn"><i class="ti ti-alert-triangle"></i> Not in your reference file — check the spelling</span>`;
+          } else if (ref?.status === 'wrong-pc') {
+            refNote = `<span class="al-ref-warn"><i class="ti ti-alert-triangle"></i> Reference has ${esc(u.loc)} at ${esc(ref.pcs.join(', '))}, not ${esc(u.pc)}</span>`;
+          }
+          const srcTag = u.kind === 'blank'   ? '<span class="al-custom-tag edited">Blank in sheet</span>'
+                       : u.kind === 'sibling' ? '<span class="al-unalloc-src">from reference</span>'
+                       :                        '<span class="al-unalloc-src">from a work file</span>';
+          return `<div class="al-unalloc-row">
+            <div class="al-unalloc-main">
+              <span class="al-unalloc-name">${esc(u.loc || '(no suburb)')}</span>
+              <span class="al-unalloc-pc">${esc(u.pc || '—')}</span>
+              ${u.st ? `<span class="al-unalloc-st">${esc(u.st)}</span>` : ''}
+              ${srcTag}
+            </div>
+            <div class="al-unalloc-sub">${u.geo
+              ? `${u.kind === 'blank' ? 'Zone' : 'Likely zone'}: <b>${esc(u.geo)}</b>${u.sugA1 ? ` → suggested ${esc(u.sugA1)}` : ''}`
+              : 'No zone known — set one when allocating.'}${refNote ? '<br>' + refNote : ''}</div>
+            <div class="al-unalloc-acts">
+              <button class="sv-cov-add" onclick="alAllocateUnalloc(${jsAttr(u.pc)},${jsAttr(u.loc || '')})"><i class="ti ti-map-pin-plus"></i> Allocate</button>
+              ${u.kind === 'gap' ? `<button class="al-del-row" onclick="alDismissGap('${u.id}')" title="Not a real site — remove from this list"><i class="ti ti-x"></i></button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}`;
     }).join('');
+
+    if (truncated) {
+      inner += `<div class="al-unalloc-more">Showing ${shown.toLocaleString()} of ${list.length.toLocaleString()} — narrow it down with Group by, or turn off reference localities.</div>`;
+    }
   }
 
   el.innerHTML = `<div class="card al-manage-card">
@@ -8383,7 +8467,7 @@ function alRenderUnallocated() {
       <i class="ti ti-chevron-${_alUnallocOpen ? 'down' : 'right'}"></i>
       <i class="ti ti-user-off"></i>
       <span>Unallocated</span>
-      <span class="al-manage-count">${list.length} site${list.length !== 1 ? 's' : ''} · ${bits.join(' · ')}</span>
+      <span class="al-manage-count">${list.length.toLocaleString()} site${list.length !== 1 ? 's' : ''} · ${bits.join(' · ')}</span>
     </button>
     ${inner}
   </div>`;
