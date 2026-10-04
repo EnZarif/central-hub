@@ -2080,7 +2080,8 @@
   .sv-cov-count { font-size:10.5px; color:var(--text-3); }
   .sv-cov-sug { grid-column:1; font-size:11.5px; color:var(--text-3); line-height:1.4; }
   .sv-cov-sug b { color:var(--text-2); font-weight:600; }
-  .sv-cov-add { grid-column:2; grid-row:1 / span 2; align-self:center; white-space:nowrap; padding:7px 13px; border-radius:7px; background:var(--teal-bg); border:1px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s; }
+  .sv-cov-acts { grid-column:2; grid-row:1 / span 2; align-self:center; display:flex; align-items:center; gap:6px; }
+  .sv-cov-add { white-space:nowrap; padding:7px 13px; border-radius:7px; background:var(--teal-bg); border:1px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s; }
   .sv-cov-add:hover { background:var(--teal); color:#fff; }
   .sv-cov-section-label { display:flex; align-items:center; gap:7px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:14px 0 7px; border-bottom:0.5px solid var(--border); margin-bottom:2px; }
   .sv-cov-section-label:first-child { padding-top:4px; }
@@ -7668,9 +7669,12 @@ function svRenderCoverage() {
           <div class="sv-cov-sug">${sug
             ? `Same postcode is <b>${esc(sug.geo)}</b> → ${esc(sug.a1)} <span style="opacity:.7">(${sug.from} site${sug.from !== 1 ? 's' : ''})</span>`
             : 'Postcode not in the allocator at all — no suggestion available.'}</div>
-          <button class="sv-cov-add" onclick="svAddAllocFor(${jsAttr(s.pc)},${jsAttr(s.suburb)})">
-            <i class="ti ti-map-pin-plus"></i> Add allocation
-          </button>
+          <div class="sv-cov-acts">
+            ${alHelpdeskLink(s.suburb)}
+            <button class="sv-cov-add" onclick="svAddAllocFor(${jsAttr(s.pc)},${jsAttr(s.suburb)})">
+              <i class="ti ti-map-pin-plus"></i> Add allocation
+            </button>
+          </div>
         </div>`;
       }).join('');
   }
@@ -7682,7 +7686,7 @@ function svRenderCoverage() {
     const rows = [...allocated].sort((a, b) =>
       (a.geo || '').localeCompare(b.geo || '') || a.suburb.localeCompare(b.suburb));
     html += `<div class="sv-cov-table-wrap"><table class="al-rows">
-      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Rows</th><th></th></tr></thead>
+      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Rows</th></tr></thead>
       <tbody>${rows.map(s => `<tr>
         <td>${esc(s.suburb)}${s.isCustom ? '<span class="al-custom-tag">Added</span>' : s.isEdited ? '<span class="al-custom-tag edited">Edited</span>' : ''}</td>
         <td class="pc">${esc(s.pc)}</td>
@@ -7691,7 +7695,6 @@ function svRenderCoverage() {
         <td><span class="al-pill ${alPillClass(s.rt)}">${esc(s.rt || '—')}</span></td>
         <td><b>${esc(s.a1 || '—')}</b></td>
         <td class="pc">${s.count}</td>
-        <td>${alHelpdeskLink(s.suburb)}</td>
       </tr>`).join('')}</tbody></table></div>`;
   }
 
@@ -8467,6 +8470,7 @@ function alRenderUnallocated() {
               ? `${u.kind === 'blank' ? 'Zone' : 'Likely zone'}: <b>${esc(u.geo)}</b>${u.sugA1 ? ` → suggested ${esc(u.sugA1)}` : ''}`
               : 'No zone known — set one when allocating.'}${refNote ? '<br>' + refNote : ''}</div>
             <div class="al-unalloc-acts">
+              ${alHelpdeskLink(u.loc)}
               <button class="sv-cov-add" onclick="alAllocateUnalloc(${jsAttr(u.pc)},${jsAttr(u.loc || '')})"><i class="ti ti-map-pin-plus"></i> Allocate</button>
               ${u.kind === 'gap' ? `<button class="al-del-row" onclick="alDismissGap('${u.id}')" title="Not a real site — remove from this list"><i class="ti ti-x"></i></button>` : ''}
             </div>
