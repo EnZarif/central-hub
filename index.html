@@ -10884,23 +10884,38 @@ const HUB_META = {
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','meetings','message','templates'],
+  helpdesk: ['kpi','alloccheck','meetings','message','templates'],
   projects: ['meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
+const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
   const saved = dbGet('zarif_hub_layout') || {};
+  const hadSaved = Object.keys(saved).length > 0;
   const layout = {};
+  let repositioned = false;
   HUBS.forEach(h => {
     const list = Array.isArray(saved[h]) ? saved[h].filter(p => PAGES[p]) : DEFAULT_HUB_LAYOUT[h].slice();
     // Migration: existing saved layouts predate the Scratchpad page — add it to Personal once.
     if (h === 'personal' && !list.includes('notes')) list.push('notes');
     if (h === 'personal' && !list.includes('learning')) list.push('learning');
     if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
-    if (h === 'helpdesk' && !list.includes('alloccheck')) list.push('alloccheck');
+    if (h === 'helpdesk') {
+      const i = list.indexOf('alloccheck');
+      if (i === -1) {
+        list.splice(1, 0, 'alloccheck');
+      } else if (i !== 1 && !dbGet(AL_POS_FLAG)) {
+        // One-time move to second place. Guarded by a flag so reordering it
+        // later in the Hub Organiser isn't undone on the next load.
+        list.splice(i, 1);
+        list.splice(1, 0, 'alloccheck');
+        repositioned = true;
+      }
+    }
     layout[h] = list;
   });
+  if (hadSaved && repositioned) dbSet(AL_POS_FLAG, true);
   return layout;
 }
 function saveHubLayout() { dbSet('zarif_hub_layout', hubLayout); }
