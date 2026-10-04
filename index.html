@@ -2082,6 +2082,13 @@
   .sv-cov-sug b { color:var(--text-2); font-weight:600; }
   .sv-cov-add { grid-column:2; grid-row:1 / span 2; align-self:center; white-space:nowrap; padding:7px 13px; border-radius:7px; background:var(--teal-bg); border:1px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s; }
   .sv-cov-add:hover { background:var(--teal); color:#fff; }
+  .sv-cov-section-label { display:flex; align-items:center; gap:7px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:14px 0 7px; border-bottom:0.5px solid var(--border); margin-bottom:2px; }
+  .sv-cov-section-label:first-child { padding-top:4px; }
+  .sv-cov-section-label.err { color:var(--amber-text); }
+  .sv-cov-section-label.ok  { color:var(--green-text); }
+  .sv-cov-tech-sum { margin-left:auto; font-size:10.5px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-3); }
+  .sv-cov-table-wrap { overflow:auto; max-height:420px; }
+  .sv-cov-table-wrap thead th { position:sticky; top:0; background:var(--surface); z-index:1; }
 
   /* ALLOCATION LOOKUP */
   .al-search-row { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; }
@@ -7593,47 +7600,71 @@ function svRenderCoverage() {
   const body = document.getElementById('sv-coverage-body');
   const sum  = document.getElementById('sv-cov-summary');
   if (!body) return;
-  // Re-resolve against current data so rows disappear as allocations get added
+  // Re-resolve against current data so rows move between the two lists as
+  // allocations get added
   svCoverage.forEach(s => {
     const hit = alRows.find(r => r.pc === s.pc && r._l === s.suburb.toLowerCase());
     s.covered = !!hit;
-    if (hit) { s.a1 = hit.a1; s.geo = hit.geo; }
+    if (hit) { s.a1 = hit.a1; s.geo = hit.geo; s.rt = hit.rt; s.isCustom = hit.custom; s.isEdited = hit.edited; }
   });
   const missing = svCoverage.filter(s => !s.covered);
-  const covered = svCoverage.length - missing.length;
+  const allocated = svCoverage.filter(s => s.covered);
+  const techs = [...new Set(allocated.map(s => s.a1).filter(Boolean))];
 
   if (sum) sum.innerHTML =
-    `<span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${covered} allocated</span>` +
+    `<span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${allocated.length} allocated</span>` +
     (missing.length ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${missing.length} unallocated</span>` : '');
 
   if (!svCoverage.length) {
     body.innerHTML = '<div class="sv-no-mismatches">No suburbs found in the mapped columns.</div>';
     return;
   }
-  if (!missing.length) {
-    body.innerHTML = '<div class="sv-no-mismatches"><i class="ti ti-circle-check" style="color:var(--green-text);font-size:20px;"></i><div>Every suburb in this file has a technician allocation.</div></div>';
-    return;
+
+  let html = '';
+
+  if (missing.length) {
+    html += `<div class="sv-cov-section-label err"><i class="ti ti-alert-triangle"></i> No technician allocated (${missing.length})</div>`;
+    html += missing
+      .sort((a, b) => b.count - a.count || a.suburb.localeCompare(b.suburb))
+      .map(s => {
+        const sug = s.suggest;
+        return `<div class="sv-cov-row">
+          <div class="sv-cov-main">
+            <span class="sv-cov-name">${esc(s.suburb || '(no suburb)')}</span>
+            <span class="sv-cov-pc">${esc(s.pc || '—')}</span>
+            ${s.st ? `<span class="sv-cov-st">${esc(s.st)}</span>` : ''}
+            <span class="sv-cov-count">${s.count} row${s.count !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="sv-cov-sug">${sug
+            ? `Same postcode is <b>${esc(sug.geo)}</b> → ${esc(sug.a1)} <span style="opacity:.7">(${sug.from} site${sug.from !== 1 ? 's' : ''})</span>`
+            : 'Postcode not in the allocator at all — no suggestion available.'}</div>
+          <button class="sv-cov-add" onclick="svAddAllocFor(${jsAttr(s.pc)},${jsAttr(s.suburb)})">
+            <i class="ti ti-map-pin-plus"></i> Add allocation
+          </button>
+        </div>`;
+      }).join('');
   }
 
-  body.innerHTML = missing
-    .sort((a, b) => b.count - a.count || a.suburb.localeCompare(b.suburb))
-    .map(s => {
-      const sug = s.suggest;
-      return `<div class="sv-cov-row">
-        <div class="sv-cov-main">
-          <span class="sv-cov-name">${esc(s.suburb || '(no suburb)')}</span>
-          <span class="sv-cov-pc">${esc(s.pc || '—')}</span>
-          ${s.st ? `<span class="sv-cov-st">${esc(s.st)}</span>` : ''}
-          <span class="sv-cov-count">${s.count} row${s.count !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="sv-cov-sug">${sug
-          ? `Same postcode is <b>${esc(sug.geo)}</b> → ${esc(sug.a1)} <span style="opacity:.7">(${sug.from} site${sug.from !== 1 ? 's' : ''})</span>`
-          : 'Postcode not in the allocator at all — no suggestion available.'}</div>
-        <button class="sv-cov-add" onclick="svAddAllocFor(${jsAttr(s.pc)},${jsAttr(s.suburb)})">
-          <i class="ti ti-map-pin-plus"></i> Add allocation
-        </button>
-      </div>`;
-    }).join('');
+  if (allocated.length) {
+    html += `<div class="sv-cov-section-label ok"><i class="ti ti-circle-check"></i> Allocated (${allocated.length})
+      <span class="sv-cov-tech-sum">${techs.length} technician${techs.length !== 1 ? 's' : ''}</span></div>`;
+    // Grouped by zone so geographically-related sites read together
+    const rows = [...allocated].sort((a, b) =>
+      (a.geo || '').localeCompare(b.geo || '') || a.suburb.localeCompare(b.suburb));
+    html += `<div class="sv-cov-table-wrap"><table class="al-rows">
+      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Rows</th></tr></thead>
+      <tbody>${rows.map(s => `<tr>
+        <td>${esc(s.suburb)}${s.isCustom ? '<span class="al-custom-tag">Added</span>' : s.isEdited ? '<span class="al-custom-tag edited">Edited</span>' : ''}</td>
+        <td class="pc">${esc(s.pc)}</td>
+        <td>${esc(s.st || '—')}</td>
+        <td>${esc(s.geo || '—')}</td>
+        <td><span class="al-pill ${alPillClass(s.rt)}">${esc(s.rt || '—')}</span></td>
+        <td><b>${esc(s.a1 || '—')}</b></td>
+        <td class="pc">${s.count}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+
+  body.innerHTML = html;
 }
 
 // Opens the Allocation Lookup's add modal prefilled from this uncovered site
