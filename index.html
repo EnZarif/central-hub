@@ -2067,6 +2067,21 @@
   .sv-col-warning span { flex:1; min-width:0; }
   .sv-swap-btn { padding:4px 10px; border-radius:6px; background:rgba(var(--amber-rgb,220,152,40),0.15); border:0.5px solid rgba(var(--amber-rgb,220,152,40),0.35); color:var(--amber-text); font-family:inherit; font-size:11px; font-weight:700; cursor:pointer; flex-shrink:0; transition:all .15s; }
   .sv-swap-btn:hover { background:rgba(var(--amber-rgb,220,152,40),0.28); }
+  .sv-action-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .sv-action-row .generate-btn { width:auto; margin-bottom:0; flex:1; min-width:180px; }
+  .generate-btn.sv-cov-btn { background:var(--surface2); border:1px solid var(--border-md); color:var(--text-2); box-shadow:none; }
+  .generate-btn.sv-cov-btn:hover:not(:disabled) { border-color:var(--teal); color:var(--teal-text); }
+  .sv-cov-row { display:grid; grid-template-columns:1fr auto; gap:4px 12px; padding:11px 0; border-bottom:0.5px solid var(--border); align-items:center; }
+  .sv-cov-row:last-child { border-bottom:none; }
+  .sv-cov-main { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .sv-cov-name { font-size:13.5px; font-weight:600; color:var(--text); }
+  .sv-cov-pc { font-size:12px; color:var(--text-2); font-variant-numeric:tabular-nums; }
+  .sv-cov-st { font-size:10.5px; color:var(--text-3); background:var(--surface2); border-radius:4px; padding:1px 6px; }
+  .sv-cov-count { font-size:10.5px; color:var(--text-3); }
+  .sv-cov-sug { grid-column:1; font-size:11.5px; color:var(--text-3); line-height:1.4; }
+  .sv-cov-sug b { color:var(--text-2); font-weight:600; }
+  .sv-cov-add { grid-column:2; grid-row:1 / span 2; align-self:center; white-space:nowrap; padding:7px 13px; border-radius:7px; background:var(--teal-bg); border:1px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s; }
+  .sv-cov-add:hover { background:var(--teal); color:#fff; }
 
   /* ALLOCATION LOOKUP */
   .al-search-row { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; }
@@ -3331,9 +3346,23 @@
         <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('sv-work-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
       </div>
       <div id="sv-col-mapper" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;"></div>
-      <button class="generate-btn" id="sv-validate-btn" style="margin-top:16px;" onclick="svValidate()" disabled>
-        <i class="ti ti-search" style="font-size:16px;"></i> Validate data
-      </button>
+      <div class="sv-action-row">
+        <button class="generate-btn" id="sv-validate-btn" style="margin-top:16px;" onclick="svValidate()" disabled>
+          <i class="ti ti-search" style="font-size:16px;"></i> Validate data
+        </button>
+        <button class="generate-btn sv-cov-btn" id="sv-coverage-btn" style="margin-top:16px;" onclick="svCheckCoverage()" disabled>
+          <i class="ti ti-user-search" style="font-size:16px;"></i> Check allocation coverage
+        </button>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:8px;">Coverage checks each suburb against the Allocation Lookup data — it doesn't need the reference file.</div>
+    </div>
+
+    <div class="card" id="sv-coverage-card" style="display:none;margin-top:12px;">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span><i class="ti ti-user-search" style="font-size:13px;"></i> Allocation coverage</span>
+        <div id="sv-cov-summary" style="display:flex;gap:12px;align-items:center;"></div>
+      </div>
+      <div id="sv-coverage-body"></div>
     </div>
 
     <div class="card" id="sv-results-card" style="display:none;margin-top:12px;">
@@ -6227,7 +6256,7 @@ document.addEventListener('keydown', e => {
 });
 
 // ===== COMMAND PALETTE (Ctrl/Cmd+K) =====
-const CMDK_PAGE_HUB = { kpi:'helpdesk', nsla:'helpdesk', meetings:'helpdesk', message:'helpdesk', templates:'helpdesk', standup:'helpdesk', wishlist:'personal', insights:'personal', notes:'personal' };
+const CMDK_PAGE_HUB = { kpi:'helpdesk', meetings:'helpdesk', message:'helpdesk', templates:'helpdesk', wishlist:'personal', insights:'personal', notes:'personal' };
 const CMDK_EXTRA_PAGES = [
   { key: 'home', title: 'Home', icon: 'ti-home' },
   { key: 'widgets', title: 'Widgets', icon: 'ti-apps' },
@@ -7506,18 +7535,144 @@ function svDownload() {
   XLSX.writeFile(svWorkbook, 'corrected_' + svSheetName + '.xlsx');
 }
 
+// ---- Allocation coverage: which suburbs in the work file have no technician ----
+let svCoverage = [];
+
+function svCheckCoverage() {
+  const subCol   = document.getElementById('sv-sel-suburb')?.value;
+  const pcodeCol = document.getElementById('sv-sel-postcode')?.value;
+  const stateCol = document.getElementById('sv-sel-state')?.value;
+  if (!subCol || !pcodeCol || !svDataRows.length) return;
+  const body = document.getElementById('sv-coverage-body');
+  const card = document.getElementById('sv-coverage-card');
+  if (card) card.style.display = '';
+  if (body) body.innerHTML = '<div class="sv-no-mismatches">Loading allocation data…</div>';
+
+  alEnsureData().then(() => {
+    // Collapse the work file to unique sites — a file with 400 rows across 30
+    // suburbs should ask about 30 things, not 400.
+    const seen = new Map();
+    for (const row of svDataRows) {
+      const suburb = String(row[subCol] || '').trim();
+      let pc = String(row[pcodeCol] || '').trim();
+      if (pc.replace('.0','').match(/^\d+$/)) pc = String(parseInt(pc, 10)).padStart(4, '0');
+      const st = stateCol ? String(row[stateCol] || '').trim() : '';
+      if (!suburb && !pc) continue;
+      const key = pc + '|' + suburb.toLowerCase();
+      if (seen.has(key)) { seen.get(key).count++; continue; }
+      seen.set(key, { suburb, pc, st, count: 1 });
+    }
+
+    svCoverage = [];
+    for (const site of seen.values()) {
+      const hit = alRows.find(r => r.pc === site.pc && r._l === site.suburb.toLowerCase());
+      if (hit) { site.covered = true; site.a1 = hit.a1; site.geo = hit.geo; }
+      else {
+        site.covered = false;
+        // Other sites on the same postcode are the best hint for what to fill in
+        const neighbours = alRows.filter(r => r.pc === site.pc);
+        if (neighbours.length) {
+          site.suggest = {
+            geo: alConsensus(neighbours, 'geo').value,
+            rt:  alConsensus(neighbours, 'rt').value,
+            a1:  alConsensus(neighbours, 'a1').value,
+            st:  alConsensus(neighbours, 'st').value,
+            from: neighbours.length
+          };
+        }
+      }
+      svCoverage.push(site);
+    }
+    svRenderCoverage();
+  }).catch(() => {
+    if (body) body.innerHTML = '<div class="sv-no-mismatches">Could not load allocation data.</div>';
+  });
+}
+
+function svRenderCoverage() {
+  const body = document.getElementById('sv-coverage-body');
+  const sum  = document.getElementById('sv-cov-summary');
+  if (!body) return;
+  // Re-resolve against current data so rows disappear as allocations get added
+  svCoverage.forEach(s => {
+    const hit = alRows.find(r => r.pc === s.pc && r._l === s.suburb.toLowerCase());
+    s.covered = !!hit;
+    if (hit) { s.a1 = hit.a1; s.geo = hit.geo; }
+  });
+  const missing = svCoverage.filter(s => !s.covered);
+  const covered = svCoverage.length - missing.length;
+
+  if (sum) sum.innerHTML =
+    `<span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${covered} allocated</span>` +
+    (missing.length ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${missing.length} unallocated</span>` : '');
+
+  if (!svCoverage.length) {
+    body.innerHTML = '<div class="sv-no-mismatches">No suburbs found in the mapped columns.</div>';
+    return;
+  }
+  if (!missing.length) {
+    body.innerHTML = '<div class="sv-no-mismatches"><i class="ti ti-circle-check" style="color:var(--green-text);font-size:20px;"></i><div>Every suburb in this file has a technician allocation.</div></div>';
+    return;
+  }
+
+  body.innerHTML = missing
+    .sort((a, b) => b.count - a.count || a.suburb.localeCompare(b.suburb))
+    .map(s => {
+      const sug = s.suggest;
+      return `<div class="sv-cov-row">
+        <div class="sv-cov-main">
+          <span class="sv-cov-name">${esc(s.suburb || '(no suburb)')}</span>
+          <span class="sv-cov-pc">${esc(s.pc || '—')}</span>
+          ${s.st ? `<span class="sv-cov-st">${esc(s.st)}</span>` : ''}
+          <span class="sv-cov-count">${s.count} row${s.count !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="sv-cov-sug">${sug
+          ? `Same postcode is <b>${esc(sug.geo)}</b> → ${esc(sug.a1)} <span style="opacity:.7">(${sug.from} site${sug.from !== 1 ? 's' : ''})</span>`
+          : 'Postcode not in the allocator at all — no suggestion available.'}</div>
+        <button class="sv-cov-add" onclick="svAddAllocFor(${jsAttr(s.pc)},${jsAttr(s.suburb)})">
+          <i class="ti ti-map-pin-plus"></i> Add allocation
+        </button>
+      </div>`;
+    }).join('');
+}
+
+// Opens the Allocation Lookup's add modal prefilled from this uncovered site
+function svAddAllocFor(pc, suburb) {
+  const site = svCoverage.find(s => s.pc === pc && s.suburb.toLowerCase() === (suburb || '').toLowerCase());
+  if (!site) return;
+  _alEditing = null;
+  alFillPickers();
+  alSetModalMode('add');
+  const err = document.getElementById('al-add-err');
+  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+  document.getElementById('al-f-loc').value  = site.suburb.toUpperCase();
+  document.getElementById('al-f-pc').value   = site.pc;
+  document.getElementById('al-f-zone').value = site.suggest?.geo || '';
+  document.getElementById('al-f-rt').value   = site.suggest?.rt  || 'Regional';
+  document.getElementById('al-f-a1').value   = site.suggest?.a1  || '';
+  const stSel = document.getElementById('al-f-st');
+  if (stSel) {
+    const want = site.st || site.suggest?.st || '';
+    if (want && [...stSel.options].some(o => o.value === want)) stSel.value = want;
+  }
+  document.getElementById('al-add-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('al-f-a1')?.focus(), 60);
+}
+
 function svShowStatus(id, msg, type) {
   const el = document.getElementById(id);
   if (el) { el.textContent = msg; el.className = 'kpi-tpl-status sv-status-' + type; }
 }
 
 function svUpdateValidateBtn() {
+  const sub = document.getElementById('sv-sel-suburb')?.value;
+  const pc  = document.getElementById('sv-sel-postcode')?.value;
+  const st  = document.getElementById('sv-sel-state')?.value;
   const btn = document.getElementById('sv-validate-btn');
-  if (!btn) return;
-  btn.disabled = !(svRef.length && svDataRows.length &&
-    document.getElementById('sv-sel-suburb')?.value &&
-    document.getElementById('sv-sel-postcode')?.value &&
-    document.getElementById('sv-sel-state')?.value);
+  if (btn) btn.disabled = !(svRef.length && svDataRows.length && sub && pc && st);
+  // Coverage only needs the work file and a suburb+postcode mapping
+  const cov = document.getElementById('sv-coverage-btn');
+  if (cov) cov.disabled = !(svDataRows.length && sub && pc);
 }
 
 // ===== ALLOCATION LOOKUP =====
@@ -7533,27 +7688,39 @@ const AL_MAX_TABLE_ROWS = 60;
 
 function saveAllocCustom() { dbSet('zarif_alloc_custom', allocCustom); }
 
+// Shared loader — the Suburb Checker's coverage report needs this data too, so
+// the fetch is a promise both pages await rather than a page-init side effect.
+let _alDataPromise = null;
+function alEnsureData() {
+  if (alRows) return Promise.resolve();
+  if (_alDataPromise) return _alDataPromise;
+  _alDataPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'assets/postcode-alloc-data.js';
+    s.onload = () => { try { alBuild(); resolve(); } catch (e) { reject(e); } };
+    s.onerror = () => reject(new Error('load failed'));
+    document.head.appendChild(s);
+  });
+  return _alDataPromise;
+}
+
 function alInit() {
   if (alRows || alLoading) { alRenderSuggestions(); return; }
   alLoading = true;
   const hint = document.getElementById('al-hint');
   if (hint) hint.textContent = 'Loading allocation data…';
-  const s = document.createElement('script');
-  s.src = 'assets/postcode-alloc-data.js';
-  s.onload = () => {
+  alEnsureData().then(() => {
     alLoading = false;
-    try { alBuild(); } catch (e) { if (hint) hint.textContent = 'Could not read allocation data.'; return; }
     if (hint) hint.textContent = `${alRows.length.toLocaleString()} ANZ WL sites · ${alGeoNames.length} zones loaded. Results update as you type.`;
     alFillStates();
     alRenderSuggestions();
     alRun();
-  };
-  s.onerror = () => {
+  }).catch(() => {
     alLoading = false;
     if (hint) hint.textContent = 'Could not load assets/postcode-alloc-data.js.';
-  };
-  document.head.appendChild(s);
+  });
 }
+
 
 // Base rows come from the generated contract file. User changes live in Supabase
 // as either an 'add' (a brand new site) or an 'edit' (an override layered on top
@@ -8014,6 +8181,14 @@ function alSaveAdd() {
   alBuild();
   alFillStates();
   alCloseAdd();
+
+  // Added from the Suburb Checker's coverage report — refresh that list in place
+  // rather than yanking them over to the lookup page mid-review.
+  if (typeof currentPage !== 'undefined' && currentPage === 'suburbcheck') {
+    svRenderCoverage();
+    if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Added <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+    return;
+  }
 
   // Jump the search to the thing they just added so they see it land
   const q = document.getElementById('al-q');
@@ -9297,7 +9472,7 @@ function toggleShowDone() { _showDone = !_showDone; renderTasks(); }
 // Special-page tasks: clicking navigates to a page instead of opening edit modal
 function taskRowClick(t) {
   if (t.jobReminder) return `openJobReminderDetail('${t.id}')`;
-  const map = { 1:'message', 3:'awjobs', 7:'standup', 8:'calldata' };
+  const map = { 1:'message', 3:'awjobs', 8:'calldata' };
   if (map[t.id]) return `showPage('${map[t.id]}')`;
   return `openTaskEdit('${t.id}')`;
 }
@@ -10370,11 +10545,9 @@ const HUB_PAGES = ['home','helpdesk','projects','personal'];
 const PAGES = {
   tasks:     { title:'Tasks',         icon:'ti-checklist',        color:'c-teal',   desc:'Your daily task dashboard with streaks and progress.' },
   kpi:       { title:'KPI Report',    icon:'ti-report-analytics', color:'c-amber',  desc:'Generate the daily Helpdesk Metrics report from your exports.' },
-  nsla:      { title:'NSLA Report',   icon:'ti-shield-check',     color:'c-teal',   desc:'Generate the NSLA report from your CMS data exports.' },
   meetings:  { title:'Meetings',      icon:'ti-notes',            color:'c-green',  desc:'Meeting minutes, agendas and attendees.' },
   message:   { title:'Daily Message', icon:'ti-message-2',        color:'c-purple', desc:'Generate your morning Teams message and break schedule.' },
   templates: { title:'Templates',     icon:'ti-template',         color:'c-coral',  desc:'Reusable message templates and common numbers.' },
-  standup:   { title:'Stand up',      icon:'ti-presentation',     color:'c-pink',   desc:'Draft and elaborate your daily stand up talking points.' },
   wishlist:       { title:'Wishlist',        icon:'ti-sparkles',        color:'c-purple', desc:'Ideas and future features for this project.' },
   insights:       { title:'Insights',        icon:'ti-chart-pie',       color:'c-green',  desc:'At-a-glance productivity dashboard: completions, streak, meetings & AI usage.' },
   notes:          { title:'Personal Notes',   icon:'ti-pencil',          color:'c-pink',   desc:'Grocery lists, errands, calls — jot it down and turn it into a personal task. Separate from the Scratch Pad widget.' },
@@ -10390,7 +10563,7 @@ const HUB_META = {
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','nsla','meetings','message','templates','standup'],
+  helpdesk: ['kpi','meetings','message','templates'],
   projects: ['meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
@@ -10403,8 +10576,6 @@ function loadHubLayout() {
     // Migration: existing saved layouts predate the Scratchpad page — add it to Personal once.
     if (h === 'personal' && !list.includes('notes')) list.push('notes');
     if (h === 'personal' && !list.includes('learning')) list.push('learning');
-    // Migration: existing saved layouts predate the NSLA Report page — add it to Helpdesk once.
-    if (h === 'helpdesk' && !list.includes('nsla')) list.push('nsla');
     if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
     if (h === 'helpdesk' && !list.includes('alloccheck')) list.push('alloccheck');
     layout[h] = list;
@@ -10737,7 +10908,7 @@ function taskHTML(t, showFreqPill) {
   const reminderPill = t.reminderTime
     ? `<span class="time-pill" title="Reminder set"><i class="ti ti-bell"></i>${fmtTime(t.reminderTime)}</span>`
     : '';
-  const click = t.jobReminder ? `openJobReminderDetail('${t.id}')` : t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : t.id === 7 ? `showPage('standup')` : `toggle('${t.id}')`;
+  const click = t.jobReminder ? `openJobReminderDetail('${t.id}')` : t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : `toggle('${t.id}')`;
   const delBtn = t.custom
     ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>`
     : `<button class="task-del-btn" onclick="event.stopPropagation(); hideHardcodedTask('${t.id}')"><i class="ti ti-trash"></i></button>`;
