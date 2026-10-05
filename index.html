@@ -2088,6 +2088,19 @@
   .sv-cov-section-label.err { color:var(--amber-text); }
   .sv-cov-section-label.ok  { color:var(--green-text); }
   .sv-cov-tech-sum { margin-left:auto; font-size:10.5px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-3); }
+  .al-owner { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .al-owner.amtek   { background:var(--teal-bg); color:var(--teal-text); }
+  .al-owner.partner { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
+  .al-owner.unknown { background:var(--coral-bg); color:var(--coral-text); }
+  .al-owner.none    { background:var(--surface2); color:var(--text-3); }
+  .al-batch-inner { padding:14px; border-top:0.5px solid var(--border); }
+  .al-batch-inner .sv-col-row { margin-top:10px; }
+  .al-batch-sum { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); }
+  .al-batch-chip.loose { font-size:11px; font-weight:600; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.12); border-radius:5px; padding:2px 8px; }
+  .al-batch-how { font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:4px; white-space:nowrap; }
+  .al-batch-how.exact { background:var(--teal-bg); color:var(--teal-text); }
+  .al-batch-how.loose { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
+  .al-batch-how.none  { background:var(--surface2); color:var(--text-3); }
   .al-lookup-btn { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; padding:4px 10px; border-radius:6px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:11px; font-weight:600; text-decoration:none; transition:all .13s; }
   .al-lookup-btn:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
   .al-lookup-btn .ti { font-size:12px; }
@@ -3442,6 +3455,29 @@
       </div>
       <div class="al-hint" id="al-hint">Type a zone name, suburb, postcode or state. Results update as you type.</div>
       <div class="al-sugg" id="al-sugg"></div>
+    </div>
+
+    <div class="card al-manage-card" style="margin-top:12px;">
+      <button class="al-manage-hd" onclick="alToggleBatch()">
+        <i class="ti ti-chevron-right" id="al-batch-caret"></i>
+        <i class="ti ti-file-spreadsheet"></i>
+        <span>Batch lookup</span>
+        <span class="al-manage-count">Upload a file of suburbs, get one back with allocations</span>
+      </button>
+      <div id="al-batch-body" style="display:none;">
+        <div class="al-batch-inner">
+          <div class="kpi-template-row">
+            <div class="kpi-template-info">
+              <div class="kpi-tpl-name">Excel or CSV with suburb, postcode and state</div>
+              <div class="kpi-tpl-status" id="al-batch-status">No file loaded</div>
+            </div>
+            <input type="file" id="al-batch-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alBatchLoad(this.files[0])">
+            <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('al-batch-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+          </div>
+          <div id="al-batch-mapper" style="display:none;"></div>
+          <div id="al-batch-result"></div>
+        </div>
+      </div>
     </div>
 
     <div id="al-unalloc"></div>
@@ -7686,7 +7722,7 @@ function svRenderCoverage() {
     const rows = [...allocated].sort((a, b) =>
       (a.geo || '').localeCompare(b.geo || '') || a.suburb.localeCompare(b.suburb));
     html += `<div class="sv-cov-table-wrap"><table class="al-rows">
-      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Rows</th></tr></thead>
+      <thead><tr><th>Suburb</th><th>Postcode</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician</th><th>Serviced by</th><th>Rows</th></tr></thead>
       <tbody>${rows.map(s => `<tr>
         <td>${esc(s.suburb)}${s.isCustom ? '<span class="al-custom-tag">Added</span>' : s.isEdited ? '<span class="al-custom-tag edited">Edited</span>' : ''}</td>
         <td class="pc">${esc(s.pc)}</td>
@@ -7694,6 +7730,7 @@ function svRenderCoverage() {
         <td>${esc(s.geo || '—')}</td>
         <td><span class="al-pill ${alPillClass(s.rt)}">${esc(s.rt || '—')}</span></td>
         <td><b>${esc(s.a1 || '—')}</b></td>
+        <td>${alOwnerPill(s.a1)}</td>
         <td class="pc">${s.count}</td>
       </tr>`).join('')}</tbody></table></div>`;
   }
@@ -7972,6 +8009,21 @@ function alHelpdeskLink(suburb) {
              title="Search the helpdesk for jobs in ${esc(name)}"><i class="ti ti-external-link"></i> Lookup</a>`;
 }
 
+// Who services the site. The sheet uses "?" on its own for sites nobody has
+// resolved yet — those are not a partner, so they get their own bucket rather
+// than being quietly counted as one.
+function alOwner(a1) {
+  const s = String(a1 || '').trim();
+  if (!s) return { key:'none',    label:'—' };
+  if (/^\?+$/.test(s)) return { key:'unknown', label:'Unknown' };
+  if (/amtek/i.test(s)) return { key:'amtek',   label:'Amtek' };
+  return { key:'partner', label:'Partner' };
+}
+function alOwnerPill(a1) {
+  const o = alOwner(a1);
+  return `<span class="al-owner ${o.key}">${o.label}</span>`;
+}
+
 function alPillClass(rt) {
   const k = (rt || '').toLowerCase();
   return k === 'metro' ? 'metro' : k === 'regional' ? 'regional' : k === 'remote' ? 'remote' : 'none';
@@ -8018,6 +8070,18 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
     ${a1.count < a1.total ? `<div class="al-alloc-sub">${a1.count} of ${a1.total} sites</div>` : ''}
   </div>`;
 
+  const owners = [...new Set(rows.map(r => alOwner(r.a1).key))];
+  const ownerCell = `<div class="al-alloc">
+    <div class="al-alloc-label">Serviced by</div>
+    <div class="al-alloc-val">${owners.length === 1
+      ? alOwnerPill(rows[0].a1)
+      : owners.map(k => {
+          const n = rows.filter(r => alOwner(r.a1).key === k).length;
+          const lbl = alOwner(rows.find(r => alOwner(r.a1).key === k).a1).label;
+          return `<span class="al-owner ${k}">${lbl} ×${n}</span>`;
+        }).join(' ')}</div>
+  </div>`;
+
   const zoneCell = `<div class="al-alloc">
     <div class="al-alloc-label">Zone</div>
     <div class="al-alloc-val">${esc(geo || '—')}</div>
@@ -8060,7 +8124,7 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
 
   const shown = rows.slice(0, AL_MAX_TABLE_ROWS);
   const table = `<div class="al-rows-wrap"><table class="al-rows">
-    <thead><tr><th>Postcode</th><th>Suburb</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician Allocation</th><th></th></tr></thead>
+    <thead><tr><th>Postcode</th><th>Suburb</th><th>State</th><th>Zone</th><th>Zone Type</th><th>Technician Allocation</th><th>Serviced by</th><th></th></tr></thead>
     <tbody>${shown.map(r => `<tr>
       <td class="pc">${esc(r.pc)}</td>
       <td>${esc(r.loc)}${r.custom ? '<span class="al-custom-tag">Added</span>' : r.edited ? '<span class="al-custom-tag edited">Edited</span>' : ''}</td>
@@ -8068,6 +8132,7 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
       <td>${esc(r.geo || '—')}</td>
       <td><span class="al-pill ${alPillClass(r.rt)}">${esc(r.rt || '—')}</span></td>
       <td>${esc(r.a1 || '—')}${r.edited ? `<span class="al-was">was ${esc(r.orig.a1 || '—')}</span>` : ''}</td>
+      <td>${alOwnerPill(r.a1)}</td>
       <td class="al-row-acts">
         <button class="al-edit-row" onclick="alOpenEdit(${jsAttr(r.pc)},${jsAttr(r.loc)})" title="Update this allocation"><i class="ti ti-pencil"></i></button>
         ${r.custom ? `<button class="al-del-row" onclick="alDeleteCustom('${r.cid}')" title="Remove this added site"><i class="ti ti-trash"></i></button>` : ''}
@@ -8090,6 +8155,7 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
     </div>
     <div class="al-alloc-grid">
       ${allocCell}
+      ${ownerCell}
       ${zoneCell}
       ${rtCell}
     </div>
@@ -8325,6 +8391,157 @@ function alSaveAdd() {
   const q = document.getElementById('al-q');
   if (q) { q.value = loc; alOnInput(); }
   if (typeof showToast === 'function') showToast(`<i class="ti ti-map-pin-plus"></i>Added <b>${esc(loc)} ${esc(pc)}</b> → ${esc(a1)}`);
+}
+
+// ---- Batch lookup: a file of suburbs in, the same file plus allocations out ----
+let alBatchRows = [], alBatchHeaders = [], alBatchName = '', alBatchOut = null;
+
+function alToggleBatch() {
+  const body = document.getElementById('al-batch-body');
+  const caret = document.getElementById('al-batch-caret');
+  const open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  caret.className = 'ti ti-chevron-' + (open ? 'down' : 'right');
+}
+
+function alBatchStatus(msg, type) {
+  const el = document.getElementById('al-batch-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' sv-status-' + type : ''); }
+}
+
+async function alBatchLoad(file) {
+  if (!file) return;
+  alBatchOut = null;
+  document.getElementById('al-batch-result').innerHTML = '';
+  try {
+    await alEnsureData();
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    // Same header-row scan the Suburb Checker uses — real files often carry a
+    // title block above the actual headers.
+    const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+    const kw = ['suburb','locality','postcode','post code','state','pcode','postalcode'];
+    let hdrIdx = 0;
+    for (let i = 0; i < Math.min(raw.length, 30); i++) {
+      const hits = raw[i].map(c => String(c).toLowerCase().trim())
+        .filter(c => kw.some(k => c === k || c.includes(k)));
+      if (hits.length >= 2) { hdrIdx = i; break; }
+    }
+    const headers = raw[hdrIdx].map(c => String(c));
+    alBatchHeaders = headers.filter(h => h.trim() !== '');
+    alBatchRows = raw.slice(hdrIdx + 1).map(row => {
+      const o = {};
+      headers.forEach((h, i) => { o[h] = row[i] !== undefined ? row[i] : ''; });
+      return o;
+    }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
+    alBatchName = file.name.replace(/\.[^.]+$/, '');
+    if (!alBatchRows.length) { alBatchStatus('No data rows found', 'error'); return; }
+    alBatchStatus(`${alBatchRows.length.toLocaleString()} rows loaded`, 'ok');
+    alBatchRenderMapper();
+    alBatchRun();
+  } catch (e) {
+    alBatchStatus('Could not read file: ' + e.message, 'error');
+  }
+}
+
+function alBatchRenderMapper() {
+  const el = document.getElementById('al-batch-mapper');
+  if (!el) return;
+  const sel = (id, picked) => `<select class="sv-col-select field-input" id="${id}" onchange="alBatchRun()">
+    <option value="">— none —</option>
+    ${alBatchHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
+  </select>`;
+  el.innerHTML =
+    `<div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('al-b-sub', svAutoDetect(alBatchHeaders, ['Suburb','suburb','SUBURB','Locality','locality'], ['suburb','locality']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Postcode column</span>${sel('al-b-pc', svAutoDetect(alBatchHeaders, ['Postcode','postcode','POSTCODE','Post Code'], ['postcode','pcode','postalcode']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('al-b-st', svAutoDetect(alBatchHeaders, ['State','state','STATE'], ['state','statecode']))}</div>`;
+  el.style.display = '';
+}
+
+// Suburb+postcode is the reliable key. Postcode alone is kept as a fallback
+// because it still identifies the zone when a suburb name is spelt differently,
+// but it is reported separately so a loose match is never mistaken for exact.
+function alBatchRun() {
+  const subCol = document.getElementById('al-b-sub')?.value;
+  const pcCol  = document.getElementById('al-b-pc')?.value;
+  const stCol  = document.getElementById('al-b-st')?.value;
+  const out = document.getElementById('al-batch-result');
+  if (!out) return;
+  if (!alBatchRows.length || (!subCol && !pcCol)) { out.innerHTML = ''; alBatchOut = null; return; }
+
+  const results = alBatchRows.map(row => {
+    const suburb = String(row[subCol] || '').trim();
+    let pc = String(row[pcCol] || '').trim();
+    if (pc.replace('.0','').match(/^\d+$/)) pc = String(parseInt(pc, 10)).padStart(4, '0');
+    let hit = null, how = '';
+    if (pc && suburb) {
+      hit = alRows.find(r => r.pc === pc && r._l === suburb.toLowerCase());
+      if (hit) how = 'Suburb + postcode';
+    }
+    if (!hit && suburb) {
+      const bySub = alRows.filter(r => r._l === suburb.toLowerCase());
+      if (bySub.length === 1) { hit = bySub[0]; how = 'Suburb only'; }
+    }
+    if (!hit && pc) {
+      const byPc = alRows.filter(r => r.pc === pc);
+      const zones = [...new Set(byPc.map(r => r.geo))];
+      if (byPc.length && zones.length === 1) { hit = byPc[0]; how = 'Postcode only'; }
+    }
+    return { row, suburb, pc, st: String(row[stCol] || '').trim(), hit, how };
+  });
+
+  const matched = results.filter(r => r.hit);
+  const exact   = results.filter(r => r.how === 'Suburb + postcode');
+  const loose   = matched.length - exact.length;
+  const missing = results.length - matched.length;
+  const amtek   = matched.filter(r => alOwner(r.hit.a1).key === 'amtek').length;
+  const partner = matched.filter(r => alOwner(r.hit.a1).key === 'partner').length;
+  const unknown = matched.filter(r => ['unknown','none'].includes(alOwner(r.hit.a1).key)).length;
+
+  alBatchOut = results;
+
+  const preview = results.slice(0, 12);
+  out.innerHTML = `
+    <div class="al-batch-sum">
+      <span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${matched.length.toLocaleString()} matched</span>
+      ${loose ? `<span class="al-batch-chip loose">${loose.toLocaleString()} loose</span>` : ''}
+      ${missing ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${missing.toLocaleString()} not found</span>` : ''}
+      <span class="al-owner amtek">Amtek ${amtek.toLocaleString()}</span>
+      <span class="al-owner partner">Partner ${partner.toLocaleString()}</span>
+      ${unknown ? `<span class="al-owner unknown">Unknown ${unknown}</span>` : ''}
+    </div>
+    <div class="sv-cov-table-wrap" style="max-height:300px;margin-top:10px;"><table class="al-rows">
+      <thead><tr><th>Suburb</th><th>Postcode</th><th>Zone</th><th>Technician</th><th>Serviced by</th><th>Match</th></tr></thead>
+      <tbody>${preview.map(r => `<tr>
+        <td>${esc(r.suburb || '—')}</td>
+        <td class="pc">${esc(r.pc || '—')}</td>
+        <td>${r.hit ? esc(r.hit.geo) : '<span style="color:var(--text-3)">—</span>'}</td>
+        <td>${r.hit ? esc(r.hit.a1 || '—') : '<span style="color:var(--coral-text)">not found</span>'}</td>
+        <td>${r.hit ? alOwnerPill(r.hit.a1) : ''}</td>
+        <td><span class="al-batch-how${r.how === 'Suburb + postcode' ? ' exact' : r.how ? ' loose' : ' none'}">${esc(r.how || '—')}</span></td>
+      </tr>`).join('')}</tbody></table>
+      ${results.length > preview.length ? `<div class="al-more">Previewing ${preview.length} of ${results.length.toLocaleString()} rows — the download has them all.</div>` : ''}
+    </div>
+    <button class="generate-btn" style="width:auto;margin:12px 0 0;padding:9px 18px;" onclick="alBatchDownload()">
+      <i class="ti ti-download" style="font-size:16px;"></i> Download with allocations
+    </button>`;
+}
+
+function alBatchDownload() {
+  if (!alBatchOut || !alBatchOut.length) return;
+  const data = alBatchOut.map(r => ({
+    ...r.row,
+    'Zone':                  r.hit ? r.hit.geo : '',
+    'Zone Type':             r.hit ? r.hit.rt  : '',
+    'Technician Allocation': r.hit ? r.hit.a1  : '',
+    'Serviced By':           r.hit ? alOwner(r.hit.a1).label : '',
+    'Match':                 r.how || 'Not found'
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Allocations');
+  XLSX.writeFile(wb, `${alBatchName || 'allocations'}_allocated.xlsx`);
 }
 
 // ---- Unallocated: everything with no technician ----
