@@ -5081,9 +5081,9 @@
         </select>
       </div>
       <div class="queue-block">
-        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Job ID(s) <span style="font-weight:400;color:var(--text-3)">(comma-separate multiple)</span></div>
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Job ID(s) <span style="font-weight:400;color:var(--text-3)">(separate multiple with spaces)</span></div>
         <div style="display:flex; gap:6px;">
-          <input class="field-input" id="jl-url" placeholder="e.g. 4421, or 4421, 4422, or paste any URL" oninput="document.getElementById('jl-fetch-status').textContent=''">
+          <input class="field-input" id="jl-url" placeholder="e.g. 4421, or 4421 4422 4423, or paste any URL" oninput="document.getElementById('jl-fetch-status').textContent=''">
           <button class="task-edit-btn" type="button" title="Paste link from clipboard and try to fill the name from the page title" id="jl-paste-btn" onclick="pasteJlUrlFromClipboard()"><i class="ti ti-clipboard"></i></button>
         </div>
         <div id="jl-fetch-status" style="font-size:11px; color:var(--text-3); margin-top:4px;"></div>
@@ -8924,7 +8924,9 @@ function buildHelpdeskUrl(input) {
   const raw = (input || '').trim();
   if (!raw) return '';
   if (raw.startsWith('http')) return raw;
-  const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+  // Accepts spaces or commas — the job list prompts for spaces, but pasted
+  // lists and previously-saved comma entries still parse.
+  const ids = raw.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
   if (!ids.length) return '';
   return ids.length === 1
     ? 'https://helpdesk.servicesupport.com.au/jobs/' + ids[0]
@@ -8935,7 +8937,7 @@ function extractJobIds(url) {
   if (!url || !url.startsWith('http')) return url || '';
   const multi  = url.match(/[?&]job_id=([\d%20\s]+)/i);
   const single = url.match(/\/jobs\/(\d+)$/);
-  if (multi)  return multi[1].replace(/%20/g, ', ').trim();
+  if (multi)  return multi[1].replace(/%20/g, ' ').replace(/\s+/g, ' ').trim();
   if (single) return single[1];
   return url; // any other URL — show as-is for editing
 }
