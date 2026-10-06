@@ -9152,6 +9152,24 @@ function jlOpenSectionEdit(sectionId) {
   const section = jobLists.find(j => String(j.id) === String(sectionId));
   if (!section) return;
   document.getElementById('jl-sec-edit-name').value = section.label || '';
+
+  // Sub-project picker. "Create from name" is offered when nothing matches yet,
+  // so a section can be hooked up without leaving to make the sub-project first.
+  const subSel = document.getElementById('jl-sec-edit-sub');
+  if (subSel) {
+    const opts = anzSubProjectOptions();
+    const cur = (section.projId && section.subId) ? `${section.projId}:${section.subId}` : '';
+    subSel.innerHTML =
+      '<option value="">— Not linked —</option>' +
+      '<option value="new">+ Create one named after this section</option>' +
+      opts.map(o => `<option value="${o.projId}:${o.subId}">${esc(o.label)}</option>`).join('');
+    subSel.value = cur && opts.some(o => `${o.projId}:${o.subId}` === cur) ? cur : '';
+    const n = jlGetSectionJobs(sectionId).length;
+    const note = document.getElementById('jl-sec-sub-note');
+    if (note) note.textContent = n
+      ? `All ${n} job${n !== 1 ? 's' : ''} in this section will be filed under it, and future ones too.`
+      : 'Jobs added to this section will be filed under it.';
+  }
   const now = Date.now();
   const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive)).map(j => j.id));
   const allJobs = jobLists.filter(j => j.type !== 'section' && !archivedIds.has(j.id));
@@ -9199,9 +9217,11 @@ function jlCloseSectionEdit() {
 function jlSaveSectionEdit() {
   if (!_jlEditingSectionId) return;
   const section = jobLists.find(j => String(j.id) === String(_jlEditingSectionId));
+  const priorSub = section ? `${section.projId || ''}:${section.subId || ''}` : '';
+  let renamed = false;
   if (section) {
     const newName = document.getElementById('jl-sec-edit-name').value.trim();
-    if (newName) section.label = newName;
+    if (newName && newName !== section.label) { section.label = newName; renamed = true; }
   }
   const listEl = document.getElementById('jl-sec-edit-list');
   if (listEl) {
@@ -9215,9 +9235,52 @@ function jlSaveSectionEdit() {
       }
     });
   }
+
+  // Apply the chosen sub-project to the section and everything under it, so the
+  // jobs end up exactly as they would had each been linked by hand.
+  const subSel = document.getElementById('jl-sec-edit-sub');
+  if (section && subSel) {
+    const v = subSel.value;
+    let projId = null, subId = null;
+    if (v === 'new') {
+      const link = jlEnsureSubProject(section.label);
+      if (link) { projId = link.projId; subId = link.subId; }
+    } else if (v) {
+      const [pi, si] = v.split(':').map(Number);
+      projId = pi; subId = si;
+    }
+    section.projId = projId; section.subId = subId;
+
+    // Renaming while leaving the link alone renames the sub-project too, matching
+    // what the inline rename on the section header does.
+    if (renamed && subId && `${projId}:${subId}` === priorSub) {
+      const p = projects.find(x => x.id === projId);
+      const s = p && (p.subs || []).find(x => x.id === subId);
+      if (s && s.title !== section.label) { s.title = section.label; saveProjects(); }
+    }
+
+    const members = jobLists.filter(x => x.type !== 'section' && String(x.sectionId || '') === String(section.id));
+    members.forEach(j => {
+      if (subId) {
+        j.projId = projId; j.subId = subId;
+        jlTouchSubProject(projId, subId, j);
+      } else {
+        // Unlinked — drop the inherited link but leave checklist history alone
+        j.projId = null; j.subId = null;
+      }
+    });
+    if (typeof showToast === 'function' && subId && members.length) {
+      const p = projects.find(x => x.id === projId);
+      const s = p && (p.subs || []).find(x => x.id === subId);
+      showToast(`<i class="ti ti-link"></i>Filed <b>${members.length}</b> job${members.length !== 1 ? 's' : ''} under <b>${esc(s ? s.title : 'sub-project')}</b>`);
+    }
+  }
+
   saveJobLists();
   jlCloseSectionEdit();
   renderJobListSidebar();
+  if (typeof renderProjects === 'function') renderProjects();
+  if (typeof renderAmtekProjects === 'function') renderAmtekProjects();
 }
 
 function openAddJobListModalInSection(sectionId) {
@@ -19398,6 +19461,11 @@ document.addEventListener('pointerup', e => {
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">Section name</div>
         <input class="field-input" id="jl-sec-edit-name" maxlength="60" placeholder="e.g. Day 4">
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">ANZ WL sub-project</div>
+        <select class="field-input" id="jl-sec-edit-sub"></select>
+        <div class="jli-hint-note" style="margin-top:7px;"><i class="ti ti-info-circle"></i><span id="jl-sec-sub-note">Every job in this section is filed under this sub-project.</span></div>
       </div>
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">Jobs in this section <span style="font-weight:400">(tick to add, untick to remove)</span></div>
