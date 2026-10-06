@@ -1969,6 +1969,8 @@
   .jli-jid { font-size:10px; color:var(--teal-text); background:var(--teal-bg); border-radius:3px; padding:1px 5px; }
   .jli-derived { font-size:9.5px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.14); border-radius:3px; padding:1px 5px; }
   .jli-suffix { font-size:11px; color:var(--teal-text); }
+  .jli-jid.multi { font-weight:700; }
+  .jli-merged { font-size:9.5px; color:var(--green-text); background:var(--green-bg); border-radius:3px; padding:1px 5px; white-space:nowrap; }
   .jli-sites { font-size:10.5px; color:var(--text-3); padding:2px 0 5px 10px; line-height:1.4; }
   .jli-grp-toggle { margin-left:auto; display:inline-flex; align-items:center; gap:5px; background:none; border:0.5px solid var(--border-md); color:var(--text-3); font-family:inherit; font-size:11px; padding:3px 10px; border-radius:20px; cursor:pointer; transition:all .13s; }
   .jli-grp-toggle:hover { color:var(--text-2); }
@@ -9561,16 +9563,41 @@ function jliBuildPlan() {
   });
 
   const plan = [...groups.values()].map(g => {
+    // Several rows against one store are several jobs at the same place, so they
+    // become a single entry whose link carries every job number — the same
+    // multi-job URL the Add job form builds when you type the IDs by hand.
+    const bySite = new Map();
+    const ordered = [];
+    g.jobs.forEach(j => {
+      const k = (j.site || '').trim().toLowerCase();
+      if (!k) { ordered.push([j]); return; }
+      if (!bySite.has(k)) { const arr = []; bySite.set(k, arr); ordered.push(arr); }
+      bySite.get(k).push(j);
+    });
+
+    const entries = ordered.map(list => {
+      const base = list[0];
+      const ids  = [...new Set(list.map(x => x.jobId).filter(Boolean))];
+      const names = [...new Set(list.map(x => x.name))];
+      const name = names.length > 1 ? names.join(' · ') : names[0];
+      const dates = list.map(x => x.date).filter(Boolean).sort();
+      return { ...base, name, jobIds: ids, merged: list.length,
+               date: dates[0] || '', derived: list.every(x => x.derived) };
+    });
+
+    // Decided after merging: three rows at one store collapse to one entry, and
+    // a section wrapping a single entry would just be noise.
     const label = g.match ? g.match.label : jliCommonPrefix(g.sites);
     let mode;
     if (g.match)                 mode = 'existing';
     else if (!g.sites.length)    mode = 'none';          // no site column value
-    else if (g.jobs.length > 1)  mode = 'new';
-    else                         mode = 'none';          // lone job, no section
+    else if (entries.length > 1) mode = 'new';
+    else                         mode = 'none';
     const sectionLabel = mode === 'none' ? '' : (label || g.sites[0] || '');
-    // Six Decjuba stores in one section would otherwise be indistinguishable,
-    // so the part of the site the section name doesn't cover joins the job.
-    const jobs = g.jobs.map(j => {
+
+    // Several stores in one section would be indistinguishable, so the part of
+    // the site the section name doesn't cover joins the job.
+    const jobs = entries.map(j => {
       const rest = sectionLabel ? jliRemainder(j.site, sectionLabel) : '';
       return { ...j, suffix: rest, display: rest ? `${j.name} — ${rest}` : j.name };
     });
@@ -9612,7 +9639,10 @@ function jliBuildPlan() {
           j.derived ? '<span class="jli-derived">name from site</span>' : ''
         }${
           j.date ? `<span class="jli-date">${esc(j.date)}</span>` : '<span class="jli-date none">no date</span>'
-        }${j.jobId ? `<span class="jli-jid">#${esc(j.jobId)}</span>` : ''}</div>`).join('')}
+        }${(j.jobIds && j.jobIds.length)
+            ? `<span class="jli-jid${j.jobIds.length > 1 ? ' multi' : ''}">#${esc(j.jobIds.join(' '))}</span>`
+            : ''
+        }${j.merged > 1 ? `<span class="jli-merged">${j.merged} jobs merged</span>` : ''}</div>`).join('')}
         ${g.jobs.length > 4 ? `<div class="jli-job more">+${g.jobs.length - 4} more</div>` : ''}
       </div>`).join('')}</div>`;
   go.disabled = !total;
@@ -9633,7 +9663,10 @@ function jliImport() {
       jobLists.push({
         id: 'jli' + (stamp + gi * 1000 + ji),
         name: j.display || j.name,
-        url: j.jobId ? buildHelpdeskUrl(j.jobId) : '',
+        // Space-separated IDs give the multi-job index URL; a single ID gives
+        // the direct job link.
+        url: (j.jobIds && j.jobIds.length) ? buildHelpdeskUrl(j.jobIds.join(' '))
+           : j.jobId ? buildHelpdeskUrl(j.jobId) : '',
         date: j.date || '',
         time: null, done: false,
         projId: null, subId: null, amtekProjectId: null, todoId: null,
