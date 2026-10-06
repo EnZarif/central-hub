@@ -1940,6 +1940,26 @@
   .jl-sec-rename-input { background:transparent; border:none; border-bottom:1px solid var(--teal); color:var(--teal-text); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:0 2px; min-width:60px; max-width:160px; outline:none; font-family:inherit; }
   .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
   .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
+  .jli-sum { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); font-size:12px; }
+  .jli-chip { font-size:11px; font-weight:600; border-radius:5px; padding:2px 8px; }
+  .jli-chip.new { background:var(--teal-bg); color:var(--teal-text); }
+  .jli-chip.reuse { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
+  .jli-chip.loose { background:var(--surface2); color:var(--text-3); }
+  .jli-plan { margin-top:12px; max-height:300px; overflow-y:auto; }
+  .jli-grp { border:0.5px solid var(--border-md); border-radius:8px; padding:9px 11px; margin-bottom:7px; }
+  .jli-grp-hd { display:flex; align-items:center; gap:8px; margin-bottom:5px; flex-wrap:wrap; }
+  .jli-grp-name { font-size:13px; font-weight:650; color:var(--text); }
+  .jli-grp-count { margin-left:auto; font-size:10.5px; color:var(--text-3); }
+  .jli-badge { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; border-radius:4px; padding:2px 6px; }
+  .jli-badge.new { background:var(--teal-bg); color:var(--teal-text); }
+  .jli-badge.existing { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
+  .jli-badge.none { background:var(--surface2); color:var(--text-3); }
+  .jli-job { font-size:11.5px; color:var(--text-2); padding:3px 0 3px 10px; display:flex; align-items:center; gap:8px; }
+  .jli-job.more { color:var(--text-3); font-style:italic; }
+  .jli-date { margin-left:auto; font-size:10.5px; color:var(--text-3); font-variant-numeric:tabular-nums; }
+  .jli-date.none { font-style:italic; opacity:.7; }
+  .jli-jid { font-size:10px; color:var(--teal-text); background:var(--teal-bg); border-radius:3px; padding:1px 5px; }
+  .jli-derived { font-size:9.5px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.14); border-radius:3px; padding:1px 5px; }
   .jl-sec-add-btn { color:var(--teal-text) !important; }
   .jl-sec-chevron { background:none; border:none; padding:2px 3px; cursor:pointer; color:var(--text-3); display:flex; align-items:center; font-size:13px; transition:color .12s, transform .15s; flex-shrink:0; border-radius:3px; }
   .jl-sec-chevron:hover { color:var(--teal-text); }
@@ -3753,6 +3773,7 @@
           </div>
           <div class="jl-list" id="jl-list"></div>
           <button class="jl-add-section-btn" onclick="jlAddSection()"><i class="ti ti-layout-rows" style="font-size:13px"></i> Add section</button>
+          <button class="jl-add-section-btn" onclick="jliOpen()"><i class="ti ti-file-import" style="font-size:13px"></i> Import from Excel</button>
         </div>
         <div class="amtek-tab-panel" id="amtek-panel-proj">
           <div class="amtek-proj-subhd">
@@ -9324,6 +9345,192 @@ function deleteJobList(id) {
   saveJobLists();
   renderAmtekProjects();
   renderJobListSidebar();
+}
+
+// ===== JOB LIST IMPORTER =====
+// Takes a sheet of jobs and files them under a section per site. A site with
+// several jobs gets its own section; a site with one job is left unsectioned
+// unless a section for it already exists, in which case it joins that.
+let jliRows = [], jliHeaders = [], jliPlan = null;
+
+function jliOpen() {
+  jliRows = []; jliHeaders = []; jliPlan = null;
+  document.getElementById('jli-status').textContent = 'No file loaded';
+  document.getElementById('jli-status').className = 'kpi-tpl-status';
+  document.getElementById('jli-mapper').style.display = 'none';
+  document.getElementById('jli-preview').innerHTML = '';
+  document.getElementById('jli-go').disabled = true;
+  document.getElementById('jli-input').value = '';
+  document.getElementById('jli-overlay').classList.add('active');
+}
+function jliClose() { document.getElementById('jli-overlay').classList.remove('active'); }
+
+function jliStatus(msg, type) {
+  const el = document.getElementById('jli-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' sv-status-' + type : ''); }
+}
+
+// Excel hands dates back as a Date, a serial number, or free text depending on
+// how the cell was formatted, so all three are normalised to YYYY-MM-DD.
+function jliDate(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (v instanceof Date && !isNaN(v)) return ymd(v);
+  if (typeof v === 'number' && v > 20000 && v < 60000) {
+    const d = new Date(Date.UTC(1899, 11, 30) + v * 86400000);
+    return isNaN(d) ? '' : ymd(new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  }
+  const s = String(v).trim();
+  if (!s) return '';
+  let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);          // AU day-first
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  const d = new Date(s);
+  return isNaN(d) ? '' : ymd(d);
+}
+
+async function jliLoad(file) {
+  if (!file) return;
+  jliPlan = null;
+  document.getElementById('jli-preview').innerHTML = '';
+  document.getElementById('jli-go').disabled = true;
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array', cellDates:true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false, dateNF:'yyyy-mm-dd' });
+    const kw = ['site','job','name','date','scheduled','description'];
+    let hdr = 0;
+    for (let i = 0; i < Math.min(raw.length, 30); i++) {
+      const hits = raw[i].map(c => String(c).toLowerCase().trim())
+        .filter(c => kw.some(k => c.includes(k)));
+      if (hits.length >= 2) { hdr = i; break; }
+    }
+    const headers = raw[hdr].map(c => String(c));
+    jliHeaders = headers.filter(h => h.trim() !== '');
+    jliRows = raw.slice(hdr + 1).map(r => {
+      const o = {}; headers.forEach((h, i) => { o[h] = r[i] !== undefined ? r[i] : ''; }); return o;
+    }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
+    if (!jliRows.length) { jliStatus('No data rows found', 'error'); return; }
+    jliStatus(`${jliRows.length.toLocaleString()} rows loaded`, 'ok');
+    jliRenderMapper();
+    jliBuildPlan();
+  } catch (e) { jliStatus('Could not read file: ' + e.message, 'error'); }
+}
+
+function jliRenderMapper() {
+  const el = document.getElementById('jli-mapper');
+  const sel = (id, picked) => `<select class="sv-col-select field-input" id="${id}" onchange="jliBuildPlan()">
+      <option value="">— none —</option>
+      ${jliHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
+    </select>`;
+  el.innerHTML =
+    `<div class="sv-col-row"><span class="sv-col-label">Site</span>${sel('jli-c-site', svAutoDetect(jliHeaders, ['Site','site','SITE','Location','Store'], ['site','location','store','branch']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Job name</span>${sel('jli-c-name', svAutoDetect(jliHeaders, ['Job Name','Job','Description','Task'], ['jobname','job','descr','task','summary']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Scheduled date</span>${sel('jli-c-date', svAutoDetect(jliHeaders, ['Scheduled Date','Date','Due Date','Scheduled'], ['scheduled','date','due']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('jli-c-id', svAutoDetect(jliHeaders, ['Job ID','JobID','ID','Job #'], ['jobid','job_id','jobno']))}</div>`;
+  el.style.display = '';
+}
+
+function jliBuildPlan() {
+  const siteCol = document.getElementById('jli-c-site')?.value;
+  const nameCol = document.getElementById('jli-c-name')?.value;
+  const dateCol = document.getElementById('jli-c-date')?.value;
+  const idCol   = document.getElementById('jli-c-id')?.value;
+  const prev = document.getElementById('jli-preview');
+  const go = document.getElementById('jli-go');
+  if (!nameCol && !siteCol) { prev.innerHTML = ''; go.disabled = true; jliPlan = null; return; }
+
+  const groups = new Map();
+  let skipped = 0;
+  jliRows.forEach(r => {
+    const site = String(r[siteCol] || '').trim();
+    const given = String(r[nameCol] || '').trim();
+    // A row with a site but no job name still represents work there, so the
+    // site stands in — flagged in the preview so an invented name is visible.
+    const name = given || site;
+    if (!name) { skipped++; return; }
+    const key = (site || '').toLowerCase();
+    if (!groups.has(key)) groups.set(key, { site, jobs: [] });
+    groups.get(key).jobs.push({ name, derived: !given, date: jliDate(r[dateCol]), jobId: String(r[idCol] || '').trim() });
+  });
+
+  const existing = jobLists.filter(j => j.type === 'section');
+  const plan = [...groups.values()].map(g => {
+    const match = g.site ? existing.find(s => (s.label || '').trim().toLowerCase() === g.site.toLowerCase()) : null;
+    let mode;
+    if (!g.site)            mode = 'none';          // no site column value
+    else if (match)         mode = 'existing';
+    else if (g.jobs.length > 1) mode = 'new';
+    else                    mode = 'none';          // lone job, no section for it
+    return { ...g, mode, sectionId: match ? match.id : null, sectionLabel: match ? match.label : g.site };
+  }).sort((a, b) => (a.site || '').localeCompare(b.site || ''));
+
+  jliPlan = { plan, skipped };
+  const total = plan.reduce((n, g) => n + g.jobs.length, 0);
+  const newSecs = plan.filter(g => g.mode === 'new').length;
+  const reused  = plan.filter(g => g.mode === 'existing').length;
+  const loose   = plan.filter(g => g.mode === 'none').reduce((n,g) => n + g.jobs.length, 0);
+
+  prev.innerHTML = `
+    <div class="jli-sum">
+      <span class="sv-sum-ok"><i class="ti ti-check"></i> ${total} job${total!==1?'s':''}</span>
+      ${newSecs ? `<span class="jli-chip new">${newSecs} new section${newSecs!==1?'s':''}</span>` : ''}
+      ${reused ? `<span class="jli-chip reuse">${reused} existing section${reused!==1?'s':''}</span>` : ''}
+      ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
+      ${skipped ? `<span class="sv-sum-err">${skipped} skipped (no name)</span>` : ''}
+    </div>
+    <div class="jli-plan">${plan.map(g => `
+      <div class="jli-grp">
+        <div class="jli-grp-hd">
+          <span class="jli-grp-name">${esc(g.site || '(no site)')}</span>
+          <span class="jli-badge ${g.mode}">${
+            g.mode === 'new' ? 'new section' : g.mode === 'existing' ? 'into existing section' : 'no section'
+          }</span>
+          <span class="jli-grp-count">${g.jobs.length} job${g.jobs.length!==1?'s':''}</span>
+        </div>
+        ${g.jobs.slice(0,4).map(j => `<div class="jli-job">${esc(j.name)}${
+          j.derived ? '<span class="jli-derived">name from site</span>' : ''
+        }${
+          j.date ? `<span class="jli-date">${esc(j.date)}</span>` : '<span class="jli-date none">no date</span>'
+        }${j.jobId ? `<span class="jli-jid">#${esc(j.jobId)}</span>` : ''}</div>`).join('')}
+        ${g.jobs.length > 4 ? `<div class="jli-job more">+${g.jobs.length - 4} more</div>` : ''}
+      </div>`).join('')}</div>`;
+  go.disabled = !total;
+}
+
+function jliImport() {
+  if (!jliPlan || !jliPlan.plan.length) return;
+  let added = 0, madeSections = 0;
+  const stamp = Date.now();
+  jliPlan.plan.forEach((g, gi) => {
+    let sectionId = g.sectionId;
+    if (g.mode === 'new') {
+      sectionId = 'jlsec' + (stamp + gi);
+      jobLists.push({ id: sectionId, type: 'section', label: g.site });
+      madeSections++;
+    }
+    g.jobs.forEach((j, ji) => {
+      jobLists.push({
+        id: 'jli' + (stamp + gi * 1000 + ji),
+        name: j.name,
+        url: j.jobId ? buildHelpdeskUrl(j.jobId) : '',
+        date: j.date || '',
+        time: null, done: false,
+        projId: null, subId: null, amtekProjectId: null, todoId: null,
+        sectionId: sectionId || null,
+        createdAt: Date.now()
+      });
+      added++;
+    });
+  });
+  saveJobLists();
+  renderJobListSidebar();
+  if (typeof renderAmtekProjects === 'function') renderAmtekProjects();
+  jliClose();
+  if (typeof showToast === 'function') {
+    showToast(`<i class="ti ti-file-import"></i>Imported <b>${added}</b> job${added!==1?'s':''}${madeSections ? ` into ${madeSections} new section${madeSections!==1?'s':''}` : ''}`);
+  }
 }
 
 // urgency-coloured due chip — overdue/soon/later scheme matching the ANZ meeting brief's
@@ -18791,6 +18998,32 @@ document.addEventListener('pointerup', e => {
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="jlCloseSectionEdit()">Cancel</button>
       <button class="generate-btn" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="jlSaveSectionEdit()"><i class="ti ti-check" style="font-size:15px"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Job list importer -->
+<div class="kpi-modal-overlay" id="jli-overlay" onclick="if(event.target===this)jliClose()">
+  <div class="kpi-modal" style="width:620px;max-width:95vw;">
+    <div class="kpi-modal-header">
+      <strong><i class="ti ti-file-import" style="margin-right:6px;"></i>Import jobs into the job list</strong>
+      <button class="icon-btn" onclick="jliClose()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="kpi-modal-preview">
+      <div class="kpi-template-row">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Excel or CSV with site, job name and scheduled date</div>
+          <div class="kpi-tpl-status" id="jli-status">No file loaded</div>
+        </div>
+        <input type="file" id="jli-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="jliLoad(this.files[0])">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('jli-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Choose file</button>
+      </div>
+      <div id="jli-mapper" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;"></div>
+      <div id="jli-preview"></div>
+    </div>
+    <div class="kpi-modal-actions">
+      <button class="kpi-file-btn" onclick="jliClose()">Cancel</button>
+      <button class="generate-btn" id="jli-go" style="width:auto;margin-bottom:0;padding:8px 18px;" onclick="jliImport()" disabled><i class="ti ti-check" style="font-size:15px"></i> Import</button>
     </div>
   </div>
 </div>
