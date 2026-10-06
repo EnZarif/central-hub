@@ -2966,11 +2966,20 @@
   .scratch-fab:hover { border-color: rgba(74,158,232,0.45) !important; filter: brightness(1.15); transform: scale(1.08); }
   .scratch-fab.sp-open { background: #0d1b2e !important; border-color: rgba(74,158,232,0.55) !important; box-shadow: 0 4px 22px rgba(74,158,232,0.3) !important; }
   /* ── Sidebar Add Task (primary) / Add Job (secondary) ── */
-  .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; font-size: 12.5px; font-weight: 700; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; }
+  .sidebar-action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+  /* Three across needs room for the labels; below that Import drops to its own
+     full-width row rather than wrapping "Add task" onto two lines. */
+  @media (max-width: 1100px) {
+    .sidebar-action-row { grid-template-columns: 1fr 1fr; }
+    .sidebar-action-row .sab-import { grid-column: 1 / -1; }
+  }
+  .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; font-size: 12.5px; font-weight: 700; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; white-space: nowrap; }
   .sidebar-action-btn.sab-task { background: var(--teal); border-color: var(--teal); color: #fff; box-shadow: 0 3px 12px rgba(74,158,232,0.35); }
   .sidebar-action-btn.sab-task:hover { filter: brightness(1.1); }
   .sidebar-action-btn.sab-job { background: rgba(245,164,73,0.1); border-color: rgba(245,164,73,0.45); color: #F5A449; }
   .sidebar-action-btn.sab-job:hover { background: rgba(245,164,73,0.18); border-color: rgba(245,164,73,0.7); }
+  .sidebar-action-btn.sab-import { background: var(--surface2); border-color: var(--border-md); color: var(--text-2); }
+  .sidebar-action-btn.sab-import:hover { border-color: var(--teal); color: var(--teal-text); background: var(--teal-bg); }
   /* ── Show / hide done tasks toggle ── */
   .show-done-btn { display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all .15s; flex-shrink: 0; }
   .show-done-btn:hover { color: var(--text-2); border-color: var(--text-2); }
@@ -3756,9 +3765,10 @@
 
     <div class="tasks-sidebar">
       <!-- Primary add buttons above the job list -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
+      <div class="sidebar-action-row">
         <button class="sidebar-action-btn sab-task" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Add task</button>
         <button class="sidebar-action-btn sab-job" onclick="openAddJobListModal()"><i class="ti ti-briefcase"></i>Add job</button>
+        <button class="sidebar-action-btn sab-import" onclick="jliOpen()" title="Import a sheet of jobs into the job list"><i class="ti ti-file-import"></i>Import</button>
       </div>
       <div class="card amtek-card">
         <div class="amtek-card-hd">
@@ -3785,7 +3795,6 @@
           <div class="jl-sec-jump" id="jl-sec-jump"></div>
           <div class="jl-list" id="jl-list"></div>
           <button class="jl-add-section-btn" onclick="jlAddSection()"><i class="ti ti-layout-rows" style="font-size:13px"></i> Add section</button>
-          <button class="jl-add-section-btn" onclick="jliOpen()"><i class="ti ti-file-import" style="font-size:13px"></i> Import from Excel</button>
         </div>
         <div class="amtek-tab-panel" id="amtek-panel-proj">
           <div class="amtek-proj-subhd">
