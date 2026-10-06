@@ -1968,6 +1968,12 @@
   .jli-date.none { font-style:italic; opacity:.7; }
   .jli-jid { font-size:10px; color:var(--teal-text); background:var(--teal-bg); border-radius:3px; padding:1px 5px; }
   .jli-derived { font-size:9.5px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.14); border-radius:3px; padding:1px 5px; }
+  .jli-suffix { font-size:11px; color:var(--teal-text); }
+  .jli-sites { font-size:10.5px; color:var(--text-3); padding:2px 0 5px 10px; line-height:1.4; }
+  .jli-grp-toggle { margin-left:auto; display:inline-flex; align-items:center; gap:5px; background:none; border:0.5px solid var(--border-md); color:var(--text-3); font-family:inherit; font-size:11px; padding:3px 10px; border-radius:20px; cursor:pointer; transition:all .13s; }
+  .jli-grp-toggle:hover { color:var(--text-2); }
+  .jli-grp-toggle.on { background:var(--teal-bg); border-color:var(--teal); color:var(--teal-text); font-weight:600; }
+  .jli-grp-toggle .ti { font-size:12px; }
   .jl-sec-add-btn { color:var(--teal-text) !important; }
   .jl-sec-chevron { background:none; border:none; padding:2px 3px; cursor:pointer; color:var(--text-3); display:flex; align-items:center; font-size:13px; transition:color .12s, transform .15s; flex-shrink:0; border-radius:3px; }
   .jl-sec-chevron:hover { color:var(--teal-text); }
@@ -9463,6 +9469,52 @@ function jliRenderMapper() {
   el.style.display = '';
 }
 
+// Site names in a dispatch sheet are usually "<Brand> <Location>", so six
+// Decjuba stores should land in one Decjuba section rather than six sections of
+// one. Grouping keys off the brand, and the section name is the longest run of
+// leading words the group actually shares — which means three jobs at a single
+// store still get a store-specific section.
+const JLI_STOP = new Set(['the','a','an','my','your','le','la']);
+
+function jliTokens(s) { return String(s || '').trim().replace(/\s+/g, ' ').split(' ').filter(Boolean); }
+
+function jliBrandKey(site) {
+  const t = jliTokens(site).map(x => x.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+  if (!t.length) return '';
+  // A leading article isn't a brand — "The Reject Shop" and "The Good Guys"
+  // must not collapse into one "The" section.
+  if (JLI_STOP.has(t[0]) && t.length > 1) return t[0] + ' ' + t[1];
+  return t[0];
+}
+
+function jliCommonPrefix(names) {
+  const toks = names.map(jliTokens);
+  if (!toks.length) return '';
+  const first = toks[0];
+  let n = 0;
+  outer: for (let i = 0; i < first.length; i++) {
+    const cmp = first[i].toLowerCase();
+    for (const t of toks) { if (!t[i] || t[i].toLowerCase() !== cmp) break outer; }
+    n = i + 1;
+  }
+  if (!n) return '';
+  const out = first.slice(0, n).join(' ');
+  return jliTokens(out).every(w => JLI_STOP.has(w.toLowerCase())) ? '' : out;
+}
+
+// What's left of the site once the section name is stripped — "Chadstone" from
+// "Decjuba Chadstone". Appended to the job so a store stays identifiable after
+// six of them share one section.
+function jliRemainder(site, sectionLabel) {
+  const s = jliTokens(site), p = jliTokens(sectionLabel);
+  if (!p.length || s.length <= p.length) return '';
+  const matches = p.every((w, i) => s[i] && s[i].toLowerCase() === w.toLowerCase());
+  return matches ? s.slice(p.length).join(' ') : '';
+}
+
+let jliGroupSimilar = true;
+function jliToggleGrouping() { jliGroupSimilar = !jliGroupSimilar; jliBuildPlan(); }
+
 function jliBuildPlan() {
   const siteCol = document.getElementById('jli-c-site')?.value;
   const nameCol = document.getElementById('jli-c-name')?.value;
@@ -9471,6 +9523,22 @@ function jliBuildPlan() {
   const prev = document.getElementById('jli-preview');
   const go = document.getElementById('jli-go');
   if (!nameCol && !siteCol) { prev.innerHTML = ''; go.disabled = true; jliPlan = null; return; }
+
+  const existing = jobLists.filter(j => j.type === 'section');
+  // An existing section wins: if its name appears in the site, that's where the
+  // job belongs, whatever the brand grouping would otherwise decide.
+  const findExisting = site => {
+    if (!site) return null;
+    const s = site.toLowerCase();
+    return existing
+      .filter(sec => {
+        const lbl = (sec.label || '').trim().toLowerCase();
+        if (!lbl) return false;
+        if (s === lbl) return true;
+        return new RegExp('(^|\\s)' + lbl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\s|$)').test(s);
+      })
+      .sort((a, b) => (b.label || '').length - (a.label || '').length)[0] || null;   // most specific
+  };
 
   const groups = new Map();
   let skipped = 0;
@@ -9481,20 +9549,33 @@ function jliBuildPlan() {
     // site stands in — flagged in the preview so an invented name is visible.
     const name = given || site;
     if (!name) { skipped++; return; }
-    const key = (site || '').toLowerCase();
-    if (!groups.has(key)) groups.set(key, { site, jobs: [] });
-    groups.get(key).jobs.push({ name, derived: !given, date: jliDate(r[dateCol]), jobId: String(r[idCol] || '').trim() });
+    const match = findExisting(site);
+    const key = match ? 'sec:' + match.id
+              : !site ? ''
+              : jliGroupSimilar ? 'brand:' + jliBrandKey(site)
+              : 'exact:' + site.toLowerCase();
+    if (!groups.has(key)) groups.set(key, { sites: [], jobs: [], match });
+    const g = groups.get(key);
+    if (site && !g.sites.includes(site)) g.sites.push(site);
+    g.jobs.push({ name, site, derived: !given, date: jliDate(r[dateCol]), jobId: String(r[idCol] || '').trim() });
   });
 
-  const existing = jobLists.filter(j => j.type === 'section');
   const plan = [...groups.values()].map(g => {
-    const match = g.site ? existing.find(s => (s.label || '').trim().toLowerCase() === g.site.toLowerCase()) : null;
+    const label = g.match ? g.match.label : jliCommonPrefix(g.sites);
     let mode;
-    if (!g.site)            mode = 'none';          // no site column value
-    else if (match)         mode = 'existing';
-    else if (g.jobs.length > 1) mode = 'new';
-    else                    mode = 'none';          // lone job, no section for it
-    return { ...g, mode, sectionId: match ? match.id : null, sectionLabel: match ? match.label : g.site };
+    if (g.match)                 mode = 'existing';
+    else if (!g.sites.length)    mode = 'none';          // no site column value
+    else if (g.jobs.length > 1)  mode = 'new';
+    else                         mode = 'none';          // lone job, no section
+    const sectionLabel = mode === 'none' ? '' : (label || g.sites[0] || '');
+    // Six Decjuba stores in one section would otherwise be indistinguishable,
+    // so the part of the site the section name doesn't cover joins the job.
+    const jobs = g.jobs.map(j => {
+      const rest = sectionLabel ? jliRemainder(j.site, sectionLabel) : '';
+      return { ...j, suffix: rest, display: rest ? `${j.name} — ${rest}` : j.name };
+    });
+    return { site: sectionLabel || g.sites[0] || '', sites: g.sites, jobs, mode,
+             sectionId: g.match ? g.match.id : null, sectionLabel };
   }).sort((a, b) => (a.site || '').localeCompare(b.site || ''));
 
   jliPlan = { plan, skipped };
@@ -9510,6 +9591,10 @@ function jliBuildPlan() {
       ${reused ? `<span class="jli-chip reuse">${reused} existing section${reused!==1?'s':''}</span>` : ''}
       ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
       ${skipped ? `<span class="sv-sum-err">${skipped} skipped (no name)</span>` : ''}
+      <button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
+        title="Treat site names sharing a leading word, like Decjuba Chadstone and Decjuba Highpoint, as one site">
+        <i class="ti ti-${jliGroupSimilar ? 'check' : 'square'}"></i> Group similar site names
+      </button>
     </div>
     <div class="jli-plan">${plan.map(g => `
       <div class="jli-grp">
@@ -9520,7 +9605,10 @@ function jliBuildPlan() {
           }</span>
           <span class="jli-grp-count">${g.jobs.length} job${g.jobs.length!==1?'s':''}</span>
         </div>
+        ${g.sites.length > 1 ? `<div class="jli-sites">${g.sites.length} sites: ${esc(g.sites.slice(0,5).join(', '))}${g.sites.length > 5 ? ` +${g.sites.length - 5}` : ''}</div>` : ''}
         ${g.jobs.slice(0,4).map(j => `<div class="jli-job">${esc(j.name)}${
+          j.suffix ? `<span class="jli-suffix">— ${esc(j.suffix)}</span>` : ''
+        }${
           j.derived ? '<span class="jli-derived">name from site</span>' : ''
         }${
           j.date ? `<span class="jli-date">${esc(j.date)}</span>` : '<span class="jli-date none">no date</span>'
@@ -9538,13 +9626,13 @@ function jliImport() {
     let sectionId = g.sectionId;
     if (g.mode === 'new') {
       sectionId = 'jlsec' + (stamp + gi);
-      jobLists.push({ id: sectionId, type: 'section', label: g.site });
+      jobLists.push({ id: sectionId, type: 'section', label: g.sectionLabel || g.site });
       madeSections++;
     }
     g.jobs.forEach((j, ji) => {
       jobLists.push({
         id: 'jli' + (stamp + gi * 1000 + ji),
-        name: j.name,
+        name: j.display || j.name,
         url: j.jobId ? buildHelpdeskUrl(j.jobId) : '',
         date: j.date || '',
         time: null, done: false,
