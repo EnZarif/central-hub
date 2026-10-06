@@ -989,6 +989,10 @@
   .jl-due.overdue { background: rgba(239,68,68,0.15); color: #ef4444; border-color: transparent; }
   .jl-due.stale { background: rgba(239,159,39,0.1); color: #d99a4a; border-color: transparent; }
   .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
+  button.jl-link-go { border: 0.5px solid transparent; font-family: inherit; cursor: pointer; transition: all .13s; }
+  button.jl-link-go:hover { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 20%, transparent); }
+  .jl-link-arrow { font-size: 9px; opacity: .55; margin-left: 1px; }
+  button.jl-link-go:hover .jl-link-arrow { opacity: 1; }
   .jl-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: auto; }
   .jl-actions-row { display: flex; align-items: center; gap: 4px; }
   .jl-action-panel { display: flex; align-items: center; gap: 1px; opacity: 0; pointer-events: none; transition: opacity 0.18s, transform 0.18s; transform: translateX(5px); }
@@ -9292,6 +9296,7 @@ function saveJobList() {
   const amtekProjectId = document.getElementById('jl-amtek-project')?.value || null;
   const time = document.getElementById('jl-time')?.value || null;
 
+  let newJob = null;
   if (editingJobListId) {
     const j = jobLists.find(x => String(x.id) === String(editingJobListId));
     if (j) {
@@ -9307,27 +9312,47 @@ function saveJobList() {
     }
   } else {
     const chosenSection = document.getElementById('jl-section')?.value || null;
-    const j = { id: 'jl' + Date.now(), name, url, date, time: time || null, done: false, projId: projId || null, subId: subId || null, amtekProjectId: amtekProjectId || null, todoId: null, sectionId: chosenSection || null, createdAt: Date.now() };
+    // A job dropped into a section inherits that section's sub-project link
+    let secProj = projId || null, secSub = subId || null;
+    if (!secSub && chosenSection) {
+      const sec = jobLists.find(x => String(x.id) === String(chosenSection));
+      if (sec && sec.subId) { secProj = sec.projId; secSub = sec.subId; }
+    }
+    const j = { id: 'jl' + Date.now(), name, url, date, time: time || null, done: false, projId: secProj, subId: secSub, amtekProjectId: amtekProjectId || null, todoId: null, sectionId: chosenSection || null, createdAt: Date.now() };
     if (projId && subId) linkJobListTodo(j);
     jobLists.push(j);
+    newJob = j;
   }
   saveJobLists();
 
-  if (amtekProjectId) {
-    for (const p of projects) {
-      const sub = (p.subs || []).find(s => String(s.id) === String(amtekProjectId));
-      if (sub && sub.status === 'delivered') {
-        sub.status = 'active';
-        saveProjects();
-        break;
+  // New work against a sub-project reopens it and is written into its checklist
+  // and notes, whether the link came from the sub-project picker, the Amtek
+  // project picker, or the section the job was filed under.
+  if (newJob) {
+    const targets = [];
+    if (newJob.subId) targets.push({ p: newJob.projId, s: newJob.subId });
+    if (amtekProjectId) {
+      for (const p of projects) {
+        if ((p.subs || []).some(s => String(s.id) === String(amtekProjectId))) {
+          targets.push({ p: p.id, s: amtekProjectId });
+          break;
+        }
       }
     }
+    const seen = new Set();
+    targets.forEach(t => {
+      const k = t.p + '|' + t.s;
+      if (seen.has(k)) return;
+      seen.add(k);
+      jlTouchSubProject(t.p, t.s, newJob);
+    });
   }
 
   editingJobListId = null;
   closeAddJobListModal();
   renderAmtekProjects();
   renderJobListSidebar();
+  if (typeof renderProjects === 'function') renderProjects();
 }
 
 // ticking a job list entry off also drops a completed task into today's Task Manager
@@ -9742,14 +9767,21 @@ function jliBuildPlan() {
 
 function jliImport() {
   if (!jliPlan || !jliPlan.plan.length) return;
-  let added = 0, madeSections = 0;
+  let added = 0, madeSections = 0, madeSubs = 0, reopened = 0;
   const stamp = Date.now();
   jliPlan.plan.forEach((g, gi) => {
     let sectionId = g.sectionId;
+    let secProjId = null, secSubId = null;
     if (g.mode === 'new') {
       sectionId = 'jlsec' + (stamp + gi);
-      jobLists.push({ id: sectionId, type: 'section', label: g.sectionLabel || g.site });
+      const label = g.sectionLabel || g.site;
+      const link = jlEnsureSubProject(label);
+      if (link) { secProjId = link.projId; secSubId = link.subId; if (link.created) madeSubs++; }
+      jobLists.push({ id: sectionId, type: 'section', label, projId: secProjId, subId: secSubId });
       madeSections++;
+    } else if (g.mode === 'existing' && sectionId) {
+      const sec = jobLists.find(x => String(x.id) === String(sectionId));
+      if (sec) { secProjId = sec.projId || null; secSubId = sec.subId || null; }
     }
     g.jobs.forEach((j, ji) => {
       jobLists.push({
@@ -9761,19 +9793,30 @@ function jliImport() {
            : j.jobId ? buildHelpdeskUrl(j.jobId) : '',
         date: j.date || '',
         time: null, done: false,
-        projId: null, subId: null, amtekProjectId: null, todoId: null,
+        projId: secProjId, subId: secSubId, amtekProjectId: null, todoId: null,
         sectionId: sectionId || null,
         createdAt: Date.now()
       });
+      // Feed the sub-project behind this section, reopening it if it had been closed
+      if (secSubId) {
+        const res = jlTouchSubProject(secProjId, secSubId, jobLists[jobLists.length - 1]);
+        if (res && res.reopened) reopened++;
+      }
       added++;
     });
   });
   saveJobLists();
   renderJobListSidebar();
   if (typeof renderAmtekProjects === 'function') renderAmtekProjects();
+  if (typeof renderProjects === 'function') renderProjects();
   jliClose();
   if (typeof showToast === 'function') {
-    showToast(`<i class="ti ti-file-import"></i>Imported <b>${added}</b> job${added!==1?'s':''}${madeSections ? ` into ${madeSections} new section${madeSections!==1?'s':''}` : ''}`);
+    const extra = [
+      madeSections ? `${madeSections} new section${madeSections !== 1 ? 's' : ''}` : '',
+      madeSubs ? `${madeSubs} new sub-project${madeSubs !== 1 ? 's' : ''}` : '',
+      reopened ? `${reopened} reopened` : ''
+    ].filter(Boolean).join(' · ');
+    showToast(`<i class="ti ti-file-import"></i>Imported <b>${added}</b> job${added !== 1 ? 's' : ''}${extra ? ` — ${extra}` : ''}`);
   }
 }
 
@@ -9838,6 +9881,70 @@ function jlAddSection() {
   setTimeout(() => jlRenameSection(id), 50);
 }
 
+// ---- Job list <-> ANZ WL sub-projects ----
+// The job list feeds the ANZ WL project, matched the same way the Amtek panel
+// finds it. A section there is the same unit of work as a sub-project here, so
+// the two are kept in step.
+function jlAnzProject() {
+  return (projects || []).find(p => /\banz\b|anzwl/i.test(p.title || '')) || null;
+}
+
+function jlFindSubByTitle(title) {
+  const t = String(title || '').trim().toLowerCase();
+  if (!t) return null;
+  for (const p of (projects || [])) {
+    const s = (p.subs || []).find(x => (x.title || '').trim().toLowerCase() === t);
+    if (s) return { projId: p.id, subId: s.id, sub: s, proj: p };
+  }
+  return null;
+}
+
+function jlEnsureSubProject(title) {
+  const t = String(title || '').trim();
+  if (!t) return null;
+  const found = jlFindSubByTitle(t);
+  if (found) return { ...found, created: false };
+  const p = jlAnzProject();
+  if (!p) return null;                       // no ANZ WL project to hang it off
+  if (!p.subs) p.subs = [];
+  const sub = { id: Date.now() + Math.floor(Math.random() * 1000), title: t, status: 'active',
+                notes: '', createdAt: new Date().toISOString(), deliveredAt: null, todos: [],
+                fromJobList: true };
+  p.subs.push(sub);
+  saveProjects();
+  return { projId: p.id, subId: sub.id, sub, proj: p, created: true };
+}
+
+// A job landing on a sub-project means work has restarted there, so one that was
+// delivered or parked comes back to In progress, and the job is recorded in both
+// the checklist and the notes rather than only changing a status silently.
+function jlTouchSubProject(projId, subId, job) {
+  const p = (projects || []).find(x => x.id === projId);
+  const s = p && (p.subs || []).find(x => x.id === subId);
+  if (!s) return null;
+  const was = s.status;
+  const reopened = s.status !== 'active';
+  if (reopened) { s.status = 'active'; s.deliveredAt = null; }
+
+  if (!s.todos) s.todos = [];
+  const already = s.todos.some(t => String(t.jlId || '') === String(job.id));
+  if (!already) {
+    s.todos.push({ id: Date.now() + Math.floor(Math.random() * 1000), text: job.name,
+                   done: false, status: 'active', dueDate: job.date || '', jlId: job.id });
+  }
+
+  const recs = _getRecords(s, 'notes');
+  const bits = [`Job added from the job list: ${job.name}`];
+  if (job.date) bits.push(`due ${job.date}`);
+  if (reopened) bits.push(`status moved from ${subStatusLabel(was)} to In progress`);
+  recs.push({ id: Date.now() + Math.floor(Math.random() * 1000),
+              text: bits.join(' · '), createdAt: new Date().toISOString() });
+  s.notes = recs;
+
+  saveProjects();
+  return { reopened, was, sub: s };
+}
+
 function jlDeleteSection(id) {
   // Unassign jobs belonging to this section
   jobLists.forEach(j => { if (String(j.sectionId || '') === String(id)) j.sectionId = null; });
@@ -9866,9 +9973,24 @@ function jlSaveSection(id) {
   const inp = document.getElementById('jlsecinput-' + id);
   const newLabel = inp ? inp.value.trim() : '';
   const j = jobLists.find(x => String(x.id) === String(id));
-  if (j) j.label = newLabel || 'Section';
+  if (!j) return;
+  const label = newLabel || 'Section';
+  const renamed = j.label !== label;
+  j.label = label;
+
+  if (j.subId) {
+    // Already linked — follow the rename rather than spawning a second sub-project
+    const p = (projects || []).find(x => x.id === j.projId);
+    const s = p && (p.subs || []).find(x => x.id === j.subId);
+    if (s && renamed && s.title !== label) { s.title = label; saveProjects(); }
+  } else if (label !== 'Section' && label !== 'New Section') {
+    // Named for the first time — give it a sub-project to match
+    const link = jlEnsureSubProject(label);
+    if (link) { j.projId = link.projId; j.subId = link.subId; }
+  }
   saveJobLists();
   renderJobListSidebar();
+  if (typeof renderProjects === 'function') renderProjects();
 }
 
 function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, collapsed = false, hasUrgent = false) {
@@ -9887,15 +10009,21 @@ function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, col
       </div>
     </div>`;
   }
+  // The tag opens its sub-project — stopPropagation so it doesn't also trigger
+  // the row's own click, which opens the job link or the edit modal.
+  const linkChip = (pid, sid, icon, label, tip) =>
+    `<button class="jl-link-badge jl-link-go" title="${esc(tip)}"
+       onclick="event.stopPropagation();openSubProjectPage(${pid},${sid})"><i class="ti ti-${icon}"></i> ${esc(label)}<i class="ti ti-arrow-up-right jl-link-arrow"></i></button>`;
   let linkBadge = '';
   if (j.projId && j.subId) {
     const p = projects.find(x => x.id === j.projId);
     const s = p && (p.subs || []).find(x => x.id === j.subId);
-    if (s) linkBadge = `<span class="jl-link-badge" title="Linked to ${esc(p.title)} › ${esc(s.title)} checklist"><i class="ti ti-link"></i> ${esc(s.title)}</span>`;
+    if (s) linkBadge = linkChip(j.projId, j.subId, 'link', s.title, `Open ${p.title} › ${s.title}`);
   }
   if (j.amtekProjectId && !linkBadge) {
-    const amtekSub = _anzWlSubs().find(s => String(s.id) === String(j.amtekProjectId));
-    if (amtekSub) linkBadge = `<span class="jl-link-badge" title="Amtek Project"><i class="ti ti-folder"></i> ${esc(amtekSub.title)}</span>`;
+    const parent = (projects || []).find(p => (p.subs || []).some(s => String(s.id) === String(j.amtekProjectId)));
+    const amtekSub = parent && (parent.subs || []).find(s => String(s.id) === String(j.amtekProjectId));
+    if (amtekSub) linkBadge = linkChip(parent.id, amtekSub.id, 'folder', amtekSub.title, `Open ${parent.title} › ${amtekSub.title}`);
   }
   const dueChip = jlDueChip(j.date);
   const staleDays = !j.done ? jlStaleDays(j) : null;
