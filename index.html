@@ -1987,14 +1987,30 @@
   .jl-sec-chevron { background:none; border:none; padding:2px 3px; cursor:pointer; color:var(--text-3); display:flex; align-items:center; font-size:13px; transition:color .12s, transform .15s; flex-shrink:0; border-radius:3px; }
   .jl-sec-chevron:hover { color:var(--teal-text); }
   .jl-sec-urgent-dot { width:6px; height:6px; background:var(--amber-text); border-radius:50%; flex-shrink:0; margin-right:-2px; }
-  .jl-sec-jump { display:flex; gap:5px; overflow-x:auto; padding:7px 12px; border-bottom:0.5px solid var(--border); scrollbar-width:thin; }
+  .jl-sec-jump { display:flex; gap:8px; overflow-x:auto; padding:11px 12px; border-bottom:0.5px solid var(--border); scrollbar-width:thin; }
   .jl-sec-jump::-webkit-scrollbar { height:4px; }
   .jl-sec-jump::-webkit-scrollbar-thumb { background:var(--border-md); border-radius:2px; }
-  .jl-jump-chip { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0; padding:4px 9px; border-radius:20px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:11px; font-weight:600; cursor:pointer; transition:all .13s; }
-  .jl-jump-chip:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
-  .jl-jump-chip.collapsed { opacity:.6; }
-  .jl-jump-n { font-size:9.5px; font-weight:700; background:rgba(255,255,255,0.07); border-radius:8px; padding:0 5px; color:var(--text-3); }
-  .jl-jump-chip:hover .jl-jump-n { background:rgba(255,255,255,0.12); }
+  .jl-jump-chip { position:relative; flex-shrink:0; min-width:100px; max-width:170px; text-align:left; padding:10px 13px 10px 14px; border-radius:9px;
+    background:var(--surface2); border:0.5px solid var(--border-md); border-left:3px solid var(--teal);
+    color:var(--text); font-family:inherit; cursor:pointer; overflow:hidden; transition:transform .18s, background .18s, border-color .18s; }
+  /* Light pooling up from the lower edge. Present at rest so the cards read as
+     lit rather than flat, then deepened and pushed further in on hover. */
+  .jl-jump-chip::after { content:''; position:absolute; inset:0; border-radius:9px; pointer-events:none;
+    box-shadow:inset 0 -13px 18px -13px var(--teal); opacity:.55;
+    transition:opacity .18s, box-shadow .18s; }
+  .jl-jump-chip:hover { transform:translateY(-1px); background:var(--teal-bg); border-color:color-mix(in srgb, var(--teal) 40%, transparent); }
+  .jl-jump-chip:hover::after { opacity:1; box-shadow:inset 0 -24px 30px -14px var(--teal); }
+  .jl-jump-chip:active { transform:translateY(0); }
+  .jl-jump-chip.collapsed { border-left-color:var(--border-md); }
+  .jl-jump-chip.collapsed::after { opacity:.2; }
+  .jl-jump-chip.collapsed:hover::after { opacity:.75; }
+  .jl-jump-chip.collapsed .jl-jump-l { color:var(--text-2); }
+  .jl-jump-l { display:block; font-size:12.5px; font-weight:650; letter-spacing:-.01em; margin-bottom:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .jl-jump-n { display:block; font-size:10.5px; font-weight:600; color:var(--text-3); white-space:nowrap; }
+  .jl-jump-n b { color:var(--teal-text); font-weight:700; }
+  .jl-jump-chip.collapsed .jl-jump-n b { color:var(--text-2); }
+  @media (prefers-reduced-motion: reduce) { .jl-jump-chip, .jl-jump-chip::after { transition:none; } .jl-jump-chip:hover { transform:none; } }
   @keyframes jlSecFlash { 0%,100% { background:transparent; } 25%,60% { background:var(--teal-bg); } }
   .jl-section-divider.jl-sec-flash { animation:jlSecFlash 1.2s ease; border-radius:6px; }
   @media (prefers-reduced-motion: reduce) { .jl-section-divider.jl-sec-flash { animation:none; } }
@@ -10085,8 +10101,9 @@ function jlRenderSectionJump(sections, activeJobs) {
     const n = activeJobs.filter(j => String(j.sectionId || '') === String(s.id)).length;
     const collapsed = jlCollapsedSections.has(String(s.id));
     return `<button class="jl-jump-chip${collapsed ? ' collapsed' : ''}" onclick="jlJumpToSection('${s.id}')"
-              title="${collapsed ? 'Collapsed — opens on click' : 'Jump to this section'}">
-              ${esc(s.label || 'Section')}<span class="jl-jump-n">${n}</span>
+              title="${esc(s.label || 'Section')} — ${n} job${n !== 1 ? 's' : ''}${collapsed ? ' · collapsed, opens on click' : ''}">
+              <span class="jl-jump-l">${esc(s.label || 'Section')}</span>
+              <span class="jl-jump-n"><b>${n}</b> job${n !== 1 ? 's' : ''}</span>
             </button>`;
   }).join('');
 }
