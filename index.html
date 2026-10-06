@@ -1862,15 +1862,13 @@
   .kpi-modal-overlay.active { display: flex; }
   .kpi-modal { background: var(--surface); border-radius: var(--radius-lg); padding: 18px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.35); }
   .kpi-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; color: var(--text); }
-  .kpi-modal-preview { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow: auto; color: #000000; }
-  #task-edit-modal-overlay .kpi-modal-preview,
-  #add-task-modal-overlay .kpi-modal-preview,
-  #add-jobreminder-modal-overlay .kpi-modal-preview,
-  #add-joblist-modal-overlay .kpi-modal-preview,
-  #activity-modal-overlay .kpi-modal-preview,
-  #shortcuts-modal-overlay .kpi-modal-preview,
-  #jl-sec-edit-overlay .kpi-modal-preview,
-  #al-add-overlay .kpi-modal-preview { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
+  /* Theme colours are the default — every modal but one is app UI. Previously
+     this defaulted to white and each modal had to opt out, which meant any new
+     one rendered light text on a white panel until someone noticed. */
+  .kpi-modal-preview { background: var(--surface2); border: 1px solid var(--border-md); border-radius: 8px; padding: 16px; overflow: auto; color: var(--text); }
+  /* The exception: this previews an email as a mail client will draw it, so it
+     stays white in every theme. */
+  #kpi-ops-modal-overlay .kpi-modal-preview { background: #ffffff; color: #000000; border-color: var(--border); }
   .shortcut-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; color: var(--text-2); }
   .shortcut-row:last-child { border-bottom: none; }
   .shortcut-row kbd { flex-shrink: 0; min-width: 28px; text-align: center; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text); background: var(--surface); border: 1px solid var(--border-md); border-radius: 6px; padding: 3px 7px; box-shadow: 0 1px 0 var(--border-md); }
@@ -1940,6 +1938,16 @@
   .jl-sec-rename-input { background:transparent; border:none; border-bottom:1px solid var(--teal); color:var(--teal-text); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:0 2px; min-width:60px; max-width:160px; outline:none; font-family:inherit; }
   .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
   .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
+  .jli-hint { margin-top:14px; padding-top:13px; border-top:0.5px solid var(--border); }
+  .jli-hint-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-bottom:8px; }
+  .jli-hint-cols { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; }
+  .jli-hint-cols > div { display:flex; align-items:baseline; gap:7px; font-size:11.5px; min-width:0; }
+  .jli-k { flex-shrink:0; font-weight:700; color:var(--teal-text); background:var(--teal-bg); border-radius:4px; padding:1px 6px; font-size:10.5px; }
+  .jli-k.opt { color:var(--text-3); background:var(--surface); }
+  .jli-v { color:var(--text-3); overflow:hidden; text-overflow:ellipsis; }
+  .jli-hint-note { display:flex; align-items:flex-start; gap:6px; font-size:11px; color:var(--text-3); margin-top:11px; line-height:1.45; }
+  .jli-hint-note .ti { font-size:12px; flex-shrink:0; margin-top:1px; }
+  @media (max-width: 560px) { .jli-hint-cols { grid-template-columns:1fr; } }
   .jli-sum { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); font-size:12px; }
   .jli-chip { font-size:11px; font-weight:600; border-radius:5px; padding:2px 8px; }
   .jli-chip.new { background:var(--teal-bg); color:var(--teal-text); }
@@ -9382,6 +9390,7 @@ function jliOpen() {
   document.getElementById('jli-preview').innerHTML = '';
   document.getElementById('jli-go').disabled = true;
   document.getElementById('jli-input').value = '';
+  document.getElementById('jli-hint').style.display = '';
   document.getElementById('jli-overlay').classList.add('active');
 }
 function jliClose() { document.getElementById('jli-overlay').classList.remove('active'); }
@@ -9434,6 +9443,7 @@ async function jliLoad(file) {
     }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
     if (!jliRows.length) { jliStatus('No data rows found', 'error'); return; }
     jliStatus(`${jliRows.length.toLocaleString()} rows loaded`, 'ok');
+    document.getElementById('jli-hint').style.display = 'none';
     jliRenderMapper();
     jliBuildPlan();
   } catch (e) { jliStatus('Could not read file: ' + e.message, 'error'); }
@@ -19074,6 +19084,16 @@ document.addEventListener('pointerup', e => {
         </div>
         <input type="file" id="jli-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="jliLoad(this.files[0])">
         <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('jli-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Choose file</button>
+      </div>
+      <div class="jli-hint" id="jli-hint">
+        <div class="jli-hint-title">What the sheet needs</div>
+        <div class="jli-hint-cols">
+          <div><span class="jli-k">Site</span><span class="jli-v">groups jobs into sections</span></div>
+          <div><span class="jli-k">Job name</span><span class="jli-v">becomes the job list entry</span></div>
+          <div><span class="jli-k">Scheduled date</span><span class="jli-v">sets the due date</span></div>
+          <div><span class="jli-k opt">Job ID</span><span class="jli-v">optional — links to the helpdesk</span></div>
+        </div>
+        <div class="jli-hint-note"><i class="ti ti-info-circle"></i> Columns are detected automatically and you can correct them before importing. Nothing is added until you confirm.</div>
       </div>
       <div id="jli-mapper" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;"></div>
       <div id="jli-preview"></div>
