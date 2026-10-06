@@ -1938,6 +1938,12 @@
   .jl-sec-rename-input { background:transparent; border:none; border-bottom:1px solid var(--teal); color:var(--teal-text); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:0 2px; min-width:60px; max-width:160px; outline:none; font-family:inherit; }
   .jl-add-section-btn { width:100%; background:none; border:none; border-top:0.5px solid var(--border); color:var(--text-3); font-size:11.5px; font-family:inherit; padding:7px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:6px; transition:color .12s, background .12s; }
   .jl-add-section-btn:hover { color:var(--teal-text); background:rgba(0,0,0,0.04); }
+  .jli-target { display:flex; align-items:center; gap:9px; margin-top:12px; padding-top:12px; border-top:0.5px solid var(--border); }
+  .jli-target-lbl { font-size:11.5px; color:var(--text-3); white-space:nowrap; flex-shrink:0; }
+  .jli-target input { flex:1; min-width:0; padding:7px 10px; border-radius:7px; border:1px solid var(--border-md); background:var(--surface); color:var(--text); font-family:inherit; font-size:12.5px; outline:none; transition:border-color .15s; }
+  .jli-target input:focus { border-color:var(--teal); }
+  .jli-target-clear { background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:4px 6px; border-radius:5px; flex-shrink:0; }
+  .jli-target-clear:hover { color:var(--coral-text); background:var(--coral-bg); }
   .jli-hint { margin-top:14px; padding-top:13px; border-top:0.5px solid var(--border); }
   .jli-hint-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-bottom:8px; }
   .jli-hint-cols { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; }
@@ -9400,9 +9406,17 @@ function jliOpen() {
   document.getElementById('jli-go').disabled = true;
   document.getElementById('jli-input').value = '';
   document.getElementById('jli-hint').style.display = '';
+  document.getElementById('jli-target').style.display = 'none';
+  document.getElementById('jli-target-sec').value = '';
   document.getElementById('jli-overlay').classList.add('active');
 }
 function jliClose() { document.getElementById('jli-overlay').classList.remove('active'); }
+
+function jliClearTarget() {
+  const el = document.getElementById('jli-target-sec');
+  if (el) { el.value = ''; el.focus(); }
+  jliBuildPlan();
+}
 
 function jliStatus(msg, type) {
   const el = document.getElementById('jli-status');
@@ -9453,6 +9467,10 @@ async function jliLoad(file) {
     if (!jliRows.length) { jliStatus('No data rows found', 'error'); return; }
     jliStatus(`${jliRows.length.toLocaleString()} rows loaded`, 'ok');
     document.getElementById('jli-hint').style.display = 'none';
+    const dl = document.getElementById('jli-sec-list');
+    if (dl) dl.innerHTML = jobLists.filter(j => j.type === 'section')
+      .map(s => `<option value="${esc(s.label || '')}"></option>`).join('');
+    document.getElementById('jli-target').style.display = '';
     jliRenderMapper();
     jliBuildPlan();
   } catch (e) { jliStatus('Could not read file: ' + e.message, 'error'); }
@@ -9540,6 +9558,7 @@ function jliBuildPlan() {
   const go = document.getElementById('jli-go');
   if (!nameCol && !siteCol) { prev.innerHTML = ''; go.disabled = true; jliPlan = null; return; }
 
+  const targetName = (document.getElementById('jli-target-sec')?.value || '').trim();
   const existing = jobLists.filter(j => j.type === 'section');
   // An existing section wins: if its name appears in the site, that's where the
   // job belongs, whatever the brand grouping would otherwise decide.
@@ -9566,8 +9585,10 @@ function jliBuildPlan() {
     // site stands in — flagged in the preview so an invented name is visible.
     const name = given || site;
     if (!name) { skipped++; return; }
-    const match = findExisting(site);
-    const key = match ? 'sec:' + match.id
+    const match = targetName ? null : findExisting(site);
+    // A chosen target overrides every grouping rule — one section, everything in it.
+    const key = targetName ? 'target'
+              : match ? 'sec:' + match.id
               : !site ? ''
               : jliGroupSimilar ? 'brand:' + jliBrandKey(site)
               : 'exact:' + site.toLowerCase();
@@ -9603,22 +9624,36 @@ function jliBuildPlan() {
 
     // Decided after merging: three rows at one store collapse to one entry, and
     // a section wrapping a single entry would just be noise.
-    const label = g.match ? g.match.label : jliCommonPrefix(g.sites);
-    let mode;
-    if (g.match)                 mode = 'existing';
-    else if (!g.sites.length)    mode = 'none';          // no site column value
-    else if (entries.length > 1) mode = 'new';
-    else                         mode = 'none';
-    const sectionLabel = mode === 'none' ? '' : (label || g.sites[0] || '');
+    let mode, sectionLabel, sectionId = null;
+    if (targetName) {
+      const hit = existing.find(s => (s.label || '').trim().toLowerCase() === targetName.toLowerCase());
+      mode = hit ? 'existing' : 'new';
+      sectionLabel = hit ? hit.label : targetName;
+      sectionId = hit ? hit.id : null;
+    } else {
+      const label = g.match ? g.match.label : jliCommonPrefix(g.sites);
+      if (g.match)                 mode = 'existing';
+      else if (!g.sites.length)    mode = 'none';        // no site column value
+      else if (entries.length > 1) mode = 'new';
+      else                         mode = 'none';
+      sectionLabel = mode === 'none' ? '' : (label || g.sites[0] || '');
+      sectionId = g.match ? g.match.id : null;
+    }
 
-    // Several stores in one section would be indistinguishable, so the part of
-    // the site the section name doesn't cover joins the job.
+    // Several stores in one section would be indistinguishable, so whatever the
+    // section name doesn't already say about the site joins the job. Under a
+    // manual target the name says nothing about it, so the whole site does.
     const jobs = entries.map(j => {
-      const rest = sectionLabel ? jliRemainder(j.site, sectionLabel) : '';
+      let rest = '';
+      if (targetName) {
+        rest = (j.site && j.name.toLowerCase().indexOf(j.site.toLowerCase()) === -1) ? j.site : '';
+      } else if (sectionLabel) {
+        rest = jliRemainder(j.site, sectionLabel);
+      }
       return { ...j, suffix: rest, display: rest ? `${j.name} — ${rest}` : j.name };
     });
     return { site: sectionLabel || g.sites[0] || '', sites: g.sites, jobs, mode,
-             sectionId: g.match ? g.match.id : null, sectionLabel };
+             sectionId, sectionLabel };
   }).sort((a, b) => (a.site || '').localeCompare(b.site || ''));
 
   jliPlan = { plan, skipped };
@@ -9640,10 +9675,10 @@ function jliBuildPlan() {
         title="Strip a leading C- code from site and job names">
         <i class="ti ti-${jliStripPrefix ? 'check' : 'square'}"></i> Remove C- prefix
       </button>
-      <button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
+      ${targetName ? '' : `<button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
         title="Treat site names sharing a leading word, like Decjuba Chadstone and Decjuba Highpoint, as one site">
         <i class="ti ti-${jliGroupSimilar ? 'check' : 'square'}"></i> Group similar site names
-      </button>
+      </button>`}
     </div>
     <div class="jli-plan">${plan.map(g => `
       <div class="jli-grp">
@@ -19239,6 +19274,13 @@ document.addEventListener('pointerup', e => {
         <div class="jli-hint-note"><i class="ti ti-info-circle"></i> Columns are detected automatically and you can correct them before importing. Nothing is added until you confirm.</div>
       </div>
       <div id="jli-mapper" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;"></div>
+      <div class="jli-target" id="jli-target" style="display:none;">
+        <span class="jli-target-lbl">Put every job in</span>
+        <input type="text" id="jli-target-sec" list="jli-sec-list" autocomplete="off"
+               placeholder="Auto — group by site" oninput="jliBuildPlan()">
+        <datalist id="jli-sec-list"></datalist>
+        <button class="jli-target-clear" id="jli-target-clear" onclick="jliClearTarget()" title="Back to grouping by site"><i class="ti ti-x"></i></button>
+      </div>
       <div id="jli-preview"></div>
     </div>
     <div class="kpi-modal-actions">
