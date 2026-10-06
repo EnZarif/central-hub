@@ -1964,6 +1964,17 @@
   .jl-sec-chevron { background:none; border:none; padding:2px 3px; cursor:pointer; color:var(--text-3); display:flex; align-items:center; font-size:13px; transition:color .12s, transform .15s; flex-shrink:0; border-radius:3px; }
   .jl-sec-chevron:hover { color:var(--teal-text); }
   .jl-sec-urgent-dot { width:6px; height:6px; background:var(--amber-text); border-radius:50%; flex-shrink:0; margin-right:-2px; }
+  .jl-sec-jump { display:flex; gap:5px; overflow-x:auto; padding:7px 12px; border-bottom:0.5px solid var(--border); scrollbar-width:thin; }
+  .jl-sec-jump::-webkit-scrollbar { height:4px; }
+  .jl-sec-jump::-webkit-scrollbar-thumb { background:var(--border-md); border-radius:2px; }
+  .jl-jump-chip { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0; padding:4px 9px; border-radius:20px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:11px; font-weight:600; cursor:pointer; transition:all .13s; }
+  .jl-jump-chip:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
+  .jl-jump-chip.collapsed { opacity:.6; }
+  .jl-jump-n { font-size:9.5px; font-weight:700; background:rgba(255,255,255,0.07); border-radius:8px; padding:0 5px; color:var(--text-3); }
+  .jl-jump-chip:hover .jl-jump-n { background:rgba(255,255,255,0.12); }
+  @keyframes jlSecFlash { 0%,100% { background:transparent; } 25%,60% { background:var(--teal-bg); } }
+  .jl-section-divider.jl-sec-flash { animation:jlSecFlash 1.2s ease; border-radius:6px; }
+  @media (prefers-reduced-motion: reduce) { .jl-section-divider.jl-sec-flash { animation:none; } }
   #jl-section-block { display:none; }
   /* Section edit modal */
   .jl-sec-checklist { max-height:280px; overflow-y:auto; }
@@ -3771,6 +3782,7 @@
             <button class="jl-time-btn" data-tf="afterhours" onclick="setJlTimeFilter('afterhours')">Afterhours</button>
             <button class="jl-time-btn auto-btn" onclick="setJlTimeFilterAuto()" title="Auto-detect Melbourne time">🕐 Now</button>
           </div>
+          <div class="jl-sec-jump" id="jl-sec-jump"></div>
           <div class="jl-list" id="jl-list"></div>
           <button class="jl-add-section-btn" onclick="jlAddSection()"><i class="ti ti-layout-rows" style="font-size:13px"></i> Add section</button>
           <button class="jl-add-section-btn" onclick="jliOpen()"><i class="ti ti-file-import" style="font-size:13px"></i> Import from Excel</button>
@@ -9629,7 +9641,7 @@ function jlSaveSection(id) {
 
 function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, collapsed = false, hasUrgent = false) {
   if (j.type === 'section') {
-    return `<div class="jl-section-divider">
+    return `<div class="jl-section-divider" id="jlsec-${j.id}">
       <button class="jl-sec-chevron" onclick="jlToggleSection('${j.id}')" title="${collapsed ? 'Expand section' : 'Collapse section'}"><i class="ti ti-chevron-${collapsed ? 'right' : 'down'}"></i></button>
       ${hasUrgent ? `<span class="jl-sec-urgent-dot" title="Auto-expanded — has overdue or due-today jobs"></span>` : ''}
       <span class="jl-sec-label" id="jlseclbl-${j.id}" onclick="jlRenameSection('${j.id}')">${esc(j.label || 'Section')}</span>
@@ -9845,6 +9857,40 @@ function quickArchiveJobList(id) {
 
 const JL_ARCHIVE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
 
+// Quick links to each section. Worth having once a list has several sections —
+// the importer can create a batch of them in one go — so it only appears at two
+// or more and stays out of the way otherwise.
+function jlRenderSectionJump(sections, activeJobs) {
+  const el = document.getElementById('jl-sec-jump');
+  if (!el) return;
+  if (!sections || sections.length < 2) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = sections.map(s => {
+    const n = activeJobs.filter(j => String(j.sectionId || '') === String(s.id)).length;
+    const collapsed = jlCollapsedSections.has(String(s.id));
+    return `<button class="jl-jump-chip${collapsed ? ' collapsed' : ''}" onclick="jlJumpToSection('${s.id}')"
+              title="${collapsed ? 'Collapsed — opens on click' : 'Jump to this section'}">
+              ${esc(s.label || 'Section')}<span class="jl-jump-n">${n}</span>
+            </button>`;
+  }).join('');
+}
+
+function jlJumpToSection(id) {
+  // Opening it first means the jump never lands on a collapsed header
+  if (jlCollapsedSections.has(String(id))) {
+    jlCollapsedSections.delete(String(id));
+    jlSaveCollapsed();
+    renderJobListSidebar();
+  }
+  const el = document.getElementById('jlsec-' + id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  el.classList.remove('jl-sec-flash');
+  void el.offsetWidth;                       // restart the animation if re-clicked
+  el.classList.add('jl-sec-flash');
+  setTimeout(() => el.classList.remove('jl-sec-flash'), 1200);
+}
+
 // Ticked jobs sink to the bottom of their group; everything else runs nearest
 // due date first, with undated jobs trailing the dated ones.
 function jlSortJobs(list) {
@@ -9898,6 +9944,7 @@ function renderJobListSidebar() {
     // Sections mode: overdue/today jobs always pinned to top, then sections, then unassigned.
     const sections = active.filter(j => j.type === 'section');
     const activeJobs = active.filter(j => j.type !== 'section');
+    jlRenderSectionJump(sections, activeJobs);
 
     // Collect urgent jobs across all sections and unassigned
     const urgentOv = [...activeJobs.filter(j => !j.done && j.date && j.date < todayStr)]
@@ -9948,6 +9995,7 @@ function renderJobListSidebar() {
       }
     }
   } else {
+    jlRenderSectionJump([], []);
     if (overdue.length) {
       const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
       html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
