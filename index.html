@@ -1953,6 +1953,7 @@
   .jli-chip.new { background:var(--teal-bg); color:var(--teal-text); }
   .jli-chip.reuse { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .jli-chip.loose { background:var(--surface2); color:var(--text-3); }
+  .jli-chip.clean { background:var(--green-bg); color:var(--green-text); }
   .jli-plan { margin-top:12px; max-height:300px; overflow-y:auto; }
   .jli-grp { border:0.5px solid var(--border-md); border-radius:8px; padding:9px 11px; margin-bottom:7px; }
   .jli-grp-hd { display:flex; align-items:center; gap:8px; margin-bottom:5px; flex-wrap:wrap; }
@@ -9517,6 +9518,19 @@ function jliRemainder(site, sectionLabel) {
 let jliGroupSimilar = true;
 function jliToggleGrouping() { jliGroupSimilar = !jliGroupSimilar; jliBuildPlan(); }
 
+// Dispatch sheets prefix names with a code — "C- Decjuba Chadstone". Only a
+// standalone leading C joined to a dash is removed; the letter is left alone
+// everywhere else, so Decjuba stays Decjuba.
+let jliStripPrefix = true;
+function jliToggleStrip() { jliStripPrefix = !jliStripPrefix; jliBuildPlan(); }
+
+function jliClean(s) {
+  const raw = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!jliStripPrefix) return raw;
+  // "C- x", "C - x", "C-x", and a bare leading "- x"
+  return raw.replace(/^c\s*-\s*/i, '').replace(/^-\s*/, '').trim() || raw;
+}
+
 function jliBuildPlan() {
   const siteCol = document.getElementById('jli-c-site')?.value;
   const nameCol = document.getElementById('jli-c-name')?.value;
@@ -9545,8 +9559,9 @@ function jliBuildPlan() {
   const groups = new Map();
   let skipped = 0;
   jliRows.forEach(r => {
-    const site = String(r[siteCol] || '').trim();
-    const given = String(r[nameCol] || '').trim();
+    const rawSite = String(r[siteCol] || '').trim();
+    const site = jliClean(rawSite);
+    const given = jliClean(String(r[nameCol] || '').trim());
     // A row with a site but no job name still represents work there, so the
     // site stands in — flagged in the preview so an invented name is visible.
     const name = given || site;
@@ -9559,7 +9574,8 @@ function jliBuildPlan() {
     if (!groups.has(key)) groups.set(key, { sites: [], jobs: [], match });
     const g = groups.get(key);
     if (site && !g.sites.includes(site)) g.sites.push(site);
-    g.jobs.push({ name, site, derived: !given, date: jliDate(r[dateCol]), jobId: String(r[idCol] || '').trim() });
+    g.jobs.push({ name, site, rawSite, cleaned: rawSite !== site,
+                  derived: !given, date: jliDate(r[dateCol]), jobId: String(r[idCol] || '').trim() });
   });
 
   const plan = [...groups.values()].map(g => {
@@ -9606,6 +9622,7 @@ function jliBuildPlan() {
   }).sort((a, b) => (a.site || '').localeCompare(b.site || ''));
 
   jliPlan = { plan, skipped };
+  const cleanedCount = plan.reduce((n, g) => n + g.jobs.filter(j => j.cleaned).length, 0);
   const total = plan.reduce((n, g) => n + g.jobs.length, 0);
   const newSecs = plan.filter(g => g.mode === 'new').length;
   const reused  = plan.filter(g => g.mode === 'existing').length;
@@ -9618,6 +9635,11 @@ function jliBuildPlan() {
       ${reused ? `<span class="jli-chip reuse">${reused} existing section${reused!==1?'s':''}</span>` : ''}
       ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
       ${skipped ? `<span class="sv-sum-err">${skipped} skipped (no name)</span>` : ''}
+      ${cleanedCount ? `<span class="jli-chip clean">${cleanedCount} name${cleanedCount!==1?'s':''} tidied</span>` : ''}
+      <button class="jli-grp-toggle${jliStripPrefix ? ' on' : ''}" onclick="jliToggleStrip()"
+        title="Strip a leading C- code from site and job names">
+        <i class="ti ti-${jliStripPrefix ? 'check' : 'square'}"></i> Remove C- prefix
+      </button>
       <button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
         title="Treat site names sharing a leading word, like Decjuba Chadstone and Decjuba Highpoint, as one site">
         <i class="ti ti-${jliGroupSimilar ? 'check' : 'square'}"></i> Group similar site names
