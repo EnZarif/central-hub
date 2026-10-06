@@ -1993,23 +1993,23 @@
   .jl-jump-chip { position:relative; flex-shrink:0; min-width:100px; max-width:170px; text-align:left; padding:10px 13px 10px 14px; border-radius:9px;
     background:var(--surface2); border:0.5px solid var(--border-md); border-left:3px solid var(--teal);
     color:var(--text); font-family:inherit; cursor:pointer; overflow:hidden; transition:transform .18s, background .18s, border-color .18s; }
-  /* Light pooling up from the lower edge. Present at rest so the cards read as
-     lit rather than flat, then deepened and pushed further in on hover. */
+  /* Light pooling up from the lower edge. A radial gradient rather than an inset
+     shadow — the shadow's negative spread kept it invisible at rest however high
+     the opacity went. Sits at 20% so the card reads as lit, full on hover. */
   .jl-jump-chip::after { content:''; position:absolute; inset:0; border-radius:9px; pointer-events:none;
-    box-shadow:inset 0 -13px 18px -13px var(--teal); opacity:.55;
-    transition:opacity .18s, box-shadow .18s; }
+    background:radial-gradient(125% 78% at 50% 124%, var(--teal) 0%, transparent 66%);
+    opacity:.2; transition:opacity .18s; }
   .jl-jump-chip:hover { transform:translateY(-1px); background:var(--teal-bg); border-color:color-mix(in srgb, var(--teal) 40%, transparent); }
-  .jl-jump-chip:hover::after { opacity:1; box-shadow:inset 0 -24px 30px -14px var(--teal); }
+  .jl-jump-chip:hover::after { opacity:1; }
   .jl-jump-chip:active { transform:translateY(0); }
+  /* Collapsed is signalled by the rail alone. The label and glow stay at full
+     strength, since most sections sit collapsed and dimming those would mean
+     never seeing the resting glow. */
   .jl-jump-chip.collapsed { border-left-color:var(--border-md); }
-  .jl-jump-chip.collapsed::after { opacity:.2; }
-  .jl-jump-chip.collapsed:hover::after { opacity:.75; }
-  .jl-jump-chip.collapsed .jl-jump-l { color:var(--text-2); }
-  .jl-jump-l { display:block; font-size:12.5px; font-weight:650; letter-spacing:-.01em; margin-bottom:3px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .jl-jump-n { display:block; font-size:10.5px; font-weight:600; color:var(--text-3); white-space:nowrap; }
+  .jl-jump-l { display:block; position:relative; z-index:1; font-size:12.5px; font-weight:650; letter-spacing:-.01em;
+    margin-bottom:3px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .jl-jump-n { display:block; position:relative; z-index:1; font-size:10.5px; font-weight:600; color:var(--text-2); white-space:nowrap; }
   .jl-jump-n b { color:var(--teal-text); font-weight:700; }
-  .jl-jump-chip.collapsed .jl-jump-n b { color:var(--text-2); }
   @media (prefers-reduced-motion: reduce) { .jl-jump-chip, .jl-jump-chip::after { transition:none; } .jl-jump-chip:hover { transform:none; } }
   @keyframes jlSecFlash { 0%,100% { background:transparent; } 25%,60% { background:var(--teal-bg); } }
   .jl-section-divider.jl-sec-flash { animation:jlSecFlash 1.2s ease; border-radius:6px; }
