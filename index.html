@@ -9476,6 +9476,25 @@ async function jliLoad(file) {
   } catch (e) { jliStatus('Could not read file: ' + e.message, 'error'); }
 }
 
+// Helpdesk exports lead with "Job Category Short Name", a one-letter code. A
+// plain "contains job" test picks that over the real description, so columns
+// that are evidently codes or metadata are ruled out first. Finding nothing is
+// a valid answer — the site name then stands in.
+const JLI_NAME_BLOCK = ['category','short name','code','status','priority','contract',
+  'org unit','technician','sla','customer','id','#','date','scheduled','time',
+  'postcode','state','location','site','store','branch','address'];
+
+function jliPickName(headers) {
+  const exact = ['Job Name','Job Description','Description','Task','Summary','Title','Work Description','Fault','Fault Description'];
+  for (const h of headers) if (exact.some(n => h.toLowerCase() === n.toLowerCase())) return h;
+  for (const h of headers) {
+    const hl = h.toLowerCase();
+    if (JLI_NAME_BLOCK.some(b => hl.includes(b))) continue;
+    if (/(^|\s)(job|task|descr|summary|title|work|fault)/.test(hl)) return h;
+  }
+  return '';
+}
+
 function jliRenderMapper() {
   const el = document.getElementById('jli-mapper');
   const sel = (id, picked) => `<select class="sv-col-select field-input" id="${id}" onchange="jliBuildPlan()">
@@ -9484,7 +9503,7 @@ function jliRenderMapper() {
     </select>`;
   el.innerHTML =
     `<div class="sv-col-row"><span class="sv-col-label">Site</span>${sel('jli-c-site', svAutoDetect(jliHeaders, ['Site','site','SITE','Location','Store'], ['site','location','store','branch']))}</div>
-     <div class="sv-col-row"><span class="sv-col-label">Job name</span>${sel('jli-c-name', svAutoDetect(jliHeaders, ['Job Name','Job','Description','Task'], ['jobname','job','descr','task','summary']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Job name</span>${sel('jli-c-name', jliPickName(jliHeaders))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Scheduled date</span>${sel('jli-c-date', svAutoDetect(jliHeaders, ['Scheduled Date','Date','Due Date','Scheduled'], ['scheduled','date','due']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('jli-c-id', svAutoDetect(jliHeaders, ['Job ID','JobID','ID','Job #'], ['jobid','job_id','jobno']))}</div>`;
   el.style.display = '';
@@ -9645,11 +9664,11 @@ function jliBuildPlan() {
     // manual target the name says nothing about it, so the whole site does.
     const jobs = entries.map(j => {
       let rest = '';
-      if (targetName) {
-        rest = (j.site && j.name.toLowerCase().indexOf(j.site.toLowerCase()) === -1) ? j.site : '';
-      } else if (sectionLabel) {
-        rest = jliRemainder(j.site, sectionLabel);
-      }
+      if (targetName)        rest = j.site;
+      else if (sectionLabel) rest = jliRemainder(j.site, sectionLabel);
+      // When the sheet has no job-name column the site becomes the name, so
+      // appending the location again would read "DECJUBA BANKSTOWN — BANKSTOWN".
+      if (rest && j.name.toLowerCase().includes(rest.toLowerCase())) rest = '';
       return { ...j, suffix: rest, display: rest ? `${j.name} — ${rest}` : j.name };
     });
     return { site: sectionLabel || g.sites[0] || '', sites: g.sites, jobs, mode,
