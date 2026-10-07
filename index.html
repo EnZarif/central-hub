@@ -970,6 +970,10 @@
   .jl-item.jl-stripe-td { background: rgba(245,164,73,0.08); border: 0.5px solid rgba(245,164,73,0.18); }
   .jl-item.jl-stripe-sn::before { width: 4px; background: #7B9FE8 !important; }
   .jl-item.jl-stripe-sn { background: rgba(123,159,232,0.06); border: 0.5px solid rgba(123,159,232,0.18); }
+  /* Row indicator colours, fixed like the urgency ones above rather than following
+     the theme accent, so the chips stay in the same family as #E05858 / #F5A449
+     / #7B9FE8 whatever theme is active. Violet groups, teal links out. */
+  :root { --jl-ind-section: #A78BDB; --jl-ind-sub: #5BC0BE; }
   .jl-cb-wrap { position: relative; flex-shrink: 0; margin-top: 1px; width: 18px; height: 18px; display: inline-block; cursor: pointer; }
   .jl-cb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin: 0; border-radius: 50%; border: 1.5px solid var(--text-3); background: transparent; cursor: pointer; transition: all 0.15s; }
   .jl-cb:hover { border-color: var(--text-2); }
@@ -988,15 +992,18 @@
   .jl-due.soon { background: rgba(239,159,39,0.15); color: #efb157; border-color: transparent; }
   .jl-due.overdue { background: rgba(239,68,68,0.15); color: #ef4444; border-color: transparent; }
   .jl-due.stale { background: rgba(239,159,39,0.1); color: #d99a4a; border-color: transparent; }
-  .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
-  button.jl-link-go { border: 0.5px solid transparent; font-family: inherit; cursor: pointer; transition: all .13s; }
-  button.jl-link-go:hover { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 20%, transparent); }
-  /* Neutral on purpose. Red and amber already mean "how soon" on these rows, so
-     a status colour here would read as urgency rather than structure. */
+  .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+    background: color-mix(in srgb, var(--jl-ind-sub) 15%, transparent); color: var(--jl-ind-sub); }
+  button.jl-link-go { border: 0.5px solid color-mix(in srgb, var(--jl-ind-sub) 26%, transparent); font-family: inherit; cursor: pointer; transition: all .13s; }
+  button.jl-link-go:hover { border-color: color-mix(in srgb, var(--jl-ind-sub) 60%, transparent);
+    background: color-mix(in srgb, var(--jl-ind-sub) 28%, transparent); }
   .jl-sec-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
-    background: rgba(255,255,255,0.06); color: var(--text-2); border: 0.5px solid var(--border-md); font-family: inherit; cursor: pointer; transition: all .13s; }
-  .jl-sec-chip:hover { background: rgba(255,255,255,0.12); color: var(--text); border-color: var(--text-3); }
-  .jl-sec-chip .ti { font-size: 11px; opacity: .8; }
+    background: color-mix(in srgb, var(--jl-ind-section) 15%, transparent); color: var(--jl-ind-section);
+    border: 0.5px solid color-mix(in srgb, var(--jl-ind-section) 26%, transparent);
+    font-family: inherit; cursor: pointer; transition: all .13s; }
+  .jl-sec-chip:hover { background: color-mix(in srgb, var(--jl-ind-section) 28%, transparent);
+    border-color: color-mix(in srgb, var(--jl-ind-section) 60%, transparent); }
+  .jl-sec-chip .ti { font-size: 11px; opacity: .85; }
   .jl-link-arrow { font-size: 9px; opacity: .55; margin-left: 1px; }
   button.jl-link-go:hover .jl-link-arrow { opacity: 1; }
   .jl-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: auto; }
