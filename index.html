@@ -991,10 +991,12 @@
   .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
   button.jl-link-go { border: 0.5px solid transparent; font-family: inherit; cursor: pointer; transition: all .13s; }
   button.jl-link-go:hover { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 20%, transparent); }
+  /* Neutral on purpose. Red and amber already mean "how soon" on these rows, so
+     a status colour here would read as urgency rather than structure. */
   .jl-sec-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
-    background: rgba(239,159,39,0.13); color: var(--amber-text); border: 0.5px solid transparent; font-family: inherit; cursor: pointer; transition: all .13s; }
-  .jl-sec-chip:hover { border-color: var(--amber-text); background: rgba(239,159,39,0.24); }
-  .jl-sec-chip .ti { font-size: 11px; }
+    background: rgba(255,255,255,0.06); color: var(--text-2); border: 0.5px solid var(--border-md); font-family: inherit; cursor: pointer; transition: all .13s; }
+  .jl-sec-chip:hover { background: rgba(255,255,255,0.12); color: var(--text); border-color: var(--text-3); }
+  .jl-sec-chip .ti { font-size: 11px; opacity: .8; }
   .jl-link-arrow { font-size: 9px; opacity: .55; margin-left: 1px; }
   button.jl-link-go:hover .jl-link-arrow { opacity: 1; }
   .jl-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: auto; }
@@ -10394,11 +10396,13 @@ function renderJobListSidebar() {
 
     if (urgentOv.length) {
       html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
-      html += urgentOv.map(j => jlRowHtml(j, false, true, !!j.sectionId, false, false, true)).join('');
+      // inSection is false here on purpose: its accent bar would stack against
+      // the urgency stripe, and the section chip already says where the job sits.
+      html += urgentOv.map(j => jlRowHtml(j, false, true, false, false, false, true)).join('');
     }
     if (urgentTd.length) {
       html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
-      html += urgentTd.map(j => jlRowHtml(j, true, false, !!j.sectionId, false, false, true)).join('');
+      html += urgentTd.map(j => jlRowHtml(j, true, false, false, false, false, true)).join('');
     }
 
     if (!sections.length && !activeJobs.length) {
