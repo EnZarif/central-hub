@@ -991,6 +991,10 @@
   .jl-link-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--teal-bg); color: var(--teal-text); }
   button.jl-link-go { border: 0.5px solid transparent; font-family: inherit; cursor: pointer; transition: all .13s; }
   button.jl-link-go:hover { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 20%, transparent); }
+  .jl-sec-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+    background: rgba(239,159,39,0.13); color: var(--amber-text); border: 0.5px solid transparent; font-family: inherit; cursor: pointer; transition: all .13s; }
+  .jl-sec-chip:hover { border-color: var(--amber-text); background: rgba(239,159,39,0.24); }
+  .jl-sec-chip .ti { font-size: 11px; }
   .jl-link-arrow { font-size: 9px; opacity: .55; margin-left: 1px; }
   button.jl-link-go:hover .jl-link-arrow { opacity: 1; }
   .jl-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: auto; }
@@ -10056,7 +10060,10 @@ function jlSaveSection(id) {
   if (typeof renderProjects === 'function') renderProjects();
 }
 
-function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, collapsed = false, hasUrgent = false) {
+// showOrigin: set for rows lifted out of their section into the Overdue / Due
+// Today buckets, where the section heading above them no longer says where they
+// came from.
+function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, collapsed = false, hasUrgent = false, showOrigin = false) {
   if (j.type === 'section') {
     return `<div class="jl-section-divider" id="jlsec-${j.id}">
       <button class="jl-sec-chevron" onclick="jlToggleSection('${j.id}')" title="${collapsed ? 'Expand section' : 'Collapse section'}"><i class="ti ti-chevron-${collapsed ? 'right' : 'down'}"></i></button>
@@ -10087,6 +10094,15 @@ function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, col
     const parent = (projects || []).find(p => (p.subs || []).some(s => String(s.id) === String(j.amtekProjectId)));
     const amtekSub = parent && (parent.subs || []).find(s => String(s.id) === String(j.amtekProjectId));
     if (amtekSub) linkBadge = linkChip(parent.id, amtekSub.id, 'folder', amtekSub.title, `Open ${parent.title} › ${amtekSub.title}`);
+  }
+
+  // Which section this came from — only worth saying when the row is sitting
+  // outside it, and clickable so the rest of that section is one hop away.
+  let sectionChip = '';
+  if (showOrigin && j.sectionId) {
+    const sec = jobLists.find(x => x.type === 'section' && String(x.id) === String(j.sectionId));
+    if (sec) sectionChip = `<button class="jl-sec-chip" title="In section ${esc(sec.label || 'Section')} — jump to it"
+      onclick="event.stopPropagation();jlJumpToSection('${sec.id}')"><i class="ti ti-layout-rows"></i> ${esc(sec.label || 'Section')}</button>`;
   }
   const dueChip = jlDueChip(j.date);
   const staleDays = !j.done ? jlStaleDays(j) : null;
@@ -10133,7 +10149,7 @@ function jlRowHtml(j, isToday = false, isOverdue = false, inSection = false, col
       </label>
       <div class="jl-body">
         <span class="jl-name${j.url ? ' jl-clickable' : ''}" ${openAttr} title="${j.url ? 'Open link' : ''}">${esc(j.name)}</span>
-        <div class="jl-meta">${dueChip}${staleChip}${linkBadge}</div>
+        <div class="jl-meta">${dueChip}${staleChip}${sectionChip}${linkBadge}</div>
       </div>
       <div class="jl-actions">
         <div class="jl-actions-row">
@@ -10378,11 +10394,11 @@ function renderJobListSidebar() {
 
     if (urgentOv.length) {
       html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
-      html += urgentOv.map(j => jlRowHtml(j, false, true, !!j.sectionId)).join('');
+      html += urgentOv.map(j => jlRowHtml(j, false, true, !!j.sectionId, false, false, true)).join('');
     }
     if (urgentTd.length) {
       html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
-      html += urgentTd.map(j => jlRowHtml(j, true, false, !!j.sectionId)).join('');
+      html += urgentTd.map(j => jlRowHtml(j, true, false, !!j.sectionId, false, false, true)).join('');
     }
 
     if (!sections.length && !activeJobs.length) {
