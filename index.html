@@ -2223,6 +2223,7 @@
   .al-alloc-val.empty { color:var(--text-3); font-weight:400; font-style:italic; font-size:13px; }
   .al-alloc-sub { font-size:10.5px; color:var(--text-3); }
   .al-warn { display:flex; align-items:flex-start; gap:7px; font-size:11.5px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.08); border:0.5px solid rgba(var(--amber-rgb,220,152,40),0.25); border-radius:7px; padding:7px 10px; margin-top:10px; }
+  .al-warn.ok { color:var(--green-text); background:var(--green-bg); border-color:color-mix(in srgb, var(--green-text) 26%, transparent); }
   .al-warn .ti { font-size:13px; flex-shrink:0; margin-top:1px; }
   .al-copy-btn { margin-top:12px; padding:7px 13px; border-radius:7px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .15s; }
   .al-copy-btn:hover { border-color:var(--teal); color:var(--teal-text); }
@@ -8155,27 +8156,38 @@ function alRun() {
 }
 
 function alRenderAnswer(rows, raw, mode, stateFilter) {
-  const a1 = alConsensus(rows, 'a1');
-  const rt = alConsensus(rows, 'rt');
   const geo = rows[0].geo;
+  // The zone decides the allocation. A single row can carry a typo — the sheet
+  // has "430" sitting where a technician name belongs — so the answer comes
+  // from every site in the zone, and the matched rows then confirm it.
+  const zoneRows = geo ? alRows.filter(r => r.geo === geo) : rows;
+  const a1 = alConsensus(zoneRows, 'a1');
+  const rt = alConsensus(zoneRows, 'rt');
   const states = [...new Set(rows.map(r => r.st))];
+
+  // What the matched sites themselves say, for confirming against the zone
+  const siteA1 = alConsensus(rows, 'a1');
+  const siteRt = alConsensus(rows, 'rt');
+  const agrees = siteA1.value === a1.value;
 
   const label = { zone:'Zone', suburb:'Suburb', postcode:'Postcode', state:'State', partial:'Match' }[mode] || 'Match';
 
   const allocCell = `<div class="al-alloc primary">
     <div class="al-alloc-label">Technician Allocation</div>
     <div class="al-alloc-val${a1.value ? '' : ' empty'}">${a1.value ? esc(a1.value) : '— none —'}</div>
-    ${a1.count < a1.total ? `<div class="al-alloc-sub">${a1.count} of ${a1.total} sites</div>` : ''}
+    <div class="al-alloc-sub">${a1.count === a1.total
+      ? `agreed across all ${a1.total} site${a1.total !== 1 ? 's' : ''} in this zone`
+      : `${a1.count} of ${a1.total} sites in this zone`}</div>
   </div>`;
 
-  const owners = [...new Set(rows.map(r => alOwner(r.a1).key))];
+  const owners = [...new Set(zoneRows.map(r => alOwner(r.a1).key))];
   const ownerCell = `<div class="al-alloc">
     <div class="al-alloc-label">Serviced by</div>
     <div class="al-alloc-val">${owners.length === 1
-      ? alOwnerPill(rows[0].a1)
+      ? alOwnerPill(a1.value)
       : owners.map(k => {
-          const n = rows.filter(r => alOwner(r.a1).key === k).length;
-          const lbl = alOwner(rows.find(r => alOwner(r.a1).key === k).a1).label;
+          const n = zoneRows.filter(r => alOwner(r.a1).key === k).length;
+          const lbl = alOwner(zoneRows.find(r => alOwner(r.a1).key === k).a1).label;
           return `<span class="al-owner ${k}">${lbl} ×${n}</span>`;
         }).join(' ')}</div>
   </div>`;
@@ -8194,18 +8206,28 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
   </div>`;
 
   let warn = '';
+  // What actually matched, so the zone answer is visibly tied back to the
+  // suburb, postcode and state that were searched.
+  const sample = rows.slice(0, 4).map(r => `${esc(r.loc)} ${esc(r.pc)}${r.st ? ' ' + esc(r.st) : ''}`).join(' · ');
+  warn += `<div class="al-warn ${agrees ? 'ok' : ''}"><i class="ti ti-${agrees ? 'circle-check' : 'alert-triangle'}"></i><span>
+    ${agrees
+      ? `<b>Confirmed</b> against ${rows.length} matching site${rows.length !== 1 ? 's' : ''}: ${sample}${rows.length > 4 ? ` +${rows.length - 4} more` : ''}.`
+      : `<b>This site disagrees with its zone.</b> ${sample} ${rows.length !== 1 ? 'list' : 'lists'} <b>${esc(siteA1.value || 'nothing')}</b>, while ${esc(geo)} as a whole is <b>${esc(a1.value || 'nothing')}</b> — the zone is shown above.`}
+  </span></div>`;
+
   const rtOthers = rt.variants.slice(1).filter(v => v[1] > 0);
   if (rtOthers.length) {
-    const exceptions = rows.filter(r => r.rt !== rt.value);
-    const sample = exceptions.slice(0, 6).map(r => `${r.pc} ${r.loc}`).join(', ');
+    const exceptions = zoneRows.filter(r => r.rt !== rt.value);
+    const rtSample = exceptions.slice(0, 6).map(r => `${r.pc} ${r.loc}`).join(', ');
     warn += `<div class="al-warn"><i class="ti ti-alert-triangle"></i><span>
       <b>Zone Type is not uniform here.</b> ${rtOthers.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')} —
-      ${esc(sample)}${exceptions.length > 6 ? ` +${exceptions.length - 6} more` : ''}.
+      ${esc(rtSample)}${exceptions.length > 6 ? ` +${exceptions.length - 6} more` : ''}.
+      ${siteRt.value && siteRt.value !== rt.value ? `The site you searched is <b>${esc(siteRt.value)}</b>.` : ''}
     </span></div>`;
   }
   if (a1.count < a1.total) {
     warn += `<div class="al-warn"><i class="ti ti-alert-triangle"></i><span>
-      <b>Allocation varies across these sites.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
+      <b>Allocation is not uniform across the zone.</b> ${a1.variants.map(v => `${v[1]}× ${esc(v[0] || 'blank')}`).join(', ')}.
     </span></div>`;
   }
   const addedCount  = rows.filter(r => r.custom).length;
@@ -8249,7 +8271,7 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
   return `<div class="card al-answer-card">
     <div class="al-matched">
       <span class="al-matched-name">${esc(geo || raw)}</span>
-      <span class="al-matched-meta">${label} match · ${rows.length} site${rows.length !== 1 ? 's' : ''} · ${esc(states.join(', '))}${stateFilter ? ' · filtered' : ''}</span>
+      <span class="al-matched-meta">${label} match · allocation from the zone's ${zoneRows.length} site${zoneRows.length !== 1 ? 's' : ''} · confirmed on ${rows.length} · ${esc(states.join(', '))}${stateFilter ? ' · filtered' : ''}</span>
     </div>
     <div class="al-alloc-grid">
       ${allocCell}
@@ -8586,16 +8608,28 @@ function alBatchRun() {
       const zones = [...new Set(byPc.map(r => r.geo))];
       if (byPc.length && zones.length === 1) { hit = byPc[0]; how = 'Postcode only'; }
     }
-    return { row, suburb, pc, st: String(row[stCol] || '').trim(), hit, how };
+    // The matched row identifies the zone; the zone then decides the
+    // allocation, so a single mistyped row doesn't set the answer for its site.
+    let zoneA1 = '', zoneRt = '', disagrees = false;
+    if (hit && hit.geo) {
+      const zr = alRows.filter(r => r.geo === hit.geo);
+      zoneA1 = alConsensus(zr, 'a1').value;
+      zoneRt = alConsensus(zr, 'rt').value;
+      disagrees = (hit.a1 || '') !== zoneA1;
+    } else if (hit) {
+      zoneA1 = hit.a1; zoneRt = hit.rt;
+    }
+    return { row, suburb, pc, st: String(row[stCol] || '').trim(), hit, how, zoneA1, zoneRt, disagrees };
   });
 
   const matched = results.filter(r => r.hit);
   const exact   = results.filter(r => r.how === 'Suburb + postcode');
   const loose   = matched.length - exact.length;
   const missing = results.length - matched.length;
-  const amtek   = matched.filter(r => alOwner(r.hit.a1).key === 'amtek').length;
-  const partner = matched.filter(r => alOwner(r.hit.a1).key === 'partner').length;
-  const unknown = matched.filter(r => ['unknown','none'].includes(alOwner(r.hit.a1).key)).length;
+  const amtek   = matched.filter(r => alOwner(r.zoneA1).key === 'amtek').length;
+  const partner = matched.filter(r => alOwner(r.zoneA1).key === 'partner').length;
+  const unknown = matched.filter(r => ['unknown','none'].includes(alOwner(r.zoneA1).key)).length;
+  const conflicts = matched.filter(r => r.disagrees).length;
 
   alBatchOut = results;
 
@@ -8608,6 +8642,7 @@ function alBatchRun() {
       <span class="al-owner amtek">Amtek ${amtek.toLocaleString()}</span>
       <span class="al-owner partner">Partner ${partner.toLocaleString()}</span>
       ${unknown ? `<span class="al-owner unknown">Unknown ${unknown}</span>` : ''}
+      ${conflicts ? `<span class="al-batch-chip loose">${conflicts} row${conflicts!==1?'s':''} differ from zone</span>` : ''}
     </div>
     <div class="sv-cov-table-wrap" style="max-height:300px;margin-top:10px;"><table class="al-rows">
       <thead><tr><th>Suburb</th><th>Postcode</th><th>Zone</th><th>Technician</th><th>Serviced by</th><th>Match</th></tr></thead>
@@ -8615,7 +8650,7 @@ function alBatchRun() {
         <td>${esc(r.suburb || '—')}</td>
         <td class="pc">${esc(r.pc || '—')}</td>
         <td>${r.hit ? esc(r.hit.geo) : '<span style="color:var(--text-3)">—</span>'}</td>
-        <td>${r.hit ? esc(r.hit.a1 || '—') : '<span style="color:var(--coral-text)">not found</span>'}</td>
+        <td>${r.hit ? esc(r.zoneA1 || '—') + (r.disagrees ? `<span class="al-was">row says ${esc(r.hit.a1 || 'nothing')}</span>` : '') : '<span style="color:var(--coral-text)">not found</span>'}</td>
         <td>${r.hit ? alOwnerPill(r.hit.a1) : ''}</td>
         <td><span class="al-batch-how${r.how === 'Suburb + postcode' ? ' exact' : r.how ? ' loose' : ' none'}">${esc(r.how || '—')}</span></td>
       </tr>`).join('')}</tbody></table>
@@ -8631,9 +8666,10 @@ function alBatchDownload() {
   const data = alBatchOut.map(r => ({
     ...r.row,
     'Zone':                  r.hit ? r.hit.geo : '',
-    'Zone Type':             r.hit ? r.hit.rt  : '',
-    'Technician Allocation': r.hit ? r.hit.a1  : '',
-    'Serviced By':           r.hit ? alOwner(r.hit.a1).label : '',
+    'Zone Type':             r.hit ? r.zoneRt : '',
+    'Technician Allocation': r.hit ? r.zoneA1 : '',
+    'Serviced By':           r.hit ? alOwner(r.zoneA1).label : '',
+    'Row Allocation':        r.hit && r.disagrees ? (r.hit.a1 || '(blank)') : '',
     'Match':                 r.how || 'Not found'
   }));
   const ws = XLSX.utils.json_to_sheet(data);
