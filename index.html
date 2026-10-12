@@ -1977,6 +1977,17 @@
   .jli-chip.reuse { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .jli-chip.loose { background:var(--surface2); color:var(--text-3); }
   .jli-chip.clean { background:var(--green-bg); color:var(--green-text); }
+  .jli-chip.hold { background:var(--coral-bg); color:var(--coral-text); }
+  .jli-undated { display:flex; align-items:flex-start; gap:9px; font-size:12px; line-height:1.45; margin-top:14px; padding:10px 12px; border-radius:8px;
+    background:var(--coral-bg); border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); color:var(--coral-text); }
+  .jli-undated.on { background:var(--green-bg); border-color:color-mix(in srgb, var(--green-text) 30%, transparent); color:var(--green-text); }
+  .jli-undated > .ti { font-size:15px; flex-shrink:0; margin-top:1px; }
+  .jli-undated > span { flex:1; min-width:0; }
+  .jli-undated-btn { flex-shrink:0; align-self:center; white-space:nowrap; padding:5px 11px; border-radius:7px; font-family:inherit; font-size:11.5px; font-weight:700;
+    cursor:pointer; background:color-mix(in srgb, currentColor 16%, transparent); border:0.5px solid currentColor; color:inherit; transition:background .13s; }
+  .jli-undated-btn:hover { background:color-mix(in srgb, currentColor 30%, transparent); }
+  .jli-job.held { opacity:.5; }
+  .jli-job.held .jli-date.none { color:var(--coral-text); font-style:normal; opacity:1; }
   .jli-plan { margin-top:12px; max-height:300px; overflow-y:auto; }
   .jli-grp { border:0.5px solid var(--border-md); border-radius:8px; padding:9px 11px; margin-bottom:7px; }
   .jli-grp-hd { display:flex; align-items:center; gap:8px; margin-bottom:5px; flex-wrap:wrap; }
@@ -9558,6 +9569,7 @@ function jliOpen() {
   document.getElementById('jli-preview').innerHTML = '';
   document.getElementById('jli-go').disabled = true;
   document.getElementById('jli-input').value = '';
+  jliIncludeUndated = false;
   document.getElementById('jli-hint').style.display = '';
   document.getElementById('jli-target').style.display = 'none';
   document.getElementById('jli-target-sec').value = '';
@@ -9714,6 +9726,11 @@ function jliToggleGrouping() { jliGroupSimilar = !jliGroupSimilar; jliBuildPlan(
 let jliStripPrefix = true;
 function jliToggleStrip() { jliStripPrefix = !jliStripPrefix; jliBuildPlan(); }
 
+// A job with no scheduled date can't be slotted into the list's date ordering
+// or chased, so these are held back by default and only come in on request.
+let jliIncludeUndated = false;
+function jliToggleUndated() { jliIncludeUndated = !jliIncludeUndated; jliBuildPlan(); }
+
 function jliClean(s) {
   const raw = String(s || '').replace(/\s+/g, ' ').trim();
   if (!jliStripPrefix) return raw;
@@ -9830,14 +9847,31 @@ function jliBuildPlan() {
 
   jliPlan = { plan, skipped };
   const cleanedCount = plan.reduce((n, g) => n + g.jobs.filter(j => j.cleaned).length, 0);
-  const total = plan.reduce((n, g) => n + g.jobs.length, 0);
+  const allJobs = plan.flatMap(g => g.jobs);
+  const undated = allJobs.filter(j => !j.date).length;
+  const willImport = jliIncludeUndated ? allJobs.length : allJobs.length - undated;
+  const total = willImport;
   const newSecs = plan.filter(g => g.mode === 'new').length;
   const reused  = plan.filter(g => g.mode === 'existing').length;
   const loose   = plan.filter(g => g.mode === 'none').reduce((n,g) => n + g.jobs.length, 0);
 
+  const undatedBanner = undated ? `
+    <div class="jli-undated ${jliIncludeUndated ? 'on' : ''}">
+      <i class="ti ti-${jliIncludeUndated ? 'calendar-plus' : 'calendar-off'}"></i>
+      <span><b>${undated} job${undated !== 1 ? 's do' : ' does'} not have a scheduled date.</b>
+        ${jliIncludeUndated
+          ? 'They will be imported with no due date and sit below the dated jobs.'
+          : `${undated !== 1 ? 'They are' : 'It is'} held back — nothing without a date will be imported.`}</span>
+      <button class="jli-undated-btn" onclick="jliToggleUndated()">
+        ${jliIncludeUndated ? 'Hold them back' : 'Import them anyway'}
+      </button>
+    </div>` : '';
+
   prev.innerHTML = `
+    ${undatedBanner}
     <div class="jli-sum">
       <span class="sv-sum-ok"><i class="ti ti-check"></i> ${total} job${total!==1?'s':''}</span>
+      ${undated && !jliIncludeUndated ? `<span class="jli-chip hold">${undated} held back</span>` : ''}
       ${newSecs ? `<span class="jli-chip new">${newSecs} new section${newSecs!==1?'s':''}</span>` : ''}
       ${reused ? `<span class="jli-chip reuse">${reused} existing section${reused!==1?'s':''}</span>` : ''}
       ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
@@ -9862,12 +9896,13 @@ function jliBuildPlan() {
           <span class="jli-grp-count">${g.jobs.length} job${g.jobs.length!==1?'s':''}</span>
         </div>
         ${g.sites.length > 1 ? `<div class="jli-sites">${g.sites.length} sites: ${esc(g.sites.slice(0,5).join(', '))}${g.sites.length > 5 ? ` +${g.sites.length - 5}` : ''}</div>` : ''}
-        ${g.jobs.slice(0,4).map(j => `<div class="jli-job">${esc(j.name)}${
+        ${g.jobs.slice(0,4).map(j => `<div class="jli-job${!j.date && !jliIncludeUndated ? ' held' : ''}">${esc(j.name)}${
           j.suffix ? `<span class="jli-suffix">— ${esc(j.suffix)}</span>` : ''
         }${
           j.derived ? '<span class="jli-derived">name from site</span>' : ''
         }${
-          j.date ? `<span class="jli-date">${esc(j.date)}</span>` : '<span class="jli-date none">no date</span>'
+          j.date ? `<span class="jli-date">${esc(j.date)}</span>`
+                 : `<span class="jli-date none">${jliIncludeUndated ? 'no date' : 'no date — held back'}</span>`
         }${(j.jobIds && j.jobIds.length)
             ? `<span class="jli-jid${j.jobIds.length > 1 ? ' multi' : ''}">#${esc(j.jobIds.join(' '))}</span>`
             : ''
@@ -9875,14 +9910,20 @@ function jliBuildPlan() {
         ${g.jobs.length > 4 ? `<div class="jli-job more">+${g.jobs.length - 4} more</div>` : ''}
       </div>`).join('')}</div>`;
   go.disabled = !total;
+  go.innerHTML = total
+    ? `<i class="ti ti-check" style="font-size:15px"></i> Import ${total} job${total !== 1 ? 's' : ''}`
+    : `<i class="ti ti-check" style="font-size:15px"></i> Nothing to import`;
 }
 
 function jliImport() {
   if (!jliPlan || !jliPlan.plan.length) return;
-  let added = 0, madeSections = 0, madeSubs = 0, reopened = 0;
+  let added = 0, madeSections = 0, madeSubs = 0, reopened = 0, heldBack = 0;
   const stamp = Date.now();
   jliPlan.plan.forEach((g, gi) => {
     let sectionId = g.sectionId;
+    // Don't create a section for a group whose jobs are all being held back
+    const willLand = g.jobs.filter(j => j.date || jliIncludeUndated).length;
+    if (!willLand) return;
     let secProjId = null, secSubId = null;
     if (g.mode === 'new') {
       sectionId = 'jlsec' + (stamp + gi);
@@ -9896,6 +9937,7 @@ function jliImport() {
       if (sec) { secProjId = sec.projId || null; secSubId = sec.subId || null; }
     }
     g.jobs.forEach((j, ji) => {
+      if (!j.date && !jliIncludeUndated) { heldBack++; return; }
       jobLists.push({
         id: 'jli' + (stamp + gi * 1000 + ji),
         name: j.display || j.name,
@@ -9926,7 +9968,8 @@ function jliImport() {
     const extra = [
       madeSections ? `${madeSections} new section${madeSections !== 1 ? 's' : ''}` : '',
       madeSubs ? `${madeSubs} new sub-project${madeSubs !== 1 ? 's' : ''}` : '',
-      reopened ? `${reopened} reopened` : ''
+      reopened ? `${reopened} reopened` : '',
+      heldBack ? `${heldBack} held back with no date` : ''
     ].filter(Boolean).join(' · ');
     showToast(`<i class="ti ti-file-import"></i>Imported <b>${added}</b> job${added !== 1 ? 's' : ''}${extra ? ` — ${extra}` : ''}`);
   }
