@@ -2221,6 +2221,7 @@
   .al-batch-how.exact { background:var(--teal-bg); color:var(--teal-text); }
   .al-batch-how.loose { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .al-batch-how.none  { background:var(--surface2); color:var(--text-3); }
+  .al-batch-chip.zone { font-size:11px; font-weight:600; color:var(--teal-text); background:var(--teal-bg); border-radius:5px; padding:2px 8px; }
   .al-lookup-btn { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; padding:4px 10px; border-radius:6px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:11px; font-weight:600; text-decoration:none; transition:all .13s; }
   .al-lookup-btn:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
   .al-lookup-btn .ti { font-size:12px; }
@@ -3616,7 +3617,7 @@
         <div class="al-batch-inner">
           <div class="kpi-template-row">
             <div class="kpi-template-info">
-              <div class="kpi-tpl-name">Excel or CSV with suburb, postcode and state</div>
+              <div class="kpi-tpl-name">Excel or CSV with zone, suburb, postcode and state</div>
               <div class="kpi-tpl-status" id="al-batch-status">No file loaded</div>
             </div>
             <input type="file" id="al-batch-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alBatchLoad(this.files[0])">
@@ -8863,29 +8864,77 @@ function alBatchRenderMapper() {
     ${alBatchHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
   </select>`;
   el.innerHTML =
-    `<div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('al-b-sub', svAutoDetect(alBatchHeaders, ['Suburb','suburb','SUBURB','Locality','locality'], ['suburb','locality']))}</div>
+    `<div class="sv-col-row"><span class="sv-col-label">Zone column</span>${sel('al-b-geo', svAutoDetect(alBatchHeaders, ['Zone','zone','ZONE','Zone Name','Geo','Geoname','GeoName','Geo Name'], ['zone','geoname','geozone']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Suburb column</span>${sel('al-b-sub', svAutoDetect(alBatchHeaders, ['Suburb','suburb','SUBURB','Locality','locality'], ['suburb','locality']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Postcode column</span>${sel('al-b-pc', svAutoDetect(alBatchHeaders, ['Postcode','postcode','POSTCODE','Post Code'], ['postcode','pcode','postalcode']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">State column</span>${sel('al-b-st', svAutoDetect(alBatchHeaders, ['State','state','STATE'], ['state','statecode']))}</div>`;
   el.style.display = '';
 }
 
-// Suburb+postcode is the reliable key. Postcode alone is kept as a fallback
-// because it still identifies the zone when a suburb name is spelt differently,
-// but it is reported separately so a loose match is never mistaken for exact.
+// Checks the supplied suburb / postcode / state actually sit in the zone the
+// sheet named. Returns the row that confirmed it, so the table can still report
+// what that individual row says about its own allocation.
+function alBatchConfirm(zoneRows, suburb, pc, st) {
+  let pool = zoneRows;
+  if (st) {
+    const code = AL_STATE_FROM_ADMIN[st.toLowerCase()] || st.toUpperCase();
+    const inSt = pool.filter(r => (r.st || '').toUpperCase() === code);
+    if (!inSt.length) return { ok: false, label: `State ${code} not in zone`, row: null };
+    pool = inSt;
+  }
+  const sl = suburb.toLowerCase();
+  if (suburb && pc) {
+    const r = pool.find(x => x._l === sl && x.pc === pc);
+    if (r) return { ok: true, label: 'Suburb + postcode', row: r };
+  }
+  if (suburb) {
+    const r = pool.find(x => x._l === sl);
+    if (r) return { ok: true, label: 'Suburb', row: r };
+  }
+  if (pc) {
+    const r = pool.find(x => x.pc === pc);
+    if (r) return { ok: true, label: 'Postcode', row: r };
+  }
+  if (!suburb && !pc) return { ok: true, label: st ? 'State' : 'Zone only', row: pool[0] || null };
+  return { ok: false, label: 'Not in zone', row: null };
+}
+
+// Zone is the primary key: it is the level the contract actually allocates at,
+// so when the sheet carries one it decides the answer and the suburb / postcode
+// / state are used to confirm it rather than to find it. Suburb+postcode stays
+// as the fallback for sheets with no zone column, with postcode alone below that
+// — reported separately so a loose match is never mistaken for an exact one.
 function alBatchRun() {
+  const geoCol = document.getElementById('al-b-geo')?.value;
   const subCol = document.getElementById('al-b-sub')?.value;
   const pcCol  = document.getElementById('al-b-pc')?.value;
   const stCol  = document.getElementById('al-b-st')?.value;
   const out = document.getElementById('al-batch-result');
   if (!out) return;
-  if (!alBatchRows.length || (!subCol && !pcCol)) { out.innerHTML = ''; alBatchOut = null; return; }
+  if (!alBatchRows.length || (!subCol && !pcCol && !geoCol)) { out.innerHTML = ''; alBatchOut = null; return; }
 
   const results = alBatchRows.map(row => {
     const suburb = String(row[subCol] || '').trim();
+    const zoneIn = String(row[geoCol] || '').trim();
+    const st = String(row[stCol] || '').trim();
     let pc = String(row[pcCol] || '').trim();
     if (pc.replace('.0','').match(/^\d+$/)) pc = String(parseInt(pc, 10)).padStart(4, '0');
-    let hit = null, how = '';
-    if (pc && suburb) {
+    let hit = null, how = '', confirm = null, zoneRows = null, badZone = false;
+
+    if (zoneIn) {
+      zoneRows = alRows.filter(r => r._g === zoneIn.toLowerCase());
+      if (zoneRows.length) {
+        how = 'Zone';
+        confirm = alBatchConfirm(zoneRows, suburb, pc, st);
+        // Prefer the confirming row so "row says" refers to the right site;
+        // otherwise any row in the zone identifies it well enough.
+        hit = confirm.row || zoneRows[0];
+      } else {
+        badZone = true;   // named a zone the allocator has never heard of
+      }
+    }
+
+    if (!hit && pc && suburb) {
       hit = alRows.find(r => r.pc === pc && r._l === suburb.toLowerCase());
       if (hit) how = 'Suburb + postcode';
     }
@@ -8902,19 +8951,24 @@ function alBatchRun() {
     // allocation, so a single mistyped row doesn't set the answer for its site.
     let zoneA1 = '', zoneRt = '', disagrees = false;
     if (hit && hit.geo) {
-      const zr = alRows.filter(r => r.geo === hit.geo);
+      const zr = zoneRows && zoneRows.length && hit.geo === zoneRows[0].geo
+        ? zoneRows : alRows.filter(r => r.geo === hit.geo);
       zoneA1 = alConsensus(zr, 'a1').value;
       zoneRt = alConsensus(zr, 'rt').value;
       disagrees = (hit.a1 || '') !== zoneA1;
     } else if (hit) {
       zoneA1 = hit.a1; zoneRt = hit.rt;
     }
-    return { row, suburb, pc, st: String(row[stCol] || '').trim(), hit, how, zoneA1, zoneRt, disagrees };
+    return { row, suburb, pc, st, zoneIn, hit, how, confirm, badZone, zoneA1, zoneRt, disagrees };
   });
 
   const matched = results.filter(r => r.hit);
-  const exact   = results.filter(r => r.how === 'Suburb + postcode');
-  const loose   = matched.length - exact.length;
+  const byZone  = results.filter(r => r.how === 'Zone');
+  const unconf  = byZone.filter(r => r.confirm && r.confirm.ok === false);
+  const badZone = results.filter(r => r.badZone);
+  // "loose" means a fallback match on one field only. Zone rows are reported by
+  // their confirmation state instead, so the two counts never cover the same row.
+  const loose   = matched.filter(r => r.how === 'Suburb only' || r.how === 'Postcode only').length;
   const missing = results.length - matched.length;
   const amtek   = matched.filter(r => alOwner(r.zoneA1).key === 'amtek').length;
   const partner = matched.filter(r => alOwner(r.zoneA1).key === 'partner').length;
@@ -8927,6 +8981,9 @@ function alBatchRun() {
   out.innerHTML = `
     <div class="al-batch-sum">
       <span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${matched.length.toLocaleString()} matched</span>
+      ${byZone.length ? `<span class="al-batch-chip zone">${byZone.length.toLocaleString()} by zone</span>` : ''}
+      ${unconf.length ? `<span class="al-batch-chip loose">${unconf.length.toLocaleString()} unconfirmed</span>` : ''}
+      ${badZone.length ? `<span class="al-batch-chip loose">${badZone.length.toLocaleString()} zone not known</span>` : ''}
       ${loose ? `<span class="al-batch-chip loose">${loose.toLocaleString()} loose</span>` : ''}
       ${missing ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${missing.toLocaleString()} not found</span>` : ''}
       <span class="al-owner amtek">Amtek ${amtek.toLocaleString()}</span>
@@ -8935,20 +8992,30 @@ function alBatchRun() {
       ${conflicts ? `<span class="al-batch-chip loose">${conflicts} row${conflicts!==1?'s':''} differ from zone</span>` : ''}
     </div>
     <div class="sv-cov-table-wrap" style="max-height:300px;margin-top:10px;"><table class="al-rows">
-      <thead><tr><th>Suburb</th><th>Postcode</th><th>Zone</th><th>Technician</th><th>Serviced by</th><th>Match</th></tr></thead>
+      <thead><tr><th>Suburb</th><th>Postcode</th><th>Zone</th><th>Technician</th><th>Serviced by</th><th>Match</th><th>Confirmed</th></tr></thead>
       <tbody>${preview.map(r => `<tr>
         <td>${esc(r.suburb || '—')}</td>
         <td class="pc">${esc(r.pc || '—')}</td>
         <td>${r.hit ? esc(r.hit.geo) : '<span style="color:var(--text-3)">—</span>'}</td>
         <td>${r.hit ? esc(r.zoneA1 || '—') + (r.disagrees ? `<span class="al-was">row says ${esc(r.hit.a1 || 'nothing')}</span>` : '') : '<span style="color:var(--coral-text)">not found</span>'}</td>
         <td>${r.hit ? alOwnerPill(r.hit.a1) : ''}</td>
-        <td><span class="al-batch-how${r.how === 'Suburb + postcode' ? ' exact' : r.how ? ' loose' : ' none'}">${esc(r.how || '—')}</span></td>
+        <td><span class="al-batch-how${alBatchHowClass(r)}">${esc(r.how || '—')}</span></td>
+        <td>${r.confirm
+          ? `<span class="al-batch-how${r.confirm.ok ? ' exact' : ' loose'}">${esc(r.confirm.label)}</span>`
+          : (r.badZone ? `<span class="al-batch-how loose">zone "${esc(r.zoneIn)}" not known</span>`
+                       : '<span style="color:var(--text-3)">—</span>')}</td>
       </tr>`).join('')}</tbody></table>
       ${results.length > preview.length ? `<div class="al-more">Previewing ${preview.length} of ${results.length.toLocaleString()} rows — the download has them all.</div>` : ''}
     </div>
     <button class="generate-btn" style="width:auto;margin:12px 0 0;padding:9px 18px;" onclick="alBatchDownload()">
       <i class="ti ti-download" style="font-size:16px;"></i> Download with allocations
     </button>`;
+}
+
+function alBatchHowClass(r) {
+  if (!r.how) return ' none';
+  if (r.how === 'Zone') return r.confirm && r.confirm.ok === false ? ' loose' : ' exact';
+  return r.how === 'Suburb + postcode' ? ' exact' : ' loose';
 }
 
 function alBatchDownload() {
@@ -8960,7 +9027,9 @@ function alBatchDownload() {
     'Technician Allocation': r.hit ? r.zoneA1 : '',
     'Serviced By':           r.hit ? alOwner(r.zoneA1).label : '',
     'Row Allocation':        r.hit && r.disagrees ? (r.hit.a1 || '(blank)') : '',
-    'Match':                 r.how || 'Not found'
+    'Match':                 r.how || 'Not found',
+    'Zone Confirmed':        r.confirm ? (r.confirm.ok ? r.confirm.label : 'NO — ' + r.confirm.label)
+                                       : (r.badZone ? 'Zone not known' : '')
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
