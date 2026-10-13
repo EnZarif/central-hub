@@ -1871,7 +1871,8 @@
   .file-upload-btn .fu-ico { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--teal); color: white; font-size: 11px; transition: background 0.15s, color 0.15s; }
   .file-upload-btn:hover .fu-ico { background: white; color: var(--teal); }
   .kpi-template-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: var(--surface2); border-radius: var(--radius); margin-bottom: 16px; }
-  .kpi-template-info { font-size: 13px; }
+  .kpi-template-info { font-size: 13px; flex: 1; min-width: 0; }
+  .kpi-template-info .kpi-tpl-status { overflow-wrap: anywhere; }
   .kpi-template-info .kpi-tpl-name { font-weight: 500; color: var(--text); }
   .kpi-template-info .kpi-tpl-status { font-size: 12px; color: var(--text-3); margin-top: 2px; }
   .kpi-template-info .kpi-tpl-status.ready { color: var(--teal); }
@@ -1881,6 +1882,15 @@
     color: var(--text-3); background: var(--surface2); border: 0.5px solid var(--border);
     border-radius: 9px; padding: 1px 8px; }
   .kpi-sec-chip.ready { color: var(--teal-text); background: var(--teal-bg); border-color: transparent; }
+  .kpi-nick-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+  .kpi-nick-row:last-child { border-bottom: none; }
+  .kpi-nick-who { flex: 1; min-width: 0; }
+  .kpi-nick-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .kpi-nick-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpi-nick-input { width: 140px; flex-shrink: 0; padding: 6px 10px; font-size: 12.5px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+  .kpi-nick-input:focus { border-color: var(--teal); }
+  .kpi-nick-input.set { border-color: color-mix(in srgb, var(--teal) 55%, transparent); }
+  .kpi-nick-empty { font-size: 12px; color: var(--text-3); padding: 4px 0 2px; }
   .kpi-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .kpi-modal-overlay.active { display: flex; }
   .kpi-modal { background: var(--surface); border-radius: var(--radius-lg); padding: 18px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.35); }
@@ -4458,6 +4468,15 @@
       </div>
 
       <div id="kpi-ops-list"></div>
+
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('kpi-s-nicks')" style="margin-top:18px;">
+        <i class="ti ti-user-edit" style="font-size:13px;"></i> Operator nicknames
+        <span class="kpi-sec-chip" id="kpi-nick-chip">0 set</span>
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="kpi-s-nicks">
+        <div id="kpi-nick-list"></div>
+      </div>
     </div>
   </div>
 
@@ -14744,6 +14763,11 @@ function renderMeetings() {
 
 // ===== KPI REPORT GENERATOR =====
 const KPI_TEMPLATE_KEY = 'zarif_kpi_template';
+// Declared here, not beside the nickname functions below: renderKpiPage() runs
+// at top level before that point, and a const/let down there would be in its
+// temporal dead zone when it does.
+const KPI_NICK_KEY = 'zarif_kpi_nicknames';
+let _kpiNickRows = [];
 
 const KPI_SOURCES = {
   phoneCreated: {
@@ -15777,6 +15801,85 @@ function renderKpiOpsFileList() {
     </div>`).join('');
 }
 
+// ===== OPERATOR NICKNAMES =====
+// What each operator gets called in the greeting line. Saved against their email
+// address, which is the one field stable across report files — the CMS name
+// column varies in spelling between exports. KPI_NICK_KEY and _kpiNickRows are
+// declared up with KPI_TEMPLATE_KEY; see the note there.
+
+function kpiNickAll() { return dbGet(KPI_NICK_KEY) || {}; }
+function kpiNickKeyFor(name, email) { return ((email || name) || '').trim().toLowerCase(); }
+function kpiNickDefault(name) { return (name || '').trim().split(/\s+/)[0] || (name || ''); }
+
+// The name the email greets. Falls back to the first word of the CMS name, which
+// is what the greeting used before nicknames existed.
+function kpiNickFor(name, email) {
+  const entry = kpiNickAll()[kpiNickKeyFor(name, email)];
+  const nick = entry && typeof entry === 'object' ? entry.nick : entry;
+  return (nick && String(nick).trim()) || kpiNickDefault(name);
+}
+
+function kpiNickSave(i, value) {
+  const row = _kpiNickRows[i];
+  if (!row) return;
+  const all = { ...kpiNickAll() };
+  const v = (value || '').trim();
+  // Clearing the box restores the derived first name rather than storing a blank.
+  if (v && v !== kpiNickDefault(row.name)) all[row.key] = { nick: v, name: row.name };
+  else delete all[row.key];
+  dbSet(KPI_NICK_KEY, all);
+  renderKpiNicknames();
+  renderKpiOpsList();
+}
+
+function renderKpiNicknames() {
+  const el = document.getElementById('kpi-nick-list');
+  const chip = document.getElementById('kpi-nick-chip');
+  if (!el) return;
+  const all = kpiNickAll();
+
+  // Operators in the loaded files, plus anyone already given a nickname before,
+  // so saved names stay editable once their report file is gone.
+  const seen = new Map();
+  for (const [name, entries] of _kpiOpsOperatorList()) {
+    const email = entries[0].row[1] || '';
+    seen.set(kpiNickKeyFor(name, email), { name, email });
+  }
+  for (const [key, entry] of Object.entries(all)) {
+    if (seen.has(key)) continue;
+    const name = (entry && typeof entry === 'object' && entry.name) || key;
+    seen.set(key, { name, email: key.includes('@') ? key : '' });
+  }
+
+  _kpiNickRows = [...seen.entries()].map(([key, v]) => ({ key, name: v.name, email: v.email }));
+  _kpiNickRows.sort((a, b) => a.name.localeCompare(b.name));
+
+  const nSet = _kpiNickRows.filter(r => all[r.key]).length;
+  if (chip) {
+    chip.textContent = `${nSet} set`;
+    chip.classList.toggle('ready', nSet > 0);
+  }
+
+  if (!_kpiNickRows.length) {
+    el.innerHTML = '<div class="kpi-nick-empty">Load a daily report file to set nicknames.</div>';
+    return;
+  }
+
+  el.innerHTML = _kpiNickRows.map((r, i) => {
+    const entry = all[r.key];
+    const nick = entry && typeof entry === 'object' ? entry.nick : (entry || '');
+    return `<div class="kpi-nick-row">
+      <div class="kpi-nick-who">
+        <div class="kpi-nick-name">${esc(r.name)}</div>
+        <div class="kpi-nick-sub">${esc(r.email || r.key)}</div>
+      </div>
+      <input class="kpi-nick-input${nick ? ' set' : ''}" type="text" value="${esc(nick || '')}"
+        placeholder="${esc(kpiNickDefault(r.name))}" title="Name used in the greeting"
+        onchange="kpiNickSave(${i}, this.value)">
+    </div>`;
+  }).join('');
+}
+
 // ===== OPERATOR STATUS KPIs =====
 // A "Historical Metrics Report" export: one row per agent email, one column per
 // status, every value in raw seconds (blank meaning no time in that status).
@@ -15900,6 +16003,7 @@ function renderKpiOpsList() {
   const list = document.getElementById('kpi-ops-list');
   if (!list) return;
   const ops = _kpiOpsOperatorList();
+  renderKpiNicknames();
   if (!ops.length) { list.innerHTML = ''; return; }
   list.innerHTML = ops.map(([name, entries], i) => {
     const email = entries[0].row[1] || '';
@@ -15951,7 +16055,7 @@ function kpiOpsCopy(i) {
   const ops = _kpiOpsOperatorList();
   if (i >= ops.length) return;
   const [name, entries] = ops[i];
-  const firstName = name.split(/\s+/)[0] || name;
+  const greetName = kpiNickFor(name, entries[0].row[1] || '');
 
   // Status time is keyed on the operator, not the date, so it renders once
   // below the KPI table(s) as its own section.
@@ -15967,13 +16071,13 @@ function kpiOpsCopy(i) {
     const { dateLabel, row, totals } = entries[0];
     const table = buildKpiOpsTableHtml(row, totals);
     html = `<div style="font-family:Aptos,sans-serif; font-size:12pt; margin:0; padding:0;">
-    <div style="margin:0 0 12px 0;">Hi ${esc(firstName)},</div>
+    <div style="margin:0 0 12px 0;">Hi ${esc(greetName)},</div>
     <div style="margin:0 0 12px 0;">Here are the KPI's from ${esc(dateLabel)}:</div>
     ${table}
     ${statusHtml}
     <div style="margin:12px 0 0 0;">Kind regards,</div>
   </div>`;
-    text = `Hi ${firstName},\n\nHere are the KPI's from ${dateLabel}:\n\n` +
+    text = `Hi ${greetName},\n\nHere are the KPI's from ${dateLabel}:\n\n` +
       KPI_OPS_COLUMNS.map(c => c.header).join('\t') + '\n' + row.join('\t');
     if (totals && totals.some(v => v !== '')) text += '\n' + totals.join('\t');
     text += statusText + '\n\nKind regards,';
@@ -15985,7 +16089,7 @@ function kpiOpsCopy(i) {
     </div>`
     ).join('');
     html = `<div style="font-family:Aptos,sans-serif; font-size:12pt; margin:0; padding:0;">
-    <div style="margin:0 0 12px 0;">Hi ${esc(firstName)},</div>
+    <div style="margin:0 0 12px 0;">Hi ${esc(greetName)},</div>
     <div style="margin:0 0 16px 0;">Here are your KPI's for the following dates:</div>
     ${sections}
     ${statusHtml}
@@ -15996,7 +16100,7 @@ function kpiOpsCopy(i) {
       if (totals && totals.some(v => v !== '')) s += '\n' + totals.join('\t');
       return s;
     });
-    text = `Hi ${firstName},\n\nHere are your KPI's for the following dates:\n\n` +
+    text = `Hi ${greetName},\n\nHere are your KPI's for the following dates:\n\n` +
       textSections.join('\n\n') + statusText + '\n\nKind regards,';
   }
 
@@ -19666,6 +19770,7 @@ async function initApp() {
   renderDayModeBanner();
   renderSettingsDayMode();
   renderKpiPage();
+  renderKpiNicknames();
   renderNslaPage();
   renderTasks();
   renderKbFact();
