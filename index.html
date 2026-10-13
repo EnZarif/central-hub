@@ -2260,6 +2260,24 @@
   .al-group-allocs { font-size:12px; color:var(--text-2); line-height:1.5; }
   .al-add-btn { margin-top:14px; padding:9px 16px; border-radius:8px; background:var(--teal-bg); border:1.5px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .15s; }
   .al-add-btn:hover { background:var(--teal); color:#fff; }
+  .al-add-btn.ghost { background:var(--surface2); border-color:var(--border-md); color:var(--text-2); }
+  .al-add-btn.ghost:hover { background:var(--teal-bg); border-color:var(--teal); color:var(--teal-text); }
+  .al-empty-acts { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .al-geo-busy { display:flex; align-items:center; justify-content:center; gap:7px; font-size:12px; color:var(--text-3); margin-top:14px; }
+  .al-geo-busy .ti { animation:alSpin 1s linear infinite; font-size:14px; }
+  @keyframes alSpin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .al-geo-busy .ti { animation:none; } }
+  .al-geo-msg { font-size:12px; color:var(--text-3); margin-top:14px; line-height:1.5; }
+  .al-geo-card { margin-top:14px; text-align:left; border:0.5px solid var(--border-md); border-radius:9px; padding:12px 13px; background:var(--surface); }
+  .al-geo-found { font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+  .al-geo-found .ti { color:var(--teal-text); }
+  .al-geo-best { border-left:3px solid var(--teal); padding-left:11px; margin-bottom:9px; }
+  .al-geo-best-l { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-bottom:3px; }
+  .al-geo-best-v { font-size:13.5px; color:var(--text); margin-bottom:3px; }
+  .al-geo-best-z { font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .al-geo-others { font-size:11px; color:var(--text-3); margin-bottom:9px; line-height:1.5; }
+  .al-geo-note { display:flex; align-items:flex-start; gap:6px; font-size:11px; color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),0.08); border-radius:6px; padding:7px 9px; margin-bottom:10px; line-height:1.45; }
+  .al-geo-note .ti { flex-shrink:0; margin-top:1px; }
   .al-custom-tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:4px; background:var(--teal-bg); color:var(--teal-text); font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; vertical-align:middle; }
   .al-custom-tag.edited { background:rgba(var(--amber-rgb,220,152,40),0.16); color:var(--amber-text); }
   .al-was { display:block; font-size:10px; color:var(--text-3); font-style:italic; margin-top:1px; }
@@ -8152,7 +8170,11 @@ function alRun() {
     out.innerHTML = `<div class="card al-answer-card"><div class="al-empty">
       <i class="ti ti-map-off"></i>No match for “${esc(raw)}”${stateFilter ? ` in ${esc(stateFilter)}` : ''}.<br>
       Try a zone name (NT Darwin), a suburb, or a 4-digit postcode.
-      <div><button class="al-add-btn" onclick="alOpenAdd()"><i class="ti ti-map-pin-plus"></i> Add allocation</button></div>
+      <div class="al-empty-acts">
+        <button class="al-add-btn" onclick="alOpenAdd()"><i class="ti ti-map-pin-plus"></i> Add allocation</button>
+        <button class="al-add-btn ghost" onclick="alFindNearestZone()"><i class="ti ti-map-search"></i> Find nearest zone</button>
+      </div>
+      <div id="al-geo-result"></div>
     </div></div>`;
     return;
   }
@@ -8328,6 +8350,160 @@ function alCopy(btn, text) {
     btn.innerHTML = '<i class="ti ti-check"></i> Copied';
     setTimeout(() => { btn.innerHTML = old; }, 1400);
   });
+}
+
+// ---- Geographic fallback ----
+// A suburb the allocator has never heard of still has to be serviced by someone.
+// Zones are a business construct, so nothing external can name one directly —
+// but geography is a fair proxy: find where the suburb actually is, then the
+// nearest site that IS allocated, and offer its zone as the starting point.
+const AL_STATE_FROM_ADMIN = {
+  'victoria':'VIC', 'new south wales':'NSW', 'queensland':'QLD', 'south australia':'SA',
+  'western australia':'WA', 'tasmania':'TAS', 'northern territory':'NT',
+  'australian capital territory':'ACT'
+};
+let _alGeoCache = (() => {
+  try { return JSON.parse(localStorage.getItem('al_geocache') || '{}'); } catch(e) { return {}; }
+})();
+function _alGeoSave() {
+  try { localStorage.setItem('al_geocache', JSON.stringify(_alGeoCache)); } catch(e) {}
+}
+
+async function alGeocode(suburb, state) {
+  const key = `${(suburb || '').toLowerCase()}|${(state || '').toUpperCase()}`;
+  if (_alGeoCache[key] !== undefined) return _alGeoCache[key];
+  let out = null;
+  try {
+    const res = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=10&countryCode=AU&format=json&name='
+      + encodeURIComponent(suburb));
+    const json = await res.json();
+    const list = json.results || [];
+    const want = (state || '').toUpperCase();
+    // Suburb names repeat across states, so prefer one whose state matches
+    const pick = (want && list.find(r => AL_STATE_FROM_ADMIN[(r.admin1 || '').toLowerCase()] === want)) || list[0];
+    if (pick) out = { lat: pick.latitude, lng: pick.longitude, name: pick.name,
+                      st: AL_STATE_FROM_ADMIN[(pick.admin1 || '').toLowerCase()] || '', admin1: pick.admin1 || '' };
+  } catch (e) { out = null; }
+  _alGeoCache[key] = out;
+  _alGeoSave();
+  return out;
+}
+
+// Postcodes are issued broadly geographically, so the numerically closest ones
+// in the same state make a cheap candidate set — this keeps the number of
+// geocode calls bounded instead of resolving all 338 sites.
+function alNearbyCandidates(pc, st, limit = 8) {
+  const target = parseInt(pc, 10);
+  let pool = alRows.filter(r => r.a1);
+  if (st) {
+    const inState = pool.filter(r => r.st === st);
+    if (inState.length) pool = inState;
+  }
+  const seen = new Set();
+  const uniq = [];
+  pool.forEach(r => {
+    const k = r.pc + '|' + r._l;
+    if (!seen.has(k)) { seen.add(k); uniq.push(r); }
+  });
+  if (!isNaN(target)) {
+    uniq.sort((a, b) => Math.abs(parseInt(a.pc, 10) - target) - Math.abs(parseInt(b.pc, 10) - target));
+  }
+  return uniq.slice(0, limit);
+}
+
+let _alNearbyBusy = false;
+async function alFindNearestZone() {
+  if (_alNearbyBusy) return;
+  const raw = (document.getElementById('al-q')?.value || '').trim();
+  const box = document.getElementById('al-geo-result');
+  if (!box) return;
+  _alNearbyBusy = true;
+
+  // Work out what we're looking for from the search box plus the state filter
+  const stateFilter = document.getElementById('al-state')?.value || '';
+  const isPc = /^\d{3,4}$/.test(raw);
+  const suburb = isPc ? '' : raw;
+  let pc = isPc ? raw.padStart(4, '0') : '';
+  let st = stateFilter;
+
+  // Pending gaps recorded earlier may already carry the postcode and state
+  const gap = allocGaps.find(g => (g.loc || '').toLowerCase() === raw.toLowerCase());
+  if (gap) { pc = pc || gap.pc; st = st || gap.st; }
+  // The Suburb Checker's reference file is a better source than a guess
+  if (suburb && (!pc || !st) && svRef && svRef.length) {
+    const hit = (svRefNorm[svNorm(suburb)] || [])[0];
+    if (hit) { pc = pc || hit.postcode; st = st || hit.state; }
+  }
+
+  box.innerHTML = `<div class="al-geo-busy"><i class="ti ti-loader-2"></i> Looking up ${esc(raw)}…</div>`;
+  try {
+    if (!suburb) {
+      box.innerHTML = `<div class="al-geo-msg">Type a suburb name to look it up — a postcode on its own can't be placed.</div>`;
+      return;
+    }
+    const here = await alGeocode(suburb, st);
+    if (!here) {
+      box.innerHTML = `<div class="al-geo-msg">Couldn't find <b>${esc(suburb)}</b> in Australia. Check the spelling, or add the allocation manually.</div>`;
+      return;
+    }
+    st = st || here.st;
+    const cands = alNearbyCandidates(pc || '0000', st);
+    if (!cands.length) {
+      box.innerHTML = `<div class="al-geo-msg">Found <b>${esc(here.name)}, ${esc(here.admin1)}</b>, but there are no allocated sites to compare against.</div>`;
+      return;
+    }
+
+    const scored = [];
+    for (let i = 0; i < cands.length; i++) {
+      const c = cands[i];
+      box.innerHTML = `<div class="al-geo-busy"><i class="ti ti-loader-2"></i> Found ${esc(here.name)} — comparing against allocated sites (${i + 1}/${cands.length})…</div>`;
+      const g = await alGeocode(c.loc, c.st);
+      if (g) scored.push({ site: c, km: haversineM(here.lat, here.lng, g.lat, g.lng) / 1000 });
+    }
+    if (!scored.length) {
+      box.innerHTML = `<div class="al-geo-msg">Found <b>${esc(here.name)}</b>, but none of the nearby allocated sites could be placed.</div>`;
+      return;
+    }
+    scored.sort((a, b) => a.km - b.km);
+    const best = scored[0];
+    const others = scored.slice(1, 4);
+
+    box.innerHTML = `
+      <div class="al-geo-card">
+        <div class="al-geo-found"><i class="ti ti-map-pin"></i> <b>${esc(here.name)}</b>, ${esc(here.admin1)}${pc ? ' ' + esc(pc) : ''} — located</div>
+        <div class="al-geo-best">
+          <div class="al-geo-best-l">Nearest allocated site</div>
+          <div class="al-geo-best-v"><b>${esc(best.site.loc)} ${esc(best.site.pc)}</b> · ${best.km.toFixed(1)} km away</div>
+          <div class="al-geo-best-z">Zone <b>${esc(best.site.geo)}</b> → ${esc(best.site.a1)} ${alOwnerPill(best.site.a1)}</div>
+        </div>
+        ${others.length ? `<div class="al-geo-others">Next closest: ${others.map(o =>
+          `${esc(o.site.loc)} (${o.km.toFixed(0)} km, ${esc(o.site.geo)})`).join(' · ')}</div>` : ''}
+        <div class="al-geo-note"><i class="ti ti-alert-triangle"></i> Proximity only — zones are set by the contract, not by distance. Check before relying on it.</div>
+        <button class="sv-cov-add" onclick="alUseNearestZone(${jsAttr(suburb)},${jsAttr(pc)},${jsAttr(st)},${jsAttr(best.site.geo)},${jsAttr(best.site.rt)},${jsAttr(best.site.a1)})">
+          <i class="ti ti-map-pin-plus"></i> Add with this zone
+        </button>
+      </div>`;
+  } finally {
+    _alNearbyBusy = false;
+  }
+}
+
+function alUseNearestZone(loc, pc, st, geo, rt, a1) {
+  _alEditing = null;
+  _alAddReturnTo = null;
+  alFillPickers();
+  alSetModalMode('add');
+  const err = document.getElementById('al-add-err');
+  if (err) { err.className = 'al-add-err'; err.textContent = ''; }
+  document.getElementById('al-f-loc').value  = (loc || '').toUpperCase();
+  document.getElementById('al-f-pc').value   = pc || '';
+  document.getElementById('al-f-zone').value = geo || '';
+  document.getElementById('al-f-rt').value   = rt || 'Regional';
+  document.getElementById('al-f-a1').value   = a1 || '';
+  const stSel = document.getElementById('al-f-st');
+  if (stSel && st && [...stSel.options].some(o => o.value === st)) stSel.value = st;
+  document.getElementById('al-add-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('al-f-pc')?.focus(), 60);
 }
 
 // ---- Quick add / update ----
