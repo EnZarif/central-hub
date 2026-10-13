@@ -1875,6 +1875,12 @@
   .kpi-template-info .kpi-tpl-name { font-weight: 500; color: var(--text); }
   .kpi-template-info .kpi-tpl-status { font-size: 12px; color: var(--text-3); margin-top: 2px; }
   .kpi-template-info .kpi-tpl-status.ready { color: var(--teal); }
+  /* Summary chip in a collapsed section header, so the card still says what is
+     loaded without being expanded. */
+  .kpi-sec-chip { margin-left: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0;
+    color: var(--text-3); background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 9px; padding: 1px 8px; }
+  .kpi-sec-chip.ready { color: var(--teal-text); background: var(--teal-bg); border-color: transparent; }
   .kpi-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .kpi-modal-overlay.active { display: flex; }
   .kpi-modal { background: var(--surface); border-radius: var(--radius-lg); padding: 18px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.35); }
@@ -4400,18 +4406,30 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><i class="ti ti-file-spreadsheet" style="font-size:13px;"></i> Report template</div>
-      <div class="kpi-template-row">
-        <div class="kpi-template-info">
-          <div class="kpi-tpl-name">Helpdesk Daily Metrics template</div>
-          <div class="kpi-tpl-status" id="kpi-tpl-status">No template loaded</div>
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('kpi-s-tpl')">
+        <i class="ti ti-file-spreadsheet" style="font-size:13px;"></i> Report template
+        <span class="kpi-sec-chip" id="kpi-tpl-chip">None</span>
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="kpi-s-tpl">
+        <div class="kpi-template-row">
+          <div class="kpi-template-info">
+            <div class="kpi-tpl-name">Helpdesk Daily Metrics template</div>
+            <div class="kpi-tpl-status" id="kpi-tpl-status">No template loaded</div>
+          </div>
+          <input type="file" id="kpi-template-input" class="kpi-file-input" accept=".xlsx" onchange="kpiSaveTemplate(this.files[0])">
+          <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-template-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload template</button>
         </div>
-        <input type="file" id="kpi-template-input" class="kpi-file-input" accept=".xlsx" onchange="kpiSaveTemplate(this.files[0])">
-        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-template-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload template</button>
       </div>
 
-      <div class="card-title"><i class="ti ti-upload" style="font-size:13px;"></i> Daily data exports</div>
-      <div id="kpi-upload-list"></div>
+      <div class="card-title s-toggle" onclick="toggleSettingsSection('kpi-s-exports')" style="margin-top:16px;">
+        <i class="ti ti-upload" style="font-size:13px;"></i> Daily data exports
+        <span class="kpi-sec-chip" id="kpi-exports-chip">0 selected</span>
+        <i class="ti ti-chevron-down s-chev"></i>
+      </div>
+      <div class="s-body" id="kpi-s-exports">
+        <div id="kpi-upload-list"></div>
+      </div>
 
       <button class="generate-btn" id="kpi-generate-btn" style="margin-top:16px;" onclick="kpiGenerateReport()"><i class="ti ti-download" style="font-size:16px;"></i> Generate report</button>
       <div id="kpi-generate-status" style="font-size:12px; color:var(--text-3); text-align:center;"></div>
@@ -4428,6 +4446,17 @@
         <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-ops-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Add file(s)</button>
       </div>
       <div id="kpi-ops-file-list"></div>
+
+      <div class="kpi-template-row" style="margin-top:4px;">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Operator Status KPI's</div>
+          <div class="kpi-tpl-status" id="kpi-ops-st-status">No file loaded</div>
+        </div>
+        <input type="file" id="kpi-ops-st-input" class="kpi-file-input" accept=".csv,.xlsx,.xls" onchange="kpiOpsStatusLoad(this.files[0])">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-ops-st-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Add status file</button>
+        <button class="kpi-ops-file-remove" id="kpi-ops-st-clear" onclick="kpiOpsStatusClear()" title="Remove status file" style="display:none;"><i class="ti ti-x"></i></button>
+      </div>
+
       <div id="kpi-ops-list"></div>
     </div>
   </div>
@@ -15052,6 +15081,28 @@ function fillSheetTable(sheetXmlStr, tableXmlStr, colStart, dataRows) {
   };
 }
 
+// Both upload sections start collapsed, so their headers carry a short summary
+// of what is loaded — otherwise Generate sits above two closed drawers with no
+// indication of whether anything is in them.
+function kpiUpdateChips() {
+  const tplChip = document.getElementById('kpi-tpl-chip');
+  if (tplChip) {
+    const has = !!kpiGetTemplate();
+    tplChip.textContent = has ? 'Loaded' : 'None';
+    tplChip.classList.toggle('ready', has);
+  }
+  const expChip = document.getElementById('kpi-exports-chip');
+  if (expChip) {
+    const keys = Object.keys(KPI_SOURCES);
+    const n = keys.filter(k => {
+      const inp = document.getElementById(`kpi-file-${k}`);
+      return inp && inp.files && inp.files.length;
+    }).length;
+    expChip.textContent = `${n} of ${keys.length}`;
+    expChip.classList.toggle('ready', n > 0);
+  }
+}
+
 function renderKpiPage() {
   const tpl = kpiGetTemplate();
   const statusEl = document.getElementById('kpi-tpl-status');
@@ -15072,6 +15123,7 @@ function renderKpiPage() {
       <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('kpi-file-${key}').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Choose file</button>
     </div>`;
   }).join('');
+  kpiUpdateChips();
 }
 
 function kpiFileSelected(key, file) {
@@ -15084,6 +15136,7 @@ function kpiFileSelected(key, file) {
     statusEl.textContent = 'Not selected';
     statusEl.classList.remove('ready');
   }
+  kpiUpdateChips();
 }
 
 async function kpiGenerateReport() {
@@ -15724,6 +15777,112 @@ function renderKpiOpsFileList() {
     </div>`).join('');
 }
 
+// ===== OPERATOR STATUS KPIs =====
+// A "Historical Metrics Report" export: one row per agent email, one column per
+// status, every value in raw seconds (blank meaning no time in that status).
+// Held as a single file rather than one-per-date — the export carries no date
+// column, so it can't be split per day the way the daily report files are.
+let kpiOpsStatus = null;
+
+function secondsToHhMmSs(totalSeconds) {
+  const t = Math.max(0, Math.round(totalSeconds));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+async function kpiOpsStatusLoad(file) {
+  const input = document.getElementById('kpi-ops-st-input');
+  if (input) input.value = '';
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    if (!rows.length) { kpiOpsStatusSetStatus('Could not read that file', true); return; }
+
+    const header = rows[0].map(normalizeHeader);
+    let agentIdx = header.indexOf('agent');
+    if (agentIdx === -1) agentIdx = 0;
+    // Every other titled column is a status; keep the original casing for display.
+    const statusCols = [];
+    for (let c = 0; c < rows[0].length; c++) {
+      if (c === agentIdx) continue;
+      const label = (rows[0][c] == null ? '' : String(rows[0][c])).replace(/\s+/g, ' ').trim();
+      if (label) statusCols.push({ idx: c, label });
+    }
+
+    const agents = {};
+    let n = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const agent = (rows[i][agentIdx] == null ? '' : String(rows[i][agentIdx])).trim();
+      if (!agent) continue;
+      const entries = [];
+      for (const col of statusCols) {
+        const secs = parseAhtRawSeconds(rows[i][col.idx]);
+        // Blank or zero means the agent spent no time in that status — leave it
+        // out entirely rather than padding the email with 00:00:00 rows.
+        if (secs === null || secs <= 0) continue;
+        entries.push({ label: col.label, seconds: secs });
+      }
+      if (!entries.length) continue;
+      agents[agent.toLowerCase()] = entries;
+      n++;
+    }
+
+    if (!n) { kpiOpsStatusSetStatus('No agent status rows found in that file', true); return; }
+    kpiOpsStatus = { fileName: file.name, agents, count: n };
+    kpiOpsStatusSetStatus(`${file.name} · ${n} agent${n !== 1 ? 's' : ''}`);
+    renderKpiOpsList();
+  } catch (err) {
+    console.error('kpiOpsStatusLoad:', err);
+    kpiOpsStatusSetStatus('Could not read that file', true);
+  }
+}
+
+function kpiOpsStatusSetStatus(msg, isError) {
+  const el = document.getElementById('kpi-ops-st-status');
+  if (el) {
+    el.textContent = msg;
+    el.classList.toggle('ready', !isError && !!kpiOpsStatus);
+  }
+  const clear = document.getElementById('kpi-ops-st-clear');
+  if (clear) clear.style.display = kpiOpsStatus ? '' : 'none';
+}
+
+function kpiOpsStatusClear() {
+  kpiOpsStatus = null;
+  kpiOpsStatusSetStatus('No file loaded');
+  renderKpiOpsList();
+}
+
+// The status block for one operator, matched on their email address — the only
+// field the two exports share. Returns null when that agent isn't in the file.
+function buildKpiOpsStatusSection(email) {
+  if (!kpiOpsStatus) return null;
+  const entries = kpiOpsStatus.agents[(email || '').trim().toLowerCase()];
+  if (!entries || !entries.length) return null;
+
+  const base = 'border:1px solid #999999; padding:1px 6px; font-family:Calibri,sans-serif; font-size:11pt; line-height:1.2;';
+  let html = '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse; table-layout:fixed;">';
+  html += '<colgroup><col style="width:200px;"><col style="width:110px;"></colgroup>';
+  html += `<tr>
+      <th style="${base} background:#D9D9D9; color:#000000; font-weight:bold; text-align:left;">Status</th>
+      <th style="${base} background:#D9D9D9; color:#000000; font-weight:bold; text-align:center;">Time spent</th>
+    </tr>`;
+  html += entries.map(e => `<tr>
+      <td style="${base} text-align:left;">${esc(e.label)}</td>
+      <td style="${base} text-align:center; white-space:nowrap;">${esc(secondsToHhMmSs(e.seconds))}</td>
+    </tr>`).join('');
+  html += '</table>';
+
+  const text = 'Status\tTime spent\n' +
+    entries.map(e => `${e.label}\t${secondsToHhMmSs(e.seconds)}`).join('\n');
+  return { html, text };
+}
+
 function _kpiOpsOperatorList() {
   const map = new Map();
   for (const f of kpiOpsFiles) {
@@ -15745,10 +15904,15 @@ function renderKpiOpsList() {
   list.innerHTML = ops.map(([name, entries], i) => {
     const email = entries[0].row[1] || '';
     const dateSub = entries.map(e => e.dateLabel).join(' · ');
+    const hasStatus = !!buildKpiOpsStatusSection(email);
+    const statusTag = kpiOpsStatus
+      ? (hasStatus ? ' · <span style="color:var(--teal-text);">+ status time</span>'
+                   : ' · <span style="color:var(--text-3);">no status match</span>')
+      : '';
     return `<div class="kpi-upload-row">
       <div class="kpi-upload-info">
         <div class="kpi-upload-name">${esc(name)}</div>
-        <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}</div>
+        <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}${statusTag}</div>
       </div>
       <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">Preview &amp; copy</button>
     </div>`;
@@ -15789,6 +15953,15 @@ function kpiOpsCopy(i) {
   const [name, entries] = ops[i];
   const firstName = name.split(/\s+/)[0] || name;
 
+  // Status time is keyed on the operator, not the date, so it renders once
+  // below the KPI table(s) as its own section.
+  const statusSec = buildKpiOpsStatusSection(entries[0].row[1] || '');
+  const statusHtml = statusSec ? `<div style="margin:18px 0 0 0;">
+      <div style="margin:0 0 8px 0; font-weight:bold; color:#595959; font-size:11pt;">Status time</div>
+      ${statusSec.html}
+    </div>` : '';
+  const statusText = statusSec ? `\n\nStatus time:\n${statusSec.text}` : '';
+
   let html, text;
   if (entries.length === 1) {
     const { dateLabel, row, totals } = entries[0];
@@ -15797,12 +15970,13 @@ function kpiOpsCopy(i) {
     <div style="margin:0 0 12px 0;">Hi ${esc(firstName)},</div>
     <div style="margin:0 0 12px 0;">Here are the KPI's from ${esc(dateLabel)}:</div>
     ${table}
+    ${statusHtml}
     <div style="margin:12px 0 0 0;">Kind regards,</div>
   </div>`;
     text = `Hi ${firstName},\n\nHere are the KPI's from ${dateLabel}:\n\n` +
       KPI_OPS_COLUMNS.map(c => c.header).join('\t') + '\n' + row.join('\t');
     if (totals && totals.some(v => v !== '')) text += '\n' + totals.join('\t');
-    text += '\n\nKind regards,';
+    text += statusText + '\n\nKind regards,';
   } else {
     const sections = entries.map(({ dateLabel, row, totals }) =>
       `<div style="margin:0 0 18px 0;">
@@ -15814,6 +15988,7 @@ function kpiOpsCopy(i) {
     <div style="margin:0 0 12px 0;">Hi ${esc(firstName)},</div>
     <div style="margin:0 0 16px 0;">Here are your KPI's for the following dates:</div>
     ${sections}
+    ${statusHtml}
     <div style="margin:4px 0 0 0;">Kind regards,</div>
   </div>`;
     const textSections = entries.map(({ dateLabel, row, totals }) => {
@@ -15822,7 +15997,7 @@ function kpiOpsCopy(i) {
       return s;
     });
     text = `Hi ${firstName},\n\nHere are your KPI's for the following dates:\n\n` +
-      textSections.join('\n\n') + '\n\nKind regards,';
+      textSections.join('\n\n') + statusText + '\n\nKind regards,';
   }
 
   kpiOpsCurrentHtml = html;
