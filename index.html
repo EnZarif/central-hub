@@ -3571,7 +3571,7 @@
         <div class="al-input-wrap">
           <i class="ti ti-search al-input-ico"></i>
           <input type="text" id="al-q" class="al-input" autocomplete="off" spellcheck="false"
-                 placeholder="e.g. NT Darwin · 3000 · DARWIN CITY · Melbourne"
+                 placeholder="e.g. Belrose New South Wales 2085 · NT Darwin · 3000"
                  oninput="alOnInput()" onkeydown="alOnKey(event)">
           <button class="al-clear-btn" id="al-clear" onclick="alClear()" title="Clear"><i class="ti ti-x"></i></button>
         </div>
@@ -3579,7 +3579,7 @@
           <option value="">All states</option>
         </select>
       </div>
-      <div class="al-hint" id="al-hint">Type a zone name, suburb, postcode or state. Results update as you type.</div>
+      <div class="al-hint" id="al-hint">Type a zone, a suburb, a postcode, or a full address like "Belrose New South Wales 2085".</div>
       <div class="al-sugg" id="al-sugg"></div>
     </div>
 
@@ -8085,6 +8085,30 @@ function alOnInput() {
 // Search precedence: exact zone > exact suburb > postcode > partial zone/suburb.
 // Picking the narrowest match that actually hits avoids "Melbourne" dragging in
 // every zone that merely contains the word.
+// Splits a pasted address line into its parts — "Belrose New South Wales 2085",
+// "BELROSE NSW 2085", "Belrose, NSW" all reduce to suburb + state + postcode.
+// Returns null when the text carries no state or postcode to strip.
+function alParseAddress(raw) {
+  let s = String(raw || '').trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
+  if (!s) return null;
+  let pc = '', st = '';
+  const pcM = s.match(/(^|\s)(\d{4})(\s|$)/);
+  if (pcM) { pc = pcM[2]; s = (s.slice(0, pcM.index) + ' ' + s.slice(pcM.index + pcM[0].length)).trim(); }
+  // Longest state name first, so "New South Wales" wins over a stray "wales"
+  const names = Object.keys(AL_STATE_FROM_ADMIN).sort((a, b) => b.length - a.length);
+  for (const n of names) {
+    const re = new RegExp('(^|\\s)' + n.replace(/ /g, '\\s+') + '(\\s|$)', 'i');
+    if (re.test(s)) { st = AL_STATE_FROM_ADMIN[n]; s = s.replace(re, ' ').trim(); break; }
+  }
+  if (!st) {
+    const codeM = s.match(/(^|\s)(VIC|NSW|QLD|SA|WA|TAS|NT|ACT)(\s|$)/i);
+    if (codeM) { st = codeM[2].toUpperCase(); s = (s.slice(0, codeM.index) + ' ' + s.slice(codeM.index + codeM[0].length)).trim(); }
+  }
+  const loc = s.replace(/\s+/g, ' ').trim();
+  if (!pc && !st) return null;               // nothing to separate — leave it to the plain search
+  return { loc, st, pc };
+}
+
 function alSearch(raw, stateFilter) {
   const q = raw.trim().toLowerCase();
   if (!q) return { rows: [], mode: '' };
@@ -8096,6 +8120,30 @@ function alSearch(raw, stateFilter) {
 
   const exactLoc = pool.filter(r => r._l === q);
   if (exactLoc.length) return { rows: exactLoc, mode: 'suburb' };
+
+  // A full address line: narrow by whichever parts were given, most specific first
+  const addr = alParseAddress(raw);
+  if (addr) {
+    const { loc, st, pc } = addr;
+    const byState = st ? pool.filter(r => r.st === st) : pool;
+    if (loc && pc) {
+      const hit = byState.filter(r => r._l === loc.toLowerCase() && r.pc === pc);
+      if (hit.length) return { rows: hit, mode: 'address' };
+    }
+    if (loc) {
+      const hit = byState.filter(r => r._l === loc.toLowerCase());
+      if (hit.length) return { rows: hit, mode: st ? 'address' : 'suburb' };
+    }
+    if (pc) {
+      const hit = byState.filter(r => r.pc === pc);
+      if (hit.length) return { rows: hit, mode: 'postcode' };
+    }
+    if (loc) {
+      const hit = byState.filter(r => r._l.includes(loc.toLowerCase()) || r._g.includes(loc.toLowerCase()));
+      if (hit.length) return { rows: hit, mode: 'partial' };
+    }
+    return { rows: [], mode: '' };
+  }
 
   if (/^\d{3,4}$/.test(q)) {
     const pc = q.padStart(4, '0');
@@ -8203,7 +8251,7 @@ function alRenderAnswer(rows, raw, mode, stateFilter) {
   const siteRt = alConsensus(rows, 'rt');
   const agrees = siteA1.value === a1.value;
 
-  const label = { zone:'Zone', suburb:'Suburb', postcode:'Postcode', state:'State', partial:'Match' }[mode] || 'Match';
+  const label = { zone:'Zone', suburb:'Suburb', postcode:'Postcode', state:'State', address:'Address', partial:'Match' }[mode] || 'Match';
 
   const allocCell = `<div class="al-alloc primary">
     <div class="al-alloc-label">Technician Allocation</div>
@@ -8422,9 +8470,10 @@ async function alFindNearestZone() {
   // Work out what we're looking for from the search box plus the state filter
   const stateFilter = document.getElementById('al-state')?.value || '';
   const isPc = /^\d{3,4}$/.test(raw);
-  const suburb = isPc ? '' : raw;
-  let pc = isPc ? raw.padStart(4, '0') : '';
-  let st = stateFilter;
+  const addr = alParseAddress(raw);
+  const suburb = addr ? addr.loc : (isPc ? '' : raw);
+  let pc = addr && addr.pc ? addr.pc : (isPc ? raw.padStart(4, '0') : '');
+  let st = stateFilter || (addr ? addr.st : '');
 
   // Pending gaps recorded earlier may already carry the postcode and state
   const gap = allocGaps.find(g => (g.loc || '').toLowerCase() === raw.toLowerCase());
