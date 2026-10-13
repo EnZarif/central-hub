@@ -1946,6 +1946,12 @@
   .jl-section-label i { font-size: 11px; }
   .jl-section-label.ov { color: #E05858; }
   .jl-section-label.td { color: #F5A449; }
+  button.jl-bucket { width: 100%; background: none; border: none; font-family: inherit; cursor: pointer;
+    text-align: left; padding: 7px 14px 4px; border-radius: 6px; transition: background .12s; }
+  button.jl-bucket:hover { background: rgba(255,255,255,0.04); }
+  .jl-bucket-caret { opacity: .75; margin-left: -2px; }
+  .jl-bucket-n { margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: 0;
+    background: color-mix(in srgb, currentColor 16%, transparent); border-radius: 9px; padding: 1px 7px; }
   .jl-section-divider { display:flex; align-items:center; gap:8px; padding:4px 10px; margin:8px 0 2px; }
   .jl-sec-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--teal-text); white-space:nowrap; cursor:pointer; line-height:1.4; }
   .jl-sec-label:hover { opacity:.8; }
@@ -9424,6 +9430,29 @@ function jlSaveCollapsed() {
   try { localStorage.setItem('jl_collapsed_sections', JSON.stringify([...jlCollapsedSections])); } catch(e) {}
 }
 
+// Overdue / Due Today collapse like sections do. Kept per device in
+// localStorage, same as section state — it's a view preference, not data.
+let jlCollapsedBuckets = (() => {
+  try { return new Set(JSON.parse(localStorage.getItem('jl_collapsed_buckets') || '[]')); }
+  catch(e) { return new Set(); }
+})();
+function jlToggleBucket(key) {
+  if (jlCollapsedBuckets.has(key)) jlCollapsedBuckets.delete(key); else jlCollapsedBuckets.add(key);
+  try { localStorage.setItem('jl_collapsed_buckets', JSON.stringify([...jlCollapsedBuckets])); } catch(e) {}
+  renderJobListSidebar();
+}
+// The count stays in the header so a collapsed Overdue still says how much is
+// hiding behind it — collapsing urgent work shouldn't make it invisible.
+function jlBucketHeader(key, cls, icon, label, n) {
+  const open = !jlCollapsedBuckets.has(key);
+  return `<button class="jl-section-label ${cls} jl-bucket" onclick="jlToggleBucket('${key}')"
+    title="${open ? 'Collapse' : 'Expand'} ${label.toLowerCase()}">
+    <i class="ti ti-chevron-${open ? 'down' : 'right'} jl-bucket-caret"></i>
+    <i class="ti ${icon}"></i> ${label}
+    <span class="jl-bucket-n">${n}</span>
+  </button>`;
+}
+
 function jlToggleSection(id) {
   const sid = String(id);
   if (jlCollapsedSections.has(sid)) { jlCollapsedSections.delete(sid); }
@@ -10706,14 +10735,18 @@ function renderJobListSidebar() {
     const urgentIds = new Set([...urgentOv, ...urgentTd].map(j => String(j.id)));
 
     if (urgentOv.length) {
-      html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
-      // inSection is false here on purpose: its accent bar would stack against
-      // the urgency stripe, and the section chip already says where the job sits.
-      html += urgentOv.map(j => jlRowHtml(j, false, true, false, false, false, true)).join('');
+      html += jlBucketHeader('ov', 'ov', 'ti-alert-circle', 'Overdue', urgentOv.length);
+      if (!jlCollapsedBuckets.has('ov')) {
+        // inSection is false here on purpose: its accent bar would stack against
+        // the urgency stripe, and the section chip already says where the job sits.
+        html += urgentOv.map(j => jlRowHtml(j, false, true, false, false, false, true)).join('');
+      }
     }
     if (urgentTd.length) {
-      html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
-      html += urgentTd.map(j => jlRowHtml(j, true, false, false, false, false, true)).join('');
+      html += jlBucketHeader('td', 'td', 'ti-calendar-event', 'Due Today', urgentTd.length);
+      if (!jlCollapsedBuckets.has('td')) {
+        html += urgentTd.map(j => jlRowHtml(j, true, false, false, false, false, true)).join('');
+      }
     }
 
     if (!sections.length && !activeJobs.length) {
@@ -10753,13 +10786,17 @@ function renderJobListSidebar() {
     jlRenderSectionJump([], []);
     if (overdue.length) {
       const sortedOverdue = [...overdue].sort((a, b) => a.date.localeCompare(b.date));
-      html += `<div class="jl-section-label ov"><i class="ti ti-alert-circle"></i> Overdue</div>`;
-      html += sortedOverdue.map(j => jlRowHtml(j, false, true)).join('');
+      html += jlBucketHeader('ov', 'ov', 'ti-alert-circle', 'Overdue', sortedOverdue.length);
+      if (!jlCollapsedBuckets.has('ov')) {
+        html += sortedOverdue.map(j => jlRowHtml(j, false, true)).join('');
+      }
     }
 
     if (dueToday.length) {
-      html += `<div class="jl-section-label td"><i class="ti ti-calendar-event"></i> Due Today</div>`;
-      html += dueToday.map(j => jlRowHtml(j, true)).join('');
+      html += jlBucketHeader('td', 'td', 'ti-calendar-event', 'Due Today', dueToday.length);
+      if (!jlCollapsedBuckets.has('td')) {
+        html += dueToday.map(j => jlRowHtml(j, true)).join('');
+      }
     }
 
     if (sortedRest.length) {
