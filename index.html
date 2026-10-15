@@ -2268,6 +2268,53 @@
   .al-rows tr:last-child td { border-bottom:none; }
   .al-rows tr:hover td { background:var(--surface2); }
   .al-rows td.pc { font-variant-numeric:tabular-nums; color:var(--text); font-weight:600; }
+  /* ---- Project Analysis ---- */
+  .pa-filters { display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .pa-f { display:flex; flex-direction:column; gap:4px; }
+  .pa-f-l { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); }
+  .pa-f-s { min-width:150px; font-size:12.5px; }
+  .pa-more { display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11.5px; font-weight:600;
+    padding:7px 11px; border-radius:var(--radius); border:0.5px solid var(--border-md); background:var(--surface2);
+    color:var(--text-2); cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .pa-more:hover { border-color:var(--teal); color:var(--teal-text); }
+  .pa-jid { color:var(--teal-text); text-decoration:none; }
+  .pa-jid:hover { text-decoration:underline; }
+  .pa-span { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-3); padding-bottom:7px; }
+  .pa-tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:10px; margin-bottom:16px; }
+  .pa-tile { background:var(--surface); border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .pa-tile-n { font-size:21px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; line-height:1.1; }
+  .pa-tile-l { font-size:10.5px; color:var(--text-3); margin-top:3px; }
+  .pa-tile.warn .pa-tile-n { color:var(--amber-text); }
+  .pa-split { display:flex; gap:22px; flex-wrap:wrap; align-items:center; }
+  .pa-big-n { font-size:40px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+  .pa-big-n.good { color:var(--green-text); }
+  .pa-big-n.warn { color:var(--amber-text); }
+  .pa-big-n.bad  { color:var(--coral-text); }
+  .pa-big-l { font-size:12.5px; color:var(--text-2); margin-top:6px; }
+  .pa-big-s { font-size:11px; color:var(--text-3); margin-top:2px; }
+  .pa-mini { display:flex; gap:10px; margin-left:auto; }
+  .pa-mini .pa-tile { min-width:118px; }
+  .pa-bar { display:inline-block; width:74px; height:6px; border-radius:3px; background:var(--surface2); overflow:hidden; vertical-align:middle; }
+  .pa-bar-fill { display:block; height:100%; border-radius:3px; }
+  .pa-bar-fill.good { background:var(--green-text); }
+  .pa-bar-fill.warn { background:var(--amber-text); }
+  .pa-bar-fill.bad  { background:var(--coral-text); }
+  .pa-bar-n { margin-left:8px; font-size:11.5px; font-variant-numeric:tabular-nums; }
+  .pa-dim { color:var(--text-3); }
+  .pa-note { display:flex; align-items:flex-start; gap:7px; font-size:12px; color:var(--text-3); line-height:1.5; }
+  .pa-note i { color:var(--teal); margin-top:1px; flex-shrink:0; }
+  .pa-note strong { color:var(--text-2); }
+  .pa-weeks { display:flex; align-items:flex-end; gap:8px; height:120px; }
+  .pa-week { flex:1; min-width:36px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .pa-week-bar { flex:1; width:100%; display:flex; align-items:flex-end; background:var(--surface2); border-radius:5px; overflow:hidden; }
+  .pa-week-bar span { width:100%; background:linear-gradient(180deg, var(--teal), color-mix(in srgb, var(--teal) 55%, transparent)); border-radius:5px; min-height:3px; }
+  .pa-week-n { font-size:12px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+  .pa-week-l { font-size:10px; color:var(--text-3); white-space:nowrap; }
+  .pa-empty { text-align:center; padding:30px 20px; }
+  .pa-empty i { font-size:30px; color:var(--text-3); }
+  .pa-empty-t { font-size:14px; font-weight:600; color:var(--text-2); margin-top:10px; }
+  .pa-empty-d { font-size:12px; color:var(--text-3); margin:6px auto 0; max-width:520px; line-height:1.6; }
+  .pa-empty-d code { background:var(--surface2); border-radius:4px; padding:1px 5px; font-size:11px; }
   .al-pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10.5px; font-weight:600; }
   .al-pill.metro { background:var(--teal-bg); color:var(--teal-text); }
   .al-pill.regional { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
@@ -4479,6 +4526,30 @@
         <div id="kpi-nick-list"></div>
       </div>
     </div>
+  </div>
+
+  <!-- PROJECT ANALYSIS PAGE -->
+  <div class="page" id="page-projanalysis">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-chart-histogram"></i> Project Analysis</h1>
+        <p>Reconstructs project history from your daily job exports &mdash; delivery, reschedule risk and booking lead time</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-template-row">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Daily job exports</div>
+          <div class="kpi-tpl-status" id="pa-status">No snapshots loaded</div>
+        </div>
+        <input type="file" id="pa-input" class="kpi-file-input" accept=".csv,.xlsx,.xls" multiple onchange="paAddFiles(this.files)">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('pa-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Add snapshots</button>
+        <button class="kpi-ops-file-remove" onclick="paClear()" title="Clear all snapshots"><i class="ti ti-x"></i></button>
+      </div>
+    </div>
+
+    <div id="pa-body" style="margin-top:16px;"></div>
   </div>
 
   <!-- NSLA REPORT PAGE -->
@@ -12258,6 +12329,7 @@ const PAGES = {
   learning:       { title:'Learning',          icon:'ti-school',           color:'c-teal',   desc:'Courses, books, tutorials and things you want to learn.' },
   suburbcheck:    { title:'Suburb Checker',    icon:'ti-map-pin',          color:'c-amber',  desc:'Validate suburb, postcode and state data against a reference localities file.' },
   alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up the technician allocation and zone type by suburb, zone, postcode or state.' },
+  projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -12268,7 +12340,7 @@ const HUB_META = {
 };
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','alloccheck','meetings','message','templates'],
-  projects: ['meetings'],
+  projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
 const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
@@ -12284,6 +12356,8 @@ function loadHubLayout() {
     if (h === 'personal' && !list.includes('notes')) list.push('notes');
     if (h === 'personal' && !list.includes('learning')) list.push('learning');
     if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
+    // Saved layouts predate Project Analysis, so add it to Projects once.
+    if (h === 'projects' && !list.includes('projanalysis')) list.unshift('projanalysis');
     if (h === 'helpdesk') {
       const i = list.indexOf('alloccheck');
       if (i === -1) {
@@ -16223,6 +16297,539 @@ async function copyRichText(html, text) {
     sel.removeAllRanges();
     document.body.removeChild(container);
   }
+}
+
+// ===== PROJECT ANALYSIS =====
+// Fed by the daily helpdesk exports (jobs-YYYY-MM-DD.csv). Each file is a
+// snapshot of the whole job board on that day, so folding a run of them into a
+// per-job timeline is what turns a pile of exports into history: a scheduled
+// date that changes between two snapshots is a reschedule, and the first
+// snapshot where a job reads Closed dates its completion to within one export.
+// Nothing here invents a figure it cannot see — every panel reports the number
+// of jobs it could actually answer for, and the Data coverage panel says what
+// is missing and what that blocks.
+let paSnaps = [];          // [{file, date, cols, rows}]
+let paJobs = [];           // folded timelines
+let paFilter = { brand: '', state: '', contract: '', allBrands: false };
+// Below this a brand is a one-off call-out, not a project worth trending.
+const PA_PROJECT_MIN = 3;
+
+const PA_STATE_MAP = {
+  'victoria':'VIC', 'vic':'VIC',
+  'new south wales':'NSW', 'nsw':'NSW',
+  'queensland':'QLD', 'qld':'QLD',
+  'south australia':'SA', 'sa':'SA',
+  'western australia':'WA', 'wa':'WA',
+  'tasmania':'TAS', 'tas':'TAS',
+  'northern territory':'NT', 'nt':'NT',
+  'australian capital territory':'ACT', 'act':'ACT'
+};
+// The exports spell states both ways ("VICTORIA" and "VIC") and carry NZ
+// regions in the same column, so they are folded to one label per state and
+// the NZ regions are grouped rather than shown as a dozen one-job slivers.
+function paNormState(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (!s) return '';
+  if (PA_STATE_MAP[s]) return PA_STATE_MAP[s];
+  if (/auckland|otago|marlborough|waikato|canterbury|wellington|nz |north island|south island/.test(s)) return 'NZ';
+  return s.toUpperCase();
+}
+
+// Status buckets. "booking" is everything between raised and booked in — it is
+// the stage that actually consumes helpdesk time, so it is kept separate from
+// work that simply has no date yet.
+function paBucket(status) {
+  const s = String(status || '').trim().toLowerCase();
+  if (!s) return 'unknown';
+  if (/closed|complete|finish/.test(s)) return 'closed';
+  if (/cancel/.test(s)) return 'cancelled';
+  if (/on site|onsite|in progress|arrived/.test(s)) return 'onsite';
+  if (/scheduled|booked/.test(s)) return 'scheduled';
+  if (/booking|escalat|taken|pending|await/.test(s)) return 'booking';
+  return 'other';
+}
+const PA_BUCKET_LABEL = { closed:'Closed', onsite:'On site', scheduled:'Scheduled',
+  booking:'Booking', cancelled:'Cancelled', other:'Other', unknown:'No status' };
+
+// "2026-06-30 05:00 PM" / "30/06/2026" / a real Date -> YYYY-MM-DD
+function paDate(v) {
+  if (v == null || v === '') return '';
+  if (v instanceof Date && !isNaN(v)) return ymd(v);
+  const s = String(v).trim();
+  if (!s) return '';
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${String(+m[2]).padStart(2,'0')}-${String(+m[3]).padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${String(+m[2]).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`;
+  const d = new Date(s);
+  return isNaN(d) ? '' : ymd(d);
+}
+function paFileDate(name) {
+  const m = String(name || '').match(/(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+}
+function paDayDiff(a, b) {
+  if (!a || !b) return null;
+  return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+}
+// Site names read "<Brand> <Location>", so the brand is what groups a project.
+function paBrand(site) {
+  const b = jliBrandKey(site);
+  return b ? b.toUpperCase() : '';
+}
+
+const PA_COLS = {
+  jid:      ['job #','job#','job no','job number','jobid','job id'],
+  site:     ['location name','site','location'],
+  contract: ['contract'],
+  status:   ['status'],
+  sched:    ['scheduled','scheduled date','scheduled at'],
+  tech:     ['technician','allocated tech team'],
+  state:    ['location state','state'],
+  suburb:   ['location suburb','suburb'],
+  zone:     ['zone'],
+  created:  ['created at','created at (local)','created'],
+  closed:   ['closed date','closed at']
+};
+function paFindCol(headers, keys) {
+  const low = headers.map(h => String(h || '').trim().toLowerCase());
+  for (const k of keys) { const i = low.indexOf(k); if (i !== -1) return i; }
+  return -1;
+}
+
+async function paAddFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  let added = 0, skipped = 0;
+  paStatus(`Reading ${files.length} file${files.length !== 1 ? 's' : ''}…`);
+  for (const f of files) {
+    if (paSnaps.some(s => s.file === f.name)) { skipped++; continue; }
+    try {
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, { type:'array', cellDates:true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false, dateNF:'yyyy-mm-dd' });
+      if (raw.length < 2) { skipped++; continue; }
+      const headers = raw[0].map(h => String(h || ''));
+      const idx = {};
+      for (const key of Object.keys(PA_COLS)) idx[key] = paFindCol(headers, PA_COLS[key]);
+      if (idx.jid === -1 || idx.site === -1) { skipped++; continue; }
+      const rows = [];
+      for (let i = 1; i < raw.length; i++) {
+        const r = raw[i];
+        const get = k => idx[k] === -1 ? '' : String(r[idx[k]] == null ? '' : r[idx[k]]).trim();
+        const jid = get('jid');
+        if (!jid) continue;
+        rows.push({
+          jid, site: get('site').toUpperCase(), contract: get('contract'),
+          status: get('status'), sched: paDate(idx.sched === -1 ? '' : r[idx.sched]),
+          tech: get('tech'), state: paNormState(get('state')), suburb: get('suburb').toUpperCase(),
+          zone: get('zone'),
+          created: paDate(idx.created === -1 ? '' : r[idx.created]),
+          closed: paDate(idx.closed === -1 ? '' : r[idx.closed])
+        });
+      }
+      if (!rows.length) { skipped++; continue; }
+      paSnaps.push({
+        file: f.name,
+        date: paFileDate(f.name) || ymd(new Date(f.lastModified || Date.now())),
+        cols: Object.keys(PA_COLS).filter(k => idx[k] !== -1),
+        rows
+      });
+      added++;
+    } catch (e) { console.error('paAddFiles:', f.name, e); skipped++; }
+  }
+  // Chronological, so folding walks the timeline forwards.
+  paSnaps.sort((a, b) => a.date.localeCompare(b.date) || a.file.localeCompare(b.file));
+  paBuild();
+  paStatus(`${paSnaps.length} snapshot${paSnaps.length !== 1 ? 's' : ''} · ${paJobs.length.toLocaleString()} jobs`
+    + (skipped ? ` · ${skipped} skipped` : ''), 'ok');
+  renderProjAnalysis();
+  const inp = document.getElementById('pa-input');
+  if (inp) inp.value = '';
+}
+
+function paStatus(msg, type) {
+  const el = document.getElementById('pa-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' ' + type : ''); }
+}
+
+function paClear() {
+  paSnaps = []; paJobs = [];
+  paStatus('No snapshots loaded');
+  renderProjAnalysis();
+}
+
+// Fold the snapshots into one timeline per job. Only change-points are kept:
+// a run of identical snapshots says nothing, and the gaps are what let the
+// reschedule and completion dates be read off later.
+function paBuild() {
+  const map = new Map();
+  for (const snap of paSnaps) {
+    for (const r of snap.rows) {
+      let j = map.get(r.jid);
+      if (!j) {
+        j = { jid: r.jid, site: r.site, brand: paBrand(r.site), contract: r.contract,
+              tech: r.tech, state: r.state, suburb: r.suburb, zone: r.zone,
+              created: r.created, closedCol: r.closed,
+              firstSeen: snap.date, lastSeen: snap.date, hist: [] };
+        map.set(r.jid, j);
+      }
+      // Later snapshots fill in fields the earlier exports did not carry.
+      if (r.site)     j.site = r.site;
+      if (r.contract) j.contract = r.contract;
+      if (r.tech)     j.tech = r.tech;
+      if (r.state)    j.state = r.state;
+      if (r.suburb)   j.suburb = r.suburb;
+      if (r.zone)     j.zone = r.zone;
+      if (r.created)  j.created = r.created;
+      if (r.closed)   j.closedCol = r.closed;
+      j.lastSeen = snap.date;
+      // The last snapshot that still showed this job open bounds the earliest
+      // its close could have happened; paBuild uses it to avoid calling a job
+      // late purely because the export that caught it ran the next morning.
+      if (paBucket(r.status) !== 'closed') j.lastOpenOn = snap.date;
+      else if (j.closedFirstOn === undefined) { j.closedFirstOn = snap.date; j.prevOpenOn = j.lastOpenOn || ''; }
+      const last = j.hist[j.hist.length - 1];
+      if (!last || last.status !== r.status || last.sched !== r.sched) {
+        j.hist.push({ on: snap.date, status: r.status, sched: r.sched });
+      }
+    }
+  }
+
+  paJobs = [...map.values()];
+  for (const j of paJobs) {
+    if (!j.brand) j.brand = paBrand(j.site);
+    const last = j.hist[j.hist.length - 1] || {};
+    j.status = last.status || '';
+    j.bucket = paBucket(j.status);
+    j.sched  = last.sched || '';
+
+    // Every distinct non-blank scheduled date this job has ever carried.
+    const dates = [];
+    for (const h of j.hist) {
+      if (h.sched && dates[dates.length - 1] !== h.sched) dates.push(h.sched);
+    }
+    j.schedDates = dates;
+    j.firstSched = dates[0] || '';
+    // A reschedule is a *move* between two dates, so the first date is not one.
+    j.reschedules = Math.max(0, dates.length - 1);
+    // Also count dropping back to no date at all while not closed — a booking
+    // that fell over, which is the same failure wearing different clothes.
+    j.dropped = j.hist.some((h, i) => i > 0 && !h.sched && j.hist[i-1].sched
+      && paBucket(h.status) !== 'closed' && paBucket(h.status) !== 'cancelled');
+
+    // Completion: the Closed Date column if the export carried one, otherwise
+    // the first snapshot that read Closed. The latter only bounds the real
+    // close to the window (last seen open, first seen closed].
+    j.closedOn = j.closedCol || j.closedFirstOn || '';
+    j.closedApprox = !j.closedCol && !!j.closedFirstOn;
+
+    // The date it was meant to happen: the last scheduled date it held at or
+    // before it closed, not whatever the final row says.
+    let target = '';
+    for (const h of j.hist) {
+      if (j.closedOn && h.on > j.closedOn) break;
+      if (h.sched) target = h.sched;
+    }
+    j.targetDate = target || j.firstSched;
+
+    // Three-way on purpose. Exports are snapshots, so a job finished on its
+    // booked date usually first reads Closed in the next morning's file. Only
+    // an exact Closed Date, or a window that falls wholly on one side of the
+    // booked date, settles the question - everything else is honestly unknown
+    // rather than quietly counted as late.
+    j.onTime = null; j.slip = null; j.verdict = 'n/a';
+    if (j.bucket === 'closed' && j.targetDate && j.closedOn) {
+      if (!j.closedApprox) {
+        j.slip = paDayDiff(j.targetDate, j.closedOn);
+        j.onTime = j.slip <= 0;
+        j.verdict = j.onTime ? 'on-time' : 'late';
+      } else if (j.closedOn <= j.targetDate) {
+        j.slip = paDayDiff(j.targetDate, j.closedOn);
+        j.onTime = true; j.verdict = 'on-time';
+      } else if (j.prevOpenOn && j.prevOpenOn > j.targetDate) {
+        // Still open in an export taken after the booked date - genuinely late.
+        j.slip = paDayDiff(j.targetDate, j.prevOpenOn);
+        j.onTime = false; j.verdict = 'late';
+      } else {
+        j.verdict = 'unclear';   // window straddles the booked date
+      }
+    }
+    j.leadDays = j.firstSched ? paDayDiff(j.created || j.firstSeen, j.firstSched) : null;
+  }
+  paJobs.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || a.jid.localeCompare(b.jid));
+}
+
+function paFiltered() {
+  return paJobs.filter(j =>
+    (!paFilter.brand    || j.brand === paFilter.brand) &&
+    (!paFilter.state    || (j.state || '(unknown)') === paFilter.state) &&
+    (!paFilter.contract || j.contract === paFilter.contract));
+}
+
+function paSetFilter(k, v) {
+  paFilter[k] = (v === 'true') ? true : (v === 'false') ? false : v;
+  renderProjAnalysis();
+}
+
+// Grouped stats for one dimension (state / brand), so the same table renders
+// either without duplicating the arithmetic.
+function paGroup(jobs, keyFn) {
+  const g = new Map();
+  for (const j of jobs) {
+    const k = keyFn(j) || '(unknown)';
+    let o = g.get(k);
+    if (!o) { o = { key:k, n:0, resched:0, reschedJobs:0, dropped:0, closed:0,
+                    onTime:0, rated:0, lead:[], slip:[] }; g.set(k, o); }
+    o.n++;
+    o.resched += j.reschedules;
+    if (j.reschedules) o.reschedJobs++;
+    if (j.dropped) o.dropped++;
+    if (j.bucket === 'closed') o.closed++;
+    if (j.onTime !== null) { o.rated++; if (j.onTime) o.onTime++; else o.slip.push(j.slip); }
+    if (j.leadDays !== null && j.leadDays >= 0) o.lead.push(j.leadDays);
+  }
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  return [...g.values()].map(o => ({
+    ...o,
+    reschedRate: o.n ? o.reschedJobs / o.n : 0,
+    onTimeRate:  o.rated ? o.onTime / o.rated : null,
+    avgLead:     avg(o.lead),
+    avgSlip:     avg(o.slip)
+  })).sort((a, b) => b.n - a.n);
+}
+
+function paPct(x) { return x === null ? '—' : Math.round(x * 100) + '%'; }
+function paNum(x, d) { return x === null ? '—' : (Math.round(x * 10) / 10).toFixed(d === undefined ? 1 : d); }
+
+// A bar that reads as a proportion at a glance. Risk colour is driven by the
+// value, not the row, so the eye lands on the worst performers first.
+function paBar(frac, tone) {
+  const pct = Math.max(0, Math.min(1, frac || 0)) * 100;
+  return `<span class="pa-bar"><span class="pa-bar-fill ${tone}" style="width:${pct.toFixed(1)}%"></span></span>`;
+}
+function paRiskTone(rate) { return rate >= 0.3 ? 'bad' : rate >= 0.12 ? 'warn' : 'good'; }
+
+function renderProjAnalysis() {
+  const el = document.getElementById('pa-body');
+  if (!el) return;
+
+  if (!paSnaps.length) {
+    el.innerHTML = `<div class="card"><div class="pa-empty">
+      <i class="ti ti-chart-histogram"></i>
+      <div class="pa-empty-t">No snapshots loaded</div>
+      <div class="pa-empty-d">Add your daily <code>jobs-YYYY-MM-DD</code> exports above. Each file is a snapshot of the
+      board that day — load a run of them and this page reconstructs every job's history: when it was booked, how often it
+      moved, and whether it landed on the day.</div></div></div>`;
+    return;
+  }
+
+  const jobs = paFiltered();
+  const brandCount = new Map();
+  for (const j of paJobs) if (j.brand) brandCount.set(j.brand, (brandCount.get(j.brand) || 0) + 1);
+  const minJobs = paFilter.allBrands ? 1 : PA_PROJECT_MIN;
+  const brands = [...brandCount.entries()]
+    .filter(([b, n]) => n >= minJobs || b === paFilter.brand)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([b, n]) => [b, `${b} (${n})`]);
+  const hiddenBrands = brandCount.size - brands.length;
+  const states    = [...new Set(paJobs.map(j => j.state || '(unknown)'))].sort();
+  const contracts = [...new Set(paJobs.map(j => j.contract).filter(Boolean))].sort();
+
+  const buckets = {};
+  for (const j of jobs) buckets[j.bucket] = (buckets[j.bucket] || 0) + 1;
+  const rated     = jobs.filter(j => j.onTime !== null);
+  const onTime    = rated.filter(j => j.onTime).length;
+  const unclear   = jobs.filter(j => j.verdict === 'unclear').length;
+  const withSched = jobs.filter(j => j.firstSched).length;
+  const movers    = jobs.filter(j => j.reschedules > 0).length;
+  const leads     = jobs.map(j => j.leadDays).filter(x => x !== null && x >= 0);
+  const avgLead   = leads.length ? leads.reduce((a, b) => a + b, 0) / leads.length : null;
+
+  const sel = (id, cur, opts, label, allLabel) => `
+    <label class="pa-f">
+      <span class="pa-f-l">${label}</span>
+      <select class="field-input pa-f-s" onchange="paSetFilter('${id}', this.value)">
+        <option value="">${esc(allLabel || 'All')}</option>
+        ${opts.map(o => { const [v, t] = Array.isArray(o) ? o : [o, o];
+          return `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(t)}</option>`; }).join('')}
+      </select>
+    </label>`;
+
+  const tile = (n, l, cls) => `<div class="pa-tile ${cls || ''}"><div class="pa-tile-n">${n}</div><div class="pa-tile-l">${l}</div></div>`;
+
+  // ---- on-time ----
+  const late = rated.filter(j => !j.onTime);
+  const avgSlip = late.length ? late.reduce((a, j) => a + j.slip, 0) / late.length : null;
+  const onTimePanel = rated.length ? `
+    <div class="pa-split">
+      <div class="pa-big"><div class="pa-big-n ${onTime / rated.length >= 0.8 ? 'good' : onTime / rated.length >= 0.5 ? 'warn' : 'bad'}">${paPct(onTime / rated.length)}</div>
+        <div class="pa-big-l">landed on or before the booked date</div>
+        <div class="pa-big-s">${onTime} of ${rated.length} closed jobs that had a date</div></div>
+      <div class="pa-mini">
+        ${tile(late.length, 'ran late')}
+        ${tile(avgSlip === null ? '—' : paNum(avgSlip) + 'd', 'average slip when late')}
+        ${tile(unclear, 'too close to call', unclear ? 'warn' : '')}
+      </div>
+    </div>
+    ${unclear ? `<div class="pa-note" style="margin-top:14px;"><i class="ti ti-help-circle"></i>
+      <span><strong>${unclear}</strong> closed job${unclear !== 1 ? 's' : ''} can't be judged: the export that caught
+      ${unclear !== 1 ? 'them' : 'it'} closed ran after the booked date, so finishing on the day and finishing a little
+      late look identical. A <strong>Closed Date</strong> column in the export removes this entirely.</span></div>` : ''}`
+    : `<div class="pa-note"><i class="ti ti-info-circle"></i> No job in this selection has both a booked
+      date and a close — see <strong>Data coverage</strong> below for what to add to the export.</div>`;
+
+  // ---- by state ----
+  const byState = paGroup(jobs, j => j.state || '(unknown)').filter(g => g.n >= 1);
+  const stateRows = byState.map(g => `<tr>
+      <td><strong>${esc(g.key)}</strong></td>
+      <td class="pc">${g.n.toLocaleString()}</td>
+      <td class="pc">${g.reschedJobs}</td>
+      <td>${paBar(g.reschedRate, paRiskTone(g.reschedRate))}<span class="pa-bar-n">${paPct(g.reschedRate)}</span></td>
+      <td class="pc">${g.dropped || '—'}</td>
+      <td>${g.onTimeRate === null ? '<span class="pa-dim">no data</span>'
+          : paBar(g.onTimeRate, g.onTimeRate >= 0.8 ? 'good' : g.onTimeRate >= 0.5 ? 'warn' : 'bad')
+            + `<span class="pa-bar-n">${paPct(g.onTimeRate)}<span class="pa-dim"> (${g.rated})</span></span>`}</td>
+      <td class="pc">${g.avgLead === null ? '—' : paNum(g.avgLead) + 'd'}</td>
+    </tr>`).join('');
+
+  // ---- by project ----
+  const byBrand = paGroup(jobs, j => j.brand).slice(0, 25);
+  const brandRows = byBrand.map(g => `<tr>
+      <td><strong>${esc(g.key)}</strong></td>
+      <td class="pc">${g.n.toLocaleString()}</td>
+      <td class="pc">${g.closed}</td>
+      <td>${paBar(g.reschedRate, paRiskTone(g.reschedRate))}<span class="pa-bar-n">${paPct(g.reschedRate)}</span></td>
+      <td>${g.onTimeRate === null ? '<span class="pa-dim">no data</span>'
+          : paBar(g.onTimeRate, g.onTimeRate >= 0.8 ? 'good' : g.onTimeRate >= 0.5 ? 'warn' : 'bad')
+            + `<span class="pa-bar-n">${paPct(g.onTimeRate)}</span>`}</td>
+      <td class="pc">${g.avgLead === null ? '—' : paNum(g.avgLead) + 'd'}</td>
+    </tr>`).join('');
+
+  // ---- forecast ----
+  const today = ymd(new Date());
+  const upcoming = jobs.filter(j => j.sched && j.sched >= today && j.bucket !== 'closed' && j.bucket !== 'cancelled');
+  const weeks = new Map();
+  for (const j of upcoming) {
+    const d = new Date(j.sched + 'T00:00:00');
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));   // back to Monday
+    const k = ymd(d);
+    if (!weeks.has(k)) weeks.set(k, []);
+    weeks.get(k).push(j);
+  }
+  const weekList = [...weeks.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(0, 10);
+  const peak = Math.max(1, ...weekList.map(([, v]) => v.length));
+  const backlog = jobs.filter(j => !j.sched && j.bucket !== 'closed' && j.bucket !== 'cancelled').length;
+  const forecastPanel = weekList.length ? `
+    <div class="pa-weeks">${weekList.map(([wk, v]) => `
+      <div class="pa-week">
+        <div class="pa-week-bar"><span style="height:${Math.round(v.length / peak * 100)}%"></span></div>
+        <div class="pa-week-n">${v.length}</div>
+        <div class="pa-week-l">${new Date(wk + 'T00:00:00').toLocaleDateString('en-AU', { day:'numeric', month:'short' })}</div>
+      </div>`).join('')}</div>
+    <div class="pa-note" style="margin-top:12px;"><i class="ti ti-clock"></i>
+      ${backlog.toLocaleString()} job${backlog !== 1 ? 's' : ''} with no date yet.
+      ${avgLead === null ? '' : `At the observed ${paNum(avgLead)}-day booking lead time, work raised today would
+      land around <strong>${new Date(Date.now() + avgLead * 86400000).toLocaleDateString('en-AU',
+      { day:'numeric', month:'short' })}</strong>.`}</div>`
+    : `<div class="pa-note"><i class="ti ti-info-circle"></i> Nothing scheduled ahead of today in this selection.
+       ${backlog ? `${backlog.toLocaleString()} job${backlog !== 1 ? 's' : ''} are waiting on a date.` : ''}</div>`;
+
+  // ---- worst offenders ----
+  const worst = [...jobs].filter(j => j.reschedules > 0 || j.dropped)
+    .sort((a, b) => (b.reschedules - a.reschedules) || (b.dropped - a.dropped)).slice(0, 15);
+
+  // ---- data coverage ----
+  const colCount = {};
+  for (const s of paSnaps) for (const c of s.cols) colCount[c] = (colCount[c] || 0) + 1;
+  const need = [
+    ['sched',  'Scheduled',      'on-time delivery, reschedule counts and the forecast'],
+    ['status', 'Status',         'the funnel and when a job actually closed'],
+    ['state',  'Location State', 'the state breakdown'],
+    ['created','Created At',     'a true booking lead time (otherwise measured from first appearance)'],
+    ['closed', 'Closed Date',    'an exact completion date (otherwise accurate to the export gap)']
+  ];
+  const covRows = need.map(([k, label, unlocks]) => {
+    const n = colCount[k] || 0, pct = n / paSnaps.length;
+    return `<tr>
+      <td><strong>${label}</strong></td>
+      <td class="pc">${n} / ${paSnaps.length}</td>
+      <td>${paBar(pct, pct >= 0.9 ? 'good' : pct >= 0.4 ? 'warn' : 'bad')}<span class="pa-bar-n">${paPct(pct)}</span></td>
+      <td class="pa-dim">${unlocks}</td></tr>`;
+  }).join('');
+
+  const span = paSnaps.length
+    ? `${paSnaps[0].date} → ${paSnaps[paSnaps.length - 1].date}` : '';
+
+  el.innerHTML = `
+    <div class="pa-filters">
+      ${sel('brand',    paFilter.brand,    brands,    'Project', 'All projects')}
+      ${sel('state',    paFilter.state,    states,    'State')}
+      ${sel('contract', paFilter.contract, contracts, 'Contract')}
+      ${hiddenBrands > 0 || paFilter.allBrands ? `<button class="pa-more" onclick="paSetFilter('allBrands', ${paFilter.allBrands ? 'false' : 'true'})"
+        title="Brands with fewer than ${PA_PROJECT_MIN} jobs are one-off calls rather than rollouts">
+        <i class="ti ti-${paFilter.allBrands ? 'eye-off' : 'eye'}"></i>
+        ${paFilter.allBrands ? 'Hide one-offs' : `+${hiddenBrands.toLocaleString()} one-off`}</button>` : ''}
+      <div class="pa-span"><i class="ti ti-calendar"></i> ${esc(span)} · ${paSnaps.length} snapshot${paSnaps.length !== 1 ? 's' : ''}</div>
+    </div>
+
+    <div class="pa-tiles">
+      ${tile(jobs.length.toLocaleString(), 'jobs in view')}
+      ${tile((buckets.scheduled || 0).toLocaleString(), 'scheduled')}
+      ${tile((buckets.booking || 0).toLocaleString(), 'in booking')}
+      ${tile((buckets.closed || 0).toLocaleString(), 'closed')}
+      ${tile(withSched.toLocaleString(), 'ever had a date')}
+      ${tile(movers.toLocaleString(), 'moved at least once', movers ? 'warn' : '')}
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-target-arrow" style="font-size:13px;"></i> Did the booked work land on the day?</div>
+      ${onTimePanel}
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title"><i class="ti ti-map-2" style="font-size:13px;"></i> Risk by state</div>
+      ${byState.length ? `<div class="sv-cov-table-wrap"><table class="al-rows">
+        <thead><tr><th>State</th><th>Jobs</th><th>Moved</th><th>Reschedule rate</th><th>Fell over</th><th>On time</th><th>Lead</th></tr></thead>
+        <tbody>${stateRows}</tbody></table></div>`
+        : '<div class="pa-note">No state data in this selection.</div>'}
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title"><i class="ti ti-building-store" style="font-size:13px;"></i> By project</div>
+      <div class="sv-cov-table-wrap"><table class="al-rows">
+        <thead><tr><th>Project</th><th>Jobs</th><th>Closed</th><th>Reschedule rate</th><th>On time</th><th>Lead</th></tr></thead>
+        <tbody>${brandRows}</tbody></table></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title"><i class="ti ti-calendar-stats" style="font-size:13px;"></i> Scheduled ahead</div>
+      ${forecastPanel}
+    </div>
+
+    ${worst.length ? `<div class="card" style="margin-top:14px;">
+      <div class="card-title"><i class="ti ti-alert-triangle" style="font-size:13px;"></i> Most-moved jobs</div>
+      <div class="sv-cov-table-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>State</th><th>Moves</th><th>Dates it held</th><th>Status</th></tr></thead>
+        <tbody>${worst.map(j => `<tr>
+          <td class="pc"><a href="${esc(buildHelpdeskUrl(j.jid))}" target="_blank" rel="noopener" class="pa-jid">${esc(j.jid)}</a></td>
+          <td>${esc(j.site)}</td>
+          <td>${esc(j.state || '—')}</td>
+          <td class="pc">${j.reschedules}${j.dropped ? ' <span class="pa-dim">+fell over</span>' : ''}</td>
+          <td class="pa-dim">${j.schedDates.map(esc).join(' → ') || '—'}</td>
+          <td>${esc(PA_BUCKET_LABEL[j.bucket] || j.status)}</td>
+        </tr>`).join('')}</tbody></table></div>
+    </div>` : ''}
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title"><i class="ti ti-database-cog" style="font-size:13px;"></i> Data coverage</div>
+      <div class="pa-dim" style="font-size:12px;margin-bottom:10px;">How many of the loaded exports carry each column,
+        and what a gap costs you. Anything below 100% means the figures above are drawn from a subset.</div>
+      <div class="sv-cov-table-wrap"><table class="al-rows">
+        <thead><tr><th>Column</th><th>Files</th><th>Coverage</th><th>Unlocks</th></tr></thead>
+        <tbody>${covRows}</tbody></table></div>
+    </div>`;
 }
 
 // ===== REUSABLE DATE PICKER =====
