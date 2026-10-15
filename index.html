@@ -16400,6 +16400,13 @@ function paFindCol(headers, keys) {
 async function paAddFiles(fileList) {
   const files = Array.from(fileList || []);
   if (!files.length) return;
+  // The allocator supplies suburb -> state for exports that predate the
+  // Location State column, so make sure it is loaded before folding.
+  try {
+    if (typeof alEnsureData === 'function') await alEnsureData();
+    if (typeof alRows !== 'undefined' && !alRows && typeof alBuild === 'function') alBuild();
+  } catch (e) { console.warn('Project Analysis: allocator data unavailable', e); }
+  _paSubState = null;
   let added = 0, skipped = 0;
   paStatus(`Reading ${files.length} file${files.length !== 1 ? 's' : ''}…`);
   for (const f of files) {
@@ -16497,9 +16504,28 @@ function paBuild() {
     }
   }
 
+  const jlCloses = paJobListCloses();
   paJobs = [...map.values()];
   for (const j of paJobs) {
     if (!j.brand) j.brand = paBrand(j.site);
+
+    // State, best source first: the column, then the suburb or zone the export
+    // gave, then the site name. Anything below the column is flagged so the
+    // breakdown can say how much of it was inferred.
+    j.stateSrc = j.state ? 'column' : '';
+    if (!j.state && j.suburb) {
+      const hit = paSubStateMap().get(j.suburb);
+      if (hit && hit.size === 1) { j.state = [...hit][0]; j.stateSrc = 'suburb'; }
+    }
+    if (!j.state && j.zone && typeof alRows !== 'undefined' && alRows) {
+      const zr = alRows.filter(r => (r.geo || '').toUpperCase() === j.zone.toUpperCase());
+      const sts = [...new Set(zr.map(r => r.st))];
+      if (sts.length === 1) { j.state = sts[0]; j.stateSrc = 'zone'; }
+    }
+    if (!j.state) {
+      const fromName = paStateFromName(j.site);
+      if (fromName) { j.state = fromName; j.stateSrc = 'name'; }
+    }
     const last = j.hist[j.hist.length - 1] || {};
     j.status = last.status || '';
     j.bucket = paBucket(j.status);
@@ -16522,11 +16548,18 @@ function paBuild() {
     // Completion: the Closed Date column if the export carried one, otherwise
     // the first snapshot that read Closed. The latter only bounds the real
     // close to the window (last seen open, first seen closed].
-    j.closedOn = j.closedCol || j.closedFirstOn || '';
-    j.closedApprox = !j.closedCol && !!j.closedFirstOn;
+    // Ticking a job off in the Amtek Job List records an exact completion
+    // date, so it outranks both the export column and the snapshot gap - and
+    // it closes the job even when the last export still read it as open.
+    const tickedOn = jlCloses.get(j.jid);
+    j.closedOn = tickedOn || j.closedCol || j.closedFirstOn || '';
+    j.closedApprox = !tickedOn && !j.closedCol && !!j.closedFirstOn;
+    j.closeSrc = tickedOn ? 'joblist' : j.closedCol ? 'column' : j.closedFirstOn ? 'snapshot' : '';
+    if (tickedOn) { j.bucket = 'closed'; j.ticked = true; }
 
     // The date it was meant to happen: the last scheduled date it held at or
-    // before it closed, not whatever the final row says.
+    // before it closed, not whatever the final row says. (Runs after the close
+    // date is settled, so a job-list tick narrows the window too.)
     let target = '';
     for (const h of j.hist) {
       if (j.closedOn && h.on > j.closedOn) break;
@@ -16559,6 +16592,79 @@ function paBuild() {
     j.leadDays = j.firstSched ? paDayDiff(j.created || j.firstSeen, j.firstSched) : null;
   }
   paJobs.sort((a, b) => (a.brand || '').localeCompare(b.brand || '') || a.jid.localeCompare(b.jid));
+}
+
+// ---- state from the site name, via the allocator -------------------------
+// The exports only carried Location State in 10 of the files, so for the
+// back history the state is recovered from the site name: sites read
+// "<Brand> <Suburb>", and the allocator already knows which state a suburb is
+// in. Only the trailing run of words is tried - "AVEO ALBANY CREEK" must not
+// match the ALBANY in Western Australia just because the word appears.
+let _paSubState = null;
+
+// Corporate tails sit between the brand and nothing useful; strip them so
+// "GREEN VALLEY BANKSTOWN PTY LTD" still ends on its suburb.
+const PA_NAME_TAIL = /\s+(PTY\s+LTD|PTY|LTD|P\/L|INC|RECEPTION|STORE|DC|HQ|OFFICE|BRANCH|WAREHOUSE|DEPOT|CLINIC|CENTRE|CENTER)$/;
+// Suburb names that exist in more than one state. The first three the
+// allocator flags itself; the rest are conflicts this data set actually
+// produced (an ALDI in Albury VIC, a Kmart in Belmont VIC) where the
+// allocator happens to hold only one of the two.
+const PA_AMBIGUOUS = new Set(['ALBURY','RICHMOND','BELMONT','CASUARINA','MANSFIELD','EPPING','NEWTOWN','KINGSTON']);
+
+function paSubStateMap() {
+  if (_paSubState) return _paSubState;
+  const m = new Map();
+  if (typeof alRows !== 'undefined' && alRows) {
+    for (const r of alRows) {
+      const k = (r.loc || '').toUpperCase();
+      if (!k) continue;
+      if (!m.has(k)) m.set(k, new Set());
+      m.get(k).add(r.st);
+    }
+  }
+  _paSubState = m;
+  return m;
+}
+
+function paCleanSite(site) {
+  let s = String(site || '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  let prev = null;
+  while (prev !== s) { prev = s; s = s.replace(PA_NAME_TAIL, '').trim(); }
+  return s;
+}
+
+function paStateFromName(site) {
+  const raw = String(site || '').toUpperCase();
+  if (/\(NZ\)|\bNZ\b|NEW ZEALAND/.test(raw)) return '';   // not an AU state
+  const map = paSubStateMap();
+  if (!map.size) return '';
+  const t = paCleanSite(site).split(' ').filter(Boolean);
+  if (!t.length) return '';
+  for (let n = Math.min(4, t.length); n >= 1; n--) {
+    const cand = t.slice(t.length - n).join(' ');
+    const hit = map.get(cand);
+    // One state only, and not a name known to repeat across the country.
+    if (hit && hit.size === 1 && !(n === 1 && PA_AMBIGUOUS.has(cand))) {
+      return [...hit][0];
+    }
+  }
+  return '';
+}
+
+// ---- completions ticked off in the Amtek Job List ------------------------
+// A job the user has ticked complete carries an exact completedAt, which beats
+// anything inferred from the gap between two exports. Job list entries hold
+// their helpdesk ids in the url, and one entry can cover several merged jobs.
+function paJobListCloses() {
+  const m = new Map();
+  if (typeof jobLists === 'undefined' || !Array.isArray(jobLists)) return m;
+  for (const j of jobLists) {
+    if (j.type === 'section' || !j.done || !j.completedAt) continue;
+    const ids = String(extractJobIds(j.url) || '').split(/[\s,]+/).filter(x => /^\d+$/.test(x));
+    const on = ymd(new Date(j.completedAt));
+    for (const id of ids) if (!m.has(id)) m.set(id, on);
+  }
+  return m;
 }
 
 function paFiltered() {
@@ -16642,6 +16748,10 @@ function renderProjAnalysis() {
   const rated     = jobs.filter(j => j.onTime !== null);
   const onTime    = rated.filter(j => j.onTime).length;
   const unclear   = jobs.filter(j => j.verdict === 'unclear').length;
+  const ticked    = jobs.filter(j => j.ticked).length;
+  const stateSrc  = {};
+  for (const j of jobs) if (j.state) stateSrc[j.stateSrc] = (stateSrc[j.stateSrc] || 0) + 1;
+  const inferred  = (stateSrc.suburb || 0) + (stateSrc.zone || 0) + (stateSrc.name || 0);
   const withSched = jobs.filter(j => j.firstSched).length;
   const movers    = jobs.filter(j => j.reschedules > 0).length;
   const leads     = jobs.map(j => j.leadDays).filter(x => x !== null && x >= 0);
@@ -16669,6 +16779,7 @@ function renderProjAnalysis() {
         <div class="pa-big-s">${onTime} of ${rated.length} closed jobs that had a date</div></div>
       <div class="pa-mini">
         ${tile(late.length, 'ran late')}
+        ${tile(rated.filter(j => j.closeSrc === 'joblist').length, 'dated by your tick')}
         ${tile(avgSlip === null ? '—' : paNum(avgSlip) + 'd', 'average slip when late')}
         ${tile(unclear, 'too close to call', unclear ? 'warn' : '')}
       </div>
@@ -16750,6 +16861,20 @@ function renderProjAnalysis() {
     ['created','Created At',     'a true booking lead time (otherwise measured from first appearance)'],
     ['closed', 'Closed Date',    'an exact completion date (otherwise accurate to the export gap)']
   ];
+  const srcRows = [
+    ['column', 'Location State column', 'stated outright by the export'],
+    ['suburb', 'Suburb \u2192 allocator',   'the suburb column matched one state in the allocator'],
+    ['zone',   'Zone \u2192 allocator',     'the zone column matched one state in the allocator'],
+    ['name',   'Site name \u2192 allocator', 'the name ends on a suburb the allocator knows (~97% accurate on the rows that could be checked)']
+  ].map(([k, label, how]) => {
+    const n = stateSrc[k] || 0;
+    return `<tr><td><strong>${label}</strong></td><td class="pc">${n.toLocaleString()}</td>
+      <td>${paBar(jobs.length ? n / jobs.length : 0, k === 'column' ? 'good' : 'warn')}</td>
+      <td class="pa-dim">${how}</td></tr>`;
+  }).join('') + `<tr><td><strong>Still unknown</strong></td>
+      <td class="pc">${(jobs.length - Object.values(stateSrc).reduce((a, b) => a + b, 0)).toLocaleString()}</td>
+      <td></td><td class="pa-dim">no state, no suburb, and the name ends on nothing recognisable</td></tr>`;
+
   const covRows = need.map(([k, label, unlocks]) => {
     const n = colCount[k] || 0, pct = n / paSnaps.length;
     return `<tr>
@@ -16781,6 +16906,7 @@ function renderProjAnalysis() {
       ${tile((buckets.closed || 0).toLocaleString(), 'closed')}
       ${tile(withSched.toLocaleString(), 'ever had a date')}
       ${tile(movers.toLocaleString(), 'moved at least once', movers ? 'warn' : '')}
+      ${tile(ticked.toLocaleString(), 'ticked off in your job list')}
     </div>
 
     <div class="card">
@@ -16789,7 +16915,8 @@ function renderProjAnalysis() {
     </div>
 
     <div class="card" style="margin-top:14px;">
-      <div class="card-title"><i class="ti ti-map-2" style="font-size:13px;"></i> Risk by state</div>
+      <div class="card-title"><i class="ti ti-map-2" style="font-size:13px;"></i> Risk by state
+        ${inferred ? `<span class="kpi-sec-chip" title="States the export did not state outright, recovered from the suburb, zone or site name via the allocator">${inferred.toLocaleString()} inferred</span>` : ''}</div>
       ${byState.length ? `<div class="sv-cov-table-wrap"><table class="al-rows">
         <thead><tr><th>State</th><th>Jobs</th><th>Moved</th><th>Reschedule rate</th><th>Fell over</th><th>On time</th><th>Lead</th></tr></thead>
         <tbody>${stateRows}</tbody></table></div>`
@@ -16829,6 +16956,11 @@ function renderProjAnalysis() {
       <div class="sv-cov-table-wrap"><table class="al-rows">
         <thead><tr><th>Column</th><th>Files</th><th>Coverage</th><th>Unlocks</th></tr></thead>
         <tbody>${covRows}</tbody></table></div>
+
+      <div class="card-title" style="margin:18px 0 8px;"><i class="ti ti-map-pin" style="font-size:13px;"></i> How the state was worked out</div>
+      <div class="sv-cov-table-wrap"><table class="al-rows">
+        <thead><tr><th>Source</th><th>Jobs</th><th>Share</th><th>How</th></tr></thead>
+        <tbody>${srcRows}</tbody></table></div>
     </div>`;
 }
 
