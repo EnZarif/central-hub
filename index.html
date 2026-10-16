@@ -2000,21 +2000,30 @@
   .jli-hint-note { display:flex; align-items:flex-start; gap:6px; font-size:11px; color:var(--text-3); margin-top:11px; line-height:1.45; }
   .jli-hint-note .ti { font-size:12px; flex-shrink:0; margin-top:1px; }
   @media (max-width: 560px) { .jli-hint-cols { grid-template-columns:1fr; } }
-  .jli-sum { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); font-size:12px; }
-  .jli-chip { font-size:11px; font-weight:600; border-radius:5px; padding:2px 8px; }
-  .jli-chip.new { background:var(--teal-bg); color:var(--teal-text); }
-  .jli-chip.reuse { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
-  .jli-chip.loose { background:var(--surface2); color:var(--text-3); }
-  .jli-chip.clean { background:var(--green-bg); color:var(--green-text); }
-  .jli-chip.hold { background:var(--coral-bg); color:var(--coral-text); }
-  .jli-undated { display:flex; align-items:flex-start; gap:9px; font-size:12px; line-height:1.45; margin-top:14px; padding:10px 12px; border-radius:8px;
-    background:var(--coral-bg); border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); color:var(--coral-text); }
-  .jli-undated.on { background:var(--green-bg); border-color:color-mix(in srgb, var(--green-text) 30%, transparent); color:var(--green-text); }
-  .jli-undated > .ti { font-size:15px; flex-shrink:0; margin-top:1px; }
-  .jli-undated > span { flex:1; min-width:0; }
-  .jli-undated-btn { flex-shrink:0; align-self:center; white-space:nowrap; padding:5px 11px; border-radius:7px; font-family:inherit; font-size:11.5px; font-weight:700;
-    cursor:pointer; background:color-mix(in srgb, currentColor 16%, transparent); border:0.5px solid currentColor; color:inherit; transition:background .13s; }
-  .jli-undated-btn:hover { background:color-mix(in srgb, currentColor 30%, transparent); }
+  /* One number first, then only what the sheet actually needs explaining. */
+  .jli-headline { display:flex; align-items:center; gap:13px; margin-top:14px; padding-top:13px; border-top:0.5px solid var(--border); }
+  .jli-headline-n { font-size:30px; font-weight:700; line-height:1; color:var(--green-text); font-variant-numeric:tabular-nums; }
+  .jli-headline.none .jli-headline-n { color:var(--text-3); }
+  .jli-headline-t { display:flex; flex-direction:column; gap:1px; font-size:12.5px; }
+  .jli-headline-t b { color:var(--text); font-weight:600; }
+  .jli-headline-t span { color:var(--text-3); font-size:11.5px; }
+  .jli-held { margin-top:12px; border:0.5px solid var(--border); border-radius:9px; overflow:hidden; }
+  .jli-held-hd { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3);
+    padding:7px 11px; background:var(--surface2); }
+  .jli-held-row { display:flex; align-items:center; gap:9px; padding:8px 11px; border-top:0.5px solid var(--border); font-size:12px; }
+  .jli-held-row > .ti { font-size:14px; color:var(--text-3); flex-shrink:0; }
+  .jli-held-row.on > .ti { color:var(--amber-text); }
+  .jli-held-n { font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; min-width:22px; }
+  .jli-held-t { flex:1; min-width:0; color:var(--text-2); display:flex; flex-direction:column; gap:1px; }
+  .jli-held-why { font-size:11px; color:var(--text-3); }
+  .jli-held-row.on .jli-held-t { color:var(--amber-text); }
+  .jli-held-btn { flex-shrink:0; font-family:inherit; font-size:11px; font-weight:600; padding:4px 10px; border-radius:7px;
+    border:0.5px solid var(--border-md); background:var(--bg); color:var(--text-2); cursor:pointer; transition:all .15s; }
+  .jli-held-btn:hover { border-color:var(--teal); color:var(--teal-text); }
+  .jli-outcome { display:flex; align-items:flex-start; gap:6px; margin-top:10px; font-size:11.5px; color:var(--text-3); line-height:1.5; }
+  .jli-outcome > .ti { font-size:13px; margin-top:1px; flex-shrink:0; }
+  .jli-opts { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; padding-top:10px; border-top:0.5px solid var(--border); }
+  .jli-opts-l { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); }
   .jli-job.held { opacity:.5; }
   .jli-job.held .jli-date.none { color:var(--coral-text); font-style:normal; opacity:1; }
   .jli-plan { margin-top:12px; max-height:300px; overflow-y:auto; }
@@ -10352,46 +10361,63 @@ function jliBuildPlan() {
   const reused  = plan.filter(g => g.mode === 'existing').length;
   const loose   = plan.filter(g => g.mode === 'none').reduce((n,g) => n + g.jobs.length, 0);
 
-  const undatedBanner = undated ? `
-    <div class="jli-undated ${jliIncludeUndated ? 'on' : ''}">
-      <i class="ti ti-${jliIncludeUndated ? 'calendar-plus' : 'calendar-off'}"></i>
-      <span><b>${undated} job${undated !== 1 ? 's do' : ' does'} not have a scheduled date.</b>
-        ${jliIncludeUndated
-          ? 'They will be imported with no due date and sit below the dated jobs.'
-          : `${undated !== 1 ? 'They are' : 'It is'} held back — nothing without a date will be imported.`}</span>
-      <button class="jli-undated-btn" onclick="jliToggleUndated()">
-        ${jliIncludeUndated ? 'Hold them back' : 'Import them anyway'}
-      </button>
-    </div>` : '';
+  // A sheet that mixes closed work, repeats and undated jobs used to answer with
+  // a dozen chips side by side. One number leads instead, every row that is not
+  // coming in is listed with the reason and its own way to override, and the
+  // settings that are not about this sheet sit quietly at the end.
+  const sheetRows = jliRows.length;
+  const mergedAway = plan.reduce((n, g) => n + g.jobs.reduce((m, j) => m + Math.max(0, (j.merged || 1) - 1), 0), 0);
+
+  const held = [
+    { n: closedOut, on: jliIncludeClosed, icon: 'circle-check',
+      one: 'job is already closed', many: 'jobs are already closed',
+      why: 'Finished work is not work to track.', fn: 'jliToggleClosed()' },
+    { n: dupeOut, on: jliIncludeDupes, icon: 'copy',
+      one: 'job is already on your list', many: 'jobs are already on your list',
+      why: dupeInSheet
+        ? `${dupeExisting} matched a job you already have, ${dupeInSheet} repeated inside this sheet.`
+        : 'Matched on job number.', fn: 'jliToggleDupes()' },
+    { n: undated, on: jliIncludeUndated, icon: 'calendar-off',
+      one: 'job has no scheduled date', many: 'jobs have no scheduled date',
+      why: 'Without a date they cannot be ordered or chased.', fn: 'jliToggleUndated()' },
+  ].filter(h => h.n > 0);
+
+  const heldList = held.map(h => `
+    <div class="jli-held-row${h.on ? ' on' : ''}">
+      <i class="ti ti-${h.on ? 'arrow-right-circle' : h.icon}"></i>
+      <span class="jli-held-n">${h.n}</span>
+      <span class="jli-held-t">${h.n === 1 ? h.one : h.many}<span class="jli-held-why">${esc(h.why)}</span></span>
+      <button class="jli-held-btn" onclick="${h.fn}">${h.on ? 'Leave out' : 'Include'}</button>
+    </div>`).join('');
+
+  const outcome = [
+    newSecs ? `${newSecs} new section${newSecs !== 1 ? 's' : ''}` : '',
+    reused  ? `${reused} existing section${reused !== 1 ? 's' : ''}` : '',
+    loose   ? `${loose} without a section` : '',
+    mergedAway ? `${mergedAway} row${mergedAway !== 1 ? 's' : ''} merged into same-site jobs` : '',
+    cleanedCount ? `${cleanedCount} name${cleanedCount !== 1 ? 's' : ''} tidied` : '',
+    skipped ? `${skipped} row${skipped !== 1 ? 's' : ''} had no name` : '',
+  ].filter(Boolean);
 
   prev.innerHTML = `
-    ${undatedBanner}
-    <div class="jli-sum">
-      <span class="sv-sum-ok"><i class="ti ti-check"></i> ${total} job${total!==1?'s':''}</span>
-      ${undated && !jliIncludeUndated ? `<span class="jli-chip hold">${undated} held back</span>` : ''}
-      ${newSecs ? `<span class="jli-chip new">${newSecs} new section${newSecs!==1?'s':''}</span>` : ''}
-      ${reused ? `<span class="jli-chip reuse">${reused} existing section${reused!==1?'s':''}</span>` : ''}
-      ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
-      ${closedOut && !jliIncludeClosed ? `<span class="jli-chip hold">${closedOut} closed skipped</span>` : ''}
-      ${closedOut && jliIncludeClosed ? `<span class="sv-sum-err">${closedOut} closed included</span>` : ''}
-      ${dupeOut && !jliIncludeDupes ? `<span class="jli-chip hold"
-        title="${dupeExisting} already on your job list${dupeInSheet ? `, ${dupeInSheet} repeated inside this sheet` : ''}"
-        >${dupeOut} duplicate${dupeOut !== 1 ? 's' : ''} skipped</span>` : ''}
-      ${dupeOut && jliIncludeDupes ? `<span class="sv-sum-err">${dupeOut} duplicate${dupeOut !== 1 ? 's' : ''} included</span>` : ''}
-      ${skipped ? `<span class="sv-sum-err">${skipped} skipped (no name)</span>` : ''}
-      ${cleanedCount ? `<span class="jli-chip clean">${cleanedCount} name${cleanedCount!==1?'s':''} tidied</span>` : ''}
+    <div class="jli-headline${total ? '' : ' none'}">
+      <div class="jli-headline-n">${total}</div>
+      <div class="jli-headline-t">
+        <b>job${total !== 1 ? 's' : ''} will be imported</b>
+        <span>from ${sheetRows} row${sheetRows !== 1 ? 's' : ''} in the sheet</span>
+      </div>
+    </div>
+    ${held.length ? `<div class="jli-held">
+      <div class="jli-held-hd">Not importing</div>
+      ${heldList}
+    </div>` : ''}
+    ${outcome.length ? `<div class="jli-outcome"><i class="ti ti-arrow-down-right"></i> ${outcome.join(' · ')}</div>` : ''}
+    <div class="jli-opts">
+      <span class="jli-opts-l">Options</span>
       <button class="jli-grp-toggle${jliStripPrefix ? ' on' : ''}" onclick="jliToggleStrip()"
         title="Strip a leading C- code from site and job names">
         <i class="ti ti-${jliStripPrefix ? 'check' : 'square'}"></i> Remove C- prefix
       </button>
-      ${closedOut ? `<button class="jli-grp-toggle${jliIncludeClosed ? ' on' : ''}" onclick="jliToggleClosed()"
-        title="Closed jobs are finished work and are not imported. Only turn this on if the Status column was picked wrongly.">
-        <i class="ti ti-${jliIncludeClosed ? 'check' : 'square'}"></i> Include closed
-      </button>` : ''}
-      ${dupeOut ? `<button class="jli-grp-toggle${jliIncludeDupes ? ' on' : ''}" onclick="jliToggleDupes()"
-        title="Matched on job number. Only turn this on if the Job ID column was picked wrongly.">
-        <i class="ti ti-${jliIncludeDupes ? 'check' : 'square'}"></i> Include duplicates
-      </button>` : ''}
       ${targetName ? '' : `<button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
         title="Treat site names sharing a leading word, like Decjuba Chadstone and Decjuba Highpoint, as one site">
         <i class="ti ti-${jliGroupSimilar ? 'check' : 'square'}"></i> Group similar site names
