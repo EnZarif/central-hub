@@ -10112,7 +10112,8 @@ function jliRenderMapper() {
     `<div class="sv-col-row"><span class="sv-col-label">Site</span>${sel('jli-c-site', svAutoDetect(jliHeaders, ['Site','site','SITE','Location','Store'], ['site','location','store','branch']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job name</span>${sel('jli-c-name', jliPickName(jliHeaders))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Scheduled date</span>${sel('jli-c-date', svAutoDetect(jliHeaders, ['Scheduled Date','Date','Due Date','Scheduled'], ['scheduled','date','due']))}</div>
-     <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('jli-c-id', svAutoDetect(jliHeaders, ['Job ID','JobID','ID','Job #'], ['jobid','job_id','jobno']))}</div>`;
+     <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('jli-c-id', svAutoDetect(jliHeaders, ['Job ID','JobID','ID','Job #'], ['jobid','job_id','jobno']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Status <span style="font-weight:400;color:var(--text-3)">(closed jobs skipped)</span></span>${sel('jli-c-status', svAutoDetect(jliHeaders, ['Status','Job Status','State'], ['status']))}</div>`;
   el.style.display = '';
 }
 
@@ -10173,6 +10174,16 @@ function jliToggleStrip() { jliStripPrefix = !jliStripPrefix; jliBuildPlan(); }
 let jliIncludeUndated = false;
 function jliToggleUndated() { jliIncludeUndated = !jliIncludeUndated; jliBuildPlan(); }
 
+// Work that is already finished is not work to track, so closed rows never
+// import. The pattern matches only terminal states - of the 26 statuses the
+// helpdesk emits, nothing but "Closed" hits it, and "Booking Called", "On
+// Hold" and the rest are deliberately left alone. The override exists so a
+// mis-detected Status column can't silently swallow a whole sheet.
+const JLI_CLOSED_RE = /\b(closed|completed|complete|finished|cancelled|canceled)\b/i;
+function jliIsClosed(v) { return JLI_CLOSED_RE.test(String(v || '').trim()); }
+let jliIncludeClosed = false;
+function jliToggleClosed() { jliIncludeClosed = !jliIncludeClosed; jliBuildPlan(); }
+
 function jliClean(s) {
   const raw = String(s || '').replace(/\s+/g, ' ').trim();
   if (!jliStripPrefix) return raw;
@@ -10185,6 +10196,7 @@ function jliBuildPlan() {
   const nameCol = document.getElementById('jli-c-name')?.value;
   const dateCol = document.getElementById('jli-c-date')?.value;
   const idCol   = document.getElementById('jli-c-id')?.value;
+  const statusCol = document.getElementById('jli-c-status')?.value;
   const prev = document.getElementById('jli-preview');
   const go = document.getElementById('jli-go');
   if (!nameCol && !siteCol) { prev.innerHTML = ''; go.disabled = true; jliPlan = null; return; }
@@ -10207,8 +10219,11 @@ function jliBuildPlan() {
   };
 
   const groups = new Map();
-  let skipped = 0;
+  let skipped = 0, closedOut = 0;
   jliRows.forEach(r => {
+    // Dropped before anything else, so a closed job never reaches the grouping,
+    // the merged job-id link, or the section it would otherwise have created.
+    if (statusCol && jliIsClosed(r[statusCol])) { closedOut++; if (!jliIncludeClosed) return; }
     const rawSite = String(r[siteCol] || '').trim();
     const site = jliClean(rawSite);
     const given = jliClean(String(r[nameCol] || '').trim());
@@ -10287,7 +10302,7 @@ function jliBuildPlan() {
              sectionId, sectionLabel };
   }).sort((a, b) => (a.site || '').localeCompare(b.site || ''));
 
-  jliPlan = { plan, skipped };
+  jliPlan = { plan, skipped, closedOut };
   const cleanedCount = plan.reduce((n, g) => n + g.jobs.filter(j => j.cleaned).length, 0);
   const allJobs = plan.flatMap(g => g.jobs);
   const undated = allJobs.filter(j => !j.date).length;
@@ -10317,12 +10332,18 @@ function jliBuildPlan() {
       ${newSecs ? `<span class="jli-chip new">${newSecs} new section${newSecs!==1?'s':''}</span>` : ''}
       ${reused ? `<span class="jli-chip reuse">${reused} existing section${reused!==1?'s':''}</span>` : ''}
       ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
+      ${closedOut && !jliIncludeClosed ? `<span class="jli-chip hold">${closedOut} closed skipped</span>` : ''}
+      ${closedOut && jliIncludeClosed ? `<span class="sv-sum-err">${closedOut} closed included</span>` : ''}
       ${skipped ? `<span class="sv-sum-err">${skipped} skipped (no name)</span>` : ''}
       ${cleanedCount ? `<span class="jli-chip clean">${cleanedCount} name${cleanedCount!==1?'s':''} tidied</span>` : ''}
       <button class="jli-grp-toggle${jliStripPrefix ? ' on' : ''}" onclick="jliToggleStrip()"
         title="Strip a leading C- code from site and job names">
         <i class="ti ti-${jliStripPrefix ? 'check' : 'square'}"></i> Remove C- prefix
       </button>
+      ${closedOut ? `<button class="jli-grp-toggle${jliIncludeClosed ? ' on' : ''}" onclick="jliToggleClosed()"
+        title="Closed jobs are finished work and are not imported. Only turn this on if the Status column was picked wrongly.">
+        <i class="ti ti-${jliIncludeClosed ? 'check' : 'square'}"></i> Include closed
+      </button>` : ''}
       ${targetName ? '' : `<button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
         title="Treat site names sharing a leading word, like Decjuba Chadstone and Decjuba Highpoint, as one site">
         <i class="ti ti-${jliGroupSimilar ? 'check' : 'square'}"></i> Group similar site names
@@ -10408,6 +10429,7 @@ function jliImport() {
   jliClose();
   if (typeof showToast === 'function') {
     const extra = [
+      (jliPlan && jliPlan.closedOut && !jliIncludeClosed) ? `${jliPlan.closedOut} closed skipped` : '',
       madeSections ? `${madeSections} new section${madeSections !== 1 ? 's' : ''}` : '',
       madeSubs ? `${madeSubs} new sub-project${madeSubs !== 1 ? 's' : ''}` : '',
       reopened ? `${reopened} reopened` : '',
