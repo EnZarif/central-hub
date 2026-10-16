@@ -10184,6 +10184,26 @@ function jliIsClosed(v) { return JLI_CLOSED_RE.test(String(v || '').trim()); }
 let jliIncludeClosed = false;
 function jliToggleClosed() { jliIncludeClosed = !jliIncludeClosed; jliBuildPlan(); }
 
+// Job numbers are unique, so they are the one dependable way to tell that a row
+// is work already on the list. Successive daily exports overlap heavily - the
+// same job stays on the board for weeks - so without this every re-import
+// stacks another copy of everything still open.
+// Entries hold their ids in the helpdesk url, and a merged entry covers several
+// at once, so every id it carries counts as taken.
+function jliExistingJobIds() {
+  const set = new Set();
+  if (typeof jobLists === 'undefined' || !Array.isArray(jobLists)) return set;
+  for (const j of jobLists) {
+    if (j.type === 'section' || !j.url) continue;
+    for (const id of String(extractJobIds(j.url) || '').split(/[\s,]+/)) {
+      if (/^\d+$/.test(id)) set.add(id);
+    }
+  }
+  return set;
+}
+let jliIncludeDupes = false;
+function jliToggleDupes() { jliIncludeDupes = !jliIncludeDupes; jliBuildPlan(); }
+
 function jliClean(s) {
   const raw = String(s || '').replace(/\s+/g, ' ').trim();
   if (!jliStripPrefix) return raw;
@@ -10219,11 +10239,23 @@ function jliBuildPlan() {
   };
 
   const groups = new Map();
-  let skipped = 0, closedOut = 0;
+  const existingIds = jliExistingJobIds();
+  const seenIds = new Set();
+  let skipped = 0, closedOut = 0, dupeExisting = 0, dupeInSheet = 0;
   jliRows.forEach(r => {
     // Dropped before anything else, so a closed job never reaches the grouping,
     // the merged job-id link, or the section it would otherwise have created.
     if (statusCol && jliIsClosed(r[statusCol])) { closedOut++; if (!jliIncludeClosed) return; }
+    // Same treatment for anything already on the list, or repeated inside this
+    // sheet. Rows with no job number can't be matched and are left alone.
+    const thisId = String(r[idCol] || '').trim();
+    if (thisId) {
+      if (existingIds.has(thisId) || seenIds.has(thisId)) {
+        if (existingIds.has(thisId)) dupeExisting++; else dupeInSheet++;
+        if (!jliIncludeDupes) return;
+      }
+      seenIds.add(thisId);
+    }
     const rawSite = String(r[siteCol] || '').trim();
     const site = jliClean(rawSite);
     const given = jliClean(String(r[nameCol] || '').trim());
@@ -10302,7 +10334,8 @@ function jliBuildPlan() {
              sectionId, sectionLabel };
   }).sort((a, b) => (a.site || '').localeCompare(b.site || ''));
 
-  jliPlan = { plan, skipped, closedOut };
+  const dupeOut = dupeExisting + dupeInSheet;
+  jliPlan = { plan, skipped, closedOut, dupeExisting, dupeInSheet, dupeOut };
   const cleanedCount = plan.reduce((n, g) => n + g.jobs.filter(j => j.cleaned).length, 0);
   const allJobs = plan.flatMap(g => g.jobs);
   const undated = allJobs.filter(j => !j.date).length;
@@ -10334,6 +10367,10 @@ function jliBuildPlan() {
       ${loose ? `<span class="jli-chip loose">${loose} unsectioned</span>` : ''}
       ${closedOut && !jliIncludeClosed ? `<span class="jli-chip hold">${closedOut} closed skipped</span>` : ''}
       ${closedOut && jliIncludeClosed ? `<span class="sv-sum-err">${closedOut} closed included</span>` : ''}
+      ${dupeOut && !jliIncludeDupes ? `<span class="jli-chip hold"
+        title="${dupeExisting} already on your job list${dupeInSheet ? `, ${dupeInSheet} repeated inside this sheet` : ''}"
+        >${dupeOut} duplicate${dupeOut !== 1 ? 's' : ''} skipped</span>` : ''}
+      ${dupeOut && jliIncludeDupes ? `<span class="sv-sum-err">${dupeOut} duplicate${dupeOut !== 1 ? 's' : ''} included</span>` : ''}
       ${skipped ? `<span class="sv-sum-err">${skipped} skipped (no name)</span>` : ''}
       ${cleanedCount ? `<span class="jli-chip clean">${cleanedCount} name${cleanedCount!==1?'s':''} tidied</span>` : ''}
       <button class="jli-grp-toggle${jliStripPrefix ? ' on' : ''}" onclick="jliToggleStrip()"
@@ -10343,6 +10380,10 @@ function jliBuildPlan() {
       ${closedOut ? `<button class="jli-grp-toggle${jliIncludeClosed ? ' on' : ''}" onclick="jliToggleClosed()"
         title="Closed jobs are finished work and are not imported. Only turn this on if the Status column was picked wrongly.">
         <i class="ti ti-${jliIncludeClosed ? 'check' : 'square'}"></i> Include closed
+      </button>` : ''}
+      ${dupeOut ? `<button class="jli-grp-toggle${jliIncludeDupes ? ' on' : ''}" onclick="jliToggleDupes()"
+        title="Matched on job number. Only turn this on if the Job ID column was picked wrongly.">
+        <i class="ti ti-${jliIncludeDupes ? 'check' : 'square'}"></i> Include duplicates
       </button>` : ''}
       ${targetName ? '' : `<button class="jli-grp-toggle${jliGroupSimilar ? ' on' : ''}" onclick="jliToggleGrouping()"
         title="Treat site names sharing a leading word, like Decjuba Chadstone and Decjuba Highpoint, as one site">
@@ -10430,6 +10471,7 @@ function jliImport() {
   if (typeof showToast === 'function') {
     const extra = [
       (jliPlan && jliPlan.closedOut && !jliIncludeClosed) ? `${jliPlan.closedOut} closed skipped` : '',
+      (jliPlan && jliPlan.dupeOut && !jliIncludeDupes) ? `${jliPlan.dupeOut} duplicate${jliPlan.dupeOut !== 1 ? 's' : ''} skipped` : '',
       madeSections ? `${madeSections} new section${madeSections !== 1 ? 's' : ''}` : '',
       madeSubs ? `${madeSubs} new sub-project${madeSubs !== 1 ? 's' : ''}` : '',
       reopened ? `${reopened} reopened` : '',
