@@ -1021,6 +1021,13 @@
   .jl-archive-toggle { width: 100%; display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-3); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 6px 2px; font-family: inherit; }
   .jl-archive-toggle:hover { color: var(--text-2); }
   .jl-archive-list { display: flex; flex-direction: column; gap: 8px; opacity: 0.75; }
+  /* A section's own completed pile: indented so it reads as part of the section
+     above it rather than the start of the next one. */
+  .jl-archive-toggle.jl-sec-archive { padding: 4px 14px 4px 24px; font-size: 11px; }
+  .jl-sec-archive-ico { font-size: 11px; color: var(--green-text); }
+  .jl-sec-archive-n { margin-left: auto; font-size: 10px; font-weight: 700;
+    background: var(--surface2); border-radius: 9px; padding: 1px 7px; }
+  .jl-archive-list.jl-sec-archive-list { padding-left: 10px; gap: 6px; }
   /* ===== ITEM ANIMATIONS ===== */
   @keyframes jlItemIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes jlNoteIn  { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
@@ -10870,6 +10877,22 @@ function toggleJlArchive() {
   renderJobListSidebar();
 }
 
+// Each section keeps its own completed pile, so finishing the work at a site
+// doesn't scatter it into a single list at the bottom of the card - the record
+// of what was done stays with the section it was done for. Open sections are
+// tracked rather than closed ones, so a section's history starts out of the way
+// and the same key survives a reload the way the collapse state does.
+let _jlSecArchiveOpen = (() => {
+  try { return new Set(JSON.parse(localStorage.getItem('jl_sec_archive_open') || '[]')); }
+  catch(e) { return new Set(); }
+})();
+function toggleJlSecArchive(id) {
+  const sid = String(id);
+  if (_jlSecArchiveOpen.has(sid)) _jlSecArchiveOpen.delete(sid); else _jlSecArchiveOpen.add(sid);
+  try { localStorage.setItem('jl_sec_archive_open', JSON.stringify([..._jlSecArchiveOpen])); } catch(e) {}
+  renderJobListSidebar();
+}
+
 function toggleJlActions(event, id) {
   event.stopPropagation();
   const item = event.currentTarget.closest('.jl-item');
@@ -10955,6 +10978,10 @@ function renderJobListSidebar() {
   // Only archive untagged done items; tagged items manage their lifecycle inside their project
   const archived = visible.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive));
   const active = visible.filter(j => !archived.includes(j));
+  // Filled in below when the list is in sections mode; without sections every
+  // completed job stays in the one card-level list as before.
+  let archivedBySection = new Map();
+  let looseArchived = archived;
 
   const todayStr = ymd(new Date());
   const overdue  = active.filter(j => !j.done && j.date && j.date < todayStr);
@@ -10979,6 +11006,22 @@ function renderJobListSidebar() {
     const sections = active.filter(j => j.type === 'section');
     const activeJobs = active.filter(j => j.type !== 'section');
     jlRenderSectionJump(sections, activeJobs);
+
+    // Completed work is filed under the section it belonged to. A job whose
+    // section has since been deleted has nowhere to sit, so it falls through to
+    // the card-level list rather than disappearing.
+    const sectionIds = new Set(sections.map(x => String(x.id)));
+    archivedBySection = new Map();
+    for (const j of archived) {
+      const sid = String(j.sectionId || '');
+      if (!sid || !sectionIds.has(sid)) continue;
+      if (!archivedBySection.has(sid)) archivedBySection.set(sid, []);
+      archivedBySection.get(sid).push(j);
+    }
+    looseArchived = archived.filter(j => {
+      const sid = String(j.sectionId || '');
+      return !sid || !sectionIds.has(sid);
+    });
 
     // Collect urgent jobs across all sections and unassigned
     const urgentOv = [...activeJobs.filter(j => !j.done && j.date && j.date < todayStr)]
@@ -11007,6 +11050,8 @@ function renderJobListSidebar() {
       for (const sec of sections) {
         const allSecJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
         const secJobs = jlSortJobs(allSecJobs.filter(j => !urgentIds.has(String(j.id))));
+        const secDone = (archivedBySection.get(String(sec.id)) || [])
+          .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
         const isCollapsed = jlCollapsedSections.has(String(sec.id));
         html += jlRowHtml(sec, false, false, false, isCollapsed, false);
         if (!isCollapsed) {
@@ -11016,8 +11061,23 @@ function renderJobListSidebar() {
           if (!secJobs.length) {
             const msg = allSecJobs.length > 0
               ? 'All jobs are overdue or due today — shown above.'
-              : 'No jobs yet — hover the section to add one.';
+              : secDone.length
+                ? `Nothing outstanding — ${secDone.length} completed below.`
+                : 'No jobs yet — hover the section to add one.';
             html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">${msg}</div>`;
+          }
+          if (secDone.length) {
+            const open = _jlSecArchiveOpen.has(String(sec.id));
+            html += `<button class="jl-archive-toggle jl-sec-archive" onclick="toggleJlSecArchive('${sec.id}')"
+              title="${open ? 'Hide' : 'Show'} work completed in this section">
+              <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
+              <i class="ti ti-check jl-sec-archive-ico"></i> Completed
+              <span class="jl-sec-archive-n">${secDone.length}</span>
+            </button>`;
+            if (open) {
+              html += `<div class="jl-archive-list jl-sec-archive-list">`
+                + secDone.map(j => jlRowHtml(j, false, false, true)).join('') + `</div>`;
+            }
           }
         }
       }
@@ -11059,12 +11119,15 @@ function renderJobListSidebar() {
     }
   }
 
-  if (archived.length) {
-    const sortedArchived = [...archived].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+  if (looseArchived.length) {
+    const sortedArchived = [...looseArchived].sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
     html += `<button class="jl-archive-toggle" onclick="toggleJlArchive()">
-      <i class="ti ti-chevron-${_jlArchiveOpen ? 'down' : 'right'}"></i> Recently completed (${archived.length})
+      <i class="ti ti-chevron-${_jlArchiveOpen ? 'down' : 'right'}"></i> Recently completed (${looseArchived.length})
     </button>`;
-    if (_jlArchiveOpen) html += `<div class="jl-archive-list">${sortedArchived.map(jlRowHtml).join('')}</div>`;
+    // Called through an arrow on purpose: a bare .map(jlRowHtml) passes the
+    // array index as isToday and the array as isOverdue, which drew an overdue
+    // stripe on every completed row after the first.
+    if (_jlArchiveOpen) html += `<div class="jl-archive-list">${sortedArchived.map(j => jlRowHtml(j)).join('')}</div>`;
   }
   el.innerHTML = html;
 }
