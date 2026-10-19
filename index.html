@@ -3039,10 +3039,16 @@
   .sched-card-m-title { font-size: 11.5px; font-weight: 700; color: var(--text-2); flex: 1; display: flex; align-items: center; gap: 5px; }
   .sched-card-m-count { font-size: 10.5px; color: var(--text-3); }
   .sched-row-m { display: flex; align-items: center; padding: 7px 14px; border-bottom: 0.5px solid var(--border); cursor: default; transition: background .12s; }
-  .sched-del-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:13px; padding:3px 5px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:4px; }
+  .sched-edit-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:13px; padding:3px 5px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:4px; }
+  .sched-row-m:hover .sched-edit-btn { color:var(--text-3); }
+  .sched-edit-btn:hover { color:var(--teal-text) !important; background:var(--teal-bg); }
+  .sched-del-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:13px; padding:3px 5px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:0; }
   .sched-row-m:hover .sched-del-btn { color:var(--text-3); }
   .sched-del-btn:hover { color:var(--coral-text) !important; background:rgba(255,80,60,.08); }
-  .htcm-del-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:12px; padding:2px 4px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:auto; }
+  .htcm-edit-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:12px; padding:2px 4px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:auto; }
+  .htcm-row:hover .htcm-edit-btn { color:var(--text-3); }
+  .htcm-edit-btn:hover { color:var(--teal-text) !important; background:var(--teal-bg); }
+  .htcm-del-btn { background:none; border:none; cursor:pointer; color:transparent; font-size:12px; padding:2px 4px; border-radius:5px; flex-shrink:0; transition:all .12s; margin-left:0; }
   .htcm-row:hover .htcm-del-btn { color:var(--text-3); }
   .htcm-del-btn:hover { color:var(--coral-text) !important; background:rgba(255,80,60,.08); }
   .sched-row-m:last-child { border-bottom: none; }
@@ -11516,6 +11522,7 @@ function renderSchedCardM(tasks) {
       ${taskRowLinkIcon(t)}
       ${badge}
       <span class="sched-hub-chip-m ${chipCls}">${chipLabel}</span>
+      <button class="sched-edit-btn" title="Edit task" onclick="event.stopPropagation();openTaskEdit('${t.id}')"><i class="ti ti-pencil"></i></button>
       <button class="sched-del-btn" title="Delete task" onclick="event.stopPropagation();${delFn}"><i class="ti ti-trash"></i></button>
     </div>`;
   }
@@ -11582,6 +11589,7 @@ function renderHubTaskGridM(tasks) {
           <span class="htcm-name">${esc(t.name)}</span>
           ${taskRowLinkIcon(t)}
           ${badge}${freqTag}
+          <button class="htcm-edit-btn" title="Edit task" onclick="event.stopPropagation();openTaskEdit('${t.id}')"><i class="ti ti-pencil"></i></button>
           <button class="htcm-del-btn" title="Delete task" onclick="event.stopPropagation();${htDelFn}"><i class="ti ti-trash"></i></button>
         </div>`;
       });
