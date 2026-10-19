@@ -637,6 +637,7 @@
   .cal-panel { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 14px; padding: 16px; }
   .cal-panel-header { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .cal-panel-header i { color: #185FA5; }
+  .task-row-link-ico { font-size:12px; color:var(--teal-text); flex-shrink:0; }
   .task-link-pill { display:inline-flex; align-items:center; gap:4px; max-width:190px; font-size:10.5px; font-weight:600;
     color:var(--teal-text); background:var(--teal-bg); border-radius:5px; padding:2px 7px; text-decoration:none;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:background .13s; }
@@ -11420,12 +11421,25 @@ function toggleBacklog() { _backlogOpen = !_backlogOpen; renderTasks(); }
 let _showDone = false;
 function toggleShowDone() { _showDone = !_showDone; renderTasks(); }
 
-// Special-page tasks: clicking navigates to a page instead of opening edit modal
+// What a task row does when clicked, for the home cards. A link the user set
+// wins over both the built-in page jumps and the edit modal, so a task behaves
+// the same way wherever it is shown. Job reminders keep their detail modal,
+// which carries its own Open link button.
 function taskRowClick(t) {
   if (t.jobReminder) return `openJobReminderDetail('${t.id}')`;
+  if (taskUrlHref(t.url)) return `taskOpenLink('${t.id}')`;
   const map = { 1:'message', 3:'awjobs', 8:'calldata' };
   if (map[t.id]) return `showPage('${map[t.id]}')`;
   return `openTaskEdit('${t.id}')`;
+}
+
+// These rows are dense, so the link shows as an icon rather than the full chip
+// the main task list uses.
+function taskRowLinkIcon(t) {
+  const href = taskUrlHref(t.url);
+  return href
+    ? `<i class="ti ti-link task-row-link-ico" title="Opens ${escAttr(href)}"></i>`
+    : '';
 }
 
 // ── Mockup-style backlog snooze (session-level; reappears next load) ──
@@ -11499,6 +11513,7 @@ function renderSchedCardM(tasks) {
       <div class="sched-div-m"></div>
       <div class="sched-dot-m" style="background:${dotColor}"></div>
       <span class="sched-task-name-m${done?' sr-name-done':''}">${esc(t.name)}</span>
+      ${taskRowLinkIcon(t)}
       ${badge}
       <span class="sched-hub-chip-m ${chipCls}">${chipLabel}</span>
       <button class="sched-del-btn" title="Delete task" onclick="event.stopPropagation();${delFn}"><i class="ti ti-trash"></i></button>
@@ -11565,6 +11580,7 @@ function renderHubTaskGridM(tasks) {
         rows += `<div class="${cls}" onclick="${taskRowClick(t)}" style="border-left:2px solid ${prioClr}">
           <button class="htcm-cb${done?' on':''}" onclick="event.stopPropagation();toggle('${t.id}')">${done?'✓':''}</button>
           <span class="htcm-name">${esc(t.name)}</span>
+          ${taskRowLinkIcon(t)}
           ${badge}${freqTag}
           <button class="htcm-del-btn" title="Delete task" onclick="event.stopPropagation();${htDelFn}"><i class="ti ti-trash"></i></button>
         </div>`;
