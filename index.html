@@ -1906,6 +1906,18 @@
   .kpi-nick-input { width: 140px; flex-shrink: 0; padding: 6px 10px; font-size: 12.5px; font-family: inherit; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
   .kpi-nick-input:focus { border-color: var(--teal); }
   .kpi-nick-input.set { border-color: color-mix(in srgb, var(--teal) 55%, transparent); }
+  .kpi-nick-skip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; font-family: inherit;
+    font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: var(--radius);
+    border: 0.5px solid var(--border-md); background: var(--bg); color: var(--text-3); cursor: pointer; transition: all .15s; }
+  .kpi-nick-skip:hover { border-color: var(--coral-text); color: var(--coral-text); }
+  .kpi-nick-skip.on { background: var(--coral-bg); border-color: transparent; color: var(--coral-text); }
+  .kpi-nick-skip i { font-size: 12px; }
+  .kpi-nick-row.skipped .kpi-nick-name,
+  .kpi-nick-row.skipped .kpi-nick-sub { opacity: .5; text-decoration: line-through; }
+  .kpi-ops-skip-note { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-3);
+    padding: 9px 2px 2px; }
+  .kpi-ops-skip-note i { font-size: 13px; color: var(--coral-text); }
+  .kpi-ops-skip-note strong { color: var(--text-2); font-weight: 600; }
   .kpi-nick-empty { font-size: 12px; color: var(--text-3); padding: 4px 0 2px; }
   .kpi-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .kpi-modal-overlay.active { display: flex; }
@@ -4549,7 +4561,7 @@
       <div id="kpi-ops-list"></div>
 
       <div class="card-title s-toggle" onclick="toggleSettingsSection('kpi-s-nicks')" style="margin-top:18px;">
-        <i class="ti ti-user-edit" style="font-size:13px;"></i> Operator nicknames
+        <i class="ti ti-user-edit" style="font-size:13px;"></i> Operator settings
         <span class="kpi-sec-chip" id="kpi-nick-chip">0 set</span>
         <i class="ti ti-chevron-down s-chev"></i>
       </div>
@@ -16229,17 +16241,41 @@ function kpiNickFor(name, email) {
   return (nick && String(nick).trim()) || kpiNickDefault(name);
 }
 
-function kpiNickSave(i, value) {
-  const row = _kpiNickRows[i];
-  if (!row) return;
+// Operators who should never be emailed - a queue account, someone who has
+// left, a manager who gets the summary instead. Kept on the same record as the
+// nickname: both are standing preferences about one person, keyed on the email
+// address, and both outlive the report file that introduced them.
+function kpiNickSkipped(name, email) {
+  const entry = kpiNickAll()[kpiNickKeyFor(name, email)];
+  return !!(entry && typeof entry === 'object' && entry.skip);
+}
+
+// One writer for both fields, so setting a nickname can't drop a skip and vice
+// versa. The record only survives while it still says something.
+function kpiNickWrite(key, name, patch) {
   const all = { ...kpiNickAll() };
-  const v = (value || '').trim();
-  // Clearing the box restores the derived first name rather than storing a blank.
-  if (v && v !== kpiNickDefault(row.name)) all[row.key] = { nick: v, name: row.name };
-  else delete all[row.key];
+  const prev = all[key];
+  const cur = (prev && typeof prev === 'object') ? prev : (prev ? { nick: prev } : {});
+  const next = { ...cur, name: name || cur.name, ...patch };
+  const nick = (next.nick || '').trim();
+  if (!nick || nick === kpiNickDefault(next.name)) delete next.nick;
+  if (!next.skip) delete next.skip;
+  if (next.nick || next.skip) all[key] = next; else delete all[key];
   dbSet(KPI_NICK_KEY, all);
   renderKpiNicknames();
   renderKpiOpsList();
+}
+
+function kpiNickSave(i, value) {
+  const row = _kpiNickRows[i];
+  if (!row) return;
+  kpiNickWrite(row.key, row.name, { nick: (value || '').trim() });
+}
+
+function kpiNickToggleSkip(i) {
+  const row = _kpiNickRows[i];
+  if (!row) return;
+  kpiNickWrite(row.key, row.name, { skip: !kpiNickSkipped(row.name, row.email || row.key) });
 }
 
 function renderKpiNicknames() {
@@ -16251,7 +16287,7 @@ function renderKpiNicknames() {
   // Operators in the loaded files, plus anyone already given a nickname before,
   // so saved names stay editable once their report file is gone.
   const seen = new Map();
-  for (const [name, entries] of _kpiOpsOperatorList()) {
+  for (const [name, entries] of _kpiOpsOperatorListAll()) {
     const email = entries[0].row[1] || '';
     seen.set(kpiNickKeyFor(name, email), { name, email });
   }
@@ -16264,21 +16300,28 @@ function renderKpiNicknames() {
   _kpiNickRows = [...seen.entries()].map(([key, v]) => ({ key, name: v.name, email: v.email }));
   _kpiNickRows.sort((a, b) => a.name.localeCompare(b.name));
 
-  const nSet = _kpiNickRows.filter(r => all[r.key]).length;
+  const nNamed = _kpiNickRows.filter(r => { const e = all[r.key]; return e && (typeof e === 'object' ? e.nick : e); }).length;
+  const nSkip  = _kpiNickRows.filter(r => kpiNickSkipped(r.name, r.email || r.key)).length;
   if (chip) {
-    chip.textContent = `${nSet} set`;
-    chip.classList.toggle('ready', nSet > 0);
+    const bits = [];
+    if (nNamed) bits.push(`${nNamed} named`);
+    if (nSkip)  bits.push(`${nSkip} skipped`);
+    chip.textContent = bits.length ? bits.join(' \u00b7 ') : 'None set';
+    chip.classList.toggle('ready', bits.length > 0);
   }
 
   if (!_kpiNickRows.length) {
-    el.innerHTML = '<div class="kpi-nick-empty">Load a daily report file to set nicknames.</div>';
+    el.innerHTML = '<div class="kpi-nick-empty">Load a daily report file to set nicknames or skip operators.</div>';
     return;
   }
 
   el.innerHTML = _kpiNickRows.map((r, i) => {
     const entry = all[r.key];
     const nick = entry && typeof entry === 'object' ? entry.nick : (entry || '');
-    return `<div class="kpi-nick-row">
+    const skip = kpiNickSkipped(r.name, r.email || r.key);
+    // The nickname box stays usable while skipped, so a name set earlier isn't
+    // lost and one can be prepared before un-skipping.
+    return `<div class="kpi-nick-row${skip ? ' skipped' : ''}">
       <div class="kpi-nick-who">
         <div class="kpi-nick-name">${esc(r.name)}</div>
         <div class="kpi-nick-sub">${esc(r.email || r.key)}</div>
@@ -16286,6 +16329,10 @@ function renderKpiNicknames() {
       <input class="kpi-nick-input${nick ? ' set' : ''}" type="text" value="${esc(nick || '')}"
         placeholder="${esc(kpiNickDefault(r.name))}" title="Name used in the greeting"
         onchange="kpiNickSave(${i}, this.value)">
+      <button class="kpi-nick-skip${skip ? ' on' : ''}" onclick="kpiNickToggleSkip(${i})"
+        title="${skip ? 'Start sending KPIs to this operator again' : 'Never build a KPI email for this operator'}">
+        <i class="ti ti-${skip ? 'bell-off' : 'bell'}"></i>${skip ? 'Skipped' : 'Skip'}
+      </button>
     </div>`;
   }).join('');
 }
@@ -16396,7 +16443,9 @@ function buildKpiOpsStatusSection(email) {
   return { html, text };
 }
 
-function _kpiOpsOperatorList() {
+// Everyone in the loaded files, skipped or not. Only the settings panel wants
+// this - it has to list a skipped operator in order to offer un-skipping them.
+function _kpiOpsOperatorListAll() {
   const map = new Map();
   for (const f of kpiOpsFiles) {
     for (const row of f.rows) {
@@ -16409,12 +16458,31 @@ function _kpiOpsOperatorList() {
   return [...map.entries()];
 }
 
+// The operators an email actually gets built for. Filtering here rather than at
+// each call site means the preview list, the copy, and the Next button all walk
+// the same set and stay in step with one another.
+function _kpiOpsOperatorList() {
+  return _kpiOpsOperatorListAll()
+    .filter(([name, entries]) => !kpiNickSkipped(name, entries[0].row[1] || ''));
+}
+
+function _kpiOpsSkippedCount() {
+  return _kpiOpsOperatorListAll().length - _kpiOpsOperatorList().length;
+}
+
 function renderKpiOpsList() {
   const list = document.getElementById('kpi-ops-list');
   if (!list) return;
   const ops = _kpiOpsOperatorList();
   renderKpiNicknames();
-  if (!ops.length) { list.innerHTML = ''; return; }
+  // An operator missing from this list is a deliberate choice, so it is stated
+  // rather than left as a silent gap in the run.
+  const nSkip = _kpiOpsSkippedCount();
+  const skipNote = nSkip
+    ? `<div class="kpi-ops-skip-note"><i class="ti ti-bell-off"></i> ${nSkip} operator${nSkip !== 1 ? 's' : ''}
+         skipped \u2014 change that under <strong>Operator settings</strong> below.</div>`
+    : '';
+  if (!ops.length) { list.innerHTML = skipNote; return; }
   list.innerHTML = ops.map(([name, entries], i) => {
     const email = entries[0].row[1] || '';
     const dateSub = entries.map(e => e.dateLabel).join(' · ');
@@ -16430,7 +16498,7 @@ function renderKpiOpsList() {
       </div>
       <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">Preview &amp; copy</button>
     </div>`;
-  }).join('');
+  }).join('') + skipNote;
 }
 
 function buildKpiOpsTableHtml(row, totals) {
