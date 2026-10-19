@@ -637,6 +637,14 @@
   .cal-panel { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: 14px; padding: 16px; }
   .cal-panel-header { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .cal-panel-header i { color: #185FA5; }
+  .task-link-pill { display:inline-flex; align-items:center; gap:4px; max-width:190px; font-size:10.5px; font-weight:600;
+    color:var(--teal-text); background:var(--teal-bg); border-radius:5px; padding:2px 7px; text-decoration:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:background .13s; }
+  .task-link-pill:hover { background:color-mix(in srgb, var(--teal) 26%, transparent); text-decoration:underline; }
+  .task-link-pill i { font-size:11px; flex-shrink:0; }
+  /* The whole row opens the link, so say so before it is clicked. */
+  .task.task-has-link { cursor:pointer; }
+  .task.task-has-link:hover .tname { text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px; }
   .cal-task-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; background: var(--bg); border: 0.5px solid var(--border); transition: border-color 0.15s; }
   .cal-task-row:hover { border-color: var(--border-md); }
   .cal-task-row.done { opacity: 0.5; }
@@ -5201,6 +5209,10 @@
         <textarea class="field-input" id="te-note" rows="3" style="resize:vertical; font-family:inherit; font-size:13px; line-height:1.6;"></textarea>
       </div>
       <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Link <span style="font-weight:400;">(optional — clicking the task opens it)</span></div>
+        <input class="field-input" id="te-url" placeholder="e.g. helpdesk.servicesupport.com.au/jobs/1960635">
+      </div>
+      <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Tags <span style="font-weight:400;">(comma-separated, optional)</span></div>
         <input class="field-input" id="te-tags" placeholder="e.g. ANZ, urgent">
       </div>
@@ -5271,6 +5283,10 @@
         <div class="queue-block">
           <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Tags <span style="font-weight:400;">(comma-separated, optional)</span></div>
           <input class="field-input" id="ct-tags" placeholder="e.g. ANZ, urgent">
+        </div>
+        <div class="queue-block">
+          <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Link <span style="font-weight:400;">(optional — clicking the task opens it)</span></div>
+          <input class="field-input" id="ct-url" placeholder="e.g. helpdesk.servicesupport.com.au/jobs/1960635">
         </div>
       </div>
     </div>
@@ -7061,7 +7077,9 @@ function addCustomTask() {
   const time = timeEl && timeEl.value ? timeEl.value : '';
   const tagsEl = document.getElementById('ct-tags');
   const tags = tagsEl ? parseTagsInput(tagsEl.value) : [];
-  const task = { id: 'c' + Date.now(), freq, priority, name, days: 'all', assignees: ['Me'], note: '', custom: true, hub, time, tags };
+  const urlEl = document.getElementById('ct-url');
+  const url = urlEl ? urlEl.value.trim() : '';
+  const task = { id: 'c' + Date.now(), freq, priority, name, days: 'all', assignees: ['Me'], note: '', custom: true, hub, time, tags, url };
   if (freq === 'weekly' && dayVal !== 'all') {
     task.days = [parseInt(dayVal, 10)];
   } else if (freq === 'monthly' && dayVal !== 'all') {
@@ -7078,6 +7096,7 @@ function addCustomTask() {
   nameEl.value = '';
   if (timeEl) timeEl.value = '';
   if (tagsEl) tagsEl.value = '';
+  if (urlEl) urlEl.value = '';
   renderTasks();
 }
 
@@ -11275,6 +11294,8 @@ function openTaskEdit(id) {
   document.getElementById('te-note').value = task.note || '';
   const teTagsEl = document.getElementById('te-tags');
   if (teTagsEl) teTagsEl.value = (task.tags || []).join(', ');
+  const teUrlEl = document.getElementById('te-url');
+  if (teUrlEl) teUrlEl.value = task.url || '';
   renderTaskEditDayField(task.freq, task);
   const th = document.getElementById('te-time-holder');
   if (th) th.innerHTML = timeField('te-time', task.time || '');
@@ -11354,6 +11375,8 @@ function saveTaskEdit() {
   override.note = document.getElementById('te-note').value.trim();
   const teTagsEl = document.getElementById('te-tags');
   override.tags = teTagsEl ? parseTagsInput(teTagsEl.value) : [];
+  const teUrlEl = document.getElementById('te-url');
+  override.url = teUrlEl ? teUrlEl.value.trim() : '';
   taskOverrides[editingTaskId] = { ...(taskOverrides[editingTaskId] || {}), ...override };
   saveTaskOverrides();
   if (override.reminderTime) requestNotifPermission();
@@ -12827,6 +12850,60 @@ const FREQ_LABELS = {daily:'Daily', weekly:'Weekly', fortnightly:'Fortnightly', 
 let _nextBestId = null;
 let _highlightIds = new Set();
 
+// ===== TASK LINKS =====
+// A task can carry a link, and opening it becomes what clicking the row does.
+// Typing "helpdesk.servicesupport.com.au/jobs/1" is the common case, so a bare
+// host gets https:// rather than being read as a relative path. Only http(s)
+// is allowed through - a stored javascript: or data: url would run in the page
+// the moment the row was clicked.
+function taskUrlHref(raw) {
+  let u = String(raw || '').trim();
+  if (!u) return '';
+  // "example.com:8080/x" matches the shape of a scheme but is a host and a
+  // port, so a colon only counts as a scheme when it is followed by // or by
+  // something that isn't a port number.
+  const schemeM = u.match(/^([a-z][a-z0-9+.-]*):/i);
+  const hasAuthority = /^[a-z][a-z0-9+.-]*:\/\//i.test(u);
+  const hadScheme = !!schemeM && (hasAuthority || !/^\d/.test(u.slice(schemeM[0].length)));
+  if (!hadScheme) u = 'https://' + u.replace(/^\/+/, '');
+  try {
+    const parsed = new URL(u);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    // A typed scheme is taken at its word - a single-label intranet host is
+    // real. Where the scheme was inferred, the text has to look like a host, so
+    // a stray note doesn't quietly turn into a link to nowhere.
+    if (!hadScheme && !/^(localhost|[a-z0-9-]+(\.[a-z0-9-]+)+)$/i.test(parsed.hostname)) return '';
+    return parsed.href;
+  } catch (e) { return ''; }
+}
+
+// What the chip shows: the host, plus a hint of the path so two links to the
+// same site are still tellable apart.
+function taskUrlLabel(raw) {
+  const href = taskUrlHref(raw);
+  if (!href) return '';
+  try {
+    const u = new URL(href);
+    const host = u.hostname.replace(/^www\./, '');
+    let tail = (u.pathname || '').replace(/\/+$/, '').split('/').filter(Boolean).pop() || '';
+    if (!tail) return host;
+    if (tail.length > 14) tail = tail.slice(0, 13) + '\u2026';
+    // On a long host the tail is the part that identifies the thing - a job
+    // number, a page name - so the host gives way rather than the tail being
+    // cut off by the pill's width.
+    const full = `${host}/${tail}`;
+    if (full.length <= 30) return full;
+    return `${host.split('.')[0]}\u2026/${tail}`;
+  } catch (e) { return href; }
+}
+
+function taskOpenLink(id) {
+  const t = getAllTasks().find(x => String(x.id) === String(id));
+  const href = taskUrlHref(t && t.url);
+  if (!href) return;
+  window.open(href, '_blank', 'noopener');
+}
+
 function taskHTML(t, showFreqPill) {
   const d = isDone(t.id);
   const isNext = !d && _nextBestId !== null && String(t.id) === String(_nextBestId);
@@ -12854,7 +12931,20 @@ function taskHTML(t, showFreqPill) {
   const reminderPill = t.reminderTime
     ? `<span class="time-pill" title="Reminder set"><i class="ti ti-bell"></i>${fmtTime(t.reminderTime)}</span>`
     : '';
-  const click = t.jobReminder ? `openJobReminderDetail('${t.id}')` : t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')` : `toggle('${t.id}')`;
+  // A link the user set outranks the built-in page jumps on the hardcoded
+  // tasks: it was put there deliberately. Job reminders keep their own detail
+  // modal, which already has an Open link button of its own.
+  const taskHref = taskUrlHref(t.url);
+  const click = t.jobReminder ? `openJobReminderDetail('${t.id}')`
+    : taskHref ? `taskOpenLink('${t.id}')`
+    : t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')`
+    : `toggle('${t.id}')`;
+  // Visible so the row doesn't just silently behave differently, and clickable
+  // in its own right for anyone who goes straight for it.
+  const linkPill = taskHref
+    ? `<a class="task-link-pill" href="${escAttr(taskHref)}" target="_blank" rel="noopener noreferrer"
+         title="${escAttr(taskHref)}" onclick="event.stopPropagation()"><i class="ti ti-link"></i>${esc(taskUrlLabel(t.url))}</a>`
+    : '';
   const delBtn = t.custom
     ? `<button class="task-del-btn" onclick="event.stopPropagation(); deleteCustomTask('${t.id}')"><i class="ti ti-trash"></i></button>`
     : `<button class="task-del-btn" onclick="event.stopPropagation(); hideHardcodedTask('${t.id}')"><i class="ti ti-trash"></i></button>`;
@@ -12892,13 +12982,13 @@ function taskHTML(t, showFreqPill) {
     : '';
   const pinBtn = `<button class="task-move-btn${t.pinned?' pin-active':''}" title="${t.pinned?'Unpin':'Pin to top'}" onclick="event.stopPropagation(); toggleTaskPin('${t.id}')"><i class="ti ti-pin${t.pinned?'-filled':''}"></i></button>`;
   const pinIcon = t.pinned ? `<i class="ti ti-pin-filled task-pin-icon" title="Pinned"></i>` : '';
-  return `<div class="task ${pCls}${d?' done':''}${bulkSelected?' bulk-selected':''}${extraCls}" tabindex="0" onclick="${rowClick}" ondragover="taskDragOver(event,'${t.id}')" ondrop="taskDrop(event,'${t.id}')">
+  return `<div class="task ${pCls}${d?' done':''}${bulkSelected?' bulk-selected':''}${extraCls}${taskHref && !bulkSelectMode ? ' task-has-link' : ''}" tabindex="0" onclick="${rowClick}" ondragover="taskDragOver(event,'${t.id}')" ondrop="taskDrop(event,'${t.id}')">
     ${bulkCb}
     ${dragHandle}
     <div class="cb${d?' on':''}${(d && String(t.id)===String(justToggledId))?' cb-pop':''}" title="Mark done" onclick="event.stopPropagation(); toggle('${t.id}')"><i class="ti ti-check"></i></div>
     <div class="tbody">
       <div class="trow1">${pinIcon}<span class="tname">${t.name}</span>${(t.autoEscalated && t.priority === 'HIGH') ? `<i class="ti ti-trending-up task-escalated-icon" title="Auto-escalated from Medium — overdue ${AUTO_ESCALATE_DAYS}+ days"></i>` : ''}${nextBadge}${focusBadge}</div>
-      <div class="tmeta"><span class="tprio ${pCls}">${bLbl} priority</span>${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${tagChips}<div class="pills">${pills}</div></div>
+      <div class="tmeta"><span class="tprio ${pCls}">${bLbl} priority</span>${freqPill}${timePill}${reminderPill}${jobBadge}${streakBadge}${hubBadge}${linkPill}${tagChips}<div class="pills">${pills}</div></div>
       ${note}
     </div>
     <div class="task-actions">
