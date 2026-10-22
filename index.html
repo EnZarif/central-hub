@@ -10401,13 +10401,27 @@ function jliBuildPlan() {
     // Several rows against one store are several jobs at the same place, so they
     // become a single entry whose link carries every job number — the same
     // multi-job URL the Add job form builds when you type the IDs by hand.
-    const bySite = new Map();
+    // The date is part of the key, not just the site: four jobs at one site,
+    // two on the 23rd and two on the 25th, are two visits and have to be two
+    // entries, or the pair on the later date disappears behind the earlier one.
+    const bySiteDate = new Map();
     const ordered = [];
     g.jobs.forEach(j => {
-      const k = (j.site || '').trim().toLowerCase();
-      if (!k) { ordered.push([j]); return; }
-      if (!bySite.has(k)) { const arr = []; bySite.set(k, arr); ordered.push(arr); }
-      bySite.get(k).push(j);
+      const site = (j.site || '').trim().toLowerCase();
+      if (!site) { ordered.push([j]); return; }
+      const k = site + '|' + (j.date || '');
+      if (!bySiteDate.has(k)) { const arr = []; bySiteDate.set(k, arr); ordered.push(arr); }
+      bySiteDate.get(k).push(j);
+    });
+
+    // Which sites ended up split across dates. Only those carry the date in
+    // their name - putting it on every job would just repeat the due chip.
+    const datesPerSite = new Map();
+    g.jobs.forEach(j => {
+      const site = (j.site || '').trim().toLowerCase();
+      if (!site) return;
+      if (!datesPerSite.has(site)) datesPerSite.set(site, new Set());
+      datesPerSite.get(site).add(j.date || '');
     });
 
     const entries = ordered.map(list => {
@@ -10415,10 +10429,14 @@ function jliBuildPlan() {
       const ids  = [...new Set(list.map(x => x.jobId).filter(Boolean))];
       const names = [...new Set(list.map(x => x.name))];
       const name = names.length > 1 ? names.join(' · ') : names[0];
-      const dates = list.map(x => x.date).filter(Boolean).sort();
+      const site = (base.site || '').trim().toLowerCase();
+      const splitByDate = !!site && (datesPerSite.get(site) || new Set()).size > 1;
       return { ...base, name, jobIds: ids, merged: list.length,
-               date: dates[0] || '', derived: list.every(x => x.derived) };
-    });
+               date: base.date || '', splitByDate, derived: list.every(x => x.derived) };
+    })
+    // Earliest visit first, so a site split across dates reads in the order it
+    // will be worked.
+    .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
 
     // Decided after merging: three rows at one store collapse to one entry, and
     // a section wrapping a single entry would just be noise.
@@ -10448,7 +10466,11 @@ function jliBuildPlan() {
       // When the sheet has no job-name column the site becomes the name, so
       // appending the location again would read "DECJUBA BANKSTOWN — BANKSTOWN".
       if (rest && j.name.toLowerCase().includes(rest.toLowerCase())) rest = '';
-      return { ...j, suffix: rest, display: rest ? `${j.name} — ${rest}` : j.name };
+      let display = rest ? `${j.name} — ${rest}` : j.name;
+      // Same site, different visit: without this they read as duplicates in the
+      // list, since the name alone no longer tells them apart.
+      if (j.splitByDate && j.date) display += ` — ${fmtShortDate(j.date)}`;
+      return { ...j, suffix: rest, display };
     });
     return { site: sectionLabel || g.sites[0] || '', sites: g.sites, jobs, mode,
              sectionId, sectionLabel };
@@ -11151,7 +11173,7 @@ function jlSortJobs(list) {
     if (a.date && !b.date) return -1;
     if (!a.date && b.date) return 1;
     if (a.date && b.date && a.date !== b.date) return a.date.localeCompare(b.date);
-    return 0;
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true });
   });
 }
 
