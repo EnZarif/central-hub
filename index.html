@@ -1996,6 +1996,13 @@
   .jl-bucket-caret { opacity: .75; margin-left: -2px; }
   .jl-bucket-n { margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: 0;
     background: color-mix(in srgb, currentColor 16%, transparent); border-radius: 9px; padding: 1px 7px; }
+  /* A subsection is drawn inside its umbrella, with a rail so the branch reads
+     as belonging to the header above it. */
+  .jl-subsec { margin:2px 0 4px 12px; padding-left:10px; border-left:1.5px solid var(--border-md); }
+  .jl-subsec .jl-sec-label { font-size:10px; opacity:.92; }
+  .jl-subsec .jl-section-divider { margin:4px 0 2px; }
+  .jl-jump-chip.sub { border-left-color:var(--border-md); }
+  .jl-jump-par { color:var(--text-3); font-weight:600; margin-right:3px; }
   .jl-section-divider { display:flex; align-items:center; gap:8px; padding:4px 10px; margin:8px 0 2px; }
   .jl-sec-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--teal-text); white-space:nowrap; cursor:pointer; line-height:1.4; }
   .jl-sec-label:hover { opacity:.8; }
@@ -9703,6 +9710,37 @@ function jlToggleSection(id) {
   renderJobListSidebar();
 }
 
+// ---- Subsections -------------------------------------------------------
+// A section can sit under one other section, which is how a run of
+// similarly-named sites ends up filed beneath an umbrella that is named
+// something else entirely - "NSWH MLHD" and "NSWH SNSWLHD" under "NSW Health".
+// Nesting stops at one level on purpose: a job belongs to exactly one section,
+// and deeper trees would make "which section am I in" ambiguous to answer.
+function jlSectionsAll(list) {
+  return (list || jobLists).filter(j => j.type === 'section');
+}
+function jlParentOf(sec, list) {
+  if (!sec || !sec.parentId) return null;
+  return jlSectionsAll(list).find(x => String(x.id) === String(sec.parentId)) || null;
+}
+// A parentId pointing at a section that has since gone is treated as no parent,
+// so a deleted umbrella never hides the sections that sat under it.
+function jlIsSub(sec, list) { return !!jlParentOf(sec, list); }
+function jlTopSections(list) { return jlSectionsAll(list).filter(x => !jlIsSub(x, list)); }
+function jlSubsOf(id, list) {
+  return jlSectionsAll(list).filter(x => String(x.parentId || '') === String(id));
+}
+// Only a section with no children of its own can become a child, which is what
+// keeps the tree one level deep.
+function jlCanNestUnder(secId, parentId) {
+  if (String(secId) === String(parentId)) return false;
+  const parent = jobLists.find(x => String(x.id) === String(parentId));
+  if (!parent || parent.type !== 'section') return false;
+  if (parent.parentId) return false;              // parent is itself a child
+  if (jlSubsOf(secId).length) return false;       // this one already has children
+  return true;
+}
+
 function jlOpenSectionEdit(sectionId) {
   _jlEditingSectionId = sectionId;
   const section = jobLists.find(j => String(j.id) === String(sectionId));
@@ -9726,6 +9764,28 @@ function jlOpenSectionEdit(sectionId) {
       ? `All ${n} job${n !== 1 ? 's' : ''} in this section will be filed under it, and future ones too.`
       : 'Jobs added to this section will be filed under it.';
   }
+  // Parent picker. Only sections this one may legally sit under are offered, so
+  // the one-level rule is enforced by what is on the menu rather than by an
+  // error after the fact.
+  const parSel = document.getElementById('jl-sec-edit-parent');
+  if (parSel) {
+    const cands = jlSectionsAll().filter(x => jlCanNestUnder(sectionId, x.id));
+    parSel.innerHTML = '<option value="">\u2014 Top level \u2014</option>' +
+      cands.map(x => `<option value="${x.id}">${esc(x.label || 'Section')}</option>`).join('');
+    parSel.value = section.parentId && cands.some(x => String(x.id) === String(section.parentId))
+      ? String(section.parentId) : '';
+    const note = document.getElementById('jl-sec-parent-note');
+    if (note) {
+      const kids = jlSubsOf(sectionId).length;
+      note.textContent = kids
+        ? `This section has ${kids} subsection${kids !== 1 ? 's' : ''} of its own, so it stays top level.`
+        : cands.length
+          ? 'Keep it top level, or file it under an umbrella section.'
+          : 'No other section is available to sit under yet.';
+    }
+    parSel.disabled = !cands.length;
+  }
+
   const now = Date.now();
   const archivedIds = new Set(jobLists.filter(j => j.done && j.completedAt && (now - j.completedAt) >= JL_ARCHIVE_AFTER_MS && (!j.amtekProjectId || j._manualArchive)).map(j => j.id));
   const allJobs = jobLists.filter(j => j.type !== 'section' && !archivedIds.has(j.id));
@@ -9779,6 +9839,12 @@ function jlSaveSectionEdit() {
     const newName = document.getElementById('jl-sec-edit-name').value.trim();
     if (newName && newName !== section.label) { section.label = newName; renamed = true; }
   }
+  const parSel = document.getElementById('jl-sec-edit-parent');
+  if (section && parSel && !parSel.disabled) {
+    const pid = parSel.value || '';
+    section.parentId = (pid && jlCanNestUnder(section.id, pid)) ? pid : null;
+  }
+
   const listEl = document.getElementById('jl-sec-edit-list');
   if (listEl) {
     listEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
@@ -10573,8 +10639,11 @@ function moveJobList(id, dir) {
   let group;
   if (hasSections) {
     if (target.type === 'section') {
-      // Sections reorder only among other sections
-      group = jobLists.filter(j => !archivedIds.has(j.id) && j.type === 'section');
+      // Sections reorder among their own siblings: top-level with top-level,
+      // and a subsection only within the umbrella it sits under.
+      const pid = String(target.parentId || '');
+      group = jobLists.filter(j => !archivedIds.has(j.id) && j.type === 'section'
+        && String(j.parentId || '') === pid);
     } else {
       // Jobs reorder within their sectionId group (or within unassigned)
       const sid = target.sectionId || null;
@@ -10680,6 +10749,9 @@ function jlTouchSubProject(projId, subId, job) {
 function jlDeleteSection(id) {
   // Unassign jobs belonging to this section
   jobLists.forEach(j => { if (String(j.sectionId || '') === String(id)) j.sectionId = null; });
+  // Subsections are promoted rather than deleted with their umbrella - removing
+  // a grouping should not take the work filed under it.
+  jobLists.forEach(j => { if (j.type === 'section' && String(j.parentId || '') === String(id)) j.parentId = null; });
   jobLists = jobLists.filter(j => String(j.id) !== String(id));
   saveJobLists();
   renderJobListSidebar();
@@ -10980,17 +11052,75 @@ const JL_ARCHIVE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
 // Quick links to each section. Worth having once a list has several sections —
 // the importer can create a batch of them in one go — so it only appears at two
 // or more and stays out of the way otherwise.
+// One section's header, jobs, empty note and completed pile. Shared by the
+// top-level pass and the subsection pass so the two can never drift apart.
+function jlSectionBlock(sec, ctx, isSub) {
+  const { activeJobs, urgentIds, archivedBySection } = ctx;
+  const allSecJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
+  const secJobs = jlSortJobs(allSecJobs.filter(j => !urgentIds.has(String(j.id))));
+  const secDone = (archivedBySection.get(String(sec.id)) || [])
+    .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+  const isCollapsed = jlCollapsedSections.has(String(sec.id));
+  const kids = isSub ? [] : jlSubsOf(sec.id);
+
+  let html = jlRowHtml(sec, false, false, false, isCollapsed, false);
+  if (!isCollapsed) {
+    for (const j of secJobs) html += jlRowHtml(j, false, false, true);
+    if (!secJobs.length) {
+      const msg = allSecJobs.length > 0
+        ? 'All jobs are overdue or due today \u2014 shown above.'
+        : secDone.length
+          ? `Nothing outstanding \u2014 ${secDone.length} completed below.`
+          : kids.length
+            ? `No jobs of its own \u2014 ${kids.length} subsection${kids.length !== 1 ? 's' : ''} below.`
+            : 'No jobs yet \u2014 hover the section to add one.';
+      html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">${msg}</div>`;
+    }
+    if (secDone.length) {
+      const open = _jlSecArchiveOpen.has(String(sec.id));
+      html += `<button class="jl-archive-toggle jl-sec-archive" onclick="toggleJlSecArchive('${sec.id}')"
+        title="${open ? 'Hide' : 'Show'} work completed in this section">
+        <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
+        <i class="ti ti-check jl-sec-archive-ico"></i> Completed
+        <span class="jl-sec-archive-n">${secDone.length}</span>
+      </button>`;
+      if (open) {
+        html += `<div class="jl-archive-list jl-sec-archive-list">`
+          + secDone.map(j => jlRowHtml(j, false, false, true)).join('') + `</div>`;
+      }
+    }
+    // Children render inside the parent, so collapsing the umbrella takes the
+    // whole branch with it.
+    for (const kid of kids) {
+      html += `<div class="jl-subsec">` + jlSectionBlock(kid, ctx, true) + `</div>`;
+    }
+  }
+  return html;
+}
+
 function jlRenderSectionJump(sections, activeJobs) {
   const el = document.getElementById('jl-sec-jump');
   if (!el) return;
   if (!sections || sections.length < 2) { el.innerHTML = ''; el.style.display = 'none'; return; }
   el.style.display = '';
-  el.innerHTML = sections.map(s => {
+  // Parent first, then its children, so the chips read in the order the list
+  // below them does. A child says who it belongs to, since its own name is
+  // often the part that doesn't identify it.
+  const ordered = [];
+  for (const top of jlTopSections(sections)) {
+    ordered.push({ sec: top, parent: null });
+    for (const kid of jlSubsOf(top.id, sections)) ordered.push({ sec: kid, parent: top });
+  }
+  for (const s2 of sections) {
+    if (!ordered.some(o => String(o.sec.id) === String(s2.id))) ordered.push({ sec: s2, parent: null });
+  }
+  el.innerHTML = ordered.map(({ sec: s, parent }) => {
     const n = activeJobs.filter(j => String(j.sectionId || '') === String(s.id)).length;
     const collapsed = jlCollapsedSections.has(String(s.id));
-    return `<button class="jl-jump-chip${collapsed ? ' collapsed' : ''}" onclick="jlJumpToSection('${s.id}')"
-              title="${esc(s.label || 'Section')} — ${n} job${n !== 1 ? 's' : ''}${collapsed ? ' · collapsed, opens on click' : ''}">
-              <span class="jl-jump-l">${esc(s.label || 'Section')}</span>
+    const lbl = esc(s.label || 'Section');
+    return `<button class="jl-jump-chip${collapsed ? ' collapsed' : ''}${parent ? ' sub' : ''}" onclick="jlJumpToSection('${s.id}')"
+              title="${parent ? esc(parent.label || 'Section') + ' \u203a ' : ''}${lbl} — ${n} job${n !== 1 ? 's' : ''}${collapsed ? ' · collapsed, opens on click' : ''}">
+              <span class="jl-jump-l">${parent ? `<span class="jl-jump-par">${esc(parent.label || '')} \u203a</span>` : ''}${lbl}</span>
               <span class="jl-jump-n"><b>${n}</b> job${n !== 1 ? 's' : ''}</span>
             </button>`;
   }).join('');
@@ -11111,40 +11241,8 @@ function renderJobListSidebar() {
     if (!sections.length && !activeJobs.length) {
       html += '<div class="jl-empty">Nothing active — add one above.</div>';
     } else {
-      for (const sec of sections) {
-        const allSecJobs = activeJobs.filter(j => String(j.sectionId || '') === String(sec.id));
-        const secJobs = jlSortJobs(allSecJobs.filter(j => !urgentIds.has(String(j.id))));
-        const secDone = (archivedBySection.get(String(sec.id)) || [])
-          .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
-        const isCollapsed = jlCollapsedSections.has(String(sec.id));
-        html += jlRowHtml(sec, false, false, false, isCollapsed, false);
-        if (!isCollapsed) {
-          for (const j of secJobs) {
-            html += jlRowHtml(j, false, false, true);
-          }
-          if (!secJobs.length) {
-            const msg = allSecJobs.length > 0
-              ? 'All jobs are overdue or due today — shown above.'
-              : secDone.length
-                ? `Nothing outstanding — ${secDone.length} completed below.`
-                : 'No jobs yet — hover the section to add one.';
-            html += `<div style="padding:6px 14px;font-size:11.5px;color:var(--text-3);font-style:italic;">${msg}</div>`;
-          }
-          if (secDone.length) {
-            const open = _jlSecArchiveOpen.has(String(sec.id));
-            html += `<button class="jl-archive-toggle jl-sec-archive" onclick="toggleJlSecArchive('${sec.id}')"
-              title="${open ? 'Hide' : 'Show'} work completed in this section">
-              <i class="ti ti-chevron-${open ? 'down' : 'right'}"></i>
-              <i class="ti ti-check jl-sec-archive-ico"></i> Completed
-              <span class="jl-sec-archive-n">${secDone.length}</span>
-            </button>`;
-            if (open) {
-              html += `<div class="jl-archive-list jl-sec-archive-list">`
-                + secDone.map(j => jlRowHtml(j, false, false, true)).join('') + `</div>`;
-            }
-          }
-        }
-      }
+      const ctx = { activeJobs, urgentIds, archivedBySection };
+      for (const sec of jlTopSections(active)) html += jlSectionBlock(sec, ctx, false);
       const unassigned = jlSortJobs(activeJobs.filter(j => !j.sectionId && !urgentIds.has(String(j.id))));
       if (unassigned.length) {
         html += `<div class="jl-unassigned-zone">
@@ -21252,6 +21350,11 @@ document.addEventListener('pointerup', e => {
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">Section name</div>
         <input class="field-input" id="jl-sec-edit-name" maxlength="60" placeholder="e.g. Day 4">
+      </div>
+      <div class="queue-block">
+        <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">Sits under <span style="font-weight:400;">(optional — makes this a subsection)</span></div>
+        <select class="field-input" id="jl-sec-edit-parent"></select>
+        <div class="jli-hint-note" style="margin-top:7px;"><i class="ti ti-info-circle"></i><span id="jl-sec-parent-note">Keep it top level, or file it under an umbrella section.</span></div>
       </div>
       <div class="queue-block">
         <div class="field-label" style="margin-bottom:6px;font-size:12px;color:var(--text-3);">ANZ WL sub-project</div>
