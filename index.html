@@ -1926,6 +1926,21 @@
   /* Theme colours are the default — every modal but one is app UI. Previously
      this defaulted to white and each modal had to opt out, which meant any new
      one rendered light text on a white panel until someone noticed. */
+  .kpi-modal-fields { display:flex; flex-direction:column; gap:6px; padding:12px 0 0; }
+  .kpi-field { display:flex; align-items:center; gap:10px; width:100%; text-align:left; font-family:inherit;
+    padding:8px 11px; border-radius:9px; border:0.5px solid var(--border-md); background:var(--surface2);
+    color:var(--text); cursor:pointer; transition:all .14s; }
+  .kpi-field:hover { border-color:var(--teal); background:var(--teal-bg); }
+  .kpi-field.copied { border-color:var(--green-text); background:var(--green-bg); }
+  .kpi-field-l { flex-shrink:0; width:52px; font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--text-3); }
+  .kpi-field-v { flex:1; min-width:0; font-size:12.5px; font-weight:500; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .kpi-field-a { flex-shrink:0; display:inline-flex; align-items:center; gap:4px; font-size:11px;
+    font-weight:600; color:var(--text-3); }
+  .kpi-field:hover .kpi-field-a { color:var(--teal-text); }
+  .kpi-field.copied .kpi-field-a { color:var(--green-text); }
+  .kpi-field-a i { font-size:12px; }
   .kpi-modal-preview { background: var(--surface2); border: 1px solid var(--border-md); border-radius: 8px; padding: 16px; overflow: auto; color: var(--text); }
   /* The exception: this previews an email as a mail client will draw it, so it
      stays white in every theme. */
@@ -5074,6 +5089,7 @@
       <strong>Email preview — <span id="kpi-ops-modal-pos"></span></strong>
       <button class="icon-btn" onclick="kpiOpsModalClose()"><i class="ti ti-x"></i></button>
     </div>
+    <div class="kpi-modal-fields" id="kpi-ops-fields"></div>
     <div class="kpi-modal-preview" id="kpi-ops-modal-preview"></div>
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="kpiOpsModalClose()">Close</button>
@@ -16644,6 +16660,72 @@ function buildKpiOpsTableHtml(row, totals) {
   return html;
 }
 
+// ---- The three header fields that go with the email body ----------------
+// Pasting the body is only part of sending one of these; the address, the CC
+// and the subject all have to be retyped otherwise. Each is one click.
+const KPI_OPS_CC = 'patrick.le@amtek.com.au';
+
+// "KPI Monday, 19 Oct 2026" for one day, and the span when an operator's email
+// covers several, which is how the dates already read everywhere else here.
+function kpiOpsSubject(entries) {
+  const labels = [...new Set((entries || []).map(e => e.dateLabel).filter(Boolean))];
+  if (!labels.length) return 'KPI';
+  if (labels.length === 1) return `KPI ${labels[0]}`;
+  return `KPI ${labels[0]} \u2013 ${labels[labels.length - 1]}`;
+}
+
+let kpiOpsCurrentFields = { to: '', cc: KPI_OPS_CC, subject: '' };
+
+// Plain text, not the rich-text path the body uses: an address pasted as HTML
+// arrives in Outlook's To box as markup.
+function kpiCopyPlain(text) {
+  const t = String(text || '');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(t).catch(() => kpiCopyPlainFallback(t));
+  }
+  kpiCopyPlainFallback(t);
+  return Promise.resolve();
+}
+function kpiCopyPlainFallback(t) {
+  const ta = document.createElement('textarea');
+  ta.value = t;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+function renderKpiOpsFields() {
+  const el = document.getElementById('kpi-ops-fields');
+  if (!el) return;
+  const f = kpiOpsCurrentFields;
+  const row = (kind, label, value) => `
+    <button class="kpi-field" onclick="kpiOpsCopyField('${kind}', this)" title="Copy ${esc(label)}">
+      <span class="kpi-field-l">${esc(label)}</span>
+      <span class="kpi-field-v">${esc(value || '\u2014')}</span>
+      <span class="kpi-field-a"><i class="ti ti-copy"></i>Copy</span>
+    </button>`;
+  el.innerHTML = row('to', 'To', f.to) + row('cc', 'Cc', f.cc) + row('subject', 'Subject', f.subject);
+}
+
+function kpiOpsCopyField(kind, btn) {
+  const val = kpiOpsCurrentFields[kind];
+  if (!val) return;
+  kpiCopyPlain(val).then(() => {
+    if (!btn) return;
+    const act = btn.querySelector('.kpi-field-a');
+    if (!act) return;
+    act.innerHTML = '<i class="ti ti-check"></i>Copied';
+    btn.classList.add('copied');
+    clearTimeout(btn._t);
+    btn._t = setTimeout(() => {
+      act.innerHTML = '<i class="ti ti-copy"></i>Copy';
+      btn.classList.remove('copied');
+    }, 1400);
+  });
+}
+
 let kpiOpsCurrentHtml = '';
 let kpiOpsCurrentText = '';
 let kpiOpsCurrentIdx = 0;
@@ -16704,6 +16786,12 @@ function kpiOpsCopy(i) {
 
   kpiOpsCurrentHtml = html;
   kpiOpsCurrentText = text;
+  kpiOpsCurrentFields = {
+    to: entries[0].row[1] || '',
+    cc: KPI_OPS_CC,
+    subject: kpiOpsSubject(entries)
+  };
+  renderKpiOpsFields();
   document.getElementById('kpi-ops-modal-preview').innerHTML = html;
   document.getElementById('kpi-ops-modal-pos').textContent = `${i + 1} of ${ops.length}`;
   document.getElementById('kpi-ops-modal-next-btn').style.display = 'none';
