@@ -1926,21 +1926,20 @@
   /* Theme colours are the default — every modal but one is app UI. Previously
      this defaulted to white and each modal had to opt out, which meant any new
      one rendered light text on a white panel until someone noticed. */
-  .kpi-modal-fields { display:flex; flex-direction:column; gap:6px; padding:12px 0 0; }
-  .kpi-field { display:flex; align-items:center; gap:10px; width:100%; text-align:left; font-family:inherit;
-    padding:8px 11px; border-radius:9px; border:0.5px solid var(--border-md); background:var(--surface2);
-    color:var(--text); cursor:pointer; transition:all .14s; }
-  .kpi-field:hover { border-color:var(--teal); background:var(--teal-bg); }
-  .kpi-field.copied { border-color:var(--green-text); background:var(--green-bg); }
-  .kpi-field-l { flex-shrink:0; width:52px; font-size:10px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.06em; color:var(--text-3); }
-  .kpi-field-v { flex:1; min-width:0; font-size:12.5px; font-weight:500; overflow:hidden;
-    text-overflow:ellipsis; white-space:nowrap; }
-  .kpi-field-a { flex-shrink:0; display:inline-flex; align-items:center; gap:4px; font-size:11px;
-    font-weight:600; color:var(--text-3); }
-  .kpi-field:hover .kpi-field-a { color:var(--teal-text); }
-  .kpi-field.copied .kpi-field-a { color:var(--green-text); }
-  .kpi-field-a i { font-size:12px; }
+  .kpi-modal-fields { display:flex; justify-content:flex-start; flex-wrap:wrap; gap:9px; padding:12px 0 2px; }
+  /* Sized to their labels and sitting left, rather than stretched across the
+     modal - three buttons spread that wide read as a toolbar, not a choice. */
+  .kpi-field { flex:0 0 auto; min-width:120px; display:flex; align-items:center; justify-content:flex-start; gap:8px;
+    font-family:inherit; font-size:13.5px; font-weight:600; padding:14px 18px; border-radius:11px;
+    border:0.5px solid var(--border-md); background:var(--surface2); color:var(--text);
+    cursor:pointer; transition:all .14s; }
+  .kpi-field:hover { border-color:var(--teal); background:var(--teal-bg); color:var(--teal-text); transform:translateY(-1px); }
+  .kpi-field:active { transform:translateY(0); }
+  .kpi-field.copied { border-color:var(--green-text); background:var(--green-bg); color:var(--green-text); }
+  .kpi-field[disabled] { opacity:.45; cursor:default; }
+  .kpi-field[disabled]:hover { border-color:var(--border-md); background:var(--surface2); color:var(--text); transform:none; }
+  .kpi-field-i { font-size:17px; flex-shrink:0; }
+  .kpi-field-l { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .kpi-modal-preview { background: var(--surface2); border: 1px solid var(--border-md); border-radius: 8px; padding: 16px; overflow: auto; color: var(--text); }
   /* The exception: this previews an email as a mail client will draw it, so it
      stays white in every theme. */
@@ -16700,13 +16699,13 @@ function renderKpiOpsFields() {
   const el = document.getElementById('kpi-ops-fields');
   if (!el) return;
   const f = kpiOpsCurrentFields;
-  const row = (kind, label, value) => `
-    <button class="kpi-field" onclick="kpiOpsCopyField('${kind}', this)" title="Copy ${esc(label)}">
+  const btn = (kind, label, value) => `
+    <button class="kpi-field" onclick="kpiOpsCopyField('${kind}', this)"
+      title="${esc(value || '')}" ${value ? '' : 'disabled'}>
+      <i class="ti ti-copy kpi-field-i"></i>
       <span class="kpi-field-l">${esc(label)}</span>
-      <span class="kpi-field-v">${esc(value || '\u2014')}</span>
-      <span class="kpi-field-a"><i class="ti ti-copy"></i>Copy</span>
     </button>`;
-  el.innerHTML = row('to', 'To', f.to) + row('cc', 'Cc', f.cc) + row('subject', 'Subject', f.subject);
+  el.innerHTML = btn('to', 'To', f.to) + btn('cc', 'Cc', f.cc) + btn('subject', 'Subject', f.subject);
 }
 
 function kpiOpsCopyField(kind, btn) {
@@ -16714,13 +16713,17 @@ function kpiOpsCopyField(kind, btn) {
   if (!val) return;
   kpiCopyPlain(val).then(() => {
     if (!btn) return;
-    const act = btn.querySelector('.kpi-field-a');
-    if (!act) return;
-    act.innerHTML = '<i class="ti ti-check"></i>Copied';
+    const ico = btn.querySelector('.kpi-field-i');
+    const lbl = btn.querySelector('.kpi-field-l');
+    if (!ico || !lbl) return;
+    const was = lbl.textContent;
+    ico.className = 'ti ti-check kpi-field-i';
+    lbl.textContent = 'Copied';
     btn.classList.add('copied');
     clearTimeout(btn._t);
     btn._t = setTimeout(() => {
-      act.innerHTML = '<i class="ti ti-copy"></i>Copy';
+      ico.className = 'ti ti-copy kpi-field-i';
+      lbl.textContent = was;
       btn.classList.remove('copied');
     }, 1400);
   });
