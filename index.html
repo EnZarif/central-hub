@@ -2335,55 +2335,34 @@
   .al-vsec-sub.warn { color:var(--amber-text); }
   .al-val-dl { width:auto !important; margin:0 0 0 auto !important; padding:8px 16px !important; letter-spacing:0; text-transform:none; }
 
-  .al-vcards { display:flex; flex-direction:column; gap:7px; }
-  @keyframes alvCardIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-  .al-vc { border-radius:10px; background:color-mix(in srgb, var(--coral-text) 6%, transparent);
-    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); padding:9px 12px;
-    animation:alvCardIn .36s cubic-bezier(.4,0,.2,1) backwards; transition:border-color .2s, box-shadow .2s; }
-  .al-vc:hover { border-color:color-mix(in srgb, var(--coral-text) 52%, transparent);
-    box-shadow:0 5px 18px color-mix(in srgb, var(--coral-text) 13%, transparent); }
-  /* Nobody allocated reads amber: still a finding, a different fix. */
-  .al-vc.none { background:rgba(var(--amber-rgb,220,152,40),.06);
-    border-color:rgba(var(--amber-rgb,220,152,40),.3); }
-  .al-vc.none:hover { border-color:rgba(var(--amber-rgb,220,152,40),.55);
-    box-shadow:0 5px 18px rgba(var(--amber-rgb,220,152,40),.12); }
-  .al-vc.none .al-vc-box.has { background:rgba(var(--amber-rgb,220,152,40),.13);
-    border-color:rgba(var(--amber-rgb,220,152,40),.3); }
-  .al-vc.none .al-vc-box.has .al-vc-name { color:var(--amber-text); }
-  .al-vc-hit { display:grid; grid-template-columns:auto 80px 1fr auto; gap:10px; align-items:center; width:100%;
-    background:none; border:none; padding:0; font-family:inherit; text-align:left; color:var(--text); cursor:pointer; }
-  .al-vc-chev { font-size:11px; color:var(--text-3); transition:transform .3s cubic-bezier(.4,0,.2,1); }
-  .al-vc-chev.open { transform:rotate(90deg); }
-  .al-vc-job { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
-  .al-vc-job a { color:var(--teal-text); text-decoration:none; }
-  .al-vc-job a:hover { text-decoration:underline; }
-  .al-vc-who { min-width:0; display:flex; flex-direction:column; gap:1px; }
-  .al-vc-site { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vc-zone { font-size:10.5px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vc-tog { font-size:10px; font-weight:700; color:var(--text-3); white-space:nowrap; }
-  .al-vc-hit:hover .al-vc-tog { color:var(--teal-text); }
-  .al-vc-delta { display:flex; align-items:center; gap:8px; margin-top:8px; }
-  .al-vc-box { flex:1; min-width:0; padding:6px 10px; border-radius:7px; display:flex; flex-direction:column; gap:1px; }
-  .al-vc-box.has { background:color-mix(in srgb, var(--coral-text) 13%, transparent);
-    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); }
-  .al-vc-box.want { background:var(--green-bg); border:0.5px solid color-mix(in srgb, var(--green-text) 28%, transparent); }
-  .al-vc-lbl { font-size:8.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
-  .al-vc-name { font-size:11.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vc-box.has .al-vc-name { color:var(--coral-text); }
-  .al-vc-box.want .al-vc-name { color:var(--green-text); }
-  .al-vc-arrow { font-size:13px; color:var(--text-3); flex-shrink:0; }
-  .al-vc-det { overflow:hidden; max-height:0; opacity:0; margin-top:0;
-    transition:max-height .34s cubic-bezier(.4,0,.2,1), opacity .22s ease, margin-top .34s cubic-bezier(.4,0,.2,1); }
-  .al-vc-det.open { max-height:220px; opacity:1; margin-top:9px; }
-  .al-vc-det-in { padding:9px 11px; border-radius:7px; background:rgba(0,0,0,.26); border:0.5px solid var(--border); }
-  .al-vc-step { display:grid; grid-template-columns:132px 1fr; gap:10px; padding:3px 0; font-size:10.5px; }
-  .al-vc-k { color:var(--text-3); }
-  .al-vc-v { min-width:0; overflow-wrap:anywhere; }
-  .al-vc-v.good { color:var(--green-text); font-weight:700; }
-  .al-vc-v.bad { color:var(--coral-text); font-weight:700; }
-  .al-vc-v.warn { color:var(--amber-text); font-weight:700; }
-  .al-vc-v.val { color:var(--text); font-weight:500; }
-  .al-vc-dim { color:var(--text-3); font-weight:400; }
+  /* One bordered block, one line per job. Red is a job to reassign, amber
+     one with nobody on it at all - the same finding, a different fix. */
+  .al-vlist { border:0.5px solid color-mix(in srgb, var(--coral-text) 26%, transparent);
+    border-radius:11px; overflow:hidden; }
+  @keyframes alvRowIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+  .al-vrow { display:grid; grid-template-columns:78px 1fr minmax(260px, 0.9fr); gap:12px; align-items:center;
+    padding:8px 13px; background:color-mix(in srgb, var(--coral-text) 5%, transparent);
+    border-bottom:0.5px solid color-mix(in srgb, var(--coral-text) 15%, transparent);
+    animation:alvRowIn .3s cubic-bezier(.4,0,.2,1) backwards; transition:background .14s; }
+  .al-vrow:last-child { border-bottom:none; }
+  .al-vrow:hover { background:color-mix(in srgb, var(--coral-text) 11%, transparent); }
+  .al-vrow.none { background:rgba(var(--amber-rgb,220,152,40),.05);
+    border-bottom-color:rgba(var(--amber-rgb,220,152,40),.15); }
+  .al-vrow.none:hover { background:rgba(var(--amber-rgb,220,152,40),.11); }
+  .al-vrow-job { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .al-vrow-job a { color:var(--teal-text); text-decoration:none; }
+  .al-vrow-job a:hover { text-decoration:underline; }
+  .al-vrow-who { min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .al-vrow-site { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vrow-zone { font-size:10.5px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vrow-delta { min-width:0; display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+  .al-vrow-delta i { font-size:12px; color:var(--text-3); flex-shrink:0; }
+  .al-vrow-has, .al-vrow-want { font-size:11px; font-weight:700; border-radius:6px; padding:4px 9px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vrow-has { color:var(--coral-text); background:color-mix(in srgb, var(--coral-text) 15%, transparent); }
+  .al-vrow.none .al-vrow-has { color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),.15); }
+  .al-vrow-want { color:var(--green-text); background:var(--green-bg); }
+  @media (prefers-reduced-motion: reduce) { .al-vrow { animation:none !important; } }
 
   .al-vgrp { margin-top:10px; border:0.5px solid var(--border); border-radius:11px; overflow:hidden; }
   .al-vgrp-hd { display:flex; align-items:center; gap:10px; width:100%; padding:12px 15px; font-family:inherit;
@@ -2404,10 +2383,11 @@
   .al-vgrp .al-val-wrap { margin:0; border-top:0.5px solid var(--border); }
   .al-vgrp .al-rows th { padding:5px 9px; font-size:9px; }
   .al-vgrp .al-rows td { padding:5px 9px; font-size:11.5px; }
+  .al-vgrp .al-rows td.al-vgrp-why { color:var(--text-3); }
   .al-vgrp-hd { padding:9px 14px; }
   @media (prefers-reduced-motion: reduce) {
-    .al-vbanner::after, .al-vc { animation:none !important; }
-    .al-vc-det, .al-vc-chev, .al-vgrp-chev { transition:none !important; }
+    .al-vbanner::after, .al-vrow { animation:none !important; }
+    .al-vgrp-chev { transition:none !important; }
   }
   .al-val-wrap { max-height:min(62vh, 760px); }
   .al-val-v { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; }
@@ -9369,7 +9349,6 @@ let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
 // Which mismatch cards have their working open, and which of the other
 // verdict groups are expanded. Mismatches are never collapsed - they are the
 // reason the file was run.
-let alValOpenCard = new Set();
 let alValOpenGroup = new Set();
 // Nothing is checked until the columns are confirmed, and once they are the
 // setup folds into one line so the findings get the screen.
@@ -9404,11 +9383,6 @@ function alValValidate() {
 function alValReopen() {
   alValDone = false;
   alValRenderConfig();
-}
-function alValToggleCard(id) {
-  const k = String(id);
-  if (alValOpenCard.has(k)) alValOpenCard.delete(k); else alValOpenCard.add(k);
-  alValRun();
 }
 function alValToggleGroup(k) {
   if (alValOpenGroup.has(k)) alValOpenGroup.delete(k); else alValOpenGroup.add(k);
@@ -9475,7 +9449,6 @@ function alZoneAllocation(zone) {
 async function alValLoad(file) {
   if (!file) return;
   alValOut = null;
-  alValOpenCard = new Set();
   alValOpenGroup = new Set();
   alValDone = false;
   alValRenderConfig();
@@ -9588,50 +9561,24 @@ function alValRun() {
   // get cards that state the delta and show the working behind the verdict,
   // and the other verdicts sit underneath as folded groups - reachable, with
   // every row in them, but not competing with what is actually wrong.
-  const card = (r, i) => {
-    const open = alValOpenCard.has(String(i));
+  // One line per flagged job: who has it, who the zone calls for. No
+  // expanding detail - the download carries the full working, and keeping
+  // every row one line is what lets the whole block be read at a glance.
+  const flagRow = (r, i) => {
     const none = r.verdict === 'notech';
-    const steps = [
-      ['Zone in your file', esc(r.zone || '(blank)'), 'val'],
-      ['Matched in allocator', esc(r.zoneName || '\u2014') + (r.zoneType ? ' \u00b7 ' + esc(r.zoneType) : '')
-        + (r.zoneN ? ` \u00b7 ${r.zoneN} site${r.zoneN !== 1 ? 's' : ''}` : ''), 'val'],
-      ['Allocation 1', esc(r.expected || '\u2014'), 'good'],
-      ['Technician read as', none
-        ? `<span class="al-vc-dim">${esc(r.why || 'nobody allocated')}</span>`
-        : r.how === 'city'
-          ? `${esc(r.tech)} \u2192 ${esc(r.resolved)} <span class="al-vc-dim">(from its city code)</span>`
-          : `${esc(r.tech)} <span class="al-vc-dim">(stated outright)</span>`, none ? 'warn' : 'bad']
-    ];
-    return `<div class="al-vc${none ? ' none' : ''}" style="animation-delay:${Math.min(i, 12) * 0.035}s">
-      <button class="al-vc-hit" onclick="alValToggleCard(${i})" aria-expanded="${open}">
-        <i class="ti ti-chevron-right al-vc-chev${open ? ' open' : ''}"></i>
-        <span class="al-vc-job">${r.jobId
-          ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener"
-               onclick="event.stopPropagation()">${esc(r.jobId)}</a>`
-          : '\u2014'}</span>
-        <span class="al-vc-who">
-          <span class="al-vc-site">${esc(r.site || r.zone || '\u2014')}</span>
-          <span class="al-vc-zone">${esc(r.zoneName || r.zone || '')}</span>
-        </span>
-        <span class="al-vc-tog">${open ? 'Hide working' : 'Why?'}</span>
-      </button>
-      <div class="al-vc-delta">
-        <span class="al-vc-box has">
-          <span class="al-vc-lbl">${none ? 'Nobody on it' : 'Has'}</span>
-          <span class="al-vc-name">${esc(r.tech || 'Unallocated')}</span>
-        </span>
-        <i class="ti ti-arrow-right al-vc-arrow"></i>
-        <span class="al-vc-box want">
-          <span class="al-vc-lbl">Zone calls for</span>
-          <span class="al-vc-name">${esc(r.expected || '\u2014')}</span>
-        </span>
-      </div>
-      <div class="al-vc-det${open ? ' open' : ''}">
-        <div class="al-vc-det-in">
-          ${steps.map(([k, v, tone]) => `<div class="al-vc-step">
-            <span class="al-vc-k">${k}</span><span class="al-vc-v ${tone}">${v}</span></div>`).join('')}
-        </div>
-      </div>
+    return `<div class="al-vrow${none ? ' none' : ''}" style="animation-delay:${Math.min(i, 14) * 0.028}s">
+      <span class="al-vrow-job">${r.jobId
+        ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener">${esc(r.jobId)}</a>`
+        : '\u2014'}</span>
+      <span class="al-vrow-who">
+        <span class="al-vrow-site">${esc(r.site || r.zone || '\u2014')}</span>
+        <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
+      </span>
+      <span class="al-vrow-delta">
+        <span class="al-vrow-has">${esc(r.tech || 'Unallocated')}</span>
+        <i class="ti ti-arrow-right"></i>
+        <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
+      </span>
     </div>`;
   };
 
@@ -9643,7 +9590,7 @@ function alValRun() {
         <td>${esc(r.zoneName || r.zone || '\u2014')}</td>
         <td>${esc(r.tech || '\u2014')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
         <td>${esc(r.expected || '\u2014')}</td>
-        <td class="al-vc-dim">${esc(r.why || '')}</td>
+        <td class="al-vgrp-why">${esc(r.why || '')}</td>
       </tr>`).join('')}</tbody></table></div>`;
 
   const GROUPS = [
@@ -9682,7 +9629,7 @@ function alValRun() {
           <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
         </button>
       </div>
-      <div class="al-vcards">${flagged.map(card).join('')}</div>
+      <div class="al-vlist">${flagged.map(flagRow).join('')}</div>
     </div>` : `<div class="al-vsec"><div class="al-vsec-hd">
         <button class="generate-btn al-val-dl" style="margin-left:0 !important;" onclick="alValDownload()">
           <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
