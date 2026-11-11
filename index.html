@@ -2363,11 +2363,14 @@
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
   .al-vrow-rt.metro { color:var(--teal-text); background:var(--teal-bg); }
   .al-vrow-rt.reg { color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),.12); }
-  /* Italic grey where the name spoke for itself, amber where it was inferred -
-     so an inferred verdict is visible without reading the words. */
-  .al-vrow-how { min-width:0; font-size:10.5px; color:var(--text-3); font-style:italic;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vrow-how.inferred { color:var(--amber-text); font-style:normal; font-weight:600; }
+  .al-vrow-when { min-width:0; font-size:11px; font-weight:600; color:var(--text);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .al-vrow-when.dim { color:var(--text-3); font-weight:400; font-style:italic; }
+  /* A date already gone is worth noticing on a job that is still wrong. */
+  .al-vrow-when.past { color:var(--amber-text); }
+  /* A name worked out from a city code, not stated: dotted underline, reading
+     in the tooltip, so the inference is visible without a column of its own. */
+  .al-vrow-has.inferred { text-decoration:underline dotted currentColor 1px; text-underline-offset:3px; cursor:help; }
   .al-vrow-has, .al-vrow-want { font-size:11px; font-weight:700; border-radius:6px; padding:4px 9px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-vrow-has { color:var(--coral-text); background:color-mix(in srgb, var(--coral-text) 15%, transparent); }
@@ -9507,6 +9510,7 @@ function alValRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Zone column</span>${sel('al-v-zone', svAutoDetect(alValHeaders, ['Zone','Zone Name','Geo','Geoname'], ['zone','geo']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-id', svAutoDetect(alValHeaders, ['Job #','Job ID','JobID','ID'], ['jobid','job']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Scheduled date <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-date', svAutoDetect(alValHeaders, ['Scheduled','Scheduled Date','Date','Due Date'], ['scheduled','date','due']))}</div>
      <div class="al-vcfg-go">
        <button class="generate-btn" onclick="alValValidate()">
          <i class="ti ti-shield-check" style="font-size:17px;"></i> Validate ${nRows} rows
@@ -9521,6 +9525,7 @@ function alValRun() {
   const zoneCol = document.getElementById('al-v-zone')?.value;
   const idCol   = document.getElementById('al-v-id')?.value;
   const siteCol = document.getElementById('al-v-site')?.value;
+  const dateCol = document.getElementById('al-v-date')?.value;
   const out = document.getElementById('al-val-result');
   if (!out) return;
   if (!alValRows.length || !techCol || !zoneCol || !alValDone) {
@@ -9538,6 +9543,9 @@ function alValRun() {
     const zone = String(row[zoneCol] || '').trim();
     const jobId = String(row[idCol] || '').trim();
     const site = String(row[siteCol] || '').trim();
+    // paDate takes the shapes the helpdesk exports use - "2026-06-30 05:00 PM",
+    // dd/mm/yyyy and plain ISO - and gives back a sortable YYYY-MM-DD.
+    const sched = dateCol ? paDate(row[dateCol]) : '';
     const zi = alZoneAllocation(zone);
     const ti = alTechToAllocation(tech);
 
@@ -9554,7 +9562,7 @@ function alValRun() {
     else if (alNormAlloc(ti.alloc) === alNormAlloc(zi.a1)) { verdict = 'match'; why = ''; }
     else                               { verdict = 'mismatch'; why = `Zone expects ${zi.a1}`; }
 
-    return { row, jobId, site, tech, zone, verdict, why,
+    return { row, jobId, site, tech, zone, sched, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
              zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
              resolved: ti.alloc, how: ti.how, code: ti.code || '' };
@@ -9583,16 +9591,22 @@ function alValRun() {
   // state, zone type, and how the technician's name was read. That last one
   // matters most: a verdict resting on an inferred city code should say so on
   // the row, not hide behind the download.
-  const howText = r => {
-    if (r.verdict === 'notech') return { t: 'not a field technician', inferred: false };
-    if (r.how === 'city') return { t: `read \u201c${esc(r.code)}\u201d \u2192 ${esc(r.resolved)}`, inferred: true };
-    if (r.how === 'exact') return { t: 'named outright', inferred: false };
-    return { t: 'could not be resolved', inferred: false };
+  // An undated job is worth seeing as such rather than as a blank, since it
+  // is a different problem from one booked for a date that has passed.
+  const schedText = r => {
+    if (!dateCol) return { t: '\u2014', dim: true };
+    if (!r.sched) return { t: 'no date', dim: true };
+    const past = r.sched < ymd(new Date());
+    return { t: fmtShortDate(r.sched), dim: false, past };
   };
 
   const flagRow = (r, i) => {
     const none = r.verdict === 'notech';
-    const h = howText(r);
+    const d = schedText(r);
+    // The reading is no longer its own column, but a verdict resting on an
+    // inferred city code still has to say so - it moves onto the technician
+    // itself as a marked name with the reading in its tooltip.
+    const inferred = r.how === 'city';
     return `<div class="al-vrow${none ? ' none' : ''}" style="animation-delay:${Math.min(i, 14) * 0.028}s">
       <span class="al-vrow-job">${r.jobId
         ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener">${esc(r.jobId)}</a>`
@@ -9603,8 +9617,10 @@ function alValRun() {
       </span>
       <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
       <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
-      <span class="al-vrow-how${h.inferred ? ' inferred' : ''}">${h.t}</span>
-      <span class="al-vrow-has">${esc(r.tech || 'Unallocated')}</span>
+      <span class="al-vrow-when${d.dim ? ' dim' : ''}${d.past ? ' past' : ''}">${esc(d.t)}</span>
+      <span class="al-vrow-has${inferred ? ' inferred' : ''}"
+        ${inferred ? `title="Read \u201c${escAttr(r.code)}\u201d as ${escAttr(r.resolved)}"` : ''}
+        >${esc(r.tech || 'Unallocated')}</span>
       <i class="ti ti-arrow-right"></i>
       <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
     </div>`;
