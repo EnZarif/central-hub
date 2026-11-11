@@ -2340,7 +2340,8 @@
   .al-vlist { border:0.5px solid color-mix(in srgb, var(--coral-text) 26%, transparent);
     border-radius:11px; overflow:hidden; }
   @keyframes alvRowIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
-  .al-vrow { display:grid; grid-template-columns:78px 1fr minmax(260px, 0.9fr); gap:12px; align-items:center;
+  .al-vrow { display:grid; gap:0 13px; align-items:center;
+    grid-template-columns:70px minmax(130px,1.25fr) 48px 80px minmax(110px,1.5fr) minmax(135px,1.15fr) 20px minmax(135px,1.15fr);
     padding:8px 13px; background:color-mix(in srgb, var(--coral-text) 5%, transparent);
     border-bottom:0.5px solid color-mix(in srgb, var(--coral-text) 15%, transparent);
     animation:alvRowIn .3s cubic-bezier(.4,0,.2,1) backwards; transition:background .14s; }
@@ -2355,8 +2356,18 @@
   .al-vrow-who { min-width:0; display:flex; flex-direction:column; gap:1px; }
   .al-vrow-site { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-vrow-zone { font-size:10.5px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vrow-delta { min-width:0; display:flex; align-items:center; gap:8px; justify-content:flex-end; }
-  .al-vrow-delta i { font-size:12px; color:var(--text-3); flex-shrink:0; }
+  .al-vrow > .ti { font-size:12px; color:var(--text-3); justify-self:center; }
+  .al-vrow-st { font-size:10px; font-weight:700; color:var(--text-2); background:var(--surface2);
+    border-radius:5px; padding:3px 7px; justify-self:start; white-space:nowrap; }
+  .al-vrow-rt { font-size:10px; font-weight:700; border-radius:5px; padding:3px 7px; justify-self:start;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+  .al-vrow-rt.metro { color:var(--teal-text); background:var(--teal-bg); }
+  .al-vrow-rt.reg { color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),.12); }
+  /* Italic grey where the name spoke for itself, amber where it was inferred -
+     so an inferred verdict is visible without reading the words. */
+  .al-vrow-how { min-width:0; font-size:10.5px; color:var(--text-3); font-style:italic;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vrow-how.inferred { color:var(--amber-text); font-style:normal; font-weight:600; }
   .al-vrow-has, .al-vrow-want { font-size:11px; font-weight:700; border-radius:6px; padding:4px 9px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-vrow-has { color:var(--coral-text); background:color-mix(in srgb, var(--coral-text) 15%, transparent); }
@@ -9426,12 +9437,13 @@ function alTechToAllocation(tech) {
 
   // "<person> MEL" -> Amtek Melbourne, when such an allocation exists.
   const m = raw.match(/[\s\-]([A-Za-z]{2,4})\s*$/);
+  const code = m ? m[1].toUpperCase() : '';
   const city = m ? AL_TECH_CITY[m[1].toLowerCase()] : null;
   if (city) {
     const want = alNormAlloc('Amtek ' + city);
     const hit = names.find(a => alNormAlloc(a) === want);
-    if (hit) return { alloc: hit, how: 'city', city };
-    return { alloc: 'Amtek ' + city, how: 'city', city, unknownAlloc: true };
+    if (hit) return { alloc: hit, how: 'city', city, code };
+    return { alloc: 'Amtek ' + city, how: 'city', city, code, unknownAlloc: true };
   }
   return { alloc: '', how: 'unknown' };
 }
@@ -9443,7 +9455,8 @@ function alZoneAllocation(zone) {
   if (!z || typeof alRows === 'undefined' || !alRows) return null;
   const rows = alRows.filter(r => r._g === z.toLowerCase());
   if (!rows.length) return null;
-  return { zone: rows[0].geo, a1: alConsensus(rows, 'a1').value, rt: alConsensus(rows, 'rt').value, n: rows.length };
+  return { zone: rows[0].geo, a1: alConsensus(rows, 'a1').value, rt: alConsensus(rows, 'rt').value,
+           st: alConsensus(rows, 'st').value, n: rows.length };
 }
 
 async function alValLoad(file) {
@@ -9543,7 +9556,8 @@ function alValRun() {
 
     return { row, jobId, site, tech, zone, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
-             zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, resolved: ti.alloc, how: ti.how };
+             zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
+             resolved: ti.alloc, how: ti.how, code: ti.code || '' };
   });
   alValOut = results;
 
@@ -9564,8 +9578,21 @@ function alValRun() {
   // One line per flagged job: who has it, who the zone calls for. No
   // expanding detail - the download carries the full working, and keeping
   // every row one line is what lets the whole block be read at a glance.
+  // The space between the site and the technician used to be dead. It now
+  // carries the three things you would otherwise open the download to find -
+  // state, zone type, and how the technician's name was read. That last one
+  // matters most: a verdict resting on an inferred city code should say so on
+  // the row, not hide behind the download.
+  const howText = r => {
+    if (r.verdict === 'notech') return { t: 'not a field technician', inferred: false };
+    if (r.how === 'city') return { t: `read \u201c${esc(r.code)}\u201d \u2192 ${esc(r.resolved)}`, inferred: true };
+    if (r.how === 'exact') return { t: 'named outright', inferred: false };
+    return { t: 'could not be resolved', inferred: false };
+  };
+
   const flagRow = (r, i) => {
     const none = r.verdict === 'notech';
+    const h = howText(r);
     return `<div class="al-vrow${none ? ' none' : ''}" style="animation-delay:${Math.min(i, 14) * 0.028}s">
       <span class="al-vrow-job">${r.jobId
         ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener">${esc(r.jobId)}</a>`
@@ -9574,11 +9601,12 @@ function alValRun() {
         <span class="al-vrow-site">${esc(r.site || r.zone || '\u2014')}</span>
         <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
       </span>
-      <span class="al-vrow-delta">
-        <span class="al-vrow-has">${esc(r.tech || 'Unallocated')}</span>
-        <i class="ti ti-arrow-right"></i>
-        <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
-      </span>
+      <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
+      <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
+      <span class="al-vrow-how${h.inferred ? ' inferred' : ''}">${h.t}</span>
+      <span class="al-vrow-has">${esc(r.tech || 'Unallocated')}</span>
+      <i class="ti ti-arrow-right"></i>
+      <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
     </div>`;
   };
 
