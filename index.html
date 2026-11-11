@@ -2330,46 +2330,58 @@
   .al-vsec-hd.bad, .al-vsec-hd.bad > .ti { color:var(--coral-text); }
   .al-vsec-n { font-size:10px; font-weight:700; letter-spacing:0; background:var(--coral-bg);
     color:var(--coral-text); border-radius:8px; padding:2px 8px; }
+  .al-vsec-sub { font-size:10px; font-weight:600; letter-spacing:0; text-transform:none;
+    color:var(--coral-text); opacity:.8; }
+  .al-vsec-sub.warn { color:var(--amber-text); }
   .al-val-dl { width:auto !important; margin:0 0 0 auto !important; padding:8px 16px !important; letter-spacing:0; text-transform:none; }
 
-  .al-vcards { display:flex; flex-direction:column; gap:10px; }
+  .al-vcards { display:flex; flex-direction:column; gap:7px; }
   @keyframes alvCardIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-  .al-vc { border-radius:12px; background:color-mix(in srgb, var(--coral-text) 6%, transparent);
-    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); padding:14px 16px;
+  .al-vc { border-radius:10px; background:color-mix(in srgb, var(--coral-text) 6%, transparent);
+    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); padding:9px 12px;
     animation:alvCardIn .36s cubic-bezier(.4,0,.2,1) backwards; transition:border-color .2s, box-shadow .2s; }
   .al-vc:hover { border-color:color-mix(in srgb, var(--coral-text) 52%, transparent);
-    box-shadow:0 6px 24px color-mix(in srgb, var(--coral-text) 13%, transparent); }
-  .al-vc-hit { display:grid; grid-template-columns:auto 92px 1fr auto; gap:13px; align-items:center; width:100%;
+    box-shadow:0 5px 18px color-mix(in srgb, var(--coral-text) 13%, transparent); }
+  /* Nobody allocated reads amber: still a finding, a different fix. */
+  .al-vc.none { background:rgba(var(--amber-rgb,220,152,40),.06);
+    border-color:rgba(var(--amber-rgb,220,152,40),.3); }
+  .al-vc.none:hover { border-color:rgba(var(--amber-rgb,220,152,40),.55);
+    box-shadow:0 5px 18px rgba(var(--amber-rgb,220,152,40),.12); }
+  .al-vc.none .al-vc-box.has { background:rgba(var(--amber-rgb,220,152,40),.13);
+    border-color:rgba(var(--amber-rgb,220,152,40),.3); }
+  .al-vc.none .al-vc-box.has .al-vc-name { color:var(--amber-text); }
+  .al-vc-hit { display:grid; grid-template-columns:auto 80px 1fr auto; gap:10px; align-items:center; width:100%;
     background:none; border:none; padding:0; font-family:inherit; text-align:left; color:var(--text); cursor:pointer; }
-  .al-vc-chev { font-size:12px; color:var(--text-3); transition:transform .3s cubic-bezier(.4,0,.2,1); }
+  .al-vc-chev { font-size:11px; color:var(--text-3); transition:transform .3s cubic-bezier(.4,0,.2,1); }
   .al-vc-chev.open { transform:rotate(90deg); }
-  .al-vc-job { font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .al-vc-job { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
   .al-vc-job a { color:var(--teal-text); text-decoration:none; }
   .al-vc-job a:hover { text-decoration:underline; }
-  .al-vc-who { min-width:0; display:flex; flex-direction:column; gap:2px; }
-  .al-vc-site { font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vc-zone { font-size:11.5px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-vc-tog { font-size:11px; font-weight:700; color:var(--text-3); white-space:nowrap; }
+  .al-vc-who { min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .al-vc-site { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vc-zone { font-size:10.5px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vc-tog { font-size:10px; font-weight:700; color:var(--text-3); white-space:nowrap; }
   .al-vc-hit:hover .al-vc-tog { color:var(--teal-text); }
-  .al-vc-delta { display:flex; align-items:center; gap:12px; margin-top:12px; }
-  .al-vc-box { flex:1; min-width:0; padding:10px 13px; border-radius:9px; display:flex; flex-direction:column; gap:3px; }
+  .al-vc-delta { display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .al-vc-box { flex:1; min-width:0; padding:6px 10px; border-radius:7px; display:flex; flex-direction:column; gap:1px; }
   .al-vc-box.has { background:color-mix(in srgb, var(--coral-text) 13%, transparent);
     border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); }
   .al-vc-box.want { background:var(--green-bg); border:0.5px solid color-mix(in srgb, var(--green-text) 28%, transparent); }
-  .al-vc-lbl { font-size:9.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
-  .al-vc-name { font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vc-lbl { font-size:8.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
+  .al-vc-name { font-size:11.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-vc-box.has .al-vc-name { color:var(--coral-text); }
   .al-vc-box.want .al-vc-name { color:var(--green-text); }
-  .al-vc-arrow { font-size:17px; color:var(--text-3); flex-shrink:0; }
+  .al-vc-arrow { font-size:13px; color:var(--text-3); flex-shrink:0; }
   .al-vc-det { overflow:hidden; max-height:0; opacity:0; margin-top:0;
     transition:max-height .34s cubic-bezier(.4,0,.2,1), opacity .22s ease, margin-top .34s cubic-bezier(.4,0,.2,1); }
-  .al-vc-det.open { max-height:240px; opacity:1; margin-top:13px; }
-  .al-vc-det-in { padding:12px 14px; border-radius:9px; background:rgba(0,0,0,.26); border:0.5px solid var(--border); }
-  .al-vc-step { display:grid; grid-template-columns:148px 1fr; gap:12px; padding:5px 0; font-size:11.5px; }
+  .al-vc-det.open { max-height:220px; opacity:1; margin-top:9px; }
+  .al-vc-det-in { padding:9px 11px; border-radius:7px; background:rgba(0,0,0,.26); border:0.5px solid var(--border); }
+  .al-vc-step { display:grid; grid-template-columns:132px 1fr; gap:10px; padding:3px 0; font-size:10.5px; }
   .al-vc-k { color:var(--text-3); }
   .al-vc-v { min-width:0; overflow-wrap:anywhere; }
   .al-vc-v.good { color:var(--green-text); font-weight:700; }
   .al-vc-v.bad { color:var(--coral-text); font-weight:700; }
+  .al-vc-v.warn { color:var(--amber-text); font-weight:700; }
   .al-vc-v.val { color:var(--text); font-weight:500; }
   .al-vc-dim { color:var(--text-3); font-weight:400; }
 
@@ -2390,6 +2402,9 @@
   .al-vgrp-n.match { background:var(--green-bg); color:var(--green-text); }
   .al-vgrp-note { margin-left:auto; font-size:11.5px; color:var(--text-3); }
   .al-vgrp .al-val-wrap { margin:0; border-top:0.5px solid var(--border); }
+  .al-vgrp .al-rows th { padding:5px 9px; font-size:9px; }
+  .al-vgrp .al-rows td { padding:5px 9px; font-size:11.5px; }
+  .al-vgrp-hd { padding:9px 14px; }
   @media (prefers-reduced-motion: reduce) {
     .al-vbanner::after, .al-vc { animation:none !important; }
     .al-vc-det, .al-vc-chev, .al-vgrp-chev { transition:none !important; }
@@ -9542,8 +9557,12 @@ function alValRun() {
 
     let verdict, why;
     if (!zi)                           { verdict = 'nozone';  why = `Zone "${zone || '(blank)'}" is not in the allocator`; }
-    else if (ti.how === 'blank')       { verdict = 'notech';  why = 'No technician on the job'; }
-    else if (ti.how === 'none')        { verdict = 'notech';  why = `"${tech}" names no field technician`; }
+    // A job nobody is going to is as much a problem as one with the wrong
+    // name on it, so it is flagged beside the mismatches rather than filed
+    // away as context. It keeps its own verdict so the two stay tellable
+    // apart - one needs reassigning, the other needs allocating at all.
+    else if (ti.how === 'blank')       { verdict = 'notech';  why = 'Nobody is allocated to this job'; }
+    else if (ti.how === 'none')        { verdict = 'notech';  why = `"${tech}" is not a field technician`; }
     else if (ti.how === 'unknown')     { verdict = 'unknown'; why = `Could not tell which allocation "${tech}" belongs to`; }
     else if (ti.unknownAlloc)          { verdict = 'unknown'; why = `${ti.alloc} is not an allocation in the sheet`; }
     else if (alNormAlloc(ti.alloc) === alNormAlloc(zi.a1)) { verdict = 'match'; why = ''; }
@@ -9557,7 +9576,11 @@ function alValRun() {
 
   const n = k => results.filter(r => r.verdict === k).length;
   const mismatch = results.filter(r => r.verdict === 'mismatch');
-  const judged = n('match') + mismatch.length;
+  const notech = results.filter(r => r.verdict === 'notech');
+  // Both are findings, so both count against the rate; a job with nobody on
+  // it was never going to be done by the right technician either.
+  const flagged = [...mismatch, ...notech];
+  const judged = n('match') + flagged.length;
 
   const VL = { match:'Correct', mismatch:'Mismatch', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
 
@@ -9567,16 +9590,19 @@ function alValRun() {
   // every row in them, but not competing with what is actually wrong.
   const card = (r, i) => {
     const open = alValOpenCard.has(String(i));
+    const none = r.verdict === 'notech';
     const steps = [
       ['Zone in your file', esc(r.zone || '(blank)'), 'val'],
       ['Matched in allocator', esc(r.zoneName || '\u2014') + (r.zoneType ? ' \u00b7 ' + esc(r.zoneType) : '')
         + (r.zoneN ? ` \u00b7 ${r.zoneN} site${r.zoneN !== 1 ? 's' : ''}` : ''), 'val'],
       ['Allocation 1', esc(r.expected || '\u2014'), 'good'],
-      ['Technician read as', r.how === 'city'
-        ? `${esc(r.tech)} \u2192 ${esc(r.resolved)} <span class="al-vc-dim">(from its city code)</span>`
-        : `${esc(r.tech)} <span class="al-vc-dim">(stated outright)</span>`, 'bad']
+      ['Technician read as', none
+        ? `<span class="al-vc-dim">${esc(r.why || 'nobody allocated')}</span>`
+        : r.how === 'city'
+          ? `${esc(r.tech)} \u2192 ${esc(r.resolved)} <span class="al-vc-dim">(from its city code)</span>`
+          : `${esc(r.tech)} <span class="al-vc-dim">(stated outright)</span>`, none ? 'warn' : 'bad']
     ];
-    return `<div class="al-vc" style="animation-delay:${Math.min(i, 12) * 0.045}s">
+    return `<div class="al-vc${none ? ' none' : ''}" style="animation-delay:${Math.min(i, 12) * 0.035}s">
       <button class="al-vc-hit" onclick="alValToggleCard(${i})" aria-expanded="${open}">
         <i class="ti ti-chevron-right al-vc-chev${open ? ' open' : ''}"></i>
         <span class="al-vc-job">${r.jobId
@@ -9591,8 +9617,8 @@ function alValRun() {
       </button>
       <div class="al-vc-delta">
         <span class="al-vc-box has">
-          <span class="al-vc-lbl">Has</span>
-          <span class="al-vc-name">${esc(r.tech || '\u2014')}</span>
+          <span class="al-vc-lbl">${none ? 'Nobody on it' : 'Has'}</span>
+          <span class="al-vc-name">${esc(r.tech || 'Unallocated')}</span>
         </span>
         <i class="ti ti-arrow-right al-vc-arrow"></i>
         <span class="al-vc-box want">
@@ -9623,36 +9649,40 @@ function alValRun() {
   const GROUPS = [
     ['unknown', "Can't judge", 'ti-help-circle', 'the technician name could not be resolved to an allocation'],
     ['nozone', 'Zone unknown', 'ti-map-off', 'the allocator has no zone by that name'],
-    ['notech', 'No technician', 'ti-user-off', 'unallocated, helpdesk, or left blank'],
     ['match', 'Correct', 'ti-circle-check', 'the technician is the one the zone calls for']
   ];
 
   out.innerHTML = `
-    ${mismatch.length ? `<div class="al-vbanner">
+    ${flagged.length ? `<div class="al-vbanner">
       <i class="ti ti-alert-triangle"></i>
       <span class="al-vbanner-t">
-        <strong>${mismatch.length.toLocaleString()} job${mismatch.length !== 1 ? 's are' : ' is'} with the wrong technician</strong>
-        <span>Each is allocated to someone other than the one its zone calls for. Every one is listed below.</span>
+        <strong>${flagged.length.toLocaleString()} job${flagged.length !== 1 ? 's need' : ' needs'} attention</strong>
+        <span>${[
+          mismatch.length ? `${mismatch.length.toLocaleString()} ${mismatch.length !== 1 ? 'are' : 'is'} with a technician the zone does not call for` : '',
+          notech.length ? `${notech.length.toLocaleString()} ${notech.length !== 1 ? 'have' : 'has'} nobody allocated` : ''
+        ].filter(Boolean).join(' \u00b7 ')}. Every one is listed below.</span>
       </span>
       <span class="al-vbanner-n">${judged ? Math.round(n('match') / judged * 100) : 0}% of judged rows correct</span>
     </div>` : `<div class="al-vbanner ok">
       <i class="ti ti-circle-check"></i>
       <span class="al-vbanner-t">
-        <strong>No mismatches</strong>
+        <strong>Nothing to action</strong>
         <span>Every row that could be judged has the technician its zone calls for.</span>
       </span>
       <span class="al-vbanner-n">${results.length.toLocaleString()} rows checked</span>
     </div>`}
 
-    ${mismatch.length ? `<div class="al-vsec">
+    ${flagged.length ? `<div class="al-vsec">
       <div class="al-vsec-hd bad">
-        <i class="ti ti-alert-triangle"></i> Mismatched
-        <span class="al-vsec-n">${mismatch.length.toLocaleString()}</span>
+        <i class="ti ti-alert-triangle"></i> Needs attention
+        <span class="al-vsec-n">${flagged.length.toLocaleString()}</span>
+        ${mismatch.length ? `<span class="al-vsec-sub">${mismatch.length.toLocaleString()} wrong technician</span>` : ''}
+        ${notech.length ? `<span class="al-vsec-sub warn">${notech.length.toLocaleString()} unallocated</span>` : ''}
         <button class="generate-btn al-val-dl" onclick="alValDownload()">
           <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
         </button>
       </div>
-      <div class="al-vcards">${mismatch.map(card).join('')}</div>
+      <div class="al-vcards">${flagged.map(card).join('')}</div>
     </div>` : `<div class="al-vsec"><div class="al-vsec-hd">
         <button class="generate-btn al-val-dl" style="margin-left:0 !important;" onclick="alValDownload()">
           <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
