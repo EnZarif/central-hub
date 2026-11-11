@@ -2283,6 +2283,20 @@
   .al-batch-how.exact { background:var(--teal-bg); color:var(--teal-text); }
   .al-batch-how.loose { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .al-batch-how.none  { background:var(--surface2); color:var(--text-3); }
+  .al-val-tabs { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); }
+  .al-val-tab { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12px; font-weight:600;
+    padding:7px 12px; border-radius:9px; border:0.5px solid var(--border-md); background:var(--surface2);
+    color:var(--text-2); cursor:pointer; transition:all .14s; }
+  .al-val-tab:hover { border-color:var(--teal); color:var(--teal-text); }
+  .al-val-tab.on { background:var(--teal-bg); border-color:transparent; color:var(--teal-text); }
+  .al-val-tab.on.bad { background:var(--coral-bg); color:var(--coral-text); }
+  .al-val-tab.on.ok  { background:var(--green-bg); color:var(--green-text); }
+  .al-val-tab-n { font-size:10.5px; font-weight:700; background:rgba(255,255,255,0.07); border-radius:8px; padding:1px 6px; }
+  .al-val-dl { width:auto !important; margin:0 0 0 auto !important; padding:8px 16px !important; }
+  .al-val-count { font-size:11.5px; color:var(--text-3); padding:10px 2px 0; }
+  /* Tall enough to work through a whole file without the page itself scrolling
+     away from the filter tabs. */
+  .al-val-wrap { max-height:min(62vh, 760px); margin-top:8px; }
   .al-val-v { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; }
   .al-val-v.ok   { background:var(--green-bg); color:var(--green-text); }
   .al-val-v.bad  { background:var(--coral-bg); color:var(--coral-text); }
@@ -3753,29 +3767,6 @@
       </div>
     </div>
 
-    <div class="card al-manage-card" style="margin-top:12px;">
-      <button class="al-manage-hd" onclick="alToggleValidate()">
-        <i class="ti ti-chevron-right" id="al-val-caret"></i>
-        <i class="ti ti-shield-check"></i>
-        <span>Allocation validator</span>
-        <span class="al-manage-count">Check each job's technician against the zone it falls in</span>
-      </button>
-      <div id="al-val-body" style="display:none;">
-        <div class="al-batch-inner">
-          <div class="kpi-template-row">
-            <div class="kpi-template-info">
-              <div class="kpi-tpl-name">Excel or CSV with the technician and the zone per job</div>
-              <div class="kpi-tpl-status" id="al-val-status">No file loaded</div>
-            </div>
-            <input type="file" id="al-val-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alValLoad(this.files[0])">
-            <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('al-val-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
-          </div>
-          <div id="al-val-mapper" style="display:none;"></div>
-          <div id="al-val-result"></div>
-        </div>
-      </div>
-    </div>
-
     <div id="al-unalloc"></div>
     <div id="al-manage"></div>
     <div id="al-result"></div>
@@ -4650,6 +4641,30 @@
     </div>
 
     <div id="pa-body" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- ALLOCATION VALIDATOR PAGE -->
+  <div class="page" id="page-allocvalidate">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-shield-check"></i> Allocation Validator</h1>
+        <p>Check each job's technician against the allocation its zone calls for</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-template-row" style="margin-bottom:0;">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Excel or CSV with the technician and the zone per job</div>
+          <div class="kpi-tpl-status" id="al-val-status">No file loaded</div>
+        </div>
+        <input type="file" id="al-val-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alValLoad(this.files[0])">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('al-val-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+      </div>
+      <div id="al-val-mapper" style="display:none;margin-top:14px;"></div>
+    </div>
+
+    <div id="al-val-result" style="margin-top:16px;"></div>
   </div>
 
   <!-- NSLA REPORT PAGE -->
@@ -9227,14 +9242,8 @@ function alBatchDownload() {
 // with, and anything that can't be resolved is reported as unjudgeable rather
 // than quietly called a mismatch.
 let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
-
-function alToggleValidate() {
-  const body = document.getElementById('al-val-body');
-  const caret = document.getElementById('al-val-caret');
-  const open = body.style.display === 'none';
-  body.style.display = open ? '' : 'none';
-  caret.className = 'ti ti-chevron-' + (open ? 'down' : 'right');
-}
+let alValFilter = 'all';
+function alValSetFilter(v) { alValFilter = v; alValRun(); }
 
 function alValStatus(msg, type) {
   const el = document.getElementById('al-val-status');
@@ -9384,38 +9393,67 @@ function alValRun() {
   const VC = { match:'ok', mismatch:'bad', unknown:'warn', notech:'dim', nozone:'warn' };
   const VL = { match:'Correct', mismatch:'Mismatch', unknown:'Can\'t judge', notech:'No technician', nozone:'Zone unknown' };
 
-  const preview = [...mismatch, ...results.filter(r => r.verdict !== 'mismatch')].slice(0, 20);
+  // Every row from the file, not a sample of it - the whole point is to see
+  // which jobs are wrong, and a row left off screen is a job not checked.
+  // Mismatches lead, then the other verdicts in the order they are summarised,
+  // and the original file order is kept inside each group.
+  const ORDER = ['mismatch', 'unknown', 'nozone', 'notech', 'match'];
+  const shown = (alValFilter === 'all' ? results : results.filter(r => r.verdict === alValFilter))
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => (ORDER.indexOf(a.r.verdict) - ORDER.indexOf(b.r.verdict)) || (a.i - b.i))
+    .map(x => x.r);
+
+  const tab = (key, label, count, cls) => count || key === 'all'
+    ? `<button class="al-val-tab${alValFilter === key ? ' on' : ''}${cls ? ' ' + cls : ''}"
+         onclick="alValSetFilter('${key}')">${label}<span class="al-val-tab-n">${count.toLocaleString()}</span></button>`
+    : '';
 
   out.innerHTML = `
-    <div class="al-batch-sum" style="margin-top:12px;">
-      <span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${n('match').toLocaleString()} correct</span>
-      ${mismatch.length ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${mismatch.length.toLocaleString()} mismatched</span>` : ''}
-      ${n('unknown') ? `<span class="al-batch-chip loose">${n('unknown').toLocaleString()} can't judge</span>` : ''}
-      ${n('notech') ? `<span class="al-batch-chip loose">${n('notech').toLocaleString()} no technician</span>` : ''}
-      ${n('nozone') ? `<span class="al-batch-chip loose">${n('nozone').toLocaleString()} zone unknown</span>` : ''}
-      ${judged ? `<span class="al-val-rate ${mismatch.length ? 'bad' : 'ok'}">${Math.round(n('match') / judged * 100)}% of judged rows correct</span>` : ''}
-    </div>
-    ${mismatch.length ? '' : `<div class="pa-note" style="margin-top:10px;"><i class="ti ti-circle-check"></i>
-      No mismatches in the rows that could be judged.</div>`}
-    <div class="sv-cov-table-wrap" style="max-height:340px;margin-top:10px;"><table class="al-rows">
-      <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Technician</th><th>Zone expects</th><th>Verdict</th></tr></thead>
-      <tbody>${preview.map(r => `<tr class="${r.verdict === 'mismatch' ? 'al-val-bad' : ''}">
-        <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '—'}</td>
-        <td>${esc(r.site || '—')}</td>
-        <td>${esc(r.zoneName || r.zone || '—')}</td>
-        <td>${esc(r.tech || '—')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
-        <td>${esc(r.expected || '—')}</td>
-        <td><span class="al-val-v ${VC[r.verdict]}">${VL[r.verdict]}</span>${r.why ? `<span class="al-was">${esc(r.why)}</span>` : ''}</td>
-      </tr>`).join('')}</tbody></table>
-      ${results.length > preview.length ? `<div class="al-more">Showing ${preview.length} of ${results.length.toLocaleString()} rows, mismatches first — the download has them all.</div>` : ''}
-    </div>
-    <button class="generate-btn" style="width:auto;margin:12px 0 0;padding:9px 18px;" onclick="alValDownload()">
-      <i class="ti ti-download" style="font-size:16px;"></i> Download with verdicts
-    </button>`;
+    <div class="card">
+      <div class="al-batch-sum" style="margin-top:0;">
+        <span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${n('match').toLocaleString()} correct</span>
+        ${mismatch.length ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${mismatch.length.toLocaleString()} mismatched</span>` : ''}
+        ${n('unknown') ? `<span class="al-batch-chip loose">${n('unknown').toLocaleString()} can't judge</span>` : ''}
+        ${n('notech') ? `<span class="al-batch-chip loose">${n('notech').toLocaleString()} no technician</span>` : ''}
+        ${n('nozone') ? `<span class="al-batch-chip loose">${n('nozone').toLocaleString()} zone unknown</span>` : ''}
+        ${judged ? `<span class="al-val-rate ${mismatch.length ? 'bad' : 'ok'}">${Math.round(n('match') / judged * 100)}% of judged rows correct</span>` : ''}
+      </div>
+      ${mismatch.length ? '' : `<div class="pa-note" style="margin-top:10px;"><i class="ti ti-circle-check"></i>
+        No mismatches in the rows that could be judged.</div>`}
+
+      <div class="al-val-tabs">
+        ${tab('all', 'All rows', results.length)}
+        ${tab('mismatch', 'Mismatched', mismatch.length, 'bad')}
+        ${tab('unknown', "Can't judge", n('unknown'))}
+        ${tab('nozone', 'Zone unknown', n('nozone'))}
+        ${tab('notech', 'No technician', n('notech'))}
+        ${tab('match', 'Correct', n('match'), 'ok')}
+        <button class="generate-btn al-val-dl" onclick="alValDownload()">
+          <i class="ti ti-download" style="font-size:15px;"></i> Download with verdicts
+        </button>
+      </div>
+
+      <div class="al-val-count">Showing all ${shown.length.toLocaleString()} ${alValFilter === 'all' ? 'rows' : VL[alValFilter].toLowerCase() + ' rows'}${alValFilter === 'all' ? '' : ` of ${results.length.toLocaleString()}`}</div>
+
+      <div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Technician</th><th>Zone expects</th><th>Verdict</th></tr></thead>
+        <tbody>${shown.map(r => `<tr class="${r.verdict === 'mismatch' ? 'al-val-bad' : ''}">
+          <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '—'}</td>
+          <td>${esc(r.site || '—')}</td>
+          <td>${esc(r.zoneName || r.zone || '—')}</td>
+          <td>${esc(r.tech || '—')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
+          <td>${esc(r.expected || '—')}</td>
+          <td><span class="al-val-v ${VC[r.verdict]}">${VL[r.verdict]}</span>${r.why ? `<span class="al-was">${esc(r.why)}</span>` : ''}</td>
+        </tr>`).join('')}</tbody></table>
+        ${shown.length ? '' : '<div class="al-more">Nothing in this group.</div>'}
+      </div>
+    </div>`;
 }
 
 function alValDownload() {
   if (!alValOut || !alValOut.length) return;
+  // Always the whole file, whatever is filtered on screen - a partial export
+  // that looks complete is worse than no export.
   const VL = { match:'Correct', mismatch:'MISMATCH', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
   const data = alValOut.map(r => ({
     ...r.row,
@@ -12925,6 +12963,7 @@ const PAGES = {
   suburbcheck:    { title:'Suburb Checker',    icon:'ti-map-pin',          color:'c-amber',  desc:'Validate suburb, postcode and state data against a reference localities file.' },
   alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up the technician allocation and zone type by suburb, zone, postcode or state.' },
   projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
+  allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -12934,7 +12973,7 @@ const HUB_META = {
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','alloccheck','meetings','message','templates'],
+  helpdesk: ['kpi','alloccheck','allocvalidate','meetings','message','templates'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
@@ -12953,6 +12992,11 @@ function loadHubLayout() {
     if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
     // Saved layouts predate Project Analysis, so add it to Projects once.
     if (h === 'projects' && !list.includes('projanalysis')) list.unshift('projanalysis');
+    // Same for the validator, which belongs beside the lookup it reads from.
+    if (h === 'helpdesk' && !list.includes('allocvalidate')) {
+      const i = list.indexOf('alloccheck');
+      if (i === -1) list.push('allocvalidate'); else list.splice(i + 1, 0, 'allocvalidate');
+    }
     if (h === 'helpdesk') {
       const i = list.indexOf('alloccheck');
       if (i === -1) {
