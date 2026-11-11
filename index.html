@@ -2283,20 +2283,118 @@
   .al-batch-how.exact { background:var(--teal-bg); color:var(--teal-text); }
   .al-batch-how.loose { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .al-batch-how.none  { background:var(--surface2); color:var(--text-3); }
-  .al-val-tabs { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); }
-  .al-val-tab { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12px; font-weight:600;
-    padding:7px 12px; border-radius:9px; border:0.5px solid var(--border-md); background:var(--surface2);
-    color:var(--text-2); cursor:pointer; transition:all .14s; }
-  .al-val-tab:hover { border-color:var(--teal); color:var(--teal-text); }
-  .al-val-tab.on { background:var(--teal-bg); border-color:transparent; color:var(--teal-text); }
-  .al-val-tab.on.bad { background:var(--coral-bg); color:var(--coral-text); }
-  .al-val-tab.on.ok  { background:var(--green-bg); color:var(--green-text); }
-  .al-val-tab-n { font-size:10.5px; font-weight:700; background:rgba(255,255,255,0.07); border-radius:8px; padding:1px 6px; }
-  .al-val-dl { width:auto !important; margin:0 0 0 auto !important; padding:8px 16px !important; }
-  .al-val-count { font-size:11.5px; color:var(--text-3); padding:10px 2px 0; }
-  /* Tall enough to work through a whole file without the page itself scrolling
-     away from the filter tabs. */
-  .al-val-wrap { max-height:min(62vh, 760px); margin-top:8px; }
+  .al-vcfg { overflow:hidden; max-height:600px; opacity:1; margin-bottom:0;
+    transition:max-height .42s cubic-bezier(.4,0,.2,1), opacity .26s ease, margin-bottom .42s cubic-bezier(.4,0,.2,1); }
+  .al-vcfg.shut { max-height:0; opacity:0; margin-bottom:-16px; }
+  .al-vcfg-go { display:flex; align-items:center; gap:13px; margin-top:16px; padding-top:14px; border-top:0.5px solid var(--border); }
+  .al-vcfg-go .generate-btn { width:auto; margin:0; padding:13px 26px; font-size:14px; }
+  .al-vcfg-go span { font-size:11.5px; color:var(--text-3); }
+  .al-vbar { overflow:hidden; max-height:0; opacity:0;
+    transition:max-height .42s cubic-bezier(.4,0,.2,1), opacity .3s ease .08s; }
+  .al-vbar.open { max-height:80px; opacity:1; }
+  .al-vbar-btn { display:flex; align-items:center; gap:11px; width:100%; font-family:inherit; text-align:left;
+    background:var(--surface); border:0.5px solid var(--border-md); border-radius:11px; padding:12px 16px;
+    color:var(--text); cursor:pointer; transition:border-color .15s; }
+  .al-vbar-btn:hover { border-color:var(--teal); }
+  .al-vbar-tick { font-size:15px; color:var(--teal-text); }
+  .al-vbar-n { font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .al-vbar-cols { font-size:12px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vbar-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; font-size:11.5px;
+    font-weight:600; color:var(--text-2); white-space:nowrap; }
+  .al-vbar-go i { font-size:11px; }
+  @media (prefers-reduced-motion: reduce) { .al-vcfg, .al-vbar { transition:none !important; } }
+
+  /* The finding first, in a sentence, then the jobs it is about. */
+  .al-vbanner { display:flex; align-items:center; gap:13px; padding:15px 17px; border-radius:12px;
+    background:var(--coral-bg); border:0.5px solid color-mix(in srgb, var(--coral-text) 34%, transparent);
+    position:relative; overflow:hidden; }
+  .al-vbanner.ok { background:var(--green-bg); border-color:color-mix(in srgb, var(--green-text) 30%, transparent); }
+  .al-vbanner > .ti { font-size:22px; color:var(--coral-text); flex-shrink:0; }
+  .al-vbanner.ok > .ti { color:var(--green-text); }
+  .al-vbanner::after { content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(100deg, transparent 38%, color-mix(in srgb, var(--coral-text) 16%, transparent) 50%, transparent 62%);
+    background-size:200% 100%; animation:alvSweep 3.4s linear infinite; }
+  .al-vbanner.ok::after { display:none; }
+  @keyframes alvSweep { from { background-position:200% 0; } to { background-position:-200% 0; } }
+  .al-vbanner-t { min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .al-vbanner-t strong { font-size:14px; font-weight:700; color:var(--coral-text); }
+  .al-vbanner.ok .al-vbanner-t strong { color:var(--green-text); }
+  .al-vbanner-t span { font-size:12px; color:var(--text-2); }
+  .al-vbanner-n { margin-left:auto; flex-shrink:0; font-size:11.5px; font-weight:700; color:var(--coral-text);
+    background:color-mix(in srgb, var(--coral-text) 18%, transparent); border-radius:7px; padding:7px 13px; }
+  .al-vbanner.ok .al-vbanner-n { color:var(--green-text); background:color-mix(in srgb, var(--green-text) 16%, transparent); }
+
+  .al-vsec { margin-top:16px; }
+  .al-vsec-hd { display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-3); margin-bottom:10px; }
+  .al-vsec-hd.bad, .al-vsec-hd.bad > .ti { color:var(--coral-text); }
+  .al-vsec-n { font-size:10px; font-weight:700; letter-spacing:0; background:var(--coral-bg);
+    color:var(--coral-text); border-radius:8px; padding:2px 8px; }
+  .al-val-dl { width:auto !important; margin:0 0 0 auto !important; padding:8px 16px !important; letter-spacing:0; text-transform:none; }
+
+  .al-vcards { display:flex; flex-direction:column; gap:10px; }
+  @keyframes alvCardIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .al-vc { border-radius:12px; background:color-mix(in srgb, var(--coral-text) 6%, transparent);
+    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); padding:14px 16px;
+    animation:alvCardIn .36s cubic-bezier(.4,0,.2,1) backwards; transition:border-color .2s, box-shadow .2s; }
+  .al-vc:hover { border-color:color-mix(in srgb, var(--coral-text) 52%, transparent);
+    box-shadow:0 6px 24px color-mix(in srgb, var(--coral-text) 13%, transparent); }
+  .al-vc-hit { display:grid; grid-template-columns:auto 92px 1fr auto; gap:13px; align-items:center; width:100%;
+    background:none; border:none; padding:0; font-family:inherit; text-align:left; color:var(--text); cursor:pointer; }
+  .al-vc-chev { font-size:12px; color:var(--text-3); transition:transform .3s cubic-bezier(.4,0,.2,1); }
+  .al-vc-chev.open { transform:rotate(90deg); }
+  .al-vc-job { font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .al-vc-job a { color:var(--teal-text); text-decoration:none; }
+  .al-vc-job a:hover { text-decoration:underline; }
+  .al-vc-who { min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .al-vc-site { font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vc-zone { font-size:11.5px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vc-tog { font-size:11px; font-weight:700; color:var(--text-3); white-space:nowrap; }
+  .al-vc-hit:hover .al-vc-tog { color:var(--teal-text); }
+  .al-vc-delta { display:flex; align-items:center; gap:12px; margin-top:12px; }
+  .al-vc-box { flex:1; min-width:0; padding:10px 13px; border-radius:9px; display:flex; flex-direction:column; gap:3px; }
+  .al-vc-box.has { background:color-mix(in srgb, var(--coral-text) 13%, transparent);
+    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent); }
+  .al-vc-box.want { background:var(--green-bg); border:0.5px solid color-mix(in srgb, var(--green-text) 28%, transparent); }
+  .al-vc-lbl { font-size:9.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
+  .al-vc-name { font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-vc-box.has .al-vc-name { color:var(--coral-text); }
+  .al-vc-box.want .al-vc-name { color:var(--green-text); }
+  .al-vc-arrow { font-size:17px; color:var(--text-3); flex-shrink:0; }
+  .al-vc-det { overflow:hidden; max-height:0; opacity:0; margin-top:0;
+    transition:max-height .34s cubic-bezier(.4,0,.2,1), opacity .22s ease, margin-top .34s cubic-bezier(.4,0,.2,1); }
+  .al-vc-det.open { max-height:240px; opacity:1; margin-top:13px; }
+  .al-vc-det-in { padding:12px 14px; border-radius:9px; background:rgba(0,0,0,.26); border:0.5px solid var(--border); }
+  .al-vc-step { display:grid; grid-template-columns:148px 1fr; gap:12px; padding:5px 0; font-size:11.5px; }
+  .al-vc-k { color:var(--text-3); }
+  .al-vc-v { min-width:0; overflow-wrap:anywhere; }
+  .al-vc-v.good { color:var(--green-text); font-weight:700; }
+  .al-vc-v.bad { color:var(--coral-text); font-weight:700; }
+  .al-vc-v.val { color:var(--text); font-weight:500; }
+  .al-vc-dim { color:var(--text-3); font-weight:400; }
+
+  .al-vgrp { margin-top:10px; border:0.5px solid var(--border); border-radius:11px; overflow:hidden; }
+  .al-vgrp-hd { display:flex; align-items:center; gap:10px; width:100%; padding:12px 15px; font-family:inherit;
+    text-align:left; background:var(--surface2); border:none; color:var(--text); cursor:pointer; transition:background .14s; }
+  .al-vgrp-hd:hover { background:rgba(255,255,255,.07); }
+  .al-vgrp-chev { font-size:11px; color:var(--text-3); transition:transform .3s cubic-bezier(.4,0,.2,1); }
+  .al-vgrp-chev.open { transform:rotate(90deg); }
+  .al-vgrp-ico { font-size:14px; }
+  .al-vgrp-ico.unknown, .al-vgrp-ico.nozone { color:var(--amber-text); }
+  .al-vgrp-ico.notech { color:var(--text-3); }
+  .al-vgrp-ico.match { color:var(--green-text); }
+  .al-vgrp-l { font-size:12.5px; font-weight:600; }
+  .al-vgrp-n { font-size:11px; font-weight:700; border-radius:8px; padding:2px 8px;
+    background:var(--surface2); color:var(--text-2); }
+  .al-vgrp-n.unknown, .al-vgrp-n.nozone { background:rgba(var(--amber-rgb,220,152,40),.14); color:var(--amber-text); }
+  .al-vgrp-n.match { background:var(--green-bg); color:var(--green-text); }
+  .al-vgrp-note { margin-left:auto; font-size:11.5px; color:var(--text-3); }
+  .al-vgrp .al-val-wrap { margin:0; border-top:0.5px solid var(--border); }
+  @media (prefers-reduced-motion: reduce) {
+    .al-vbanner::after, .al-vc { animation:none !important; }
+    .al-vc-det, .al-vc-chev, .al-vgrp-chev { transition:none !important; }
+  }
+  .al-val-wrap { max-height:min(62vh, 760px); }
   .al-val-v { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; }
   .al-val-v.ok   { background:var(--green-bg); color:var(--green-text); }
   .al-val-v.bad  { background:var(--coral-bg); color:var(--coral-text); }
@@ -4652,16 +4750,27 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="kpi-template-row" style="margin-bottom:0;">
-        <div class="kpi-template-info">
-          <div class="kpi-tpl-name">Excel or CSV with the technician and the zone per job</div>
-          <div class="kpi-tpl-status" id="al-val-status">No file loaded</div>
+    <div class="al-vcfg" id="al-val-config">
+      <div class="card" style="margin-bottom:0;">
+        <div class="kpi-template-row" style="margin-bottom:0;">
+          <div class="kpi-template-info">
+            <div class="kpi-tpl-name">Excel or CSV with the technician and the zone per job</div>
+            <div class="kpi-tpl-status" id="al-val-status">No file loaded</div>
+          </div>
+          <input type="file" id="al-val-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alValLoad(this.files[0])">
+          <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('al-val-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
         </div>
-        <input type="file" id="al-val-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alValLoad(this.files[0])">
-        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('al-val-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+        <div id="al-val-mapper" style="display:none;margin-top:14px;"></div>
       </div>
-      <div id="al-val-mapper" style="display:none;margin-top:14px;"></div>
+    </div>
+
+    <div class="al-vbar" id="al-val-bar">
+      <button class="al-vbar-btn" onclick="alValReopen()">
+        <i class="ti ti-check al-vbar-tick"></i>
+        <span class="al-vbar-n" id="al-val-bar-n"></span>
+        <span class="al-vbar-cols" id="al-val-bar-cols"></span>
+        <span class="al-vbar-go">Change setup <i class="ti ti-chevron-down"></i></span>
+      </button>
     </div>
 
     <div id="al-val-result" style="margin-top:16px;"></div>
@@ -9242,8 +9351,54 @@ function alBatchDownload() {
 // with, and anything that can't be resolved is reported as unjudgeable rather
 // than quietly called a mismatch.
 let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
-let alValFilter = 'all';
-function alValSetFilter(v) { alValFilter = v; alValRun(); }
+// Which mismatch cards have their working open, and which of the other
+// verdict groups are expanded. Mismatches are never collapsed - they are the
+// reason the file was run.
+let alValOpenCard = new Set();
+let alValOpenGroup = new Set();
+// Nothing is checked until the columns are confirmed, and once they are the
+// setup folds into one line so the findings get the screen.
+let alValDone = false;
+
+function alValRenderConfig() {
+  const cfg = document.getElementById('al-val-config');
+  const bar = document.getElementById('al-val-bar');
+  if (!cfg || !bar) return;
+  const ready = alValDone && alValRows.length;
+  cfg.classList.toggle('shut', !!ready);
+  bar.classList.toggle('open', !!ready);
+  if (ready) {
+    const nEl = document.getElementById('al-val-bar-n');
+    const cEl = document.getElementById('al-val-bar-cols');
+    const pick = id => document.getElementById(id)?.value || '';
+    if (nEl) nEl.textContent = `${alValRows.length.toLocaleString()} rows`;
+    if (cEl) cEl.textContent = [pick('al-v-tech'), pick('al-v-zone'), pick('al-v-id'), pick('al-v-site')]
+      .filter(Boolean).join('  \u00b7  ');
+  }
+}
+
+function alValValidate() {
+  const tech = document.getElementById('al-v-tech')?.value;
+  const zone = document.getElementById('al-v-zone')?.value;
+  if (!tech || !zone) return;
+  alValDone = true;
+  alValRenderConfig();
+  alValRun();
+}
+
+function alValReopen() {
+  alValDone = false;
+  alValRenderConfig();
+}
+function alValToggleCard(id) {
+  const k = String(id);
+  if (alValOpenCard.has(k)) alValOpenCard.delete(k); else alValOpenCard.add(k);
+  alValRun();
+}
+function alValToggleGroup(k) {
+  if (alValOpenGroup.has(k)) alValOpenGroup.delete(k); else alValOpenGroup.add(k);
+  alValRun();
+}
 
 function alValStatus(msg, type) {
   const el = document.getElementById('al-val-status');
@@ -9305,6 +9460,10 @@ function alZoneAllocation(zone) {
 async function alValLoad(file) {
   if (!file) return;
   alValOut = null;
+  alValOpenCard = new Set();
+  alValOpenGroup = new Set();
+  alValDone = false;
+  alValRenderConfig();
   document.getElementById('al-val-result').innerHTML = '';
   try {
     await alEnsureData();
@@ -9327,6 +9486,7 @@ async function alValLoad(file) {
     if (!alValRows.length) { alValStatus('No data rows found', 'error'); return; }
     alValStatus(`${alValRows.length.toLocaleString()} rows loaded`, 'ok');
     alValRenderMapper();
+    alValRenderConfig();
     alValRun();
   } catch (e) {
     alValStatus('Could not read file: ' + e.message, 'error');
@@ -9340,11 +9500,18 @@ function alValRenderMapper() {
     <option value="">— none —</option>
     ${alValHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
   </select>`;
+  const nRows = alValRows.length.toLocaleString();
   el.innerHTML =
     `<div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('al-v-tech', svAutoDetect(alValHeaders, ['Technician','Allocated Tech','Allocated Tech Team','Tech'], ['technician','tech','allocat']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Zone column</span>${sel('al-v-zone', svAutoDetect(alValHeaders, ['Zone','Zone Name','Geo','Geoname'], ['zone','geo']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-id', svAutoDetect(alValHeaders, ['Job #','Job ID','JobID','ID'], ['jobid','job']))}</div>
-     <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>`;
+     <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>
+     <div class="al-vcfg-go">
+       <button class="generate-btn" onclick="alValValidate()">
+         <i class="ti ti-shield-check" style="font-size:17px;"></i> Validate ${nRows} rows
+       </button>
+       <span>Check the four columns above are right, then press this.</span>
+     </div>`;
   el.style.display = '';
 }
 
@@ -9355,10 +9522,12 @@ function alValRun() {
   const siteCol = document.getElementById('al-v-site')?.value;
   const out = document.getElementById('al-val-result');
   if (!out) return;
-  if (!alValRows.length || !techCol || !zoneCol) {
-    out.innerHTML = alValRows.length
-      ? '<div class="pa-note" style="margin-top:10px;"><i class="ti ti-info-circle"></i> Pick the technician and zone columns to validate.</div>'
-      : '';
+  if (!alValRows.length || !techCol || !zoneCol || !alValDone) {
+    out.innerHTML = '';
+    if (alValRows.length && !techCol) out.innerHTML =
+      '<div class="pa-note"><i class="ti ti-info-circle"></i> Pick the technician column to validate.</div>';
+    else if (alValRows.length && !zoneCol) out.innerHTML =
+      '<div class="pa-note"><i class="ti ti-info-circle"></i> Pick the zone column to validate.</div>';
     alValOut = null;
     return;
   }
@@ -9382,7 +9551,7 @@ function alValRun() {
 
     return { row, jobId, site, tech, zone, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
-             zoneType: zi ? zi.rt : '', resolved: ti.alloc, how: ti.how };
+             zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, resolved: ti.alloc, how: ti.how };
   });
   alValOut = results;
 
@@ -9390,64 +9559,120 @@ function alValRun() {
   const mismatch = results.filter(r => r.verdict === 'mismatch');
   const judged = n('match') + mismatch.length;
 
-  const VC = { match:'ok', mismatch:'bad', unknown:'warn', notech:'dim', nozone:'warn' };
-  const VL = { match:'Correct', mismatch:'Mismatch', unknown:'Can\'t judge', notech:'No technician', nozone:'Zone unknown' };
+  const VL = { match:'Correct', mismatch:'Mismatch', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
 
-  // Every row from the file, not a sample of it - the whole point is to see
-  // which jobs are wrong, and a row left off screen is a job not checked.
-  // Mismatches lead, then the other verdicts in the order they are summarised,
-  // and the original file order is kept inside each group.
-  const ORDER = ['mismatch', 'unknown', 'nozone', 'notech', 'match'];
-  const shown = (alValFilter === 'all' ? results : results.filter(r => r.verdict === alValFilter))
-    .map((r, i) => ({ r, i }))
-    .sort((a, b) => (ORDER.indexOf(a.r.verdict) - ORDER.indexOf(b.r.verdict)) || (a.i - b.i))
-    .map(x => x.r);
-
-  const tab = (key, label, count, cls) => count || key === 'all'
-    ? `<button class="al-val-tab${alValFilter === key ? ' on' : ''}${cls ? ' ' + cls : ''}"
-         onclick="alValSetFilter('${key}')">${label}<span class="al-val-tab-n">${count.toLocaleString()}</span></button>`
-    : '';
-
-  out.innerHTML = `
-    <div class="card">
-      <div class="al-batch-sum" style="margin-top:0;">
-        <span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${n('match').toLocaleString()} correct</span>
-        ${mismatch.length ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${mismatch.length.toLocaleString()} mismatched</span>` : ''}
-        ${n('unknown') ? `<span class="al-batch-chip loose">${n('unknown').toLocaleString()} can't judge</span>` : ''}
-        ${n('notech') ? `<span class="al-batch-chip loose">${n('notech').toLocaleString()} no technician</span>` : ''}
-        ${n('nozone') ? `<span class="al-batch-chip loose">${n('nozone').toLocaleString()} zone unknown</span>` : ''}
-        ${judged ? `<span class="al-val-rate ${mismatch.length ? 'bad' : 'ok'}">${Math.round(n('match') / judged * 100)}% of judged rows correct</span>` : ''}
+  // A mismatch is the finding; everything else is context. So the mismatches
+  // get cards that state the delta and show the working behind the verdict,
+  // and the other verdicts sit underneath as folded groups - reachable, with
+  // every row in them, but not competing with what is actually wrong.
+  const card = (r, i) => {
+    const open = alValOpenCard.has(String(i));
+    const steps = [
+      ['Zone in your file', esc(r.zone || '(blank)'), 'val'],
+      ['Matched in allocator', esc(r.zoneName || '\u2014') + (r.zoneType ? ' \u00b7 ' + esc(r.zoneType) : '')
+        + (r.zoneN ? ` \u00b7 ${r.zoneN} site${r.zoneN !== 1 ? 's' : ''}` : ''), 'val'],
+      ['Allocation 1', esc(r.expected || '\u2014'), 'good'],
+      ['Technician read as', r.how === 'city'
+        ? `${esc(r.tech)} \u2192 ${esc(r.resolved)} <span class="al-vc-dim">(from its city code)</span>`
+        : `${esc(r.tech)} <span class="al-vc-dim">(stated outright)</span>`, 'bad']
+    ];
+    return `<div class="al-vc" style="animation-delay:${Math.min(i, 12) * 0.045}s">
+      <button class="al-vc-hit" onclick="alValToggleCard(${i})" aria-expanded="${open}">
+        <i class="ti ti-chevron-right al-vc-chev${open ? ' open' : ''}"></i>
+        <span class="al-vc-job">${r.jobId
+          ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener"
+               onclick="event.stopPropagation()">${esc(r.jobId)}</a>`
+          : '\u2014'}</span>
+        <span class="al-vc-who">
+          <span class="al-vc-site">${esc(r.site || r.zone || '\u2014')}</span>
+          <span class="al-vc-zone">${esc(r.zoneName || r.zone || '')}</span>
+        </span>
+        <span class="al-vc-tog">${open ? 'Hide working' : 'Why?'}</span>
+      </button>
+      <div class="al-vc-delta">
+        <span class="al-vc-box has">
+          <span class="al-vc-lbl">Has</span>
+          <span class="al-vc-name">${esc(r.tech || '\u2014')}</span>
+        </span>
+        <i class="ti ti-arrow-right al-vc-arrow"></i>
+        <span class="al-vc-box want">
+          <span class="al-vc-lbl">Zone calls for</span>
+          <span class="al-vc-name">${esc(r.expected || '\u2014')}</span>
+        </span>
       </div>
-      ${mismatch.length ? '' : `<div class="pa-note" style="margin-top:10px;"><i class="ti ti-circle-check"></i>
-        No mismatches in the rows that could be judged.</div>`}
-
-      <div class="al-val-tabs">
-        ${tab('all', 'All rows', results.length)}
-        ${tab('mismatch', 'Mismatched', mismatch.length, 'bad')}
-        ${tab('unknown', "Can't judge", n('unknown'))}
-        ${tab('nozone', 'Zone unknown', n('nozone'))}
-        ${tab('notech', 'No technician', n('notech'))}
-        ${tab('match', 'Correct', n('match'), 'ok')}
-        <button class="generate-btn al-val-dl" onclick="alValDownload()">
-          <i class="ti ti-download" style="font-size:15px;"></i> Download with verdicts
-        </button>
-      </div>
-
-      <div class="al-val-count">Showing all ${shown.length.toLocaleString()} ${alValFilter === 'all' ? 'rows' : VL[alValFilter].toLowerCase() + ' rows'}${alValFilter === 'all' ? '' : ` of ${results.length.toLocaleString()}`}</div>
-
-      <div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
-        <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Technician</th><th>Zone expects</th><th>Verdict</th></tr></thead>
-        <tbody>${shown.map(r => `<tr class="${r.verdict === 'mismatch' ? 'al-val-bad' : ''}">
-          <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '—'}</td>
-          <td>${esc(r.site || '—')}</td>
-          <td>${esc(r.zoneName || r.zone || '—')}</td>
-          <td>${esc(r.tech || '—')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
-          <td>${esc(r.expected || '—')}</td>
-          <td><span class="al-val-v ${VC[r.verdict]}">${VL[r.verdict]}</span>${r.why ? `<span class="al-was">${esc(r.why)}</span>` : ''}</td>
-        </tr>`).join('')}</tbody></table>
-        ${shown.length ? '' : '<div class="al-more">Nothing in this group.</div>'}
+      <div class="al-vc-det${open ? ' open' : ''}">
+        <div class="al-vc-det-in">
+          ${steps.map(([k, v, tone]) => `<div class="al-vc-step">
+            <span class="al-vc-k">${k}</span><span class="al-vc-v ${tone}">${v}</span></div>`).join('')}
+        </div>
       </div>
     </div>`;
+  };
+
+  const groupRows = list => `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+      <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Technician</th><th>Zone expects</th><th>Why</th></tr></thead>
+      <tbody>${list.map(r => `<tr>
+        <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '\u2014'}</td>
+        <td>${esc(r.site || '\u2014')}</td>
+        <td>${esc(r.zoneName || r.zone || '\u2014')}</td>
+        <td>${esc(r.tech || '\u2014')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
+        <td>${esc(r.expected || '\u2014')}</td>
+        <td class="al-vc-dim">${esc(r.why || '')}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+
+  const GROUPS = [
+    ['unknown', "Can't judge", 'ti-help-circle', 'the technician name could not be resolved to an allocation'],
+    ['nozone', 'Zone unknown', 'ti-map-off', 'the allocator has no zone by that name'],
+    ['notech', 'No technician', 'ti-user-off', 'unallocated, helpdesk, or left blank'],
+    ['match', 'Correct', 'ti-circle-check', 'the technician is the one the zone calls for']
+  ];
+
+  out.innerHTML = `
+    ${mismatch.length ? `<div class="al-vbanner">
+      <i class="ti ti-alert-triangle"></i>
+      <span class="al-vbanner-t">
+        <strong>${mismatch.length.toLocaleString()} job${mismatch.length !== 1 ? 's are' : ' is'} with the wrong technician</strong>
+        <span>Each is allocated to someone other than the one its zone calls for. Every one is listed below.</span>
+      </span>
+      <span class="al-vbanner-n">${judged ? Math.round(n('match') / judged * 100) : 0}% of judged rows correct</span>
+    </div>` : `<div class="al-vbanner ok">
+      <i class="ti ti-circle-check"></i>
+      <span class="al-vbanner-t">
+        <strong>No mismatches</strong>
+        <span>Every row that could be judged has the technician its zone calls for.</span>
+      </span>
+      <span class="al-vbanner-n">${results.length.toLocaleString()} rows checked</span>
+    </div>`}
+
+    ${mismatch.length ? `<div class="al-vsec">
+      <div class="al-vsec-hd bad">
+        <i class="ti ti-alert-triangle"></i> Mismatched
+        <span class="al-vsec-n">${mismatch.length.toLocaleString()}</span>
+        <button class="generate-btn al-val-dl" onclick="alValDownload()">
+          <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
+        </button>
+      </div>
+      <div class="al-vcards">${mismatch.map(card).join('')}</div>
+    </div>` : `<div class="al-vsec"><div class="al-vsec-hd">
+        <button class="generate-btn al-val-dl" style="margin-left:0 !important;" onclick="alValDownload()">
+          <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
+        </button></div></div>`}
+
+    ${GROUPS.map(([key, label, icon, note]) => {
+      const list = results.filter(r => r.verdict === key);
+      if (!list.length) return '';
+      const open = alValOpenGroup.has(key);
+      return `<div class="al-vgrp${open ? ' open' : ''}">
+        <button class="al-vgrp-hd" onclick="alValToggleGroup('${key}')" aria-expanded="${open}">
+          <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
+          <i class="ti ${icon} al-vgrp-ico ${key}"></i>
+          <span class="al-vgrp-l">${label}</span>
+          <span class="al-vgrp-n ${key}">${list.length.toLocaleString()}</span>
+          <span class="al-vgrp-note">${note}</span>
+        </button>
+        ${open ? groupRows(list) : ''}
+      </div>`;
+    }).join('')}`;
 }
 
 function alValDownload() {
