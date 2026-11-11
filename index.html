@@ -2283,6 +2283,15 @@
   .al-batch-how.exact { background:var(--teal-bg); color:var(--teal-text); }
   .al-batch-how.loose { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .al-batch-how.none  { background:var(--surface2); color:var(--text-3); }
+  .al-val-v { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; }
+  .al-val-v.ok   { background:var(--green-bg); color:var(--green-text); }
+  .al-val-v.bad  { background:var(--coral-bg); color:var(--coral-text); }
+  .al-val-v.warn { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
+  .al-val-v.dim  { background:var(--surface2); color:var(--text-3); }
+  .al-rows tr.al-val-bad td { background:color-mix(in srgb, var(--coral-text) 7%, transparent); }
+  .al-val-rate { font-size:11px; font-weight:700; padding:2px 8px; border-radius:5px; }
+  .al-val-rate.ok  { background:var(--green-bg); color:var(--green-text); }
+  .al-val-rate.bad { background:rgba(var(--amber-rgb,220,152,40),0.14); color:var(--amber-text); }
   .al-batch-chip.zone { font-size:11px; font-weight:600; color:var(--teal-text); background:var(--teal-bg); border-radius:5px; padding:2px 8px; }
   .al-lookup-btn { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; padding:4px 10px; border-radius:6px; background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text-2); font-family:inherit; font-size:11px; font-weight:600; text-decoration:none; transition:all .13s; }
   .al-lookup-btn:hover { border-color:var(--teal); color:var(--teal-text); background:var(--teal-bg); }
@@ -3740,6 +3749,29 @@
           </div>
           <div id="al-batch-mapper" style="display:none;"></div>
           <div id="al-batch-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card al-manage-card" style="margin-top:12px;">
+      <button class="al-manage-hd" onclick="alToggleValidate()">
+        <i class="ti ti-chevron-right" id="al-val-caret"></i>
+        <i class="ti ti-shield-check"></i>
+        <span>Allocation validator</span>
+        <span class="al-manage-count">Check each job's technician against the zone it falls in</span>
+      </button>
+      <div id="al-val-body" style="display:none;">
+        <div class="al-batch-inner">
+          <div class="kpi-template-row">
+            <div class="kpi-template-info">
+              <div class="kpi-tpl-name">Excel or CSV with the technician and the zone per job</div>
+              <div class="kpi-tpl-status" id="al-val-status">No file loaded</div>
+            </div>
+            <input type="file" id="al-val-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="alValLoad(this.files[0])">
+            <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('al-val-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+          </div>
+          <div id="al-val-mapper" style="display:none;"></div>
+          <div id="al-val-result"></div>
         </div>
       </div>
     </div>
@@ -9186,6 +9218,218 @@ function alBatchDownload() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Allocations');
   XLSX.writeFile(wb, `${alBatchName || 'allocations'}_allocated.xlsx`);
+}
+
+// ---- Allocation validator: is this job's technician the one the zone says? --
+// The export names people ("Nick Vlachos ADL"); the allocator names companies
+// ("Amtek Adelaide"). Comparing the two literally would flag almost every row,
+// so a person is resolved to a company through the city code they sign off
+// with, and anything that can't be resolved is reported as unjudgeable rather
+// than quietly called a mismatch.
+let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
+
+function alToggleValidate() {
+  const body = document.getElementById('al-val-body');
+  const caret = document.getElementById('al-val-caret');
+  const open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  caret.className = 'ti ti-chevron-' + (open ? 'down' : 'right');
+}
+
+function alValStatus(msg, type) {
+  const el = document.getElementById('al-val-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' sv-status-' + type : ''); }
+}
+
+// The city a trailing code stands for. Amtek staff sign with these; the field
+// partners appear under their own company name instead and match directly.
+const AL_TECH_CITY = {
+  mel:'Melbourne', melb:'Melbourne', vic:'Melbourne',
+  syd:'Sydney', sdc:'Sydney', nsw:'Sydney',
+  bne:'Brisbane', bris:'Brisbane', qld:'Brisbane',
+  adl:'Adelaide', ade:'Adelaide', sa:'Adelaide',
+  per:'Perth', wa:'Perth',
+  gee:'Geelong'
+};
+// Values that name no field technician at all. Not a mismatch - there is
+// simply nobody to compare, and saying so is the useful answer.
+const AL_TECH_NONE = /^(unallocated|unassigned|none|n\/?a|tbc|tba|\?+|amtek helpdesk|helpdesk)$/i;
+
+function alNormAlloc(v) {
+  return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+// What allocation a technician string stands for, and how that was decided -
+// the how is shown, so an inferred answer is never mistaken for a stated one.
+function alTechToAllocation(tech) {
+  const raw = String(tech || '').trim();
+  if (!raw) return { alloc: '', how: 'blank' };
+  if (AL_TECH_NONE.test(raw)) return { alloc: '', how: 'none' };
+
+  const norm = alNormAlloc(raw);
+  const names = (typeof alAllocNames !== 'undefined' && alAllocNames) ? alAllocNames : [];
+  const exact = names.find(a => alNormAlloc(a) === norm);
+  if (exact) return { alloc: exact, how: 'exact' };
+
+  // "<person> MEL" -> Amtek Melbourne, when such an allocation exists.
+  const m = raw.match(/[\s\-]([A-Za-z]{2,4})\s*$/);
+  const city = m ? AL_TECH_CITY[m[1].toLowerCase()] : null;
+  if (city) {
+    const want = alNormAlloc('Amtek ' + city);
+    const hit = names.find(a => alNormAlloc(a) === want);
+    if (hit) return { alloc: hit, how: 'city', city };
+    return { alloc: 'Amtek ' + city, how: 'city', city, unknownAlloc: true };
+  }
+  return { alloc: '', how: 'unknown' };
+}
+
+// The zone decides the expected allocation, by the same consensus the lookup
+// uses everywhere else - one mistyped row can't set the answer for its zone.
+function alZoneAllocation(zone) {
+  const z = String(zone || '').trim();
+  if (!z || typeof alRows === 'undefined' || !alRows) return null;
+  const rows = alRows.filter(r => r._g === z.toLowerCase());
+  if (!rows.length) return null;
+  return { zone: rows[0].geo, a1: alConsensus(rows, 'a1').value, rt: alConsensus(rows, 'rt').value, n: rows.length };
+}
+
+async function alValLoad(file) {
+  if (!file) return;
+  alValOut = null;
+  document.getElementById('al-val-result').innerHTML = '';
+  try {
+    await alEnsureData();
+    if (typeof alRows !== 'undefined' && !alRows) alBuild();
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:'' });
+    let hdrIdx = 0;
+    for (let i = 0; i < Math.min(raw.length, 25); i++) {
+      const hits = raw[i].map(c => String(c).toLowerCase());
+      if (hits.some(c => c.includes('tech')) || hits.some(c => c.includes('zone'))) { hdrIdx = i; break; }
+    }
+    const headers = raw[hdrIdx].map(c => String(c));
+    alValHeaders = headers.filter(h => h.trim() !== '');
+    alValRows = raw.slice(hdrIdx + 1).map(row => {
+      const o = {}; headers.forEach((h, i) => { o[h] = row[i] !== undefined ? row[i] : ''; }); return o;
+    }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
+    alValName = file.name.replace(/\.[^.]+$/, '');
+    if (!alValRows.length) { alValStatus('No data rows found', 'error'); return; }
+    alValStatus(`${alValRows.length.toLocaleString()} rows loaded`, 'ok');
+    alValRenderMapper();
+    alValRun();
+  } catch (e) {
+    alValStatus('Could not read file: ' + e.message, 'error');
+  }
+}
+
+function alValRenderMapper() {
+  const el = document.getElementById('al-val-mapper');
+  if (!el) return;
+  const sel = (id, picked) => `<select class="sv-col-select field-input" id="${id}" onchange="alValRun()">
+    <option value="">— none —</option>
+    ${alValHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
+  </select>`;
+  el.innerHTML =
+    `<div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('al-v-tech', svAutoDetect(alValHeaders, ['Technician','Allocated Tech','Allocated Tech Team','Tech'], ['technician','tech','allocat']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Zone column</span>${sel('al-v-zone', svAutoDetect(alValHeaders, ['Zone','Zone Name','Geo','Geoname'], ['zone','geo']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-id', svAutoDetect(alValHeaders, ['Job #','Job ID','JobID','ID'], ['jobid','job']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>`;
+  el.style.display = '';
+}
+
+function alValRun() {
+  const techCol = document.getElementById('al-v-tech')?.value;
+  const zoneCol = document.getElementById('al-v-zone')?.value;
+  const idCol   = document.getElementById('al-v-id')?.value;
+  const siteCol = document.getElementById('al-v-site')?.value;
+  const out = document.getElementById('al-val-result');
+  if (!out) return;
+  if (!alValRows.length || !techCol || !zoneCol) {
+    out.innerHTML = alValRows.length
+      ? '<div class="pa-note" style="margin-top:10px;"><i class="ti ti-info-circle"></i> Pick the technician and zone columns to validate.</div>'
+      : '';
+    alValOut = null;
+    return;
+  }
+
+  const results = alValRows.map(row => {
+    const tech = String(row[techCol] || '').trim();
+    const zone = String(row[zoneCol] || '').trim();
+    const jobId = String(row[idCol] || '').trim();
+    const site = String(row[siteCol] || '').trim();
+    const zi = alZoneAllocation(zone);
+    const ti = alTechToAllocation(tech);
+
+    let verdict, why;
+    if (!zi)                           { verdict = 'nozone';  why = `Zone "${zone || '(blank)'}" is not in the allocator`; }
+    else if (ti.how === 'blank')       { verdict = 'notech';  why = 'No technician on the job'; }
+    else if (ti.how === 'none')        { verdict = 'notech';  why = `"${tech}" names no field technician`; }
+    else if (ti.how === 'unknown')     { verdict = 'unknown'; why = `Could not tell which allocation "${tech}" belongs to`; }
+    else if (ti.unknownAlloc)          { verdict = 'unknown'; why = `${ti.alloc} is not an allocation in the sheet`; }
+    else if (alNormAlloc(ti.alloc) === alNormAlloc(zi.a1)) { verdict = 'match'; why = ''; }
+    else                               { verdict = 'mismatch'; why = `Zone expects ${zi.a1}`; }
+
+    return { row, jobId, site, tech, zone, verdict, why,
+             expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
+             zoneType: zi ? zi.rt : '', resolved: ti.alloc, how: ti.how };
+  });
+  alValOut = results;
+
+  const n = k => results.filter(r => r.verdict === k).length;
+  const mismatch = results.filter(r => r.verdict === 'mismatch');
+  const judged = n('match') + mismatch.length;
+
+  const VC = { match:'ok', mismatch:'bad', unknown:'warn', notech:'dim', nozone:'warn' };
+  const VL = { match:'Correct', mismatch:'Mismatch', unknown:'Can\'t judge', notech:'No technician', nozone:'Zone unknown' };
+
+  const preview = [...mismatch, ...results.filter(r => r.verdict !== 'mismatch')].slice(0, 20);
+
+  out.innerHTML = `
+    <div class="al-batch-sum" style="margin-top:12px;">
+      <span class="sv-sum-ok"><i class="ti ti-circle-check"></i> ${n('match').toLocaleString()} correct</span>
+      ${mismatch.length ? `<span class="sv-sum-err"><i class="ti ti-alert-triangle"></i> ${mismatch.length.toLocaleString()} mismatched</span>` : ''}
+      ${n('unknown') ? `<span class="al-batch-chip loose">${n('unknown').toLocaleString()} can't judge</span>` : ''}
+      ${n('notech') ? `<span class="al-batch-chip loose">${n('notech').toLocaleString()} no technician</span>` : ''}
+      ${n('nozone') ? `<span class="al-batch-chip loose">${n('nozone').toLocaleString()} zone unknown</span>` : ''}
+      ${judged ? `<span class="al-val-rate ${mismatch.length ? 'bad' : 'ok'}">${Math.round(n('match') / judged * 100)}% of judged rows correct</span>` : ''}
+    </div>
+    ${mismatch.length ? '' : `<div class="pa-note" style="margin-top:10px;"><i class="ti ti-circle-check"></i>
+      No mismatches in the rows that could be judged.</div>`}
+    <div class="sv-cov-table-wrap" style="max-height:340px;margin-top:10px;"><table class="al-rows">
+      <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Technician</th><th>Zone expects</th><th>Verdict</th></tr></thead>
+      <tbody>${preview.map(r => `<tr class="${r.verdict === 'mismatch' ? 'al-val-bad' : ''}">
+        <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '—'}</td>
+        <td>${esc(r.site || '—')}</td>
+        <td>${esc(r.zoneName || r.zone || '—')}</td>
+        <td>${esc(r.tech || '—')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
+        <td>${esc(r.expected || '—')}</td>
+        <td><span class="al-val-v ${VC[r.verdict]}">${VL[r.verdict]}</span>${r.why ? `<span class="al-was">${esc(r.why)}</span>` : ''}</td>
+      </tr>`).join('')}</tbody></table>
+      ${results.length > preview.length ? `<div class="al-more">Showing ${preview.length} of ${results.length.toLocaleString()} rows, mismatches first — the download has them all.</div>` : ''}
+    </div>
+    <button class="generate-btn" style="width:auto;margin:12px 0 0;padding:9px 18px;" onclick="alValDownload()">
+      <i class="ti ti-download" style="font-size:16px;"></i> Download with verdicts
+    </button>`;
+}
+
+function alValDownload() {
+  if (!alValOut || !alValOut.length) return;
+  const VL = { match:'Correct', mismatch:'MISMATCH', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
+  const data = alValOut.map(r => ({
+    ...r.row,
+    'Zone Matched':      r.zoneName || '',
+    'Zone Type':         r.zoneType || '',
+    'Zone Expects':      r.expected || '',
+    'Technician Read As': r.how === 'city' ? r.resolved : '',
+    'Verdict':           VL[r.verdict] || '',
+    'Reason':            r.why || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Validation');
+  XLSX.writeFile(wb, `${alValName || 'allocations'}_validated.xlsx`);
 }
 
 // ---- Unallocated: everything with no technician ----
