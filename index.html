@@ -2499,9 +2499,38 @@
   /* The model gets the room: a truncated "Scanner DS9808 (Barcode)" costs you
      the one thing the row is about, where a truncated run of job numbers
      still reads, and carries the rest in its tooltip either way. */
-  .stk-prow { display:grid; grid-template-columns:minmax(0,1.5fr) 38px minmax(0,1fr) 112px; gap:12px;
-    align-items:center; padding:9px 15px; border-top:0.5px solid var(--border); transition:background .14s; }
+  .stk-prow { padding:9px 15px; border-top:0.5px solid var(--border); transition:background .14s; }
   .stk-prow:hover { background:rgba(255,255,255,.035); }
+  /* Even split now the contracts have their own line: the model no longer has
+     to win room back from the job numbers. */
+  .stk-prow-main { display:grid; grid-template-columns:minmax(0,1.25fr) 38px minmax(0,1.25fr) 96px;
+    gap:10px; align-items:center; }
+
+  /* Contracts get their own line under the part rather than a sixth column:
+     a part can sit under several at once, and each one needs room for its
+     own count and its own hide button. */
+  .stk-prow-con { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  .stk-con { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700;
+    border-radius:20px; padding:3px 9px; border:0.5px solid; white-space:nowrap; }
+  .stk-con.hide-able { padding-right:3px; }
+  .stk-con .ti { font-size:8px; }
+  .stk-con-n { font-weight:400; opacity:.7; }
+  /* Colour and shape together, so two contracts are never told apart by hue
+     alone - and the name is on every badge regardless. */
+  .stk-con.k0 { color:var(--teal-text);   background:var(--teal-bg);   border-color:color-mix(in srgb, var(--teal-text) 30%, transparent); }
+  .stk-con.k1 { color:var(--green-text);  background:var(--green-bg);  border-color:color-mix(in srgb, var(--green-text) 30%, transparent); }
+  .stk-con.k2 { color:var(--amber-text);  background:var(--amber-bg);  border-color:color-mix(in srgb, var(--amber-text) 30%, transparent); }
+  .stk-con.k3 { color:var(--purple-text); background:var(--purple-bg); border-color:color-mix(in srgb, var(--purple-text) 30%, transparent); }
+  .stk-con.k4 { color:var(--pink-text);   background:var(--pink-bg);   border-color:color-mix(in srgb, var(--pink-text) 30%, transparent); }
+  .stk-con.k5 { color:var(--coral-text);  background:var(--coral-bg);  border-color:color-mix(in srgb, var(--coral-text) 30%, transparent); }
+  .stk-con-x { background:none; border:none; color:currentColor; font-family:inherit; font-size:10px;
+    line-height:1; padding:3px 5px; border-radius:20px; cursor:pointer; opacity:0;
+    transition:opacity .13s, background .13s; }
+  .stk-prow:hover .stk-con-x, .stk-con-x:focus-visible { opacity:.65; }
+  .stk-con-x:hover { opacity:1; background:color-mix(in srgb, currentColor 22%, transparent); }
+
+  .stk-legend { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:12px; }
+  .stk-legend-l { font-size:11.5px; color:var(--text-2); margin-right:2px; }
   .stk-model { min-width:0; display:flex; flex-direction:column; gap:1px; }
   .stk-model-top { min-width:0; display:flex; align-items:center; gap:4px; }
   .stk-model-n { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -9972,10 +10001,18 @@ let stkShowAllFaults = false;
 let stkOpenGroup = new Set();
 let stkSearchBy = null;       // 'model' | 'code' - read from storage on first use
 let stkRules = null;          // model name -> the warehouse name to search for it
+let stkCons = null;           // contract code -> the badge number it was given
+let stkHidden = null;         // "contract|model" pairs you never want to see
 let stkRowIndex = [];         // the part rows on screen, so a pencil can name one
 let stkEditing = [];          // the model name(s) the open modal is editing
 const STK_SEARCH_KEY = 'zarif_stk_search_by';
 const STK_RULES_KEY = 'zarif_stk_model_terms';
+const STK_CONS_KEY = 'zarif_stk_contract_badges';
+const STK_HIDE_KEY = 'zarif_stk_hidden_pairs';
+// Six hues from the theme and six shapes, paired so the hue cycles fastest:
+// the first six contracts differ by colour alone, and no two ever share both.
+const STK_CON_ICONS = ['ti-circle-filled','ti-square-filled','ti-triangle-filled',
+                       'ti-star-filled','ti-hexagon-filled','ti-diamond-filled'];
 const STK_BLANK = '(blank)';
 const STK_FAULT_CHIPS = 14;
 
@@ -10048,6 +10085,76 @@ function stkGetRule(model) {
 function stkTerm(model) {
   const r = stkGetRule(model);
   return r && r.term ? r.term : stkAutoTerm(model);
+}
+
+// A contract keeps the badge it was first given, for good. Deriving one from
+// the name instead would be tidier to write and worse to use: adding a
+// contract would reshuffle the others, and the colour you learned last month
+// would belong to someone else today.
+function stkGetCons() {
+  if (stkCons === null) {
+    const saved = dbGet(STK_CONS_KEY);
+    stkCons = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return stkCons;
+}
+function stkConBadge(code) {
+  const c = String(code || '').trim();
+  if (!c) return null;
+  const all = stkGetCons();
+  if (!(c in all)) {
+    const taken = new Set(Object.values(all));
+    let n = 0;
+    while (taken.has(n)) n++;
+    all[c] = n;
+    dbSet(STK_CONS_KEY, all);
+  }
+  const n = all[c];
+  return { code: c, k: n % 6, icon: STK_CON_ICONS[Math.floor(n / 6) % 6] };
+}
+function stkConChip(code, n, hideIx) {
+  const b = stkConBadge(code);
+  if (!b) return '';
+  return `<span class="stk-con k${b.k}${hideIx !== undefined ? ' hide-able' : ''}">
+    <i class="ti ${b.icon}"></i>${esc(b.code)}${n ? `<span class="stk-con-n">${n.toLocaleString()}</span>` : ''}
+    ${hideIx !== undefined ? `<button class="stk-con-x" onclick="stkHidePair(${hideIx}, ${escAttr(JSON.stringify(b.code))})"
+      title="Stop showing this part under ${escAttr(b.code)}"
+      aria-label="Stop showing this part under ${escAttr(b.code)}"><i class="ti ti-eye-off"></i></button>` : ''}
+  </span>`;
+}
+
+// Hiding is per contract AND part, never per part alone: the same scanner can
+// be yours to stock on one contract and the customer's problem on another.
+function stkPairKey(contract, model) {
+  return String(contract || '').trim().toLowerCase() + '|' + stkModelKey(model);
+}
+function stkGetHidden() {
+  if (stkHidden === null) {
+    const saved = dbGet(STK_HIDE_KEY);
+    stkHidden = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return stkHidden;
+}
+function stkIsHidden(contract, model) {
+  const c = String(contract || '').trim();
+  return c ? !!stkGetHidden()[stkPairKey(c, model)] : false;
+}
+function stkHidePair(i, contract) {
+  const g = stkRowIndex[i];
+  if (!g || !contract) return;
+  const h = stkGetHidden();
+  g.models.forEach(m => { h[stkPairKey(contract, m)] = { contract, model: m }; });
+  dbSet(STK_HIDE_KEY, h);
+  stkRun();
+  stkRenderRules();
+}
+function stkShowPair(key) {
+  const h = stkGetHidden();
+  if (!h[key]) return;
+  delete h[key];
+  dbSet(STK_HIDE_KEY, h);
+  stkRun();
+  stkRenderRules();
 }
 
 function stkEditTerm(i) {
@@ -10131,9 +10238,30 @@ function stkRenderRules() {
   const rules = stkGetRules();
   const keys = Object.keys(rules).sort((a, b) =>
     String(rules[a].model || a).localeCompare(String(rules[b].model || b)));
-  if (!keys.length) { el.innerHTML = ''; return; }
+  const hid = stkGetHidden();
+  const hkeys = Object.keys(hid).sort((a, b) =>
+    String(hid[a].contract || '').localeCompare(String(hid[b].contract || '')) ||
+    String(hid[a].model || '').localeCompare(String(hid[b].model || '')));
+  if (!keys.length && !hkeys.length) { el.innerHTML = ''; return; }
+  const hopen = stkOpenGroup.has('hidden');
+  const hiddenBlock = hkeys.length ? `<div class="al-vgrp stk-rules${hopen ? ' open' : ''}">
+    <button class="al-vgrp-hd" onclick="stkToggleGroup('hidden')" aria-expanded="${hopen}">
+      <i class="ti ti-chevron-right al-vgrp-chev${hopen ? ' open' : ''}"></i>
+      <i class="ti ti-eye-off al-vgrp-ico notech"></i>
+      <span class="al-vgrp-l">Hidden parts</span>
+      <span class="al-vgrp-n">${hkeys.length.toLocaleString()}</span>
+      <span class="al-vgrp-note">kept off every stock check until you put them back</span>
+    </button>
+    ${hopen ? hkeys.map(k => `<div class="stk-rule">
+      <span class="stk-rule-from">${esc(hid[k].model || '')}</span>
+      <i class="ti ti-arrow-right"></i>
+      <span>${stkConChip(hid[k].contract)}</span>
+      <span><button class="stk-rule-x" onclick="stkShowPair(${escAttr(JSON.stringify(k))})">Show again</button></span>
+    </div>`).join('') : ''}
+  </div>` : '';
+  if (!keys.length) { el.innerHTML = hiddenBlock; return; }
   const open = stkOpenGroup.has('rules');
-  el.innerHTML = `<div class="al-vgrp stk-rules${open ? ' open' : ''}">
+  el.innerHTML = hiddenBlock + `<div class="al-vgrp stk-rules${open ? ' open' : ''}">
     <button class="al-vgrp-hd" onclick="stkToggleGroup('rules')" aria-expanded="${open}">
       <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
       <i class="ti ti-bookmark al-vgrp-ico match"></i>
@@ -10201,7 +10329,7 @@ function stkToggleFault(i) {
 function stkMoreFaults() { stkShowAllFaults = true; stkRenderFaults(); }
 function stkToggleGroup(k) {
   if (stkOpenGroup.has(k)) stkOpenGroup.delete(k); else stkOpenGroup.add(k);
-  if (k === 'rules') stkRenderRules(); else stkRun();
+  if (k === 'rules' || k === 'hidden') stkRenderRules(); else stkRun();
 }
 
 function stkRenderFaults() {
@@ -10242,6 +10370,7 @@ function stkRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('stk-c-tech', svAutoDetect(stkHeaders, ['Technician','Allocated Tech','Tech'], ['technician','tech','allocat']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job number <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-id', svAutoDetect(stkHeaders, ['Job #','Job Number','Job ID','ID'], ['jobid','job']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-site', svAutoDetect(stkHeaders, ['Location Name','Site','Store'], ['location','site','store']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Contract <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-con', svAutoDetect(stkHeaders, ['Contract','Contract Name','Client','Account'], ['contract','client','account']), 'stkOnChange()')}</div>
      <div class="stk-fsec" id="stk-faults-sec"></div>
      <div class="stk-cfg-go">
        <button class="generate-btn" onclick="stkFind()">
@@ -10279,7 +10408,7 @@ function stkRenderConfig() {
     const pick = id => document.getElementById(id)?.value || '';
     if (nEl) nEl.textContent = `${stkRows.length.toLocaleString()} rows`;
     if (cEl) cEl.textContent = [pick('stk-c-model'), pick('stk-c-fault'), pick('stk-c-tech'),
-      pick('stk-c-id'), pick('stk-c-site')].filter(Boolean).join('  \u00b7  ');
+      pick('stk-c-id'), pick('stk-c-site'), pick('stk-c-con')].filter(Boolean).join('  \u00b7  ');
   }
 }
 
@@ -10369,6 +10498,7 @@ function stkRun() {
   const techCol  = document.getElementById('stk-c-tech')?.value;
   const idCol    = document.getElementById('stk-c-id')?.value;
   const siteCol  = document.getElementById('stk-c-site')?.value;
+  const conCol   = document.getElementById('stk-c-con')?.value;
   const out = document.getElementById('stk-result');
   if (!out) return;
   if (!stkRows.length || !stkDone || !modelCol || !faultCol || !techCol) {
@@ -10384,15 +10514,21 @@ function stkRun() {
     const model = String(row[modelCol] || '').trim();
     const tech  = String(row[techCol] || '').trim();
     const w = stkLocation(tech);
-    hits.push({ row, i, model, tech,
+    const con = conCol ? String(row[conCol] || '').trim() : '';
+    hits.push({ row, i, model, tech, con,
       id: idCol ? String(row[idCol] || '').trim() : '',
       site: siteCol ? String(row[siteCol] || '').trim() : '',
-      loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '' });
+      loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '',
+      hidden: stkIsHidden(con, model) });
   });
   stkOut = hits;
 
-  const linkable = hits.filter(h => h.loc && h.model);
-  const stuck = hits.filter(h => !h.loc || !h.model);
+  // Hidden rows stay in stkOut so the download still accounts for them; they
+  // just take no part in what the page shows or counts.
+  const shown = hits.filter(h => !h.hidden);
+  const nHidden = hits.length - shown.length;
+  const linkable = shown.filter(h => h.loc && h.model);
+  const stuck = shown.filter(h => !h.loc || !h.model);
 
   // One card per warehouse, one row per thing to search for. The jobs stay
   // visible inside the row, so nothing is folded away - only the duplicate
@@ -10412,9 +10548,10 @@ function stkRun() {
     L.n++;
     const pk = term.toLowerCase();
     let Pt = L.parts.get(pk);
-    if (!Pt) { Pt = { term, models: new Set(), jobs: [], ruled: false }; L.parts.set(pk, Pt); }
+    if (!Pt) { Pt = { term, models: new Set(), jobs: [], cons: new Map(), ruled: false }; L.parts.set(pk, Pt); }
     Pt.models.add(h.model);
     if (stkGetRule(h.model)) Pt.ruled = true;
+    if (h.con) Pt.cons.set(h.con, (Pt.cons.get(h.con) || 0) + 1);
     Pt.jobs.push(h);
   });
   const locList = [...locs.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
@@ -10428,36 +10565,49 @@ function stkRun() {
 
   const nParts = new Set(linkable.map(h => stkTerm(h.model).toLowerCase())).size;
   const other = stkRows.length - hits.length;
+  // Commonest contract first, so the legend reads in the order the work does.
+  const conCount = new Map();
+  shown.forEach(h => { if (h.con) conCount.set(h.con, (conCount.get(h.con) || 0) + 1); });
+  const conList = [...conCount].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const by = stkGetSearchBy();
   const egModel = linkable.length ? linkable[0].model : '';
   const open = stkOpenGroup.has('stuck');
 
   out.innerHTML = `
-    ${hits.length ? `<div class="stk-banner">
+    ${shown.length ? `<div class="stk-banner">
       <i class="ti ti-package"></i>
       <span class="stk-banner-t">
-        <strong>${hits.length.toLocaleString()} job${hits.length !== 1 ? 's are' : ' is'} waiting on a replacement part</strong>
+        <strong>${shown.length.toLocaleString()} job${shown.length !== 1 ? 's are' : ' is'} waiting on a replacement part</strong>
         <span>${nParts.toLocaleString()} part${nParts !== 1 ? 's' : ''} across ${locList.length.toLocaleString()} location${locList.length !== 1 ? 's' : ''}${other
-          ? ` \u00b7 the other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement` : ''}.</span>
+          ? ` \u00b7 the other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement` : ''}${nHidden
+          ? ` \u00b7 ${nHidden.toLocaleString()} hidden by your list` : ''}.</span>
       </span>
-      <button class="generate-btn" onclick="stkDownload()">
+      <button class="generate-btn" onclick="stkDownload()"${nHidden
+        ? ` title="Includes the ${nHidden.toLocaleString()} you have hidden, each marked as hidden"` : ''}>
         <i class="ti ti-download" style="font-size:15px;"></i> Download all ${hits.length.toLocaleString()}
       </button>
     </div>` : `<div class="stk-banner none">
       <i class="ti ti-info-circle"></i>
       <span class="stk-banner-t">
         <strong>Nothing is waiting on a part</strong>
-        <span>No row carries one of the fault values picked as a replacement. Change setup above to pick others.</span>
+        <span>${nHidden
+          ? `Every one of the ${nHidden.toLocaleString()} replacement job${nHidden !== 1 ? 's' : ''} here is on your hidden list.`
+          : 'No row carries one of the fault values picked as a replacement. Change setup above to pick others.'}</span>
       </span>
     </div>`}
 
-    ${hits.length ? `<div class="stk-seg-row">
+    ${shown.length ? `<div class="stk-seg-row">
       <span class="stk-seg-l">Search the warehouse by</span>
       <span class="stk-seg">
         <button class="${by === 'model' ? 'on' : ''}" onclick="stkSetSearchBy('model')">Model name</button>
         <button class="${by === 'code' ? 'on' : ''}" onclick="stkSetSearchBy('code')">Part code</button>
       </span>
       ${egModel ? `<span class="stk-seg-eg">part_type_search=${esc(stkTerm(egModel))}</span>` : ''}
+    </div>` : ''}
+
+    ${conList.length ? `<div class="stk-legend">
+      <span class="stk-legend-l">Contracts</span>
+      ${conList.map(([c, n]) => stkConChip(c, n)).join('')}
     </div>` : ''}
 
     ${locList.length ? `<div class="stk-grid">${locList.map((L, i) => {
@@ -10470,17 +10620,23 @@ function stkRun() {
             ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
         </header>
         ${L.partList.map(Pt => `<div class="stk-prow">
-          <span class="stk-model">
-            ${stkModelLabel(Pt, Pt.ix)}
-            ${stkSubLabel(Pt)}
-          </span>
-          <span class="stk-qty">&times;${Pt.jobs.length}</span>
-          <span class="stk-jobs" title="${escAttr(Pt.jobs.map(j => (j.id || 'row ' + (j.i + 2)) + (j.site ? ' \u2014 ' + j.site : '')).join('\n'))}">${Pt.jobs.map(j => j.id
-            ? `<a href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${esc(j.id)}</a>`
-            : `<span>${esc(j.site || 'row ' + (j.i + 2))}</span>`).join('<i>\u00b7</i>')}</span>
-          <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
-            Check stock <i class="ti ti-arrow-up-right"></i>
-          </a>
+          <div class="stk-prow-main">
+            <span class="stk-model">
+              ${stkModelLabel(Pt, Pt.ix)}
+              ${stkSubLabel(Pt)}
+            </span>
+            <span class="stk-qty">&times;${Pt.jobs.length}</span>
+            <span class="stk-jobs" title="${escAttr(Pt.jobs.map(j => (j.id || 'row ' + (j.i + 2))
+              + (j.con ? ' \u00b7 ' + j.con : '') + (j.site ? ' \u2014 ' + j.site : '')).join('\n'))}">${Pt.jobs.map(j => j.id
+              ? `<a href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${esc(j.id)}</a>`
+              : `<span>${esc(j.site || 'row ' + (j.i + 2))}</span>`).join('<i>\u00b7</i>')}</span>
+            <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
+              Check stock <i class="ti ti-arrow-up-right"></i>
+            </a>
+          </div>
+          ${Pt.cons.size ? `<div class="stk-prow-con">${[...Pt.cons]
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+            .map(([c, n]) => stkConChip(c, n, Pt.ix)).join('')}</div>` : ''}
         </div>`).join('')}
       </section>`;
     }).join('')}</div>` : ''}
@@ -10519,6 +10675,7 @@ function stkDownload() {
       'Warehouse Location':  h.loc || '',
       'Searched For':        term,
       'Part Name Source':    !ok ? '' : (stkGetRule(h.model) ? 'Saved by you' : 'Automatic'),
+      'Hidden By You':       h.hidden ? 'Yes \u2014 ' + h.model + ' under ' + h.con : '',
       'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
       'Stock Link':          ok ? stkUrl(h.loc, term) : '',
       'Not Linked Because':  stkBlockedWhy(h)
