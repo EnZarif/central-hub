@@ -2340,10 +2340,19 @@
      out today and on what - so it gets its own section rather than a filter
      on the one above it. Depots, not names: "Mustafa Mariot SYD" and "Amtek
      Sydney" are one place to ring from. */
-  .al-vsec-hd.today, .al-vsec-hd.today > .ti { color:var(--teal-text); }
-  .al-vsec-n.today { background:var(--teal-bg); color:var(--teal-text); }
-  .al-today-btns { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+  .al-vgrp-ico.today { color:var(--teal-text); }
+  .al-vgrp-n.today { background:var(--teal-bg); color:var(--teal-text); }
+  /* A header that both folds the section and carries its own actions, so the
+     list can be copied without opening it. The toggle is its own button
+     rather than the whole bar, because a button cannot hold other buttons. */
+  .al-today-hd { display:flex; align-items:center; gap:10px; padding-right:12px; background:var(--surface2); }
+  .al-vgrp-toggle { display:flex; align-items:center; gap:10px; flex:1; min-width:0; padding:12px 15px;
+    font-family:inherit; text-align:left; background:none; border:none; color:var(--text);
+    cursor:pointer; transition:background .14s; }
+  .al-vgrp-toggle:hover { background:rgba(255,255,255,.07); }
+  .al-today-btns { display:flex; gap:8px; flex-shrink:0; }
   .al-today-btns .al-val-dl { margin:0 !important; }
+  .al-tgrid-wrap { padding:13px 15px 15px; border-top:0.5px solid var(--border); }
   /* start, not stretch: a depot with one job should be one job tall rather
      than padded out to match the busiest card beside it. */
   .al-tgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px, 100%), 1fr));
@@ -2360,6 +2369,14 @@
   .al-tdepot.none .al-tdepot-n { color:var(--text-3); }
   .al-tdepot-c { margin-left:auto; flex-shrink:0; font-size:10px; font-weight:700;
     color:var(--teal-text); background:var(--teal-bg); border-radius:5px; padding:3px 7px; }
+  /* Per depot, because the list is worked one depot at a time - you ring
+     Sydney's jobs, not everyone's. */
+  .al-tcopy { flex-shrink:0; background:none; border:none; color:var(--text-3); font-family:inherit;
+    font-size:13px; line-height:1; padding:4px 5px; border-radius:5px; cursor:pointer;
+    transition:color .13s, background .13s; }
+  .al-tdepot:hover .al-tcopy, .al-tcopy:focus-visible { color:var(--text-2); }
+  .al-tcopy:hover { color:var(--teal-text) !important; background:var(--teal-bg); }
+  .al-tcopy.done { color:var(--green-text) !important; background:var(--green-bg); }
   .al-tdepot.partner .al-tdepot-c { color:var(--purple-text); background:var(--purple-bg); }
   .al-tdepot.none .al-tdepot-c { color:var(--text-3); background:var(--surface2); }
   .al-tjob { display:block; padding:7px 14px; font-size:12px; color:var(--text-2);
@@ -10001,35 +10018,47 @@ function alValRun() {
           <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
         </button></div></div>`}
 
-    ${dateCol ? `<div class="al-vsec">
-      <div class="al-vsec-hd today">
-        <i class="ti ti-phone-call"></i> Scheduled today
-        <span class="al-vsec-n today">${alValToday.length.toLocaleString()}</span>
-        <span class="al-vsec-sub">${esc(alValTodayLongDate())}</span>
+    ${dateCol ? (() => {
+      const tOpen = alValOpenGroup.has('today');
+      const tg = alValTodayGroups();
+      return `<div class="al-vgrp${tOpen ? ' open' : ''}" style="margin-top:16px;">
+      <div class="al-today-hd">
+        <button class="al-vgrp-toggle" onclick="alValToggleGroup('today')" aria-expanded="${tOpen}">
+          <i class="ti ti-chevron-right al-vgrp-chev${tOpen ? ' open' : ''}"></i>
+          <i class="ti ti-phone-call al-vgrp-ico today"></i>
+          <span class="al-vgrp-l">Scheduled today</span>
+          <span class="al-vgrp-n today">${alValToday.length.toLocaleString()}</span>
+          <span class="al-vgrp-note">${esc(alValTodayLongDate())}${tg.length
+            ? ` \u00b7 ${tg.length} depot${tg.length !== 1 ? 's' : ''}` : ''}</span>
+        </button>
         ${alValToday.length ? `<span class="al-today-btns">
           <button class="generate-btn al-val-dl" onclick="alValCopyToday(this)">
-            <i class="ti ti-copy" style="font-size:15px;"></i> Copy list
+            <i class="ti ti-copy" style="font-size:15px;"></i> Copy all
           </button>
           <button class="generate-btn al-val-dl" onclick="alValDownloadToday()">
             <i class="ti ti-download" style="font-size:15px;"></i> Download
           </button>
         </span>` : ''}
       </div>
-      ${alValToday.length ? `<div class="al-tgrid">${alValTodayGroups().map(g => {
-        const cls = g.unplaced ? ' none'
-          : (alOwner(g.depot).key === 'partner' ? ' partner' : '');
-        return `<section class="al-tdepot${cls}">
-          <header class="al-tdepot-hd">
-            <span class="al-tdepot-n">${esc(g.depot)}</span>
-            <span class="al-tdepot-c">${g.jobs.length.toLocaleString()}</span>
-          </header>
-          ${g.jobs.map(j => j.jobId
-            ? `<a class="al-tjob" href="${escAttr(buildHelpdeskUrl(j.jobId))}" target="_blank" rel="noopener">${esc(alValCallLabel(j))}</a>`
-            : `<span class="al-tjob dead">${esc(alValCallLabel(j))}</span>`).join('')}
-        </section>`;
-      }).join('')}</div>`
-      : `<div class="pa-note"><i class="ti ti-calendar-off"></i> Nothing in this file is scheduled for today.</div>`}
-    </div>` : ''}
+      ${!tOpen ? '' : (alValToday.length
+        ? `<div class="al-tgrid-wrap"><div class="al-tgrid">${tg.map((g, gi) => {
+            const cls = g.unplaced ? ' none'
+              : (alOwner(g.depot).key === 'partner' ? ' partner' : '');
+            return `<section class="al-tdepot${cls}">
+              <header class="al-tdepot-hd">
+                <span class="al-tdepot-n">${esc(g.depot)}</span>
+                <span class="al-tdepot-c">${g.jobs.length.toLocaleString()}</span>
+                <button class="al-tcopy" onclick="alValCopyDepot(${gi}, this)"
+                  title="Copy the ${g.jobs.length} job${g.jobs.length !== 1 ? 's' : ''} for ${escAttr(g.depot)}"
+                  aria-label="Copy the jobs for ${escAttr(g.depot)}"><i class="ti ti-copy"></i></button>
+              </header>
+              ${g.jobs.map(j => j.jobId
+                ? `<a class="al-tjob" href="${escAttr(buildHelpdeskUrl(j.jobId))}" target="_blank" rel="noopener">${esc(alValCallLabel(j))}</a>`
+                : `<span class="al-tjob dead">${esc(alValCallLabel(j))}</span>`).join('')}
+            </section>`;
+          }).join('')}</div></div>`
+        : `<div class="al-tgrid-wrap"><div class="pa-note" style="margin:0;"><i class="ti ti-calendar-off"></i> Nothing in this file is scheduled for today.</div></div>`)}
+    </div>`; })() : ''}
 
     ${GROUPS.map(([key, label, icon, note]) => {
       const list = results.filter(r => r.verdict === key);
@@ -10092,46 +10121,68 @@ function alValTodayLongDate() {
 }
 
 // Rich HTML for the clipboard and for the saved file both: the whole point of
-// the list is that the links survive the paste.
-function alValTodayHtml() {
+// the list is that the links survive the paste. Takes whichever groups it is
+// given, so one depot copies by the same path as all of them.
+function alValTodayHtml(groups) {
+  const one = groups.length === 1;
   return `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.7">
-    <p><b>Jobs scheduled for ${esc(alValTodayLongDate())}</b></p>
-    ${alValTodayGroups().map(g => `<p><b>${esc(g.depot)}</b> (${g.jobs.length})<br>
+    ${one ? '' : `<p><b>Jobs scheduled for ${esc(alValTodayLongDate())}</b></p>`}
+    ${groups.map(g => `<p><b>${esc(g.depot)}</b>${one
+        ? ` \u2014 ${esc(alValTodayLongDate())}` : ''} (${g.jobs.length})<br>
       ${g.jobs.map(j => j.jobId
         ? `<a href="${escAttr(buildHelpdeskUrl(j.jobId))}">${esc(alValCallLabel(j))}</a>`
         : esc(alValCallLabel(j))).join('<br>')}</p>`).join('')}
   </div>`;
 }
 
-function alValTodayText() {
-  return `Jobs scheduled for ${alValTodayLongDate()}\n\n` + alValTodayGroups().map(g =>
-    `${g.depot} (${g.jobs.length})\n` + g.jobs.map(j =>
+function alValTodayText(groups) {
+  const one = groups.length === 1;
+  const head = one ? '' : `Jobs scheduled for ${alValTodayLongDate()}\n\n`;
+  return head + groups.map(g =>
+    `${g.depot}${one ? ' \u2014 ' + alValTodayLongDate() : ''} (${g.jobs.length})\n` + g.jobs.map(j =>
       alValCallLabel(j) + (j.jobId ? '  ' + buildHelpdeskUrl(j.jobId) : '')).join('\n')
   ).join('\n\n') + '\n';
 }
 
+// Plain text goes alongside the HTML, not instead of it: somewhere that takes
+// no markup still gets the job numbers and the URLs.
+function alValCopyGroups(groups, onDone) {
+  if (!groups.length) return;
+  const html = alValTodayHtml(groups), text = alValTodayText(groups);
+  if (window.ClipboardItem) {
+    const item = new ClipboardItem({
+      'text/html': new Blob([html], { type:'text/html' }),
+      'text/plain': new Blob([text], { type:'text/plain' })
+    });
+    navigator.clipboard.write([item]).then(onDone, () => navigator.clipboard.writeText(text).then(onDone));
+  } else {
+    navigator.clipboard.writeText(text).then(onDone);
+  }
+}
+
 function alValCopyToday(btn) {
   if (!alValToday.length) return;
-  const html = alValTodayHtml(), text = alValTodayText();
-  const done = () => {
+  alValCopyGroups(alValTodayGroups(), () => {
     if (btn) {
       const o = btn.innerHTML;
       btn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Copied';
       setTimeout(() => { btn.innerHTML = o; }, 2000);
     }
     showToast('<i class="ti ti-check"></i> Call list copied \u2014 the links come with it', 2800);
-  };
-  // Plain text goes alongside the HTML, not instead of it: somewhere that
-  // takes no markup still gets the job numbers and the URLs.
-  if (window.ClipboardItem) {
-    const item = new ClipboardItem({
-      'text/html': new Blob([html], { type:'text/html' }),
-      'text/plain': new Blob([text], { type:'text/plain' })
-    });
-    navigator.clipboard.write([item]).then(done, () => navigator.clipboard.writeText(text).then(done));
-  } else {
-    navigator.clipboard.writeText(text).then(done);
-  }
+  });
+}
+
+function alValCopyDepot(i, btn) {
+  const g = alValTodayGroups()[i];
+  if (!g) return;
+  alValCopyGroups([g], () => {
+    if (btn) {
+      btn.classList.add('done');
+      btn.innerHTML = '<i class="ti ti-check"></i>';
+      setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = '<i class="ti ti-copy"></i>'; }, 1800);
+    }
+    showToast(`<i class="ti ti-check"></i> ${esc(g.depot)} \u2014 ${g.jobs.length} job${g.jobs.length !== 1 ? 's' : ''} copied`, 2600);
+  });
 }
 
 function alValDownloadToday() {
@@ -10141,7 +10192,7 @@ function alValDownloadToday() {
 <title>Jobs scheduled for ${esc(d)}</title>
 <style>body{font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#14161a;margin:34px;max-width:780px}
 a{color:#1a5fb4}p{margin:0 0 16px}</style>
-</head><body>${alValTodayHtml()}</body></html>`;
+</head><body>${alValTodayHtml(alValTodayGroups())}</body></html>`;
   const blob = new Blob([doc], { type:'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
