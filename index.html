@@ -9438,6 +9438,22 @@ function alTechToAllocation(tech) {
   const exact = names.find(a => alNormAlloc(a) === norm);
   if (exact) return { alloc: exact, how: 'exact' };
 
+  // "Viridian IT - Hobart - Bob" is an allocation with the technician's own
+  // name on the end. Take the longest allocation name the field starts with -
+  // so the Hobart branch wins over any shorter name that also begins it - and
+  // read the rest as the person. Checked before the city code below, because a
+  // company named outright beats a code read off the end: that is what keeps
+  // "Advanced Works Wollongong - Mel" from reading as Amtek Melbourne.
+  let pre = '', preN = '';
+  for (const a of names) {
+    const an = alNormAlloc(a);
+    if (an && norm.startsWith(an + ' ') && an.length > preN.length) { pre = a; preN = an; }
+  }
+  if (pre) {
+    const words = raw.match(/[A-Za-z0-9]+/g) || [];
+    return { alloc: pre, how: 'named', person: words.slice(preN.split(' ').length).join(' ') };
+  }
+
   // "<person> MEL" -> Amtek Melbourne, when such an allocation exists.
   const m = raw.match(/[\s\-]([A-Za-z]{2,4})\s*$/);
   const code = m ? m[1].toUpperCase() : '';
@@ -9451,11 +9467,22 @@ function alTechToAllocation(tech) {
   return { alloc: '', how: 'unknown' };
 }
 
+// Zones that work files name but the allocator's own sheet has no sites for,
+// with the allocation confirmed for them by hand. Checked ahead of the sheet,
+// so this is a short list of deliberate answers - each entry is here because
+// someone said so, not because it looked likely.
+const AL_ZONE_FIXED = {
+  'nsw sydney east': { zone: 'NSW Sydney East', a1: 'Amtek Sydney', rt: 'Metro', st: 'NSW' }
+};
+
 // The zone decides the expected allocation, by the same consensus the lookup
 // uses everywhere else - one mistyped row can't set the answer for its zone.
 function alZoneAllocation(zone) {
   const z = String(zone || '').trim();
-  if (!z || typeof alRows === 'undefined' || !alRows) return null;
+  if (!z) return null;
+  const fixed = AL_ZONE_FIXED[z.toLowerCase()];
+  if (fixed) return { ...fixed, n: 0, fixed: true };
+  if (typeof alRows === 'undefined' || !alRows) return null;
   const rows = alRows.filter(r => r._g === z.toLowerCase());
   if (!rows.length) return null;
   return { zone: rows[0].geo, a1: alConsensus(rows, 'a1').value, rt: alConsensus(rows, 'rt').value,
@@ -9565,7 +9592,7 @@ function alValRun() {
     return { row, jobId, site, tech, zone, sched, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
              zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
-             resolved: ti.alloc, how: ti.how, code: ti.code || '' };
+             resolved: ti.alloc, how: ti.how, code: ti.code || '', person: ti.person || '' };
   });
   alValOut = results;
 
@@ -9588,9 +9615,7 @@ function alValRun() {
   // every row one line is what lets the whole block be read at a glance.
   // The space between the site and the technician used to be dead. It now
   // carries the three things you would otherwise open the download to find -
-  // state, zone type, and how the technician's name was read. That last one
-  // matters most: a verdict resting on an inferred city code should say so on
-  // the row, not hide behind the download.
+  // state, zone type, and the date the job is booked for.
   // An undated job is worth seeing as such rather than as a blank, since it
   // is a different problem from one booked for a date that has passed.
   const schedText = r => {
@@ -9600,13 +9625,21 @@ function alValRun() {
     return { t: fmtShortDate(r.sched), dim: false, past };
   };
 
+  // A verdict that rests on reading the technician field - a city code off the
+  // end, or an allocation with the person's name after it - has to say so. It
+  // says it on the name itself: marked, with the reading in its tooltip.
+  const readAs = r => {
+    if (r.how === 'city') return `Read \u201c${r.code}\u201d as ${r.resolved}`;
+    if (r.how === 'named') return r.person
+      ? `Matched ${r.resolved} \u2014 \u201c${r.person}\u201d read as the technician's name`
+      : `Matched ${r.resolved}`;
+    return '';
+  };
+
   const flagRow = (r, i) => {
     const none = r.verdict === 'notech';
     const d = schedText(r);
-    // The reading is no longer its own column, but a verdict resting on an
-    // inferred city code still has to say so - it moves onto the technician
-    // itself as a marked name with the reading in its tooltip.
-    const inferred = r.how === 'city';
+    const read = readAs(r);
     return `<div class="al-vrow${none ? ' none' : ''}" style="animation-delay:${Math.min(i, 14) * 0.028}s">
       <span class="al-vrow-job">${r.jobId
         ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener">${esc(r.jobId)}</a>`
@@ -9618,8 +9651,8 @@ function alValRun() {
       <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
       <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
       <span class="al-vrow-when${d.dim ? ' dim' : ''}${d.past ? ' past' : ''}">${esc(d.t)}</span>
-      <span class="al-vrow-has${inferred ? ' inferred' : ''}"
-        ${inferred ? `title="Read \u201c${escAttr(r.code)}\u201d as ${escAttr(r.resolved)}"` : ''}
+      <span class="al-vrow-has${read ? ' inferred' : ''}"
+        ${read ? `title="${escAttr(read)}"` : ''}
         >${esc(r.tech || 'Unallocated')}</span>
       <i class="ti ti-arrow-right"></i>
       <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
@@ -9632,7 +9665,7 @@ function alValRun() {
         <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '\u2014'}</td>
         <td>${esc(r.site || '\u2014')}</td>
         <td>${esc(r.zoneName || r.zone || '\u2014')}</td>
-        <td>${esc(r.tech || '\u2014')}${r.how === 'city' ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
+        <td>${esc(r.tech || '\u2014')}${(r.how === 'city' || r.how === 'named') ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
         <td>${esc(r.expected || '\u2014')}</td>
         <td class="al-vgrp-why">${esc(r.why || '')}</td>
       </tr>`).join('')}</tbody></table></div>`;
@@ -9706,7 +9739,7 @@ function alValDownload() {
     'Zone Matched':      r.zoneName || '',
     'Zone Type':         r.zoneType || '',
     'Zone Expects':      r.expected || '',
-    'Technician Read As': r.how === 'city' ? r.resolved : '',
+    'Technician Read As': (r.how === 'city' || r.how === 'named') ? r.resolved : '',
     'Verdict':           VL[r.verdict] || '',
     'Reason':            r.why || ''
   }));
