@@ -2379,16 +2379,21 @@
   .al-tcopy.done { color:var(--green-text) !important; background:var(--green-bg); }
   .al-tdepot.partner .al-tdepot-c { color:var(--purple-text); background:var(--purple-bg); }
   .al-tdepot.none .al-tdepot-c { color:var(--text-3); background:var(--surface2); }
-  .al-tjob { display:flex; align-items:baseline; gap:10px; padding:7px 14px; font-size:12px;
-    color:var(--text-2); text-decoration:none; border-top:0.5px solid var(--border);
+  .al-tjob { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 10px; padding:7px 14px;
+    font-size:12px; color:var(--text-2); text-decoration:none; border-top:0.5px solid var(--border);
     transition:background .13s, color .13s; }
   a.al-tjob:hover { background:var(--teal-bg); color:var(--teal-text); }
   .al-tjob.dead { color:var(--text-3); font-style:italic; }
-  /* The call label keeps the room it needs; the name gives way first and is
-     capped, so a long technician can never squeeze out the job and the site. */
   .al-tjob-l { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .al-tjob-t { flex:0 1 auto; min-width:0; max-width:45%; font-size:10.5px; color:var(--text-3);
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* The name is never cut. It holds its own width and drops to its own line
+     when the row runs out of room, rather than ellipsing - a half-written
+     name is no use for ringing someone. Pink because every other colour in
+     this section is already spoken for - teal is the depot and its links,
+     purple is a partner, amber and red are findings - so the person reads
+     as its own kind of fact rather than a dimmer version of the job. */
+  .al-tjob-t { flex:0 0 auto; max-width:100%; margin-left:auto; font-size:10.5px; font-weight:600;
+    color:var(--pink-text); background:var(--pink-bg); border-radius:5px; padding:1.5px 6px;
+    white-space:normal; overflow-wrap:anywhere; }
 
   /* One bordered block, one line per job. Red is a job to reassign, amber
      one with nobody on it at all - the same finding, a different fix. */
@@ -10058,8 +10063,8 @@ function alValRun() {
                   aria-label="Copy the jobs for ${escAttr(g.depot)}"><i class="ti ti-copy"></i></button>
               </header>
               ${g.jobs.map(j => j.jobId
-                ? `<a class="al-tjob" href="${escAttr(buildHelpdeskUrl(j.jobId))}" target="_blank" rel="noopener"><span class="al-tjob-l">${esc(alValCallLabel(j))}</span>${alValTechTag(j, g.depot)}</a>`
-                : `<span class="al-tjob dead"><span class="al-tjob-l">${esc(alValCallLabel(j))}</span>${alValTechTag(j, g.depot)}</span>`).join('')}
+                ? `<a class="al-tjob" href="${escAttr(buildHelpdeskUrl(j.jobId))}" target="_blank" rel="noopener"><span class="al-tjob-l" title="${escAttr(alValCallLabel(j))}">${esc(alValCallLabel(j))}</span>${alValTechTag(j, g.depot)}</a>`
+                : `<span class="al-tjob dead"><span class="al-tjob-l" title="${escAttr(alValCallLabel(j))}">${esc(alValCallLabel(j))}</span>${alValTechTag(j, g.depot)}</span>`).join('')}
             </section>`;
           }).join('')}</div></div>`
         : `<div class="al-tgrid-wrap"><div class="pa-note" style="margin:0;"><i class="ti ti-calendar-off"></i> Nothing in this file is scheduled for today.</div></div>`)}
