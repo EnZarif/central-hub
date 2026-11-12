@@ -2398,6 +2398,128 @@
   .al-vgrp .al-rows th { padding:5px 9px; font-size:9px; }
   .al-vgrp .al-rows td { padding:5px 9px; font-size:11.5px; }
   .al-vgrp .al-rows td.al-vgrp-why { color:var(--text-3); }
+
+  /* ---- Stock Checks -------------------------------------------------------
+     A card per warehouse, because that is how a stock check is actually done:
+     one location at a time. Each part appears once with the jobs waiting on
+     it, so four jobs needing the same scanner at the same depot are one link
+     rather than four identical ones. The card's left edge says how the
+     location was arrived at - green named outright, purple a partner, amber a
+     value the allocation sheet has never heard of and we searched verbatim. */
+  .stk-cfg { overflow:hidden; max-height:1600px; opacity:1;
+    transition:max-height .45s cubic-bezier(.4,0,.2,1), opacity .3s, margin .45s cubic-bezier(.4,0,.2,1); }
+  .stk-cfg.shut { max-height:0; opacity:0; margin-bottom:-16px; }
+  .stk-bar { overflow:hidden; max-height:0; opacity:0;
+    transition:max-height .45s cubic-bezier(.4,0,.2,1), opacity .3s; }
+  .stk-bar.open { max-height:80px; opacity:1; }
+  .stk-bar-btn { display:flex; align-items:center; gap:11px; width:100%; font-family:inherit; text-align:left;
+    padding:12px 16px; border-radius:11px; background:var(--surface); border:0.5px solid var(--border-md);
+    color:var(--text); cursor:pointer; transition:border-color .15s; }
+  .stk-bar-btn:hover { border-color:var(--green-text); }
+  .stk-bar-tick { font-size:15px; color:var(--green-text); }
+  .stk-bar-n { font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .stk-bar-cols { font-size:12px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stk-bar-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; font-size:11.5px;
+    font-weight:600; color:var(--text-3); flex-shrink:0; }
+  .stk-bar-go i { font-size:11px; }
+  @media (prefers-reduced-motion: reduce) { .stk-cfg, .stk-bar { transition:none !important; } }
+
+  /* Every fault value in the file, as a chip. Anything with "replacement" in
+     it is picked for you - the rest are shown so a value like
+     "Replacement - Scanner" is one click away instead of silently missing. */
+  .stk-fsec { margin-top:16px; padding-top:14px; border-top:0.5px solid var(--border); }
+  .stk-fhd { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .stk-fhd-l { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
+  .stk-fhd-note { font-size:11.5px; color:var(--text-3); }
+  .stk-faults { display:flex; flex-wrap:wrap; gap:7px; }
+  .stk-chip { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:11.5px;
+    font-weight:600; color:var(--text-2); background:var(--surface2); border:0.5px solid var(--border-md);
+    border-radius:20px; padding:6px 12px; cursor:pointer; transition:all .13s; }
+  .stk-chip:hover { border-color:var(--text-3); color:var(--text); }
+  .stk-chip.on { color:var(--green-text); background:var(--green-bg);
+    border-color:color-mix(in srgb, var(--green-text) 34%, transparent); }
+  .stk-chip .ti { font-size:12px; }
+  .stk-chip-n { font-weight:400; opacity:.62; }
+  .stk-chip-more { background:none; border:none; color:var(--text-3); font-family:inherit; font-size:11.5px;
+    font-weight:600; cursor:pointer; padding:6px 4px; }
+  .stk-chip-more:hover { color:var(--text-2); text-decoration:underline; }
+  .stk-cfg-go { display:flex; align-items:center; gap:13px; margin-top:16px; padding-top:14px;
+    border-top:0.5px solid var(--border); flex-wrap:wrap; }
+  .stk-cfg-go .generate-btn { width:auto; margin:0; padding:13px 26px; font-size:14px; }
+  .stk-cfg-go span { font-size:11.5px; color:var(--text-3); }
+
+  .stk-banner { display:flex; align-items:center; gap:13px; padding:15px 17px; border-radius:12px;
+    background:var(--green-bg); border:0.5px solid color-mix(in srgb, var(--green-text) 30%, transparent);
+    position:relative; overflow:hidden; }
+  .stk-banner > .ti { font-size:22px; color:var(--green-text); flex-shrink:0; }
+  .stk-banner.none > .ti { color:var(--text-3); }
+  .stk-banner.none { background:var(--surface2); border-color:var(--border-md); }
+  .stk-banner-t { min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .stk-banner-t strong { font-size:14px; font-weight:700; color:var(--green-text); }
+  .stk-banner.none .stk-banner-t strong { color:var(--text); }
+  .stk-banner-t span { font-size:12px; color:var(--text-2); }
+  .stk-banner .generate-btn { width:auto; margin:0 0 0 auto; padding:9px 16px; font-size:11.5px; flex-shrink:0; }
+
+  /* Which search term the warehouse wants is the one thing this page cannot
+     know from the file, so it is a switch rather than a guess. */
+  .stk-seg-row { display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .stk-seg-l { font-size:11.5px; color:var(--text-2); }
+  .stk-seg { display:inline-flex; background:var(--surface2); border:0.5px solid var(--border-md);
+    border-radius:8px; padding:2px; gap:2px; }
+  .stk-seg button { font-family:inherit; font-size:11.5px; font-weight:600; color:var(--text-3);
+    background:none; border:none; border-radius:6px; padding:5px 12px; cursor:pointer; transition:all .13s; }
+  .stk-seg button:hover { color:var(--text-2); }
+  .stk-seg button.on { color:var(--text); background:var(--bg); }
+  .stk-seg-eg { font-size:11px; color:var(--text-3); font-family:ui-monospace, Menlo, monospace; }
+
+  @keyframes stkCardIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  /* min() rather than a bare 430px, so the track can go narrower than its
+     minimum on a phone instead of pushing the page sideways. */
+  .stk-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(500px, 100%), 1fr));
+    gap:14px; margin-top:16px; }
+  .stk-card { border:0.5px solid var(--border); border-left:2.5px solid var(--green-text); border-radius:12px;
+    background:var(--surface); overflow:hidden; box-shadow:0 14px 32px -18px rgba(0,0,0,.9);
+    animation:stkCardIn .32s cubic-bezier(.4,0,.2,1) backwards; }
+  .stk-card.partner { border-left-color:var(--purple-text); }
+  .stk-card.asis { border-left-color:var(--amber-text); }
+  @media (prefers-reduced-motion: reduce) { .stk-card { animation:none !important; } }
+  .stk-chd { display:flex; align-items:center; gap:10px; padding:12px 15px; flex-wrap:wrap; }
+  .stk-chd-n { font-size:13.5px; font-weight:600; color:var(--text); }
+  .stk-card.partner .stk-chd-n { color:var(--purple-text); }
+  .stk-card.asis .stk-chd-n { color:var(--amber-text); }
+  /* A location worked out from the technician's name rather than stated by
+     it: dotted underline, the reading in the tooltip - the same signal the
+     Allocation Validator uses, so it means the same thing on both pages. */
+  .stk-chd-n.read { text-decoration:underline dotted currentColor 1px; text-underline-offset:3px; cursor:help; }
+  .stk-chd-pill { font-size:10px; font-weight:700; border-radius:5px; padding:3px 7px;
+    background:var(--green-bg); color:var(--green-text); }
+  .stk-card.partner .stk-chd-pill { background:var(--purple-bg); color:var(--purple-text); }
+  .stk-card.asis .stk-chd-pill { background:var(--amber-bg); color:var(--amber-text); }
+  .stk-chd-from { margin-left:auto; font-size:11px; color:var(--text-3); }
+  /* The model gets the room: a truncated "Scanner DS9808 (Barcode)" costs you
+     the one thing the row is about, where a truncated run of job numbers
+     still reads, and carries the rest in its tooltip either way. */
+  .stk-prow { display:grid; grid-template-columns:minmax(0,1.5fr) 38px minmax(0,1fr) 112px; gap:12px;
+    align-items:center; padding:9px 15px; border-top:0.5px solid var(--border); transition:background .14s; }
+  .stk-prow:hover { background:rgba(255,255,255,.035); }
+  .stk-model { min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .stk-model-n { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stk-model-t { font-size:10px; color:var(--text-3); font-family:ui-monospace, Menlo, monospace;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stk-qty { font-size:11px; font-weight:700; color:var(--text-2); background:var(--surface2);
+    border-radius:5px; padding:3px 0; text-align:center; }
+  .stk-jobs { min-width:0; font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .stk-jobs a { color:var(--teal-text); text-decoration:none; }
+  .stk-jobs a:hover { text-decoration:underline; }
+  .stk-jobs i { font-style:normal; opacity:.5; margin:0 4px; }
+  .stk-go { display:inline-flex; align-items:center; justify-content:center; gap:5px; font-size:11px;
+    font-weight:600; color:var(--teal-text); background:var(--teal-bg); text-decoration:none;
+    border:0.5px solid color-mix(in srgb, var(--teal) 34%, transparent); border-radius:7px; padding:7px 0;
+    transition:background .14s, border-color .14s, color .14s; }
+  .stk-prow:hover .stk-go, .stk-go:hover { background:color-mix(in srgb, var(--teal) 24%, transparent);
+    border-color:var(--teal); color:var(--text); }
+  .stk-go .ti { font-size:11px; }
   .al-vgrp-hd { padding:9px 14px; }
   @media (prefers-reduced-motion: reduce) {
     .al-vbanner::after, .al-vrow { animation:none !important; }
@@ -4783,6 +4905,41 @@
     </div>
 
     <div id="al-val-result" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- STOCK CHECKS PAGE -->
+  <div class="page" id="page-stock">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-package"></i> Stock Checks</h1>
+        <p>Jobs waiting on a replacement part, each with the warehouse link for that part at that technician's location</p>
+      </div>
+    </div>
+
+    <div class="stk-cfg" id="stk-config">
+      <div class="card" style="margin-bottom:0;">
+        <div class="kpi-template-row" style="margin-bottom:0;">
+          <div class="kpi-template-info">
+            <div class="kpi-tpl-name">Excel or CSV with the model, fault description and technician per job</div>
+            <div class="kpi-tpl-status" id="stk-status">No file loaded</div>
+          </div>
+          <input type="file" id="stk-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="stkLoad(this.files[0])">
+          <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('stk-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+        </div>
+        <div id="stk-mapper" style="display:none;margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <div class="stk-bar" id="stk-bar">
+      <button class="stk-bar-btn" onclick="stkReopen()">
+        <i class="ti ti-check stk-bar-tick"></i>
+        <span class="stk-bar-n" id="stk-bar-n"></span>
+        <span class="stk-bar-cols" id="stk-bar-cols"></span>
+        <span class="stk-bar-go">Change setup <i class="ti ti-chevron-down"></i></span>
+      </button>
+    </div>
+
+    <div id="stk-result" style="margin-top:16px;"></div>
   </div>
 
   <!-- NSLA REPORT PAGE -->
@@ -9749,6 +9906,438 @@ function alValDownload() {
   XLSX.writeFile(wb, `${alValName || 'allocations'}_validated.xlsx`);
 }
 
+// ---- Stock Checks: the jobs waiting on a replacement part -----------------
+// Each one becomes a warehouse link: the technician decides WHICH warehouse,
+// the model decides WHAT to search for. The technician column holds a mix - a
+// depot named outright ("Amtek Melbourne"), a person who signs with a city
+// code ("Ian Orola MEL"), and a partner with the technician's own name on the
+// end ("Viridian IT - Hobart - Kaine Beveridge") - so it is read through the
+// same resolver the Allocation Validator uses. A value that resolver has never
+// heard of is searched exactly as written rather than dropped: unlike a
+// validation verdict, a search that finds nothing costs a glance, where a
+// missing link costs the whole lookup by hand.
+let stkRows = [], stkHeaders = [], stkName = '', stkOut = null, stkDone = false;
+let stkFaultList = [];        // [{v, n}] every distinct fault value, commonest first
+let stkFaultPick = null;      // the values that count as a replacement
+let stkFaultCol = '';         // the column stkFaultList was built from
+let stkShowAllFaults = false;
+let stkOpenGroup = new Set();
+let stkSearchBy = null;       // 'model' | 'code' - read from storage on first use
+const STK_SEARCH_KEY = 'zarif_stk_search_by';
+const STK_BLANK = '(blank)';
+const STK_FAULT_CHIPS = 14;
+
+function stkGetSearchBy() {
+  if (stkSearchBy === null) stkSearchBy = dbGet(STK_SEARCH_KEY) === 'code' ? 'code' : 'model';
+  return stkSearchBy;
+}
+function stkSetSearchBy(v) {
+  if (stkGetSearchBy() === v) return;
+  stkSearchBy = v;
+  dbSet(STK_SEARCH_KEY, v);
+  stkRun();
+}
+
+function stkStatus(msg, type) {
+  const el = document.getElementById('stk-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' sv-status-' + type : ''); }
+}
+
+// The warehouse's own query shape. Built by hand rather than with
+// URLSearchParams, which writes "+" for a space where this wants "%20".
+function stkUrl(location, term) {
+  return 'https://warehouse.servicesupport.com.au/parts?search_mode=advanced&condition=1'
+    + '&location_name=' + encodeURIComponent(location)
+    + '&part_type_search=' + encodeURIComponent(term);
+}
+
+// The model column is descriptive - "Scanner DS9808 (Barcode)" - but the
+// warehouse's part type search may want only the code inside it. Both are
+// offered on the page; this finds the code when the model carries one.
+function stkPartCode(model) {
+  const toks = String(model || '').match(/[A-Za-z0-9]+/g) || [];
+  // Letters then digits first ("DS9808", "MK3190", "CX7"), then a bare model
+  // number ("9400i", "4400"). Case is left as the file wrote it, since a code
+  // like 9400i is not the same string as 9400I to a search box.
+  const mixed = toks.find(t => /^[A-Za-z]{1,4}[0-9]{1,5}[A-Za-z]?$/.test(t));
+  if (mixed) return mixed;
+  const num = toks.find(t => /^[0-9]{3,5}[A-Za-z]?$/.test(t));
+  return num || '';
+}
+
+// In code mode a model with no code in it still has to search for something,
+// so it falls back to its own name rather than searching for nothing.
+function stkTerm(model) {
+  const m = String(model || '').trim();
+  return stkGetSearchBy() === 'code' ? (stkPartCode(m) || m) : m;
+}
+
+// Which warehouse to look in, and whether that was stated or worked out.
+function stkLocation(tech) {
+  const raw = String(tech || '').trim();
+  if (!raw) return { loc: '', kind: 'none', why: 'No technician on the job' };
+  const t = alTechToAllocation(raw);
+  if (t.how === 'none')  return { loc: '', kind: 'none', why: '\u201c' + raw + '\u201d is not a field technician' };
+  if (t.how === 'exact') return { loc: t.alloc, kind: 'named' };
+  if (t.how === 'city')  return { loc: t.alloc, kind: 'read',
+    read: 'Read \u201c' + t.code + '\u201d as ' + t.alloc };
+  if (t.how === 'named') return { loc: t.alloc, kind: 'read',
+    read: 'Matched ' + t.alloc + ' \u2014 \u201c' + t.person + '\u201d read as the technician\u2019s name' };
+  return { loc: raw, kind: 'asis',
+    read: 'Not an allocation in the sheet \u2014 searched exactly as the file writes it' };
+}
+
+function stkFaultKey(v) {
+  const t = String(v === undefined || v === null ? '' : v).trim();
+  return t || STK_BLANK;
+}
+
+// Anything with "replacement" in it counts unless told otherwise, which picks
+// up "Replacement - Scanner" without picking up "Diagnostics required". The
+// chips make both the catch and the miss visible, so the guess is correctable.
+function stkIsReplacement(v) { return v !== STK_BLANK && /replacement/i.test(v); }
+
+function stkBuildFaults(col) {
+  const counts = new Map();
+  stkRows.forEach(r => {
+    const k = stkFaultKey(r[col]);
+    counts.set(k, (counts.get(k) || 0) + 1);
+  });
+  stkFaultList = [...counts].map(([v, n]) => ({ v, n }))
+    .sort((a, b) => b.n - a.n || a.v.localeCompare(b.v));
+  stkFaultPick = new Set(stkFaultList.filter(f => stkIsReplacement(f.v)).map(f => f.v));
+  stkFaultCol = col;
+  stkShowAllFaults = false;
+}
+
+function stkToggleFault(i) {
+  const f = stkFaultList[i];
+  if (!f || !stkFaultPick) return;
+  if (stkFaultPick.has(f.v)) stkFaultPick.delete(f.v); else stkFaultPick.add(f.v);
+  stkRenderFaults();
+  if (stkDone) stkRun();
+}
+function stkMoreFaults() { stkShowAllFaults = true; stkRenderFaults(); }
+function stkToggleGroup(k) {
+  if (stkOpenGroup.has(k)) stkOpenGroup.delete(k); else stkOpenGroup.add(k);
+  stkRun();
+}
+
+function stkRenderFaults() {
+  const el = document.getElementById('stk-faults-sec');
+  if (!el) return;
+  if (!stkFaultCol || !stkFaultList.length) { el.innerHTML = ''; return; }
+  const show = stkShowAllFaults ? stkFaultList : stkFaultList.slice(0, STK_FAULT_CHIPS);
+  const hidden = stkFaultList.length - show.length;
+  const picked = stkFaultList.reduce((n, f) => n + (stkFaultPick.has(f.v) ? f.n : 0), 0);
+  el.innerHTML = `
+    <div class="stk-fhd">
+      <span class="stk-fhd-l">What counts as a replacement</span>
+      <span class="stk-fhd-note">${picked
+        ? `${picked.toLocaleString()} of ${stkRows.length.toLocaleString()} rows`
+        : 'Nothing picked'} \u2014 anything with &ldquo;replacement&rdquo; in it is picked for you. Click to change.</span>
+    </div>
+    <div class="stk-faults">
+      ${show.map((f, i) => `<button class="stk-chip${stkFaultPick.has(f.v) ? ' on' : ''}"
+        onclick="stkToggleFault(${stkFaultList.indexOf(f)})" aria-pressed="${stkFaultPick.has(f.v)}">
+        ${stkFaultPick.has(f.v) ? '<i class="ti ti-check"></i>' : ''}${esc(f.v)}
+        <span class="stk-chip-n">${f.n.toLocaleString()}</span>
+      </button>`).join('')}
+      ${hidden > 0 ? `<button class="stk-chip-more" onclick="stkMoreFaults()">+ ${hidden.toLocaleString()} more</button>` : ''}
+    </div>`;
+}
+
+function stkRenderMapper() {
+  const el = document.getElementById('stk-mapper');
+  if (!el) return;
+  const sel = (id, picked, fn) => `<select class="sv-col-select field-input" id="${id}" onchange="${fn}">
+    <option value="">\u2014 none \u2014</option>
+    ${stkHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
+  </select>`;
+  const faultCol = svAutoDetect(stkHeaders, ['Fault Description','Fault','Fault Desc'], ['fault','problem','symptom']);
+  el.innerHTML =
+    `<div class="sv-col-row"><span class="sv-col-label">Model column</span>${sel('stk-c-model', svAutoDetect(stkHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Fault column</span>${sel('stk-c-fault', faultCol, 'stkOnFaultCol()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('stk-c-tech', svAutoDetect(stkHeaders, ['Technician','Allocated Tech','Tech'], ['technician','tech','allocat']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Job number <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-id', svAutoDetect(stkHeaders, ['Job #','Job Number','Job ID','ID'], ['jobid','job']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-site', svAutoDetect(stkHeaders, ['Location Name','Site','Store'], ['location','site','store']), 'stkOnChange()')}</div>
+     <div class="stk-fsec" id="stk-faults-sec"></div>
+     <div class="stk-cfg-go">
+       <button class="generate-btn" onclick="stkFind()">
+         <i class="ti ti-package" style="font-size:17px;"></i> Find replacements
+       </button>
+       <span>Check the columns and the fault values above, then press this.</span>
+     </div>`;
+  el.style.display = '';
+  if (faultCol) stkBuildFaults(faultCol);
+  stkRenderFaults();
+}
+
+function stkOnChange() { if (stkDone) stkRun(); }
+
+function stkOnFaultCol() {
+  const col = document.getElementById('stk-c-fault')?.value || '';
+  if (col !== stkFaultCol) {
+    if (col) stkBuildFaults(col);
+    else { stkFaultList = []; stkFaultPick = new Set(); stkFaultCol = ''; }
+  }
+  stkRenderFaults();
+  if (stkDone) stkRun();
+}
+
+function stkRenderConfig() {
+  const cfg = document.getElementById('stk-config');
+  const bar = document.getElementById('stk-bar');
+  if (!cfg || !bar) return;
+  const ready = stkDone && stkRows.length;
+  cfg.classList.toggle('shut', !!ready);
+  bar.classList.toggle('open', !!ready);
+  if (ready) {
+    const nEl = document.getElementById('stk-bar-n');
+    const cEl = document.getElementById('stk-bar-cols');
+    const pick = id => document.getElementById(id)?.value || '';
+    if (nEl) nEl.textContent = `${stkRows.length.toLocaleString()} rows`;
+    if (cEl) cEl.textContent = [pick('stk-c-model'), pick('stk-c-fault'), pick('stk-c-tech'),
+      pick('stk-c-id'), pick('stk-c-site')].filter(Boolean).join('  \u00b7  ');
+  }
+}
+
+function stkFind() {
+  const model = document.getElementById('stk-c-model')?.value;
+  const fault = document.getElementById('stk-c-fault')?.value;
+  const tech  = document.getElementById('stk-c-tech')?.value;
+  if (!model || !fault || !tech) return;
+  stkDone = true;
+  stkRenderConfig();
+  stkRun();
+}
+function stkReopen() { stkDone = false; stkRenderConfig(); }
+
+// Why a replacement job got no link. The technician comes first: with no
+// warehouse there is nothing to search, model or no model.
+function stkBlockedWhy(h) {
+  if (!h.loc) return h.why || 'No warehouse location for this technician';
+  if (!h.model) return 'No model on the job';
+  return '';
+}
+
+// The second line of a part row only earns its place when it says something
+// the first does not - the term actually searched, or the several model names
+// that collapsed into one search.
+function stkModelLabel(P) {
+  const t = P.models.size === 1 ? [...P.models][0] : P.term;
+  return `<span class="stk-model-n" title="${escAttr(t)}">${esc(t)}</span>`;
+}
+
+function stkSubLabel(P) {
+  if (P.models.size > 1) return `<span class="stk-model-t">${esc([...P.models].join('  \u00b7  '))}</span>`;
+  const only = [...P.models][0] || '';
+  return only === P.term ? '' : `<span class="stk-model-t">searched as ${esc(P.term)}</span>`;
+}
+
+async function stkLoad(file) {
+  if (!file) return;
+  stkOut = null; stkDone = false; stkOpenGroup = new Set();
+  stkFaultList = []; stkFaultPick = null; stkFaultCol = ''; stkShowAllFaults = false;
+  stkRenderConfig();
+  const res = document.getElementById('stk-result');
+  if (res) res.innerHTML = '';
+  try {
+    await alEnsureData();
+    if (typeof alRows !== 'undefined' && !alRows) alBuild();
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:'' });
+    let hdrIdx = 0;
+    for (let i = 0; i < Math.min(raw.length, 25); i++) {
+      const cells = raw[i].map(c => String(c).toLowerCase());
+      if (cells.some(c => c.includes('model')) || cells.some(c => c.includes('fault'))) { hdrIdx = i; break; }
+    }
+    const headers = raw[hdrIdx].map(c => String(c));
+    stkHeaders = headers.filter(h => h.trim() !== '');
+    stkRows = raw.slice(hdrIdx + 1).map(row => {
+      const o = {}; headers.forEach((h, i) => { o[h] = row[i] !== undefined ? row[i] : ''; }); return o;
+    }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
+    stkName = file.name.replace(/\.[^.]+$/, '');
+    if (!stkRows.length) { stkStatus('No data rows found', 'error'); return; }
+    stkStatus(`${stkRows.length.toLocaleString()} rows loaded`, 'ok');
+    stkRenderMapper();
+    stkRenderConfig();
+  } catch (e) {
+    stkStatus('Could not read file: ' + e.message, 'error');
+  }
+}
+
+function stkRun() {
+  const modelCol = document.getElementById('stk-c-model')?.value;
+  const faultCol = document.getElementById('stk-c-fault')?.value;
+  const techCol  = document.getElementById('stk-c-tech')?.value;
+  const idCol    = document.getElementById('stk-c-id')?.value;
+  const siteCol  = document.getElementById('stk-c-site')?.value;
+  const out = document.getElementById('stk-result');
+  if (!out) return;
+  if (!stkRows.length || !stkDone || !modelCol || !faultCol || !techCol) {
+    out.innerHTML = '';
+    stkOut = null;
+    return;
+  }
+
+  const picked = stkFaultPick || new Set();
+  const hits = [];
+  stkRows.forEach((row, i) => {
+    if (!picked.has(stkFaultKey(row[faultCol]))) return;
+    const model = String(row[modelCol] || '').trim();
+    const tech  = String(row[techCol] || '').trim();
+    const w = stkLocation(tech);
+    hits.push({ row, i, model, tech,
+      id: idCol ? String(row[idCol] || '').trim() : '',
+      site: siteCol ? String(row[siteCol] || '').trim() : '',
+      loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '' });
+  });
+  stkOut = hits;
+
+  const linkable = hits.filter(h => h.loc && h.model);
+  const stuck = hits.filter(h => !h.loc || !h.model);
+
+  // One card per warehouse, one row per thing to search for. The jobs stay
+  // visible inside the row, so nothing is folded away - only the duplicate
+  // links are, since four jobs wanting the same part at the same depot are
+  // one page to open, not four.
+  const locs = new Map();
+  linkable.forEach(h => {
+    const term = stkTerm(h.model);
+    const lk = alNormAlloc(h.loc) || h.loc.toLowerCase();
+    let L = locs.get(lk);
+    if (!L) { L = { name: h.loc, kind: h.kind, read: h.read, techs: new Set(), parts: new Map(), n: 0 }; locs.set(lk, L); }
+    // A location any row names outright is named outright; a reading only
+    // stands in where nothing stated it.
+    if (h.kind === 'named') { L.kind = 'named'; L.read = ''; }
+    else if (L.kind !== 'named') { L.kind = h.kind; L.read = h.read; }
+    L.techs.add(h.tech);
+    L.n++;
+    const pk = term.toLowerCase();
+    let Pt = L.parts.get(pk);
+    if (!Pt) { Pt = { term, models: new Set(), jobs: [] }; L.parts.set(pk, Pt); }
+    Pt.models.add(h.model);
+    Pt.jobs.push(h);
+  });
+  const locList = [...locs.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  locList.forEach(L => {
+    L.partList = [...L.parts.values()]
+      .sort((a, b) => b.jobs.length - a.jobs.length || a.term.localeCompare(b.term));
+  });
+
+  const nParts = new Set(linkable.map(h => stkTerm(h.model).toLowerCase())).size;
+  const other = stkRows.length - hits.length;
+  const by = stkGetSearchBy();
+  const egModel = linkable.length ? linkable[0].model : '';
+  const open = stkOpenGroup.has('stuck');
+
+  out.innerHTML = `
+    ${hits.length ? `<div class="stk-banner">
+      <i class="ti ti-package"></i>
+      <span class="stk-banner-t">
+        <strong>${hits.length.toLocaleString()} job${hits.length !== 1 ? 's are' : ' is'} waiting on a replacement part</strong>
+        <span>${nParts.toLocaleString()} part${nParts !== 1 ? 's' : ''} across ${locList.length.toLocaleString()} location${locList.length !== 1 ? 's' : ''}${other
+          ? ` \u00b7 the other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement` : ''}.</span>
+      </span>
+      <button class="generate-btn" onclick="stkDownload()">
+        <i class="ti ti-download" style="font-size:15px;"></i> Download all ${hits.length.toLocaleString()}
+      </button>
+    </div>` : `<div class="stk-banner none">
+      <i class="ti ti-info-circle"></i>
+      <span class="stk-banner-t">
+        <strong>Nothing is waiting on a part</strong>
+        <span>No row carries one of the fault values picked as a replacement. Change setup above to pick others.</span>
+      </span>
+    </div>`}
+
+    ${hits.length ? `<div class="stk-seg-row">
+      <span class="stk-seg-l">Search the warehouse by</span>
+      <span class="stk-seg">
+        <button class="${by === 'model' ? 'on' : ''}" onclick="stkSetSearchBy('model')">Model name</button>
+        <button class="${by === 'code' ? 'on' : ''}" onclick="stkSetSearchBy('code')">Part code</button>
+      </span>
+      ${egModel ? `<span class="stk-seg-eg">part_type_search=${esc(stkTerm(egModel))}</span>` : ''}
+    </div>` : ''}
+
+    ${locList.length ? `<div class="stk-grid">${locList.map((L, i) => {
+      const cls = L.kind === 'asis' ? ' asis' : (alOwner(L.name).key === 'partner' ? ' partner' : '');
+      return `<section class="stk-card${cls}" style="animation-delay:${Math.min(i, 12) * 0.03}s">
+        <header class="stk-chd">
+          <span class="stk-chd-n${L.read ? ' read' : ''}"${L.read ? ` title="${escAttr(L.read)}"` : ''}>${esc(L.name)}</span>
+          <span class="stk-chd-pill">${L.n.toLocaleString()} job${L.n !== 1 ? 's' : ''}</span>
+          <span class="stk-chd-from">${L.techs.size === 1
+            ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
+        </header>
+        ${L.partList.map(Pt => `<div class="stk-prow">
+          <span class="stk-model">
+            ${stkModelLabel(Pt)}
+            ${stkSubLabel(Pt)}
+          </span>
+          <span class="stk-qty">&times;${Pt.jobs.length}</span>
+          <span class="stk-jobs" title="${escAttr(Pt.jobs.map(j => (j.id || 'row ' + (j.i + 2)) + (j.site ? ' \u2014 ' + j.site : '')).join('\n'))}">${Pt.jobs.map(j => j.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${esc(j.id)}</a>`
+            : `<span>${esc(j.site || 'row ' + (j.i + 2))}</span>`).join('<i>\u00b7</i>')}</span>
+          <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
+            Check stock <i class="ti ti-arrow-up-right"></i>
+          </a>
+        </div>`).join('')}
+      </section>`;
+    }).join('')}</div>` : ''}
+
+    ${stuck.length ? `<div class="al-vgrp${open ? ' open' : ''}" style="margin-top:16px;">
+      <button class="al-vgrp-hd" onclick="stkToggleGroup('stuck')" aria-expanded="${open}">
+        <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
+        <i class="ti ti-link-off al-vgrp-ico notech"></i>
+        <span class="al-vgrp-l">No link possible</span>
+        <span class="al-vgrp-n">${stuck.length.toLocaleString()}</span>
+        <span class="al-vgrp-note">a replacement job with nothing to search the warehouse for</span>
+      </button>
+      ${open ? `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Model</th><th>Technician</th><th>Why</th></tr></thead>
+        <tbody>${stuck.map(h => `<tr>
+          <td class="pc">${h.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(h.id))}" target="_blank" rel="noopener" class="pa-jid">${esc(h.id)}</a>`
+            : '\u2014'}</td>
+          <td>${esc(h.site || '\u2014')}</td>
+          <td>${esc(h.model || '\u2014')}</td>
+          <td>${esc(h.tech || '\u2014')}</td>
+          <td class="al-vgrp-why">${esc(stkBlockedWhy(h))}</td>
+        </tr>`).join('')}</tbody></table></div>` : ''}
+    </div>` : ''}`;
+}
+
+function stkDownload() {
+  if (!stkOut || !stkOut.length) return;
+  const HOW = { named: 'Named in the file', read: 'Read from the technician name',
+                asis: 'Not in the allocation sheet \u2014 used as written' };
+  const data = stkOut.map(h => {
+    const ok = h.loc && h.model;
+    const term = ok ? stkTerm(h.model) : '';
+    return {
+      ...h.row,
+      'Warehouse Location':  h.loc || '',
+      'Searched For':        term,
+      'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
+      'Stock Link':          ok ? stkUrl(h.loc, term) : '',
+      'Not Linked Because':  stkBlockedWhy(h)
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Stock Checks');
+  XLSX.writeFile(wb, `${stkName || 'jobs'}_stock_checks.xlsx`);
+}
+
+function stkInit() {
+  stkRenderConfig();
+  // Technician names are read through the allocation sheet, so start it
+  // loading on arrival rather than on the first file.
+  if (typeof alEnsureData === 'function') alEnsureData().catch(() => {});
+}
+
 // ---- Unallocated: everything with no technician ----
 // Two sources: rows the allocator sheet itself leaves blank, and suburbs the
 // Suburb Checker found in real work files that the sheet has never heard of.
@@ -13243,6 +13832,7 @@ const PAGES = {
   alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up the technician allocation and zone type by suburb, zone, postcode or state.' },
   projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
   allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
+  stock:          { title:'Stock Checks',      icon:'ti-package',          color:'c-green',  desc:'Replacement jobs from a file, each with the warehouse stock link for that part at that technician.' },
 };
 const HUBS = ['helpdesk','projects','personal'];
 const HUB_META = {
@@ -13252,7 +13842,7 @@ const HUB_META = {
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','alloccheck','allocvalidate','meetings','message','templates'],
+  helpdesk: ['kpi','alloccheck','allocvalidate','stock','meetings','message','templates'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
@@ -13275,6 +13865,12 @@ function loadHubLayout() {
     if (h === 'helpdesk' && !list.includes('allocvalidate')) {
       const i = list.indexOf('alloccheck');
       if (i === -1) list.push('allocvalidate'); else list.splice(i + 1, 0, 'allocvalidate');
+    }
+    // Stock Checks reads technicians through the same allocation data, so it
+    // lands beside the validator rather than at the end of the hub.
+    if (h === 'helpdesk' && !list.includes('stock')) {
+      const i = list.indexOf('allocvalidate');
+      if (i === -1) list.push('stock'); else list.splice(i + 1, 0, 'stock');
     }
     if (h === 'helpdesk') {
       const i = list.indexOf('alloccheck');
@@ -13393,6 +13989,7 @@ function showPage(p, hub) {
   if (p === 'widgets' && typeof renderWeekAtAGlance === 'function') renderWeekAtAGlance();
   if (p === 'learning' && typeof renderLearning === 'function') renderLearning();
   if (p === 'alloccheck' && typeof alInit === 'function') alInit();
+  if (p === 'stock' && typeof stkInit === 'function') stkInit();
   window.scrollTo(0, 0);
 }
 
