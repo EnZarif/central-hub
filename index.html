@@ -2503,9 +2503,40 @@
     align-items:center; padding:9px 15px; border-top:0.5px solid var(--border); transition:background .14s; }
   .stk-prow:hover { background:rgba(255,255,255,.035); }
   .stk-model { min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .stk-model-top { min-width:0; display:flex; align-items:center; gap:4px; }
   .stk-model-n { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .stk-model-t { font-size:10px; color:var(--text-3); font-family:ui-monospace, Menlo, monospace;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* A name you set yourself is not a guess, so it is not dimmed like one. */
+  .stk-model-t.saved { color:var(--green-text); font-weight:600; }
+  .stk-edit { flex-shrink:0; background:none; border:none; color:var(--text-3); font-family:inherit;
+    font-size:12px; line-height:1; padding:3px 4px; border-radius:4px; cursor:pointer; opacity:0;
+    transition:opacity .13s, color .13s, background .13s; }
+  .stk-prow:hover .stk-edit, .stk-edit:focus-visible { opacity:1; }
+  .stk-edit:hover { color:var(--teal-text); background:var(--teal-bg); }
+
+  /* The saved names, listed in full. A setting that outlives the file it was
+     made in has to be reviewable without reopening that file. */
+  .stk-rules { margin-top:16px; }
+  /* Capped tracks rather than fractions, so the pair reads as a pair instead
+     of drifting to opposite ends of a wide screen. */
+  .stk-rule { display:grid; grid-template-columns:minmax(0,340px) 18px minmax(0,240px) 1fr; gap:10px;
+    align-items:center; padding:8px 15px; border-top:0.5px solid var(--border); font-size:12px; }
+  .stk-rule > span:last-child { justify-self:end; white-space:nowrap; }
+  .stk-rule:hover { background:rgba(255,255,255,.035); }
+  .stk-rule-from { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-2); }
+  .stk-rule > .ti { font-size:12px; color:var(--text-3); justify-self:center; }
+  .stk-rule-to { min-width:0; font-weight:600; font-family:ui-monospace, Menlo, monospace;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stk-rule-x { background:none; border:none; color:var(--text-3); font-family:inherit; font-size:11.5px;
+    cursor:pointer; padding:4px 8px; border-radius:5px; transition:all .13s; }
+  .stk-rule-x:hover { color:var(--coral-text); background:var(--coral-bg); }
+  .stk-term-model { font-size:13px; font-weight:600; line-height:1.6; }
+  .stk-term-hint { margin-top:8px; font-size:11.5px; color:var(--text-3); line-height:1.6; }
+  .stk-term-sug { background:var(--surface2); border:0.5px solid var(--border-md); border-radius:5px;
+    font-family:ui-monospace, Menlo, monospace; font-size:11px; color:var(--text-2); padding:2px 7px;
+    cursor:pointer; transition:all .13s; }
+  .stk-term-sug:hover { color:var(--text); border-color:var(--text-3); }
   .stk-qty { font-size:11px; font-weight:700; color:var(--text-2); background:var(--surface2);
     border-radius:5px; padding:3px 0; text-align:center; }
   .stk-jobs { min-width:0; font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis;
@@ -4940,6 +4971,7 @@
     </div>
 
     <div id="stk-result" style="margin-top:16px;"></div>
+    <div id="stk-rules"></div>
   </div>
 
   <!-- NSLA REPORT PAGE -->
@@ -5587,6 +5619,22 @@
     <div class="kpi-modal-actions">
       <button class="kpi-file-btn" onclick="closeTaskEditModal()">Cancel</button>
       <button class="generate-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="saveTaskEdit()"><i class="ti ti-check" style="font-size:15px;"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Checks: the warehouse name to search for one model, saved for good -->
+<div class="kpi-modal-overlay" id="stk-term-modal-overlay" onclick="if(event.target===this)stkCloseTerm()">
+  <div class="kpi-modal" style="width:540px;">
+    <div class="kpi-modal-header">
+      <strong><i class="ti ti-package" style="margin-right:6px;color:var(--green-text);"></i>Warehouse name for this model</strong>
+      <button class="icon-btn" onclick="stkCloseTerm()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="stk-term-body"></div>
+    <div class="kpi-modal-actions">
+      <button class="kpi-file-btn" style="margin-right:auto;" onclick="stkClearTerm()">Back to automatic</button>
+      <button class="kpi-file-btn" onclick="stkCloseTerm()">Cancel</button>
+      <button class="generate-btn" style="width:auto; margin-bottom:0; padding:8px 18px;" onclick="stkSaveTerm()"><i class="ti ti-check" style="font-size:15px;"></i> Save</button>
     </div>
   </div>
 </div>
@@ -9923,7 +9971,11 @@ let stkFaultCol = '';         // the column stkFaultList was built from
 let stkShowAllFaults = false;
 let stkOpenGroup = new Set();
 let stkSearchBy = null;       // 'model' | 'code' - read from storage on first use
+let stkRules = null;          // model name -> the warehouse name to search for it
+let stkRowIndex = [];         // the part rows on screen, so a pencil can name one
+let stkEditing = [];          // the model name(s) the open modal is editing
 const STK_SEARCH_KEY = 'zarif_stk_search_by';
+const STK_RULES_KEY = 'zarif_stk_model_terms';
 const STK_BLANK = '(blank)';
 const STK_FAULT_CHIPS = 14;
 
@@ -9967,9 +10019,138 @@ function stkPartCode(model) {
 
 // In code mode a model with no code in it still has to search for something,
 // so it falls back to its own name rather than searching for nothing.
-function stkTerm(model) {
+function stkAutoTerm(model) {
   const m = String(model || '').trim();
   return stkGetSearchBy() === 'code' ? (stkPartCode(m) || m) : m;
+}
+
+// Reading the code out of the model name gets the plain cases right and
+// cannot get the rest right: nothing in "IBM 4800 743 POS Base unit" says
+// whether the warehouse calls that part 4800 or 4800 743, and "EFTPOS PINpad"
+// carries no code at all. So the automatic name is only ever a proposal - one
+// you can overrule per model, once, and the answer is kept for every future
+// stock check. A saved name beats both the automatic reading and the
+// model/code switch, because it is the only one of the three that was told.
+function stkModelKey(m) { return String(m || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function stkGetRules() {
+  if (stkRules === null) {
+    const saved = dbGet(STK_RULES_KEY);
+    stkRules = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return stkRules;
+}
+function stkSaveRules() { dbSet(STK_RULES_KEY, stkGetRules()); }
+function stkGetRule(model) {
+  const k = stkModelKey(model);
+  return k ? (stkGetRules()[k] || null) : null;
+}
+
+function stkTerm(model) {
+  const r = stkGetRule(model);
+  return r && r.term ? r.term : stkAutoTerm(model);
+}
+
+function stkEditTerm(i) {
+  const g = stkRowIndex[i];
+  if (!g || !g.models.length) return;
+  stkEditing = g.models.slice();
+  const body = document.getElementById('stk-term-body');
+  const auto = stkAutoTerm(stkEditing[0]);
+  const rule = stkGetRule(stkEditing[0]);
+  if (body) body.innerHTML = `
+    <div class="queue-block">
+      <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">
+        ${stkEditing.length > 1 ? 'Models, as the job file writes them' : 'Model, as the job file writes it'}</div>
+      <div class="stk-term-model">${stkEditing.map(m => esc(m)).join('<br>')}</div>
+    </div>
+    <div class="queue-block">
+      <div class="field-label" style="margin-bottom:6px; font-size:12px; color:var(--text-3);">Search the warehouse for</div>
+      <input class="field-input" id="stk-term-input" value="${escAttr(rule && rule.term ? rule.term : auto)}"
+        placeholder="${escAttr(auto)}" onkeydown="if(event.key==='Enter')stkSaveTerm()">
+      <div class="stk-term-hint">
+        Saved against ${stkEditing.length > 1 ? 'these model names' : 'this model name'} for every future stock check,
+        whichever way the switch above is set.
+        ${auto ? `Left automatic it would search for <button class="stk-term-sug" onclick="stkUseAuto()">${esc(auto)}</button>.` : ''}
+      </div>
+    </div>`;
+  document.getElementById('stk-term-modal-overlay')?.classList.add('active');
+  setTimeout(() => { const el = document.getElementById('stk-term-input'); if (el) { el.focus(); el.select(); } }, 40);
+}
+
+function stkUseAuto() {
+  const el = document.getElementById('stk-term-input');
+  if (el && stkEditing.length) { el.value = stkAutoTerm(stkEditing[0]); el.focus(); }
+}
+function stkCloseTerm() {
+  document.getElementById('stk-term-modal-overlay')?.classList.remove('active');
+  stkEditing = [];
+}
+function stkSaveTerm() {
+  const v = (document.getElementById('stk-term-input')?.value || '').trim();
+  const rules = stkGetRules();
+  // An emptied box means "stop overruling this one", which is the same thing
+  // the Back to automatic button does - no sense making them disagree.
+  stkEditing.forEach(m => {
+    const k = stkModelKey(m);
+    if (!k) return;
+    if (v) rules[k] = { model: m, term: v }; else delete rules[k];
+  });
+  stkSaveRules();
+  stkCloseTerm();
+  stkRun();
+  stkRenderRules();
+}
+function stkClearTerm() {
+  const rules = stkGetRules();
+  stkEditing.forEach(m => { delete rules[stkModelKey(m)]; });
+  stkSaveRules();
+  stkCloseTerm();
+  stkRun();
+  stkRenderRules();
+}
+function stkForgetRule(key) {
+  const rules = stkGetRules();
+  if (!rules[key]) return;
+  delete rules[key];
+  stkSaveRules();
+  stkRun();
+  stkRenderRules();
+}
+function stkEditRule(key) {
+  const r = stkGetRules()[key];
+  if (!r) return;
+  stkRowIndex.push({ models: [r.model] });
+  stkEditTerm(stkRowIndex.length - 1);
+}
+
+// Shown whether or not a file is open: a name saved for good is worth being
+// able to check without hunting up the export it was saved from.
+function stkRenderRules() {
+  const el = document.getElementById('stk-rules');
+  if (!el) return;
+  const rules = stkGetRules();
+  const keys = Object.keys(rules).sort((a, b) =>
+    String(rules[a].model || a).localeCompare(String(rules[b].model || b)));
+  if (!keys.length) { el.innerHTML = ''; return; }
+  const open = stkOpenGroup.has('rules');
+  el.innerHTML = `<div class="al-vgrp stk-rules${open ? ' open' : ''}">
+    <button class="al-vgrp-hd" onclick="stkToggleGroup('rules')" aria-expanded="${open}">
+      <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
+      <i class="ti ti-bookmark al-vgrp-ico match"></i>
+      <span class="al-vgrp-l">Saved part names</span>
+      <span class="al-vgrp-n match">${keys.length.toLocaleString()}</span>
+      <span class="al-vgrp-note">what the warehouse is searched for, whatever the file calls it</span>
+    </button>
+    ${open ? keys.map(k => `<div class="stk-rule">
+      <span class="stk-rule-from">${esc(rules[k].model || k)}</span>
+      <i class="ti ti-arrow-right"></i>
+      <span class="stk-rule-to">${esc(rules[k].term || '')}</span>
+      <span>
+        <button class="stk-rule-x" onclick="stkEditRule(${escAttr(JSON.stringify(k))})">Change</button>
+        <button class="stk-rule-x" onclick="stkForgetRule(${escAttr(JSON.stringify(k))})">Forget</button>
+      </span>
+    </div>`).join('') : ''}
+  </div>`;
 }
 
 // Which warehouse to look in, and whether that was stated or worked out.
@@ -10020,7 +10201,7 @@ function stkToggleFault(i) {
 function stkMoreFaults() { stkShowAllFaults = true; stkRenderFaults(); }
 function stkToggleGroup(k) {
   if (stkOpenGroup.has(k)) stkOpenGroup.delete(k); else stkOpenGroup.add(k);
-  stkRun();
+  if (k === 'rules') stkRenderRules(); else stkRun();
 }
 
 function stkRenderFaults() {
@@ -10124,15 +10305,27 @@ function stkBlockedWhy(h) {
 // The second line of a part row only earns its place when it says something
 // the first does not - the term actually searched, or the several model names
 // that collapsed into one search.
-function stkModelLabel(P) {
+function stkModelLabel(P, i) {
   const t = P.models.size === 1 ? [...P.models][0] : P.term;
-  return `<span class="stk-model-n" title="${escAttr(t)}">${esc(t)}</span>`;
+  return `<span class="stk-model-top">
+    <span class="stk-model-n" title="${escAttr(t)}">${esc(t)}</span>
+    <button class="stk-edit" onclick="stkEditTerm(${i})"
+      title="Set what the warehouse is searched for" aria-label="Set what the warehouse is searched for">
+      <i class="ti ti-pencil"></i></button>
+  </span>`;
 }
 
+// The second line only earns its place when it says something the first does
+// not - the name actually searched, and whether that name was saved by you or
+// worked out here.
 function stkSubLabel(P) {
-  if (P.models.size > 1) return `<span class="stk-model-t">${esc([...P.models].join('  \u00b7  '))}</span>`;
+  const saved = P.ruled ? ' saved' : '';
+  const word = P.ruled ? 'saved as' : 'searched as';
+  // On a merged row the heading is already the search name, so repeating it
+  // would say nothing; what is worth saying is which models collapsed into it.
+  if (P.models.size > 1) return `<span class="stk-model-t${saved}">${esc([...P.models].join('  \u00b7  '))}</span>`;
   const only = [...P.models][0] || '';
-  return only === P.term ? '' : `<span class="stk-model-t">searched as ${esc(P.term)}</span>`;
+  return only === P.term ? '' : `<span class="stk-model-t${saved}">${word} ${esc(P.term)}</span>`;
 }
 
 async function stkLoad(file) {
@@ -10164,6 +10357,7 @@ async function stkLoad(file) {
     stkStatus(`${stkRows.length.toLocaleString()} rows loaded`, 'ok');
     stkRenderMapper();
     stkRenderConfig();
+    stkRenderRules();
   } catch (e) {
     stkStatus('Could not read file: ' + e.message, 'error');
   }
@@ -10218,14 +10412,18 @@ function stkRun() {
     L.n++;
     const pk = term.toLowerCase();
     let Pt = L.parts.get(pk);
-    if (!Pt) { Pt = { term, models: new Set(), jobs: [] }; L.parts.set(pk, Pt); }
+    if (!Pt) { Pt = { term, models: new Set(), jobs: [], ruled: false }; L.parts.set(pk, Pt); }
     Pt.models.add(h.model);
+    if (stkGetRule(h.model)) Pt.ruled = true;
     Pt.jobs.push(h);
   });
   const locList = [...locs.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  stkRowIndex = [];
   locList.forEach(L => {
     L.partList = [...L.parts.values()]
       .sort((a, b) => b.jobs.length - a.jobs.length || a.term.localeCompare(b.term));
+    // Each part row gets a slot, so its pencil can name the models behind it.
+    L.partList.forEach(Pt => { Pt.ix = stkRowIndex.length; stkRowIndex.push({ models: [...Pt.models] }); });
   });
 
   const nParts = new Set(linkable.map(h => stkTerm(h.model).toLowerCase())).size;
@@ -10273,7 +10471,7 @@ function stkRun() {
         </header>
         ${L.partList.map(Pt => `<div class="stk-prow">
           <span class="stk-model">
-            ${stkModelLabel(Pt)}
+            ${stkModelLabel(Pt, Pt.ix)}
             ${stkSubLabel(Pt)}
           </span>
           <span class="stk-qty">&times;${Pt.jobs.length}</span>
@@ -10320,6 +10518,7 @@ function stkDownload() {
       ...h.row,
       'Warehouse Location':  h.loc || '',
       'Searched For':        term,
+      'Part Name Source':    !ok ? '' : (stkGetRule(h.model) ? 'Saved by you' : 'Automatic'),
       'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
       'Stock Link':          ok ? stkUrl(h.loc, term) : '',
       'Not Linked Because':  stkBlockedWhy(h)
@@ -10333,6 +10532,7 @@ function stkDownload() {
 
 function stkInit() {
   stkRenderConfig();
+  stkRenderRules();
   // Technician names are read through the allocation sheet, so start it
   // loading on arrival rather than on the first file.
   if (typeof alEnsureData === 'function') alEnsureData().catch(() => {});
