@@ -2501,15 +2501,38 @@
      still reads, and carries the rest in its tooltip either way. */
   .stk-prow { padding:9px 15px; border-top:0.5px solid var(--border); transition:background .14s; }
   .stk-prow:hover { background:rgba(255,255,255,.035); }
-  /* Even split now the contracts have their own line: the model no longer has
-     to win room back from the job numbers. */
-  .stk-prow-main { display:grid; grid-template-columns:minmax(0,1.25fr) 38px minmax(0,1.25fr) 96px;
-    gap:10px; align-items:center; }
+  /* The count leads the row. How many of a part you need is the thing you act
+     on, and it was previously a 38px chip in the middle of the line. */
+  .stk-prow-main { display:grid; grid-template-columns:46px minmax(0,1fr) 96px;
+    gap:12px; align-items:center; }
+  .stk-qty-big { display:flex; flex-direction:column; align-items:center; justify-content:center;
+    width:46px; height:46px; border-radius:10px; background:var(--surface2);
+    border:0.5px solid var(--border-md); }
+  .stk-qty-big b { font-size:19px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+  .stk-qty-big span { margin-top:2px; font-size:7.5px; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-3); }
+  /* Amber where one site wants more than one of them - that is a van load to
+     plan, not just a number to read. */
+  .stk-qty-big.many { background:var(--amber-bg); border-color:color-mix(in srgb, var(--amber-text) 34%, transparent); }
+  .stk-qty-big.many b { color:var(--amber-text); }
+  .stk-qty-big.many span { color:color-mix(in srgb, var(--amber-text) 72%, transparent); }
 
-  /* Contracts get their own line under the part rather than a sixth column:
-     a part can sit under several at once, and each one needs room for its
-     own count and its own hide button. */
-  .stk-prow-con { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  /* The jobs sit under their own contract, and under their own site within
+     it: one grid for the part, so every contract's jobs start at the same
+     place however long the badge beside them is. */
+  .stk-prow-con { display:grid; grid-template-columns:max-content minmax(0,1fr); gap:8px 11px;
+    margin-top:10px; align-items:start; }
+  .stk-prow-con.nocon { grid-template-columns:minmax(0,1fr); }
+  .stk-prow-con > .stk-con { align-self:start; }
+  .stk-sites { min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .stk-site { min-width:0; display:flex; align-items:baseline; gap:7px; font-size:11px; }
+  .stk-site-n { min-width:0; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stk-site-x { flex-shrink:0; font-size:9.5px; font-weight:700; color:var(--amber-text);
+    background:var(--amber-bg); border-radius:4px; padding:1px 5px; }
+  .stk-site-j { flex-shrink:0; font-variant-numeric:tabular-nums; }
+  .stk-site-j a { color:var(--teal-text); text-decoration:none; }
+  .stk-site-j a:hover { text-decoration:underline; }
+  .stk-site-j i { font-style:normal; opacity:.5; margin:0 4px; }
   .stk-con { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700;
     border-radius:20px; padding:3px 9px; border:0.5px solid; white-space:nowrap; }
   .stk-con.hide-able { padding-right:3px; }
@@ -2523,6 +2546,7 @@
   .stk-con.k3 { color:var(--purple-text); background:var(--purple-bg); border-color:color-mix(in srgb, var(--purple-text) 30%, transparent); }
   .stk-con.k4 { color:var(--pink-text);   background:var(--pink-bg);   border-color:color-mix(in srgb, var(--pink-text) 30%, transparent); }
   .stk-con.k5 { color:var(--coral-text);  background:var(--coral-bg);  border-color:color-mix(in srgb, var(--coral-text) 30%, transparent); }
+  .stk-con.none { color:var(--text-3); background:var(--surface2); border-color:var(--border-md); font-style:italic; }
   .stk-con-x { background:none; border:none; color:currentColor; font-family:inherit; font-size:10px;
     line-height:1; padding:3px 5px; border-radius:20px; cursor:pointer; opacity:0;
     transition:opacity .13s, background .13s; }
@@ -2566,13 +2590,6 @@
     font-family:ui-monospace, Menlo, monospace; font-size:11px; color:var(--text-2); padding:2px 7px;
     cursor:pointer; transition:all .13s; }
   .stk-term-sug:hover { color:var(--text); border-color:var(--text-3); }
-  .stk-qty { font-size:11px; font-weight:700; color:var(--text-2); background:var(--surface2);
-    border-radius:5px; padding:3px 0; text-align:center; }
-  .stk-jobs { min-width:0; font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis;
-    white-space:nowrap; font-variant-numeric:tabular-nums; }
-  .stk-jobs a { color:var(--teal-text); text-decoration:none; }
-  .stk-jobs a:hover { text-decoration:underline; }
-  .stk-jobs i { font-style:normal; opacity:.5; margin:0 4px; }
   .stk-go { display:inline-flex; align-items:center; justify-content:center; gap:5px; font-size:11px;
     font-weight:600; color:var(--teal-text); background:var(--teal-bg); text-decoration:none;
     border:0.5px solid color-mix(in srgb, var(--teal) 34%, transparent); border-radius:7px; padding:7px 0;
@@ -10113,7 +10130,9 @@ function stkConBadge(code) {
   return { code: c, k: n % 6, icon: STK_CON_ICONS[Math.floor(n / 6) % 6] };
 }
 function stkConChip(code, n, hideIx) {
-  const b = stkConBadge(code);
+  const c = String(code || '').trim();
+  if (!c) return `<span class="stk-con none">no contract${n ? `<span class="stk-con-n">${n.toLocaleString()}</span>` : ''}</span>`;
+  const b = stkConBadge(c);
   if (!b) return '';
   return `<span class="stk-con k${b.k}${hideIx !== undefined ? ' hide-able' : ''}">
     <i class="ti ${b.icon}"></i>${esc(b.code)}${n ? `<span class="stk-con-n">${n.toLocaleString()}</span>` : ''}
@@ -10434,6 +10453,36 @@ function stkBlockedWhy(h) {
 // The second line of a part row only earns its place when it says something
 // the first does not - the term actually searched, or the several model names
 // that collapsed into one search.
+// Several jobs at one site means several units on one visit, so they are
+// counted per site rather than only per part - that is the number that
+// decides what goes in the van.
+function stkSiteGroups(jobs) {
+  const m = new Map();
+  jobs.forEach(j => {
+    const k = (j.site || '').trim().toLowerCase() || '\u0000';
+    if (!m.has(k)) m.set(k, { site: (j.site || '').trim(), jobs: [] });
+    m.get(k).jobs.push(j);
+  });
+  return [...m.values()].sort((a, b) => b.jobs.length - a.jobs.length || a.site.localeCompare(b.site));
+}
+
+function stkJobLinks(jobs) {
+  return jobs.map(j => j.id
+    ? `<a href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${esc(j.id)}</a>`
+    : `<span>row ${j.i + 2}</span>`).join('<i>\u00b7</i>');
+}
+
+// One line per site under a contract: the name, a loud count when that single
+// site wants more than one, then the jobs behind it.
+function stkSiteLines(jobs) {
+  const gs = stkSiteGroups(jobs);
+  return `<span class="stk-sites">${gs.map(g => `<span class="stk-site">
+    ${g.site ? `<span class="stk-site-n">${esc(g.site)}</span>` : ''}
+    ${g.site && g.jobs.length > 1 ? `<span class="stk-site-x">\u00d7${g.jobs.length}</span>` : ''}
+    <span class="stk-site-j">${stkJobLinks(g.jobs)}</span>
+  </span>`).join('')}</span>`;
+}
+
 function stkModelLabel(P, i) {
   const t = P.models.size === 1 ? [...P.models][0] : P.term;
   return `<span class="stk-model-top">
@@ -10551,7 +10600,11 @@ function stkRun() {
     if (!Pt) { Pt = { term, models: new Set(), jobs: [], cons: new Map(), ruled: false }; L.parts.set(pk, Pt); }
     Pt.models.add(h.model);
     if (stkGetRule(h.model)) Pt.ruled = true;
-    if (h.con) Pt.cons.set(h.con, (Pt.cons.get(h.con) || 0) + 1);
+    // Blank contracts bucket too, under their own heading - dropping them
+    // here would quietly lose the job from the card it belongs on.
+    const ck = h.con || '';
+    if (!Pt.cons.has(ck)) Pt.cons.set(ck, []);
+    Pt.cons.get(ck).push(h);
     Pt.jobs.push(h);
   });
   const locList = [...locs.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
@@ -10619,25 +10672,32 @@ function stkRun() {
           <span class="stk-chd-from">${L.techs.size === 1
             ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
         </header>
-        ${L.partList.map(Pt => `<div class="stk-prow">
+        ${L.partList.map(Pt => {
+          const buckets = [...Pt.cons].sort((a, b) =>
+            b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0])));
+          // One site wanting several of a part is what the big number is
+          // there to warn about, so it is read off the sites, not the total.
+          const piled = Pt.jobs.length > 1 && stkSiteGroups(Pt.jobs).some(g => g.jobs.length > 1);
+          const sites = stkSiteGroups(Pt.jobs).length;
+          return `<div class="stk-prow">
           <div class="stk-prow-main">
+            <span class="stk-qty-big${piled ? ' many' : ''}" title="${escAttr(
+              `${Pt.jobs.length} needed at ${esc(L.name)}` +
+              (siteCol ? `, across ${sites} site${sites !== 1 ? 's' : ''}` : '') +
+              (piled ? ' \u2014 one site wants more than one' : ''))}">
+              <b>${Pt.jobs.length.toLocaleString()}</b><span>needed</span>
+            </span>
             <span class="stk-model">
               ${stkModelLabel(Pt, Pt.ix)}
               ${stkSubLabel(Pt)}
             </span>
-            <span class="stk-qty">&times;${Pt.jobs.length}</span>
-            <span class="stk-jobs" title="${escAttr(Pt.jobs.map(j => (j.id || 'row ' + (j.i + 2))
-              + (j.con ? ' \u00b7 ' + j.con : '') + (j.site ? ' \u2014 ' + j.site : '')).join('\n'))}">${Pt.jobs.map(j => j.id
-              ? `<a href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${esc(j.id)}</a>`
-              : `<span>${esc(j.site || 'row ' + (j.i + 2))}</span>`).join('<i>\u00b7</i>')}</span>
             <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
               Check stock <i class="ti ti-arrow-up-right"></i>
             </a>
           </div>
-          ${Pt.cons.size ? `<div class="stk-prow-con">${[...Pt.cons]
-            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-            .map(([c, n]) => stkConChip(c, n, Pt.ix)).join('')}</div>` : ''}
-        </div>`).join('')}
+          <div class="stk-prow-con${conCol ? '' : ' nocon'}">${buckets.map(([c, js]) =>
+            (conCol ? stkConChip(c, js.length, Pt.ix) : '') + stkSiteLines(js)).join('')}</div>
+        </div>`; }).join('')}
       </section>`;
     }).join('')}</div>` : ''}
 
