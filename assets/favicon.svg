@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Central Hub">
+  <!-- Built for 16px, not scaled down from the 192 app icon: at tab size that
+       one's ring is a half-pixel and its "CH" is under 4px tall. One shape and
+       one ground survive the shrink, so that is all this has. The C is a path
+       rather than text because a favicon renders with no webfonts loaded. -->
+  <rect width="64" height="64" rx="14" fill="#111318"/>
+  <path d="M44.73 19.27A18 18 0 1 0 44.73 44.73" fill="none" stroke="#378ADD"
+        stroke-width="9" stroke-linecap="round"/>
+</svg>
