@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
@@ -36,108 +36,52 @@
   input[type="search"]::-webkit-search-cancel-button,
   input[type="search"]::-webkit-search-results-button,
   input[type="search"]::-webkit-search-results-decoration { display: none; }
+  /* ONE theme. The seven are gone; what used to be a theme is now a single
+     palette plus --accent, which you pick in Settings.
+
+     The token NAMES are kept exactly as they were - --teal, --blue and the
+     rest - because 20,000 lines of CSS already reference them. Only the
+     values moved. --teal and --blue now resolve to the accent, so every
+     link, pill and active state follows your choice with no rule rewritten.
+
+     What does NOT follow the accent: amber, coral, green, purple and pink.
+     Those carry meaning - read-from-the-notes, mismatch, agreed, partner
+     depot, technician - and if they moved with the accent the pages would
+     stop meaning anything. */
   :root {
-    --bg: #111315; --surface: #161a1d; --surface2: rgba(255,255,255,0.05);
-    --border: rgba(255,255,255,0.06); --border-md: rgba(255,255,255,0.11);
-    --text: #e8ecee; --text-2: rgba(232,236,238,0.48); --text-3: rgba(232,236,238,0.26);
-    --teal: #378ADD; --teal-bg: rgba(55,138,221,0.1); --teal-text: #85B7EB;
-    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
-    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
-    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
-    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
-    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
-    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
-    --hero-bg: #0e1215;
+    --accent: #37c8b4;
+    --acc-dim:  color-mix(in srgb, var(--accent) 13%, transparent);
+    --acc-soft: color-mix(in srgb, var(--accent) 26%, transparent);
+    /* the violet well behind the landing page - atmosphere, not accent, so
+       it stays put whichever accent is chosen */
+    --well-1: #6d4aff; --well-2: #2a1a6b;
+
+    --bg: #05060a; --surface: #0a0d14; --surface2: #10141e;
+    --border: #1d2534; --border-md: #2b3547;
+    --text: #eaf0f6; --text-2: #a3b1c2; --text-3: #66788c;
+    --teal: var(--accent); --teal-bg: var(--acc-dim); --teal-text: var(--accent);
+    --blue-bg: var(--acc-dim); --blue-text: var(--accent);
+    --amber-bg: rgba(242,180,92,0.13); --amber-text: #F2B45C;
+    --coral-bg: rgba(242,112,106,0.13); --coral-text: #F2706A;
+    --green-bg: rgba(111,207,127,0.13); --green-text: #6FCF7F;
+    --purple-bg: rgba(155,140,240,0.13); --purple-text: #9B8CF0;
+    --pink-bg: rgba(232,123,184,0.13); --pink-text: #E87BB8;
+    --hero-bg: #080b12;
     --radius: 10px; --radius-lg: 14px;
   }
-  /* ── INK: pure black + white ── */
-  :root[data-theme="ink"] {
-    --bg: #080808; --surface: #101010; --surface2: rgba(255,255,255,0.06);
-    --border: rgba(255,255,255,0.08); --border-md: rgba(255,255,255,0.17);
-    --text: #ffffff; --text-2: rgba(255,255,255,0.52); --text-3: rgba(255,255,255,0.28);
-    --teal: #d0d0d0; --teal-bg: rgba(255,255,255,0.09); --teal-text: #ffffff;
-    --amber-bg: rgba(255,255,255,0.07); --amber-text: rgba(255,255,255,0.7);
-    --coral-bg: rgba(255,255,255,0.07); --coral-text: rgba(255,255,255,0.7);
-    --blue-bg: rgba(255,255,255,0.07); --blue-text: rgba(255,255,255,0.7);
-    --green-bg: rgba(255,255,255,0.07); --green-text: rgba(255,255,255,0.7);
-    --purple-bg: rgba(255,255,255,0.07); --purple-text: rgba(255,255,255,0.7);
-    --pink-bg: rgba(255,255,255,0.07); --pink-text: rgba(255,255,255,0.7);
-    --hero-bg: #050505; --radius: 10px; --radius-lg: 14px;
-  }
-  /* ── FOREST: deep green ── */
-  :root[data-theme="forest"] {
-    --bg: #0F1A10; --surface: #141F15; --surface2: rgba(99,153,34,0.07);
-    --border: rgba(99,153,34,0.1); --border-md: rgba(99,153,34,0.2);
-    --text: #D4F0B8; --text-2: rgba(212,240,184,0.5); --text-3: rgba(212,240,184,0.28);
-    --teal: #639922; --teal-bg: rgba(99,153,34,0.15); --teal-text: #97C459;
-    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
-    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
-    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
-    --green-bg: rgba(99,153,34,0.2); --green-text: #C0DD97;
-    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
-    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
-    --hero-bg: #0B1410; --radius: 10px; --radius-lg: 14px;
-  }
-  /* ── AURORA: deep navy + vibrant purple/teal/pink ── */
-  :root[data-theme="aurora"] {
-    --bg: #0D0D1A; --surface: #12122A; --surface2: rgba(127,119,221,0.08);
-    --border: rgba(127,119,221,0.1); --border-md: rgba(127,119,221,0.2);
-    --text: #E8E6FF; --text-2: rgba(232,230,255,0.5); --text-3: rgba(232,230,255,0.28);
-    --teal: #7F77DD; --teal-bg: rgba(127,119,221,0.13); --teal-text: #AFA9EC;
-    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
-    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
-    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
-    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
-    --purple-bg: rgba(127,119,221,0.18); --purple-text: #CECBF6;
-    --pink-bg: rgba(212,83,126,0.15); --pink-text: #ED93B1;
-    --hero-bg: #090916; --radius: 10px; --radius-lg: 14px;
-  }
-  /* ── EMBER: warm dark brown + amber/gold ── */
-  :root[data-theme="ember"] {
-    --bg: #1A1208; --surface: #211708; --surface2: rgba(239,159,39,0.07);
-    --border: rgba(239,159,39,0.1); --border-md: rgba(239,159,39,0.2);
-    --text: #FFE8C0; --text-2: rgba(255,232,192,0.5); --text-3: rgba(255,232,192,0.28);
-    --teal: #EF9F27; --teal-bg: rgba(239,159,39,0.13); --teal-text: #FAC775;
-    --amber-bg: rgba(239,159,39,0.18); --amber-text: #FAC775;
-    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
-    --blue-bg: rgba(55,138,221,0.1); --blue-text: #85B7EB;
-    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
-    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
-    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
-    --hero-bg: #130E06; --radius: 10px; --radius-lg: 14px;
-  }
-  /* ── SLATE: cool blue-grey ── */
-  :root[data-theme="slate"] {
-    --bg: #0F1520; --surface: #141C2B; --surface2: rgba(74,158,232,0.07);
-    --border: rgba(74,158,232,0.1); --border-md: rgba(74,158,232,0.2);
-    --text: #C8D8EE; --text-2: rgba(200,216,238,0.5); --text-3: rgba(200,216,238,0.28);
-    --teal: #4A9EE8; --teal-bg: rgba(74,158,232,0.12); --teal-text: #85B7EB;
-    --amber-bg: rgba(239,159,39,0.13); --amber-text: #FAC775;
-    --coral-bg: rgba(210,85,40,0.13); --coral-text: #F0997B;
-    --blue-bg: rgba(74,158,232,0.12); --blue-text: #85B7EB;
-    --green-bg: rgba(99,153,34,0.13); --green-text: #97C459;
-    --purple-bg: rgba(127,119,221,0.13); --purple-text: #AFA9EC;
-    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ED93B1;
-    --hero-bg: #0B1018; --radius: 10px; --radius-lg: 14px;
-  }
-  /* ── COPPER: warm charcoal + copper/gold, serif display ── */
-  :root[data-theme="navy"] {
-    --bg: #060a12; --surface: #0e1420; --surface2: rgba(74,158,232,0.07);
-    --border: rgba(74,158,232,0.1); --border-md: rgba(74,158,232,0.22);
-    --text: #e6edf7; --text-2: rgba(230,237,247,0.55); --text-3: rgba(230,237,247,0.3);
-    --teal: #4a9ee8; --teal-bg: rgba(74,158,232,0.14); --teal-text: #8fc4f5;
-    --amber-bg: rgba(74,158,232,0.16); --amber-text: #8fc4f5;
-    --coral-bg: rgba(210,85,40,0.15); --coral-text: #f0997b;
-    --blue-bg: rgba(74,158,232,0.1); --blue-text: #85b7eb;
-    --green-bg: rgba(99,153,34,0.13); --green-text: #97c459;
-    --purple-bg: rgba(127,119,221,0.13); --purple-text: #afa9ec;
-    --pink-bg: rgba(212,83,126,0.13); --pink-text: #ed93b1;
-    --hero-bg: #070b13; --radius: 10px; --radius-lg: 14px;
-    --copper-glow-1: #163a5e; --copper-glow-2: #4a9ee8;
-  }
-  :root[data-theme="navy"] body { font-family: 'Space Grotesk', -apple-system, sans-serif; }
-  :root[data-theme="navy"] .hub-head h1,
-  :root[data-theme="navy"] .app-card-title { font-family: 'Fraunces', serif; font-weight: 800; }
+
+  /* ── ACCENT PICKER (settings) ── */
+  .accent-picker { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; width: 100%; }
+  .ap-card { display: flex; flex-direction: column; align-items: center; gap: 7px;
+    background: none; border: none; font-family: inherit; cursor: pointer; padding: 4px; }
+  .ap-dot { width: 34px; height: 34px; border-radius: 50%; background: var(--c);
+    border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border) inset;
+    transition: transform .16s cubic-bezier(.22,.9,.26,1), border-color .16s, box-shadow .16s; }
+  .ap-card:hover .ap-dot { transform: scale(1.12); }
+  .ap-card.tp-active .ap-dot { border-color: var(--text); box-shadow: 0 0 18px -3px var(--c); }
+  .ap-name { font-size: 11px; color: var(--text-3); }
+  .ap-card.tp-active .ap-name { color: var(--text); font-weight: 600; }
+  .ap-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
 
   /* ── THEME PICKER (settings) ── */
   .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; width: 100%; }
@@ -150,7 +94,46 @@
   .tp-sw-line { height: 6px; border-radius: 3px; opacity: 0.6; }
   .tp-name { font-size: 11px; font-weight: 500; color: var(--text-2); text-align: center; }
   body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 90px; }
-  .wrap { padding: 2rem 3rem 4rem; }
+  /* Clear the fixed nav. It is 110px at its tallest, with the clock card in
+     it, and the greeting was sliding underneath. */
+  .wrap { padding: 7.5rem 3rem 4rem; }
+
+  /* ── THE GROUND ─────────────────────────────────────────────────────
+     Two fixed layers behind everything: a violet well at the bottom of the
+     page, and a survey grid that only lights where the pointer is. The well
+     is atmosphere and stays put whichever accent is chosen - otherwise every
+     accent would repaint the whole room. */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background:
+      radial-gradient(90% 62% at 50% 104%, color-mix(in srgb, var(--well-1) 40%, transparent), transparent 70%),
+      radial-gradient(70% 46% at 50% 100%, color-mix(in srgb, var(--well-2) 62%, transparent), transparent 72%);
+  }
+  #hub-grid-bg {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.055) 1px, transparent 1px);
+    background-size: 30px 30px, 30px 30px, 150px 150px, 150px 150px;
+    -webkit-mask-image: radial-gradient(620px circle at var(--mx,50%) var(--my,30%), #000 0%, rgba(0,0,0,0.5) 44%, rgba(0,0,0,0.1) 80%);
+    mask-image: radial-gradient(620px circle at var(--mx,50%) var(--my,30%), #000 0%, rgba(0,0,0,0.5) 44%, rgba(0,0,0,0.1) 80%);
+  }
+  #hub-grid-bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(320px circle at var(--mx,50%) var(--my,30%), color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%);
+  }
+
+  /* Archivo for anything that is a heading or a number you read at a glance,
+     IBM Plex Sans for the rest. Plex is drawn for technical work and has the
+     tabular figures a page full of job numbers needs. */
+  body { font-family: 'IBM Plex Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+  .mcard-t, .hub-head h1, .app-card-title, .home-greeting-word, .home-greeting-name,
+  .mstat-v, .sec-n, .hsh-n {
+    font-family: 'Archivo', 'Inter', system-ui, sans-serif;
+  }
+  .home-greeting-word, .home-greeting-name { font-weight: 800; letter-spacing: -0.035em; }
 
   /* TOP NAV */
   .nav { width: 100%; background: var(--surface); border-bottom: 0.5px solid var(--border); position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: row; align-items: center; padding: 9px 18px; z-index: 10; overflow: visible; gap: 18px; }
@@ -158,7 +141,7 @@
   .nav-logo-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; perspective: 170px; }
   .nav-logo-btn { background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
   .nav-logo-btn:hover { opacity: 0.8; }
-  .nav-wordmark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 30px; color: var(--text); }
+  .nav-wordmark { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.03em; color: var(--text); }
   .nav-wordmark-dot { color: #4a9ee8; }
   /* Typed <color> custom properties so the gradient colour itself can be animated smoothly —
      a plain `filter` would force this element's transform-style:preserve-3d to flatten per spec,
@@ -393,9 +376,87 @@
   .hub-back i { font-size: 14px; }
   .hub-head h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
   .hub-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; }
-  #home-greeting { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-  .home-greeting-name { color: var(--teal-text); font-size: 48px; font-weight: 800; font-style: italic; letter-spacing: -1px; }
+  #home-greeting { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.02; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+  .home-greeting-name { font-size: clamp(38px, 5.4vw, 60px); font-weight: 800; letter-spacing: -0.04em;
+    background: linear-gradient(97deg, var(--text) 10%, var(--accent) 50%, var(--well-1) 94%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    background-size: 220% 100%; animation: greetShift 9s ease-in-out infinite; }
+  @keyframes greetShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  @media (prefers-reduced-motion: reduce) { .home-greeting-name { animation: none; } }
   #home-date { font-size: 14px; color: color-mix(in srgb, var(--amber-text) 55%, var(--text-2)); margin-top: 6px; }
+  /* ── HOME: three holographic cards ──────────────────────────────────
+     The emblem on each is inline SVG built at runtime, so it takes the
+     card's own colour, stays sharp at any size and weighs nothing. Each one
+     draws the thing the card actually does rather than an abstract shape. */
+  .mains { position: relative; z-index: 1; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+  .mcard { position: relative; display: flex; flex-direction: column; min-width: 0;
+    padding: 0 0 20px; border-radius: 18px; cursor: pointer; overflow: hidden;
+    background: linear-gradient(171deg, color-mix(in srgb, var(--surface2) 92%, transparent), color-mix(in srgb, var(--bg) 88%, transparent));
+    border: 1px solid var(--border); text-align: left; font-family: inherit; color: inherit;
+    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transform-style: preserve-3d;
+    transition: transform .4s cubic-bezier(.22,.9,.26,1), border-color .25s, box-shadow .25s;
+    animation: mcardIn .6s cubic-bezier(.22,.9,.26,1) both; }
+  .mcard:hover { border-color: color-mix(in srgb, var(--ac, var(--accent)) 44%, var(--border));
+    box-shadow: 0 32px 70px -40px rgba(0,0,0,1), 0 0 60px -36px var(--ac, var(--accent)); }
+  .mcard.tilt { transition: transform .08s linear, border-color .25s, box-shadow .25s; }
+  .mcard:focus-visible { outline: 2px solid var(--ac, var(--accent)); outline-offset: 3px; }
+  @keyframes mcardIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; } }
+  .mcard-glow { position: absolute; left: 50%; top: -14%; width: 118%; height: 62%;
+    transform: translateX(-50%); pointer-events: none;
+    background: radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, var(--ac, var(--accent)) 30%, transparent), transparent 70%);
+    filter: blur(14px); opacity: .85; transition: opacity .3s; }
+  .mcard:hover .mcard-glow { opacity: 1; }
+  .holo { position: relative; height: 192px; display: block; width: 100%; transform: translateZ(42px); }
+  .mcard-b { padding: 0 20px; transform: translateZ(26px); display: flex; flex-direction: column; gap: 9px; }
+  .mcard-t { font-size: 25px; font-weight: 800; letter-spacing: -0.028em; line-height: 1.05; }
+  .mcard-t .g { background: linear-gradient(94deg, var(--text) 20%, var(--ac, var(--accent)) 110%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mcard-d { font-size: 12.5px; color: var(--text-3); line-height: 1.55; margin: 0; }
+  .subs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .sub { font-size: 11px; font-weight: 600; color: var(--text-2);
+    background: color-mix(in srgb, var(--surface2) 80%, transparent);
+    border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px;
+    transition: border-color .15s; }
+  .mcard:hover .sub { border-color: color-mix(in srgb, var(--ac, var(--accent)) 30%, var(--border)); }
+  .mstats { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 4px; }
+  .mstat-v { display: block; font-size: 23px; font-weight: 800; letter-spacing: -0.025em;
+    line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--sc, var(--text)); }
+  .mstat-k { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3); }
+  .mgo { display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-size: 12.5px; font-weight: 600; color: var(--ac, var(--accent)); }
+  .mgo i { font-size: 15px; transition: transform .22s cubic-bezier(.22,.9,.26,1); }
+  .mcard:hover .mgo i { transform: translateX(5px); }
+
+  .home-secs-head { position: relative; z-index: 1; display: flex; align-items: center;
+    gap: 12px; margin: 30px 0 13px; }
+  .hsh-n { font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+  .home-secs-head i { flex: 1 1 auto; height: 1px; background: var(--border); display: block; }
+  .secs { position: relative; z-index: 1; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 10px; }
+  .sec-card { display: flex; align-items: center; gap: 11px; padding: 13px 14px; cursor: pointer;
+    background: color-mix(in srgb, var(--surface) 72%, transparent); border: 1px solid var(--border);
+    border-radius: var(--radius); font-family: inherit; color: inherit; text-align: left;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform .17s cubic-bezier(.22,.9,.26,1), border-color .17s, background .17s;
+    animation: mcardIn .5s cubic-bezier(.22,.9,.26,1) both; }
+  .sec-card:hover { transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--ac, var(--accent)) 38%, var(--border));
+    background: color-mix(in srgb, var(--ac, var(--accent)) 7%, var(--surface)); }
+  .sec-card:focus-visible { outline: 2px solid var(--ac, var(--accent)); outline-offset: 2px; }
+  .sec-ico { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; display: grid;
+    place-items: center; font-size: 16px; color: var(--ac, var(--accent));
+    background: color-mix(in srgb, var(--ac, var(--accent)) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ac, var(--accent)) 26%, transparent); }
+  .sec-n { display: block; font-size: 12.5px; font-weight: 600; }
+  .sec-s { display: block; font-size: 10.5px; color: var(--text-3); }
+  @media (prefers-reduced-motion: reduce) {
+    .mcard { transform: none !important; animation: none; }
+    .sec-card { animation: none; }
+  }
+
   .hub-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
   .app-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; display: flex; flex-direction: column; gap: 12px; min-height: 150px; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
   .app-card:hover { border-color: var(--border-md); transform: translateY(-2px); }
@@ -451,7 +512,7 @@
   .hub-grid .app-card:nth-child(1) .app-card-icon { background: rgba(255,255,255,0.14); color: var(--text); }
   .home-hero-ghost-wrap { position: absolute; bottom: 18px; right: 18px; width: 110px; height: 110px; pointer-events: none; }
   .home-hero-ghost-ring { position: absolute; inset: 0; border-radius: 50%; opacity: 0.4; background: conic-gradient(var(--text) 0%, rgba(255,255,255,0.2) 0); -webkit-mask: radial-gradient(circle, transparent 60%, black 64%); mask: radial-gradient(circle, transparent 60%, black 64%); }
-  .home-hero-ghost-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--text); opacity: 0.5; }
+  .home-hero-ghost-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 16px; font-weight: 800; color: var(--text); opacity: 0.5; }
   #page-home .hub-grid .app-card:nth-child(4) { grid-column: span 2; }
 
   /* ── Daily briefing card on Home ── */
@@ -888,7 +949,6 @@
   .time-field-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
   /* live Melbourne clock — cartoon card with inline time | date */
   .clock-card { display: inline-flex; align-items: center; gap: 9px; background: var(--surface); border: 2px solid var(--teal); box-shadow: 4px 4px 0 var(--teal-bg); border-radius: 16px; padding: 16px 12px; }
-  :root[data-theme="ink"] .clock-card { border-color: var(--border-md); box-shadow: 4px 4px 0 rgba(255,255,255,0.06); }
   .clock-card-ico { width: 36px; height: 36px; border-radius: 10px; background: var(--teal-bg); color: var(--teal-text); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
   .clock-card-time { display: flex; align-items: baseline; gap: 4px; }
   .clock-card-time-val { font-size: 26px; font-weight: 500; letter-spacing: -0.5px; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
@@ -3422,12 +3482,7 @@
   /* Today's progress — cartoon widget card */
   .ins-hero { border-radius: 22px; overflow: hidden; background: var(--surface); border: 2.5px solid var(--teal); box-shadow: 5px 5px 0 var(--teal-bg); transition: transform 0.15s, box-shadow 0.15s; }
   .ins-hero:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--teal-bg); }
-  :root[data-theme="forest"] .ins-hero { border-color: #639922; box-shadow: 5px 5px 0 rgba(99,153,34,0.35); }
-  :root[data-theme="forest"] .ins-hero:hover { box-shadow: 7px 7px 0 rgba(99,153,34,0.35); }
-  :root[data-theme="ink"] .ins-hero { border-color: var(--border-md); box-shadow: 5px 5px 0 rgba(255,255,255,0.06); }
   .ins-hero-banner { background: linear-gradient(135deg, var(--teal) 0%, #1f6fb8 100%); padding: 20px 22px; color: #fff; display: flex; align-items: center; gap: 18px; position: relative; overflow: hidden; }
-  :root[data-theme="forest"] .ins-hero-banner { background: linear-gradient(135deg, #639922 0%, #3c6314 100%); }
-  :root[data-theme="ink"] .ins-hero-banner { background: linear-gradient(135deg, #2a2a2a 0%, #161616 100%); }
   .ins-hero-banner::after { content: ''; position: absolute; top: -30px; right: -30px; width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.1); pointer-events: none; }
   .ins-hero-banner::before { content: ''; position: absolute; bottom: -40px; right: 30px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.06); pointer-events: none; }
   .ins-hero-label { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
@@ -3944,7 +3999,7 @@
   <button class="mbb-btn" data-mbb="home" onclick="showPage('home')" aria-label="Home"><i class="ti ti-home-2"></i>Home</button>
   <button class="mbb-btn" data-mbb="tasks" onclick="showPage('tasks')" aria-label="Tasks"><i class="ti ti-checkbox"></i>Tasks</button>
   <button class="mbb-btn" data-mbb="helpdesk" onclick="showPage('helpdesk')" aria-label="Helpdesk"><i class="ti ti-headset"></i>Helpdesk</button>
-  <button class="mbb-btn" data-mbb="projects" onclick="showPage('projects')" aria-label="Projects"><i class="ti ti-folders"></i>Projects</button>
+  <button class="mbb-btn" data-mbb="dispatch" onclick="showPage('dispatch')" aria-label="Dispatch"><i class="ti ti-route"></i>Dispatch</button>
   <button class="mbb-btn" data-mbb="more" onclick="toggleMobileNav()" aria-label="More"><i class="ti ti-dots"></i>More</button>
 </nav>
 
@@ -3981,6 +4036,8 @@
   </div>
 </nav>
 
+<div id="hub-grid-bg" aria-hidden="true"></div>
+
 <div class="wrap">
 
   <div class="page-topbar topbar-empty">
@@ -3996,35 +4053,72 @@
     </div>
     <div id="home-briefing"></div>
     <div id="home-highlights"></div>
-    <div class="hub-grid" id="home-hub-grid">
-      <div class="app-card" id="home-card-tasks" onclick="showPage('tasks')">
-        <div class="home-hero-ghost-wrap">
-          <div class="home-hero-ghost-ring" id="home-hero-ghost-ring"></div>
-          <div class="home-hero-ghost-pct" id="home-hero-ghost-pct">0%</div>
-        </div>
-        <div class="app-card-icon c-teal"><i class="ti ti-checklist"></i></div>
-        <div class="app-card-title">Task Manager</div>
-        <div class="app-card-desc">Your daily task dashboard with streaks and progress.</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
-      </div>
-      <div class="app-card" id="home-card-helpdesk" onclick="showPage('helpdesk')">
-        <div class="app-card-icon c-blue"><i class="ti ti-headset"></i></div>
-        <div class="app-card-title">Helpdesk</div>
-        <div class="app-card-desc">Reports, meetings, templates and your daily stand up.</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
-      </div>
-      <div class="app-card" id="home-card-projects" onclick="showPage('projects')">
-        <div class="app-card-icon c-amber"><i class="ti ti-folders"></i></div>
-        <div class="app-card-title">Projects</div>
-        <div class="app-card-desc">Track delivery progress across your active projects.</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
-      </div>
-      <div class="app-card" id="home-card-personal" onclick="showPage('personal')">
-        <div class="app-card-icon c-pink"><i class="ti ti-user-heart"></i></div>
-        <div class="app-card-title">Personal</div>
-        <div class="app-card-desc">Wishlist, insights and your personal notes.</div>
-        <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
-      </div>
+    <div class="mains" id="home-mains">
+      <button class="mcard" style="--ac:var(--green-text)" data-go="tasks" data-holo="tasks">
+        <span class="mcard-glow"></span>
+        <span class="holo" data-h="tasks"></span>
+        <span class="mcard-b">
+          <span class="mcard-t"><span class="g">Task Manager</span></span>
+          <p class="mcard-d">Your day, your streak and the quick-task strip. Job list, escalations
+            and the knowledge base sit alongside it.</p>
+          <span class="mstats" id="home-ms-tasks"></span>
+          <span class="mgo">Open <i class="ti ti-arrow-right"></i></span>
+        </span>
+      </button>
+
+      <button class="mcard" style="--ac:var(--purple-text)" data-go="helpdesk" data-holo="helpdesk">
+        <span class="mcard-glow"></span>
+        <span class="holo" data-h="helpdesk"></span>
+        <span class="mcard-b">
+          <span class="mcard-t"><span class="g">Helpdesk</span></span>
+          <p class="mcard-d">Running the desk day to day — the report, the morning message and
+            everything you send from a template.</p>
+          <span class="subs" id="home-subs-helpdesk"></span>
+          <span class="mgo"><span id="home-n-helpdesk">0</span> tools <i class="ti ti-arrow-right"></i></span>
+        </span>
+      </button>
+
+      <button class="mcard" style="--ac:var(--amber-text)" data-go="dispatch" data-holo="dispatch">
+        <span class="mcard-glow"></span>
+        <span class="holo" data-h="dispatch"></span>
+        <span class="mcard-b">
+          <span class="mcard-t"><span class="g">Dispatch</span></span>
+          <p class="mcard-d">The three that run off the morning export: who the job belongs to,
+            which depot services it, and what part it is waiting on.</p>
+          <span class="subs" id="home-subs-dispatch"></span>
+          <span class="mgo"><span id="home-n-dispatch">0</span> tools <i class="ti ti-arrow-right"></i></span>
+        </span>
+      </button>
+    </div>
+
+    <div class="home-secs-head">
+      <span class="hsh-n">Everything else</span><i></i>
+    </div>
+    <div class="secs" id="home-secs">
+      <button class="sec-card" style="--ac:var(--teal-text)" data-go="projects">
+        <span class="sec-ico"><i class="ti ti-folders"></i></span>
+        <span><span class="sec-n">Projects</span><span class="sec-s">delivery &amp; analysis</span></span>
+      </button>
+      <button class="sec-card" style="--ac:var(--pink-text)" data-go="personal">
+        <span class="sec-ico"><i class="ti ti-user-heart"></i></span>
+        <span><span class="sec-n">Personal</span><span class="sec-s">wishlist · notes</span></span>
+      </button>
+      <button class="sec-card" style="--ac:var(--green-text)" data-go="learning">
+        <span class="sec-ico"><i class="ti ti-school"></i></span>
+        <span><span class="sec-n">Learning</span><span class="sec-s">courses &amp; books</span></span>
+      </button>
+      <button class="sec-card" style="--ac:var(--amber-text)" data-go="insights">
+        <span class="sec-ico"><i class="ti ti-chart-pie"></i></span>
+        <span><span class="sec-n">Insights</span><span class="sec-s">streak · usage</span></span>
+      </button>
+      <button class="sec-card" style="--ac:var(--teal-text)" data-go="widgets">
+        <span class="sec-ico"><i class="ti ti-apps"></i></span>
+        <span><span class="sec-n">Widgets</span><span class="sec-s">scratch pad · clock</span></span>
+      </button>
+      <button class="sec-card" style="--ac:var(--text-3)" data-go="settings">
+        <span class="sec-ico"><i class="ti ti-settings"></i></span>
+        <span><span class="sec-n">Settings</span><span class="sec-s">accent · account</span></span>
+      </button>
     </div>
   </div>
 
@@ -4163,6 +4257,14 @@
       <p>Everything for running the helpdesk day to day.</p>
     </div>
     <div class="hub-grid" id="hub-grid-helpdesk"></div>
+  </div>
+
+  <div class="page" id="page-dispatch">
+    <div class="hub-head">
+      <h1><i class="ti ti-route" style="color:var(--amber-text);"></i> Dispatch</h1>
+      <p>Who the job belongs to, which depot services it, and what part it is waiting on.</p>
+    </div>
+    <div class="hub-grid" id="hub-grid-dispatch"></div>
   </div>
 
   <!-- SUBURB CHECKER PAGE -->
@@ -5438,81 +5540,12 @@
       <div class="s-body" id="s-appearance">
         <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
           <div class="settings-row-info">
-            <div class="settings-row-label">Theme</div>
-            <div class="settings-row-desc">Choose your colour scheme — changes apply instantly</div>
+            <div class="settings-row-label">Accent</div>
+            <div class="settings-row-desc">One palette, one accent. It drives links, the active
+              page, primary buttons and the glow behind the home page. Amber, coral, green and
+              purple stay put, because they mean something.</div>
           </div>
-          <div class="theme-picker" id="theme-picker">
-            <div class="tp-card" data-theme-id="midnight" onclick="pickTheme('midnight')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#378ADD"></div>
-                <div class="tp-sw-main" style="background:#111315">
-                  <div class="tp-sw-line" style="background:#378ADD;width:60%"></div>
-                  <div class="tp-sw-line" style="background:#e8ecee;width:85%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Midnight</div>
-            </div>
-            <div class="tp-card" data-theme-id="ink" onclick="pickTheme('ink')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#d0d0d0"></div>
-                <div class="tp-sw-main" style="background:#080808">
-                  <div class="tp-sw-line" style="background:#d0d0d0;width:50%"></div>
-                  <div class="tp-sw-line" style="background:#ffffff;width:80%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Ink</div>
-            </div>
-            <div class="tp-card" data-theme-id="forest" onclick="pickTheme('forest')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#639922"></div>
-                <div class="tp-sw-main" style="background:#0F1A10">
-                  <div class="tp-sw-line" style="background:#639922;width:55%"></div>
-                  <div class="tp-sw-line" style="background:#D4F0B8;width:80%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Forest</div>
-            </div>
-            <div class="tp-card" data-theme-id="aurora" onclick="pickTheme('aurora')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#7F77DD"></div>
-                <div class="tp-sw-main" style="background:#0D0D1A">
-                  <div class="tp-sw-line" style="background:#7F77DD;width:65%"></div>
-                  <div class="tp-sw-line" style="background:#E8E6FF;width:80%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Aurora</div>
-            </div>
-            <div class="tp-card" data-theme-id="ember" onclick="pickTheme('ember')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#EF9F27"></div>
-                <div class="tp-sw-main" style="background:#1A1208">
-                  <div class="tp-sw-line" style="background:#EF9F27;width:55%"></div>
-                  <div class="tp-sw-line" style="background:#FFE8C0;width:80%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Ember</div>
-            </div>
-            <div class="tp-card" data-theme-id="slate" onclick="pickTheme('slate')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#4A9EE8"></div>
-                <div class="tp-sw-main" style="background:#0F1520">
-                  <div class="tp-sw-line" style="background:#4A9EE8;width:60%"></div>
-                  <div class="tp-sw-line" style="background:#C8D8EE;width:80%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Slate</div>
-            </div>
-            <div class="tp-card" data-theme-id="navy" onclick="pickTheme('navy')">
-              <div class="tp-swatch">
-                <div class="tp-sw-accent" style="background:#4a9ee8"></div>
-                <div class="tp-sw-main" style="background:#060a12">
-                  <div class="tp-sw-line" style="background:#4a9ee8;width:55%"></div>
-                  <div class="tp-sw-line" style="background:#e6edf7;width:80%"></div>
-                </div>
-              </div>
-              <div class="tp-name">Navy</div>
-            </div>
-          </div>
+          <div class="accent-picker" id="theme-picker"></div>
         </div>
         <div class="settings-row">
           <div class="settings-row-info">
@@ -6465,24 +6498,276 @@ const DEFAULT_BREAKS = [
   {op:'Roja (9am-5pm)',     brk:'OFF',           sep:false},
 ];
 
-// ===== THEME TOGGLE =====
-const THEMES = ['midnight','ink','forest','aurora','ember','slate','navy'];
+// The survey grid follows the pointer. Throttled to one frame so a fast
+// mouse cannot queue up work.
+(function () {
+  let queued = false;
+  window.addEventListener('pointermove', e => {
+    if (queued) return;
+    queued = true;
+    const x = (e.clientX / window.innerWidth) * 100;
+    const y = (e.clientY / window.innerHeight) * 100;
+    requestAnimationFrame(() => {
+      queued = false;
+      document.documentElement.style.setProperty('--mx', x.toFixed(2) + '%');
+      document.documentElement.style.setProperty('--my', y.toFixed(2) + '%');
+    });
+  }, { passive: true });
+})();
 
-function applyTheme(theme) {
-  if (theme === 'copper') theme = 'navy'; // old theme name, renamed
-  const t = THEMES.includes(theme) ? theme : 'navy';
-  if (t === 'midnight') {
-    document.documentElement.removeAttribute('data-theme');
-  } else {
-    document.documentElement.setAttribute('data-theme', t);
+// ===== HOME: holograms, tilt and the live figures on the cards =====
+// Drawn as SVG at runtime rather than shipped as images: each emblem then
+// inherits its card's colour, stays sharp at any size and costs nothing to
+// download. Each draws what the card does - a stack of days, a switchboard,
+// a depot plane - rather than a generic shape.
+const HOLO_NS = 'http://www.w3.org/2000/svg';
+function holoEl(n, a) {
+  const e = document.createElementNS(HOLO_NS, n);
+  for (const k in a) e.setAttribute(k, a[k]);
+  return e;
+}
+function holoDefs(svg, id) {
+  const d = holoEl('defs', {});
+  const f = holoEl('filter', { id: 'hglow-' + id, x: '-60%', y: '-60%', width: '220%', height: '220%' });
+  f.appendChild(holoEl('feGaussianBlur', { stdDeviation: '3.2', result: 'b' }));
+  const m = holoEl('feMerge', {});
+  m.appendChild(holoEl('feMergeNode', { in: 'b' }));
+  m.appendChild(holoEl('feMergeNode', { in: 'SourceGraphic' }));
+  f.appendChild(m); d.appendChild(f); svg.appendChild(d);
+}
+function holoFloor(g) {
+  const rows = 8, cols = 11, W = 300, H = 112, top = 0.34;
+  for (let r = 0; r <= rows; r++) {
+    const t = r / rows, k = Math.pow(t, 1.9);
+    const y = k * H, half = (W / 2) * (top + (1 - top) * k);
+    g.appendChild(holoEl('line', { x1: 150 - half, y1: y, x2: 150 + half, y2: y,
+      stroke: 'currentColor', 'stroke-opacity': (0.09 + 0.3 * k).toFixed(3), 'stroke-width': '1' }));
   }
-  document.querySelectorAll('.tp-card').forEach(c => c.classList.toggle('tp-active', c.dataset.themeId === t));
+  for (let c = 0; c <= cols; c++) {
+    const u = c / cols - 0.5;
+    g.appendChild(holoEl('line', { x1: 150 + u * W * top, y1: 0, x2: 150 + u * W, y2: H,
+      stroke: 'currentColor', 'stroke-opacity': '.16', 'stroke-width': '1' }));
+  }
+}
+function holoCube(g, x, y, sz, op) {
+  const faces = [
+    `M${x} ${y - sz} L${x + sz} ${y - sz / 2} L${x} ${y} L${x - sz} ${y - sz / 2} Z`,
+    `M${x - sz} ${y - sz / 2} L${x} ${y} L${x} ${y + sz} L${x - sz} ${y + sz / 2} Z`,
+    `M${x + sz} ${y - sz / 2} L${x} ${y} L${x} ${y + sz} L${x + sz} ${y + sz / 2} Z`
+  ];
+  [op, op * 0.5, op * 0.28].forEach((o, i) => {
+    g.appendChild(holoEl('path', { d: faces[i], fill: 'currentColor', 'fill-opacity': o,
+      stroke: 'currentColor', 'stroke-opacity': (op + 0.2), 'stroke-width': '.8' }));
+  });
+}
+function buildHolo(host, kind) {
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  host.innerHTML = '';
+  const svg = holoEl('svg', { viewBox: '0 0 300 192', width: '100%', height: '100%',
+    'aria-hidden': 'true', style: 'display:block;overflow:visible' });
+  holoDefs(svg, kind);
+
+  if (kind === 'dispatch') {
+    const g = holoEl('g', { transform: 'translate(0,66)' });
+    holoFloor(g); svg.appendChild(g);
+    [[96, 150, 26], [150, 162, 34], [212, 146, 22]].forEach((d, i) => {
+      svg.appendChild(holoEl('path', { d: `M${d[0]} ${d[1]} L${d[0]} ${d[1] - d[2]}`,
+        stroke: 'currentColor', 'stroke-opacity': '.5', 'stroke-width': '1.4',
+        'stroke-linecap': 'round', filter: `url(#hglow-${kind})` }));
+      svg.appendChild(holoEl('circle', { cx: d[0], cy: d[1] - d[2], r: i === 1 ? 4.6 : 3.4,
+        fill: 'currentColor', filter: `url(#hglow-${kind})` }));
+      const halo = holoEl('circle', { cx: d[0], cy: d[1] - d[2], r: i === 1 ? 11 : 8,
+        fill: 'none', stroke: 'currentColor', 'stroke-opacity': '.42', 'stroke-width': '1' });
+      if (!calm) {
+        halo.appendChild(holoEl('animate', { attributeName: 'r', values: i === 1 ? '7;17' : '5;13',
+          dur: (2.6 + i * 0.4) + 's', repeatCount: 'indefinite' }));
+        halo.appendChild(holoEl('animate', { attributeName: 'stroke-opacity', values: '.45;0',
+          dur: (2.6 + i * 0.4) + 's', repeatCount: 'indefinite' }));
+      }
+      svg.appendChild(halo);
+    });
+    svg.appendChild(holoEl('path', { d: 'M96 124 Q150 104 212 124', fill: 'none',
+      stroke: 'currentColor', 'stroke-opacity': '.34', 'stroke-width': '1.2', 'stroke-dasharray': '3 5' }));
+    const cg = holoEl('g', {});
+    holoCube(cg, 60, 44, 11, .34); holoCube(cg, 243, 34, 9, .26); holoCube(cg, 206, 62, 7, .2);
+    svg.appendChild(cg);
+
+  } else if (kind === 'tasks') {
+    [[150, 150, 86, .1], [150, 124, 74, .16], [150, 98, 62, .24], [150, 72, 50, .34]].forEach(p => {
+      const [x, y, w, o] = p;
+      svg.appendChild(holoEl('path', {
+        d: `M${x} ${y - w * 0.3} L${x + w} ${y} L${x} ${y + w * 0.3} L${x - w} ${y} Z`,
+        fill: 'currentColor', 'fill-opacity': o * 0.5,
+        stroke: 'currentColor', 'stroke-opacity': o + .3, 'stroke-width': '1' }));
+      for (let k = -1; k <= 1; k++) {
+        svg.appendChild(holoEl('line', { x1: x - w * 0.42, y1: y + k * 5,
+          x2: x + w * 0.42, y2: y + k * 5 - w * 0.1, stroke: 'currentColor',
+          'stroke-opacity': (o * 0.8).toFixed(2), 'stroke-width': '1' }));
+      }
+    });
+    svg.appendChild(holoEl('circle', { cx: 150, cy: 60, r: 27, fill: 'none', stroke: 'currentColor',
+      'stroke-opacity': '.75', 'stroke-width': '2.4', 'stroke-linecap': 'round',
+      'stroke-dasharray': '170', 'stroke-dashoffset': '64', transform: 'rotate(-90 150 60)',
+      filter: `url(#hglow-${kind})` }));
+    svg.appendChild(holoEl('path', { d: 'M141 60 l6 6 12-13', fill: 'none', stroke: 'currentColor',
+      'stroke-width': '2.6', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+      filter: `url(#hglow-${kind})` }));
+
+  } else {
+    [[88, 30, .3], [64, 22, .22], [40, 14, .16]].forEach(o => {
+      svg.appendChild(holoEl('ellipse', { cx: 150, cy: 96, rx: o[0], ry: o[1], fill: 'none',
+        stroke: 'currentColor', 'stroke-opacity': o[2], 'stroke-width': '1.1' }));
+    });
+    svg.appendChild(holoEl('circle', { cx: 150, cy: 96, r: 13, fill: 'currentColor',
+      'fill-opacity': '.18', stroke: 'currentColor', 'stroke-width': '1.6',
+      filter: `url(#hglow-${kind})` }));
+    svg.appendChild(holoEl('path', { d: 'M141 97a9 9 0 0118 0v6a4 4 0 01-4 4h-3', fill: 'none',
+      stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round' }));
+    [[62, 96, 3.6, 0], [238, 96, 3.6, 1], [150, 66, 3, 2], [150, 126, 3, 3],
+     [96, 78, 2.6, 4], [205, 115, 2.6, 5]].forEach(p => {
+      const c = holoEl('circle', { cx: p[0], cy: p[1], r: p[2], fill: 'currentColor',
+        filter: `url(#hglow-${kind})` });
+      if (!calm) c.appendChild(holoEl('animate', { attributeName: 'fill-opacity',
+        values: '.35;1;.35', dur: (2.2 + p[3] * 0.45) + 's', repeatCount: 'indefinite' }));
+      svg.appendChild(c);
+    });
+    svg.appendChild(holoEl('path', { d: 'M174 72a34 34 0 018 16', fill: 'none', stroke: 'currentColor',
+      'stroke-opacity': '.5', 'stroke-width': '1.4', 'stroke-linecap': 'round' }));
+    svg.appendChild(holoEl('path', { d: 'M182 62a46 46 0 0110 24', fill: 'none', stroke: 'currentColor',
+      'stroke-opacity': '.3', 'stroke-width': '1.4', 'stroke-linecap': 'round' }));
+  }
+  host.appendChild(svg);
+}
+
+let _holoReady = false;
+function initHome() {
+  document.querySelectorAll('.holo').forEach(h => buildHolo(h, h.dataset.h));
+
+  // The sub-tools listed on a card come from the hub layout, so reordering a
+  // hub in the organiser changes the card too - one source of truth.
+  const chips = (hub, host, countEl) => {
+    const el = document.getElementById(host);
+    if (!el) return;
+    const list = (hubLayout && hubLayout[hub]) ? hubLayout[hub] : [];
+    el.innerHTML = list.map(p => `<span class="sub">${esc(PAGES[p] ? PAGES[p].title : p)}</span>`).join('');
+    const n = document.getElementById(countEl);
+    if (n) n.textContent = list.length;
+  };
+  chips('helpdesk', 'home-subs-helpdesk', 'home-n-helpdesk');
+  chips('dispatch', 'home-subs-dispatch', 'home-n-dispatch');
+
+  const ms = document.getElementById('home-ms-tasks');
+  if (ms) {
+    const today = (typeof getTodayTasks === 'function') ? getTodayTasks() : [];
+    const pending = today.filter(t => typeof isDone === 'function' ? !isDone(t.id) : true);
+    const open = pending.length;
+    const total = today.length;
+    const pct = total ? Math.round(((total - open) / total) * 100) : 0;
+    const due = pending.filter(t => t.priority === 'HIGH').length;
+    ms.innerHTML =
+      `<span><span class="mstat-v" data-count="${open}">${open}</span><span class="mstat-k">open</span></span>` +
+      `<span><span class="mstat-v" data-count="${due}" style="--sc:var(--coral-text)">${due}</span><span class="mstat-k">high priority</span></span>` +
+      `<span><span class="mstat-v" data-count="${pct}">${pct}</span><span class="mstat-k">% done</span></span>`;
+    countUpIn(ms);
+  }
+
+  if (_holoReady) return;
+  _holoReady = true;
+
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-go]');
+    if (!t || !t.closest('#page-home')) return;
+    showPage(t.getAttribute('data-go'));
+  });
+
+  if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    document.querySelectorAll('.mcard').forEach((card, i) => {
+      card.style.animationDelay = (90 + i * 110) + 'ms';
+      card.addEventListener('pointermove', ev => {
+        const r = card.getBoundingClientRect();
+        card.classList.add('tilt');
+        card.style.setProperty('--rx', (-((ev.clientY - r.top) / r.height - .5) * 8).toFixed(2) + 'deg');
+        card.style.setProperty('--ry', (((ev.clientX - r.left) / r.width - .5) * 11).toFixed(2) + 'deg');
+      });
+      card.addEventListener('pointerleave', () => {
+        card.classList.remove('tilt');
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      });
+    });
+    document.querySelectorAll('.sec-card').forEach((c, i) => {
+      c.style.animationDelay = (60 + i * 55) + 'ms';
+    });
+  }
+}
+
+function countUpIn(scope) {
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  scope.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count, 10);
+    if (isNaN(target)) return;
+    if (calm) { el.textContent = String(target); return; }
+    let t0 = 0;
+    el.textContent = '0';
+    requestAnimationFrame(function step(now) {
+      if (!t0) t0 = now;
+      const p = Math.min((now - t0) / 820, 1);
+      el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(step);
+    });
+  });
+}
+
+// ===== ACCENT =====
+// One palette now, so the only thing left to choose is the accent. The old
+// theme names still arrive from storage on the first load after this change,
+// so each is mapped to whichever accent it leaned on rather than dropped -
+// nobody should sign in to a colour they never picked.
+const ACCENTS = [
+  { id:'teal',    name:'Teal',    c:'#37c8b4' },
+  { id:'azure',   name:'Azure',   c:'#4a9ee8' },
+  { id:'violet',  name:'Violet',  c:'#9b8cf0' },
+  { id:'magenta', name:'Magenta', c:'#e87bb8' },
+  { id:'amber',   name:'Amber',   c:'#efa03c' },
+  { id:'lime',    name:'Lime',    c:'#8fd14f' },
+];
+const THEME_TO_ACCENT = {
+  midnight:'azure', navy:'azure', copper:'azure', slate:'azure',
+  ink:'teal', forest:'lime', aurora:'violet', ember:'amber',
+};
+
+function applyTheme(name) {
+  // Takes an accent id, or an old theme name, or nothing.
+  let id = name;
+  if (!ACCENTS.some(a => a.id === id)) id = THEME_TO_ACCENT[id] || 'teal';
+  const a = ACCENTS.find(x => x.id === id);
+  document.documentElement.removeAttribute('data-theme');
+  document.documentElement.style.setProperty('--accent', a.c);
+  document.querySelectorAll('.ap-card').forEach(c => {
+    const on = c.dataset.themeId === id;
+    c.classList.toggle('tp-active', on);
+    c.setAttribute('aria-pressed', String(on));
+  });
+  return id;
+}
+
+function renderAccentPicker() {
+  const host = document.getElementById('theme-picker');
+  if (!host) return;
+  const cur = localStorage.getItem('zarif_theme') || 'teal';
+  const id = ACCENTS.some(a => a.id === cur) ? cur : (THEME_TO_ACCENT[cur] || 'teal');
+  host.innerHTML = ACCENTS.map(a => `<button class="ap-card${a.id === id ? ' tp-active' : ''}"
+      data-theme-id="${a.id}" style="--c:${a.c}" onclick="pickTheme('${a.id}')"
+      aria-pressed="${a.id === id}" title="${a.name} accent">
+      <span class="ap-dot"></span><span class="ap-name">${a.name}</span>
+    </button>`).join('');
 }
 
 function pickTheme(name) {
   const oldBg = getComputedStyle(document.body).backgroundColor;
-  localStorage.setItem('zarif_theme', name);
-  applyTheme(name);
+  const id = applyTheme(name);
+  localStorage.setItem('zarif_theme', id);
+  renderAccentPicker();
   if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
     const flash = document.createElement('div');
     flash.className = 'theme-flash';
@@ -6494,12 +6779,13 @@ function pickTheme(name) {
 }
 
 function toggleTheme() {
-  const current = localStorage.getItem('zarif_theme') || 'navy';
-  const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
-  pickTheme(next);
+  const cur = localStorage.getItem('zarif_theme') || 'teal';
+  const i = ACCENTS.findIndex(a => a.id === cur);
+  pickTheme(ACCENTS[(i + 1) % ACCENTS.length].id);
 }
 
-applyTheme(localStorage.getItem('zarif_theme') || 'navy');
+applyTheme(localStorage.getItem('zarif_theme') || 'teal');
+renderAccentPicker();
 
 const PO = {HIGH:0, MEDIUM:1, LOW:2};
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -14508,8 +14794,8 @@ function renderSchedCardM(tasks) {
   for (const t of timed) {
     if (!isDone(t.id) && timeToMin(t.time) >= curMin) { nextId = String(t.id); break; }
   }
-  const HUB_DOT  = { helpdesk:'var(--teal)', projects:'var(--amber-text)', personal:'var(--purple-text)' };
-  const HUB_CHIP = { helpdesk:['hd','Helpdesk'], projects:['pj','Projects'], personal:['ps','Personal'] };
+  const HUB_DOT  = { helpdesk:'var(--purple-text)', dispatch:'var(--amber-text)', projects:'var(--teal)', personal:'var(--pink-text)' };
+  const HUB_CHIP = { helpdesk:['hd','Helpdesk'], dispatch:['dp','Dispatch'], projects:['pj','Projects'], personal:['ps','Personal'] };
   const PRIO_CLR = { HIGH:'var(--coral-text)', MEDIUM:'var(--amber-text)', LOW:'var(--text-3)' };
 
   function makeRow(t, showTime) {
@@ -15546,18 +15832,25 @@ const PAGES = {
   allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
   stock:          { title:'Stock Checks',      icon:'ti-package',          color:'c-green',  desc:'Replacement jobs from a file, each with the warehouse stock link for that part at that technician.' },
 };
-const HUBS = ['helpdesk','projects','personal'];
+// Dispatch is its own hub now. The validator, the lookup and the stock
+// check all answer one question - who and what goes where - and all three
+// run off the same morning export, so they were the three things inside
+// Helpdesk that had nothing to do with running the desk.
+const HUBS = ['helpdesk','dispatch','projects','personal'];
 const HUB_META = {
   helpdesk: { title:'Helpdesk Management', icon:'ti-headset' },
+  dispatch: { title:'Dispatch',            icon:'ti-route' },
   projects: { title:'Projects',            icon:'ti-folders' },
   personal: { title:'Personal',            icon:'ti-user-heart' },
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','alloccheck','allocvalidate','stock','meetings','message','templates'],
+  helpdesk: ['kpi','message','meetings','templates','suburbcheck'],
+  dispatch: ['allocvalidate','stock','alloccheck'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
+const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck'];
 const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -15565,37 +15858,36 @@ function loadHubLayout() {
   const hadSaved = Object.keys(saved).length > 0;
   const layout = {};
   let repositioned = false;
+  let carriedDispatch = [];
   HUBS.forEach(h => {
-    const list = Array.isArray(saved[h]) ? saved[h].filter(p => PAGES[p]) : DEFAULT_HUB_LAYOUT[h].slice();
+    let list = Array.isArray(saved[h]) ? saved[h].filter(p => PAGES[p]) : DEFAULT_HUB_LAYOUT[h].slice();
+    // Moving the three dispatch tools out of Helpdesk. A saved layout from
+    // before the split still lists them there, so they are taken out of
+    // Helpdesk and, if Dispatch has never been saved, seeded into it in the
+    // order they were found rather than a fresh default - somebody who
+    // reordered them keeps their order.
+    if (h === 'helpdesk') {
+      const moved = list.filter(p => DISPATCH_PAGES.includes(p));
+      if (moved.length) {
+        list = list.filter(p => !DISPATCH_PAGES.includes(p));
+        if (!Array.isArray(saved.dispatch)) carriedDispatch = moved;
+      }
+    }
+    if (h === 'dispatch' && !Array.isArray(saved.dispatch) && carriedDispatch.length) {
+      // The order they sat in inside Helpdesk is the order somebody chose, so
+      // it carries across whole rather than being replaced by the default.
+      list = carriedDispatch.slice();
+      const seen = new Set(list);
+      DEFAULT_HUB_LAYOUT.dispatch.forEach(p => { if (!seen.has(p)) list.push(p); });
+    }
     // Migration: existing saved layouts predate the Scratchpad page — add it to Personal once.
     if (h === 'personal' && !list.includes('notes')) list.push('notes');
     if (h === 'personal' && !list.includes('learning')) list.push('learning');
     if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
     // Saved layouts predate Project Analysis, so add it to Projects once.
     if (h === 'projects' && !list.includes('projanalysis')) list.unshift('projanalysis');
-    // Same for the validator, which belongs beside the lookup it reads from.
-    if (h === 'helpdesk' && !list.includes('allocvalidate')) {
-      const i = list.indexOf('alloccheck');
-      if (i === -1) list.push('allocvalidate'); else list.splice(i + 1, 0, 'allocvalidate');
-    }
-    // Stock Checks reads technicians through the same allocation data, so it
-    // lands beside the validator rather than at the end of the hub.
-    if (h === 'helpdesk' && !list.includes('stock')) {
-      const i = list.indexOf('allocvalidate');
-      if (i === -1) list.push('stock'); else list.splice(i + 1, 0, 'stock');
-    }
-    if (h === 'helpdesk') {
-      const i = list.indexOf('alloccheck');
-      if (i === -1) {
-        list.splice(1, 0, 'alloccheck');
-      } else if (i !== 1 && !dbGet(AL_POS_FLAG)) {
-        // One-time move to second place. Guarded by a flag so reordering it
-        // later in the Hub Organiser isn't undone on the next load.
-        list.splice(i, 1);
-        list.splice(1, 0, 'alloccheck');
-        repositioned = true;
-      }
-    }
+    // A Dispatch hub that somehow ended up empty gets its three back.
+    if (h === 'dispatch' && !list.length) list = DEFAULT_HUB_LAYOUT.dispatch.slice();
     layout[h] = list;
   });
   if (hadSaved && repositioned) dbSet(AL_POS_FLAG, true);
@@ -15675,7 +15967,7 @@ function showPage(p, hub) {
   // global back button
   const back = document.getElementById('page-back');
   const backLbl = document.getElementById('page-back-label');
-  const HUB_BACK_COLOR = { home:'pb-home', helpdesk:'pb-helpdesk', projects:'pb-projects', personal:'pb-personal', tasks:'pb-tasks', learning:'pb-home' };
+  const HUB_BACK_COLOR = { home:'pb-home', helpdesk:'pb-helpdesk', dispatch:'pb-helpdesk', projects:'pb-projects', personal:'pb-personal', tasks:'pb-tasks', learning:'pb-home' };
   const topbar = document.querySelector('.page-topbar');
   const backHidden = p === 'home' || p === 'projdetail' || TOP_LEVEL.includes(p);
   if (topbar) topbar.classList.toggle('topbar-empty', backHidden);
@@ -15691,6 +15983,7 @@ function showPage(p, hub) {
   }
   if (typeof updatePomoFloat === 'function') updatePomoFloat();
   if (p === 'home' && typeof renderHomeDashboard === 'function') renderHomeDashboard();
+  if (p === 'home' && typeof initHome === 'function') initHome();
   if (p === 'meetings' && typeof updateMtgAnzPanel === 'function') updateMtgAnzPanel();
   if (p === 'meetings' && typeof updateMtgContextPanel === 'function') updateMtgContextPanel();
   if (p === 'meetings' && typeof populateMtgLinkOptions === 'function') populateMtgLinkOptions();
@@ -16009,8 +16302,8 @@ function taskHTML(t, showFreqPill) {
   const upBtn = `<button class="task-move-btn" onclick="event.stopPropagation(); moveTask('${t.id}', -1)"><i class="ti ti-chevron-up"></i></button>`;
   const downBtn = `<button class="task-move-btn" onclick="event.stopPropagation(); moveTask('${t.id}', 1)"><i class="ti ti-chevron-down"></i></button>`;
   const hub = t.hub || 'helpdesk';
-  const hubIcons = {helpdesk:'ti-headset', projects:'ti-folders', personal:'ti-user'};
-  const hubLabels = {helpdesk:'Helpdesk', projects:'Projects', personal:'Personal'};
+  const hubIcons = {helpdesk:'ti-headset', dispatch:'ti-route', projects:'ti-folders', personal:'ti-user'};
+  const hubLabels = {helpdesk:'Helpdesk', dispatch:'Dispatch', projects:'Projects', personal:'Personal'};
   const hubBadge = taskHubFilter === 'all'
     ? `<span class="task-hub-badge thb-${hub}"><i class="ti ${hubIcons[hub]}" style="font-size:10px;margin-right:3px"></i>${hubLabels[hub]}</span>`
     : '';
@@ -16114,6 +16407,9 @@ function renderHomeDashboard() {
   renderHomeWeather();
   renderHighlightsBanner('home-highlights');
   applyHomeTimeOrdering();
+  // The cards carry live figures, so they refresh whenever the dashboard
+  // does - the data arrives after the first paint on a cold load.
+  if (typeof initHome === 'function') initHome();
 }
 
 // ===== Time-of-day-aware Home ordering =====
@@ -16698,8 +16994,8 @@ function tomorrowPreviewRow(t) {
   const pillLbl = isDated ? fmtShortDate(t.date) : (FREQ_LABELS[t.freq] || t.freq);
   const pillCls = isDated ? 'fp-date' : 'fp-' + t.freq;
   const hub = t.hub || 'helpdesk';
-  const hubIcons = {helpdesk:'ti-headset', projects:'ti-folders', personal:'ti-user'};
-  const hubLabels = {helpdesk:'Helpdesk', projects:'Projects', personal:'Personal'};
+  const hubIcons = {helpdesk:'ti-headset', dispatch:'ti-route', projects:'ti-folders', personal:'ti-user'};
+  const hubLabels = {helpdesk:'Helpdesk', dispatch:'Dispatch', projects:'Projects', personal:'Personal'};
   return `<div class="task" style="cursor:default;">
     <div class="tbody">
       <div class="trow1"><span class="tname">${esc(t.name)}</span><span class="badge ${bCls}"><i class="ti ${bIcon}"></i>${bLbl}</span></div>
@@ -22739,7 +23035,7 @@ function loadSettings() {
   const nameEl = document.getElementById('settings-display-name');
   if (nameEl) nameEl.value = s.displayName || 'Zarif';
 
-  applyTheme(localStorage.getItem('zarif_theme') || 'navy');
+  applyTheme(localStorage.getItem('zarif_theme') || 'teal');
 
   const sidebarEl = document.getElementById('settings-show-sidebar');
   if (sidebarEl) sidebarEl.checked = s.showSidebar !== false;
