@@ -15,8 +15,15 @@
  *        SUPABASE_URL  https://qwceyzswwtyqiozxnlah.supabase.co
  *        SERVICE_KEY   <service_role key: Supabase -> Project Settings -> API>
  *        USER_ID       <your uid: Supabase -> Authentication -> Users>
- *   3. In Gmail, make a filter on the report sender that applies the label
- *      "hub-import". Create the label first if it does not exist.
+ *   3. In Gmail, make a filter that applies the label "hub-import". Create
+ *      the label first if it does not exist.
+ *
+ *      Filter on the SUBJECT, not the sender. These arrive forwarded from a
+ *      work Outlook mailbox, and an Outlook "forward" rule sends a new
+ *      message from that mailbox - so the From you see in Gmail is your own
+ *      work address, not the system that generated the report. A subject
+ *      filter survives that. (An Outlook "redirect" rule does preserve the
+ *      original sender, if your tenant allows it - subject still works.)
  *   4. Run installTrigger() once, and approve the permission prompt.
  *   5. Run ingest() by hand to test. Check the Execution log.
  *
