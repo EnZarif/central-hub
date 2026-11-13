@@ -2379,6 +2379,61 @@
   .al-tcopy.done { color:var(--green-text) !important; background:var(--green-bg); }
   .al-tdepot.partner .al-tdepot-c { color:var(--purple-text); background:var(--purple-bg); }
   .al-tdepot.none .al-tdepot-c { color:var(--text-3); background:var(--surface2); }
+  /* ---- Inbox: files that arrived by email --------------------------------
+     Shared by the Allocation Validator and Stock Checks. Stays hidden until
+     a file is actually waiting, so a page nobody has wired up to email looks
+     exactly as it did before. */
+  .hub-ibx { border:0.5px solid var(--border); border-left:2.5px solid var(--teal-text);
+    border-radius:11px; background:var(--surface); overflow:hidden; margin-bottom:14px;
+    box-shadow:0 14px 32px -20px rgba(0,0,0,.9); animation:ibxIn .18s ease; }
+  @keyframes ibxIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
+  .hub-ibx-hd { display:flex; align-items:center; gap:9px; padding:11px 14px 10px;
+    font-size:12.5px; font-weight:600; color:var(--teal-text); }
+  .hub-ibx-hd > .ti { font-size:16px; }
+  .hub-ibx-n { font-size:10px; font-weight:700; color:var(--teal-text);
+    background:var(--teal-bg); border-radius:5px; padding:3px 7px; }
+  .hub-ibx-sub { font-size:11px; font-weight:400; color:var(--text-3); }
+  .hub-ibx-re { margin-left:auto; flex-shrink:0; display:inline-flex; align-items:center;
+    gap:5px; font-size:11px; font-family:inherit; color:var(--text-3); background:transparent;
+    border:0.5px solid var(--border-md); border-radius:7px; padding:4px 9px; cursor:pointer;
+    transition:color .13s, background .13s, border-color .13s; }
+  .hub-ibx-re:hover { color:var(--teal-text); background:var(--teal-bg);
+    border-color:color-mix(in srgb, var(--teal-text) 32%, transparent); }
+  .hub-ibx-re.spin > .ti { animation:spin 0.9s linear infinite; }
+
+  .hub-ibx-f { display:flex; align-items:center; gap:10px; padding:9px 14px; font-size:12px;
+    border-top:0.5px solid var(--border); }
+  .hub-ibx-f > .ti { flex-shrink:0; font-size:15px; color:var(--text-3); }
+  .hub-ibx-f.fresh > .ti { color:var(--teal-text); }
+  .hub-ibx-nm { flex:1 1 auto; min-width:0; color:var(--text-2); overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .hub-ibx-f.fresh .hub-ibx-nm { color:var(--text-1); font-weight:500; }
+  .hub-ibx-me { flex-shrink:0; font-size:10.5px; color:var(--text-3); }
+  /* The one that was put on screen for you, so an automatic load is never a
+     silent one - you can always see which file you are looking at. */
+  .hub-ibx-cur { flex-shrink:0; font-size:9.5px; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase; color:var(--green-text); background:var(--green-bg);
+    border-radius:5px; padding:2px 6px; }
+  .hub-ibx-go { flex-shrink:0; font-size:11px; font-weight:600; font-family:inherit;
+    color:var(--teal-text); background:var(--teal-bg); border:0.5px solid
+    color-mix(in srgb, var(--teal-text) 30%, transparent); border-radius:7px;
+    padding:4px 11px; cursor:pointer; transition:background .13s, color .13s; }
+  .hub-ibx-go:hover { background:var(--teal-text); color:#000; }
+  .hub-ibx-x { flex-shrink:0; display:inline-flex; font-size:13px; color:var(--text-3);
+    background:transparent; border:none; border-radius:6px; padding:4px; cursor:pointer;
+    transition:color .13s, background .13s; }
+  .hub-ibx-x:hover { color:var(--coral-text); background:var(--coral-bg); }
+  .hub-ibx-foot { padding:8px 14px; font-size:11px; color:var(--text-3);
+    border-top:0.5px solid var(--border); font-style:italic; }
+  @media (max-width: 560px) {
+    .hub-ibx-f { flex-wrap:wrap; gap:7px 9px; }
+    .hub-ibx-nm { flex:1 1 100%; white-space:normal; overflow-wrap:anywhere; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hub-ibx { animation:none; }
+    .hub-ibx-re.spin > .ti { animation:none; }
+  }
+
   .al-tjob { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 10px; padding:7px 14px;
     font-size:12px; color:var(--text-2); text-decoration:none; border-top:0.5px solid var(--border);
     transition:background .13s, color .13s; }
@@ -5018,6 +5073,8 @@
       </div>
     </div>
 
+    <div class="hub-ibx" id="al-val-inbox" style="display:none;"></div>
+
     <div class="al-vcfg" id="al-val-config">
       <div class="card" style="margin-bottom:0;">
         <div class="kpi-template-row" style="margin-bottom:0;">
@@ -5052,6 +5109,8 @@
         <p>Jobs waiting on a replacement part, each with the warehouse link for that part at that technician's location</p>
       </div>
     </div>
+
+    <div class="hub-ibx" id="stk-inbox" style="display:none;"></div>
 
     <div class="stk-cfg" id="stk-config">
       <div class="card" style="margin-bottom:0;">
@@ -10994,6 +11053,246 @@ function stkDownload() {
   XLSX.writeFile(wb, `${stkName || 'jobs'}_stock_checks.xlsx`);
 }
 
+// ---- Inbox: the files that arrive by email ---------------------------------
+// A Gmail filter labels the morning reports, an Apps Script pushes their
+// attachments into the Supabase "imports" bucket, and this reads that bucket.
+// See automation/gmail-to-hub.gs and automation/imports_setup.sql.
+//
+// The script deliberately does not decide which page a file belongs to. One
+// helpdesk export often carries the columns both pages want, and this side
+// already parses xlsx with SheetJS, so the sniffing happens here where it is
+// cheap and can be corrected without touching anything in Google.
+const INBOX_BUCKET = 'imports';
+let inboxFiles = [];     // [{ path, name, at, fits, rows }]
+let inboxIndex = null;   // path -> { fits, rows } - the cached header peek
+let inboxSeen  = null;   // "page|path" -> iso     - already loaded on that page
+let inboxCur   = {};     // page -> path           - what is on screen right now
+let inboxBusy  = false;
+
+function inboxStore() {
+  if (!inboxIndex) inboxIndex = dbGet('zarif_inbox_index') || {};
+  if (!inboxSeen)  inboxSeen  = dbGet('zarif_inbox_seen')  || {};
+}
+
+function inboxBtn(page) {
+  return document.querySelector('#' + (page === 'stock' ? 'stk' : 'al-val') + '-inbox .hub-ibx-re');
+}
+
+async function inboxUid() {
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    return session && session.user ? session.user.id : '';
+  } catch (e) { return ''; }
+}
+
+// Which page can use this file, read off its header row. Mirrors what each
+// loader looks for: the validator needs a technician and a zone, stock needs
+// a model and a fault. A file can honestly answer both, and often does.
+function inboxFits(headers) {
+  const h = (headers || []).map(x => String(x).toLowerCase());
+  const has = re => h.some(c => re.test(c));
+  const fits = [];
+  if (has(/tech/)  && has(/zone/))  fits.push('validator');
+  if (has(/model/) && has(/fault/)) fits.push('stock');
+  return fits;
+}
+
+// 2026-11-13T06-04-11__jobs.csv -> jobs.csv
+function inboxPretty(n) {
+  return String(n).replace(/^\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d__/, '');
+}
+
+function inboxWhen(o, name) {
+  const iso = o && (o.created_at || o.updated_at);
+  if (iso) { const d = new Date(iso); if (!isNaN(d)) return d; }
+  // Fall back to the stamp the script puts on the front of the filename.
+  const m = String(name).match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d)-(\d\d)-(\d\d)__/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  return null;
+}
+
+function inboxAgo(d) {
+  if (!d) return '';
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return mins + ' min ago';
+  const t = d.toLocaleTimeString('en-AU', { hour:'numeric', minute:'2-digit' })
+             .toLowerCase().replace(' ', '');
+  if (d.toDateString() === new Date().toDateString()) return 'arrived ' + t;
+  const days = Math.round((new Date().setHours(0,0,0,0) - new Date(d.getTime()).setHours(0,0,0,0)) / 86400000);
+  if (days === 1) return 'yesterday ' + t;
+  return d.toLocaleDateString('en-AU', { day:'numeric', month:'short' }) + ' ' + t;
+}
+
+// Peek at the header row only, and remember the answer. Opening a page should
+// not re-download every file sitting in the bucket.
+async function inboxPeek(path) {
+  if (inboxIndex[path]) return inboxIndex[path];
+  let info = { fits: [], rows: 0, bad: true };
+  try {
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET).download(path);
+    if (error || !data) throw error || new Error('no data');
+    const wb = XLSX.read(await data.arrayBuffer(), { type:'array' });
+    const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],
+      { header:1, raw:false, defval:'' });
+    let hdr = 0;
+    for (let i = 0; i < Math.min(raw.length, 25); i++) {
+      if (raw[i].some(v => /tech|zone|model|fault/i.test(String(v)))) { hdr = i; break; }
+    }
+    const headers = (raw[hdr] || []).map(v => String(v)).filter(v => v.trim() !== '');
+    info = { fits: inboxFits(headers), rows: Math.max(0, raw.length - hdr - 1) };
+  } catch (e) {
+    console.warn('[inbox] could not read', path, e);
+  }
+  inboxIndex[path] = info;
+  return info;
+}
+
+async function inboxRefresh(page, manual) {
+  if (inboxBusy) return;
+  inboxBusy = true;
+  if (manual) { const b = inboxBtn(page); if (b) b.classList.add('spin'); }
+  try {
+    inboxStore();
+    const uid = await inboxUid();
+    if (!uid) { inboxFiles = []; return; }
+    const dir = uid + '/inbox';
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET)
+      .list(dir, { limit: 50, sortBy: { column: 'name', order: 'desc' } });
+    if (error) throw error;
+    inboxFiles = (data || [])
+      .filter(o => o.name && !o.name.startsWith('.'))
+      .map(o => ({ path: dir + '/' + o.name, name: inboxPretty(o.name), at: inboxWhen(o, o.name) }));
+    // Drop cache entries for files that are no longer there. hub_data is read
+    // in full on every page load, so this must not be allowed to grow forever.
+    const live = {};
+    inboxFiles.forEach(f => { if (inboxIndex[f.path]) live[f.path] = inboxIndex[f.path]; });
+    inboxIndex = live;
+    for (const f of inboxFiles) {
+      const info = await inboxPeek(f.path);
+      f.fits = info.fits; f.rows = info.rows; f.bad = info.bad;
+    }
+    dbSet('zarif_inbox_index', inboxIndex);
+  } catch (e) {
+    // Not set up yet, or no access. Stay quiet - a page nobody has wired up
+    // to email should look exactly as it always did.
+    console.warn('[inbox]', e);
+    inboxFiles = [];
+    if (manual) showToast('<i class="ti ti-alert-triangle"></i> Inbox unavailable \u2014 ' + esc(e.message || String(e)), 3400);
+  } finally {
+    inboxBusy = false;
+    const b = inboxBtn(page); if (b) b.classList.remove('spin');
+    inboxRender(page);
+  }
+}
+
+function inboxRender(page) {
+  const el = document.getElementById(page === 'stock' ? 'stk-inbox' : 'al-val-inbox');
+  if (!el) return;
+  inboxStore();
+  // Anything this page can use, plus anything we could not read - a file we
+  // failed to sniff is still a file you may want, so it is offered, not hidden.
+  const mine = inboxFiles.filter(f => !f.fits || !f.fits.length || f.fits.includes(page));
+  const away = inboxFiles.filter(f => f.fits && f.fits.length && !f.fits.includes(page));
+  if (!mine.length && !away.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  const fresh = mine.filter(f => !inboxSeen[page + '|' + f.path]).length;
+  const otherPage = page === 'stock' ? 'the Allocation Validator' : 'Stock Checks';
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="hub-ibx-hd">
+      <i class="ti ti-inbox"></i> Inbox
+      ${fresh ? `<span class="hub-ibx-n">${fresh} new</span>` : ''}
+      <span class="hub-ibx-sub">from your email</span>
+      <button class="hub-ibx-re" onclick="inboxRefresh('${page}', true)" title="Check for new files">
+        <i class="ti ti-refresh"></i> Refresh
+      </button>
+    </div>
+    ${mine.map(f => {
+      const ix = inboxFiles.indexOf(f);
+      const isNew = !inboxSeen[page + '|' + f.path];
+      const cur = inboxCur[page] === f.path;
+      const meta = [inboxAgo(f.at), f.bad ? 'could not read' : (f.rows ? f.rows.toLocaleString() + ' rows' : '')]
+        .filter(Boolean).join(' \u00b7 ');
+      return `<div class="hub-ibx-f${isNew ? ' fresh' : ''}">
+        <i class="ti ti-file-spreadsheet"></i>
+        <span class="hub-ibx-nm" title="${escAttr(f.name)}">${esc(f.name)}</span>
+        <span class="hub-ibx-me">${esc(meta)}</span>
+        ${cur ? '<span class="hub-ibx-cur">On screen</span>'
+              : `<button class="hub-ibx-go" onclick="inboxLoad('${page}', ${ix})">Load</button>`}
+        <button class="hub-ibx-x" onclick="inboxDrop('${page}', ${ix})" title="Remove from inbox"><i class="ti ti-x"></i></button>
+      </div>`;
+    }).join('')}
+    ${away.length ? `<div class="hub-ibx-foot">${away.length} other file${away.length !== 1 ? 's' : ''} here ${away.length !== 1 ? 'are' : 'is'} for ${otherPage}.</div>` : ''}`;
+}
+
+async function inboxLoad(page, ix) {
+  const f = inboxFiles[ix];
+  if (!f) return;
+  try {
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET).download(f.path);
+    if (error || !data) throw error || new Error('download failed');
+    const file = new File([data], f.name, { type: data.type || 'text/csv' });
+    if (page === 'stock') await stkLoad(file); else await alValLoad(file);
+    // Carry it through to the answer. Both of these do nothing unless the
+    // mapper resolved the columns they need, so a file that does not quite
+    // fit still stops politely at the mapper, exactly as a hand-picked one
+    // does - this only removes the button press when there is nothing to
+    // decide. A manual upload is left alone.
+    if (page === 'stock') { if (typeof stkFind === 'function') stkFind(); }
+    else if (typeof alValValidate === 'function') alValValidate();
+    inboxStore();
+    inboxSeen[page + '|' + f.path] = new Date().toISOString();
+    inboxCur[page] = f.path;
+    // Forget marks for files that have left the bucket, same reason as above.
+    const live = {};
+    Object.keys(inboxSeen).forEach(k => {
+      if (inboxFiles.some(x => k === 'validator|' + x.path || k === 'stock|' + x.path)) live[k] = inboxSeen[k];
+    });
+    inboxSeen = live;
+    dbSet('zarif_inbox_seen', inboxSeen);
+    inboxRender(page);
+  } catch (e) {
+    showToast('<i class="ti ti-alert-triangle"></i> Could not load \u2014 ' + esc(e.message || String(e)), 3400);
+  }
+}
+
+async function inboxDrop(page, ix) {
+  const f = inboxFiles[ix];
+  if (!f) return;
+  // The email still holds the attachment, so this is recoverable - but it is
+  // still a delete, so it gets asked for.
+  if (!confirm('Remove "' + f.name + '" from the inbox?\n\nThe original stays in your email.')) return;
+  try {
+    const { error } = await _sb.storage.from(INBOX_BUCKET).remove([f.path]);
+    if (error) throw error;
+    if (inboxCur[page] === f.path) delete inboxCur[page];
+    inboxFiles.splice(ix, 1);
+    inboxRender(page);
+    showToast('<i class="ti ti-check"></i> Removed from the inbox', 2400);
+  } catch (e) {
+    showToast('<i class="ti ti-alert-triangle"></i> Could not remove \u2014 ' + esc(e.message || String(e)), 3400);
+  }
+}
+
+// Open the page and the morning's file is already on screen. Only the newest
+// one this page has never been given, and only when nothing is loaded yet -
+// it must never tread on a file you picked yourself.
+async function inboxAuto(page) {
+  const rows = page === 'stock' ? stkRows : alValRows;
+  if (rows && rows.length) return;
+  inboxStore();
+  const pick = inboxFiles.find(f => f.fits && f.fits.includes(page) && !inboxSeen[page + '|' + f.path]);
+  if (!pick) return;
+  await inboxLoad(page, inboxFiles.indexOf(pick));
+}
+
+async function inboxInit(page) {
+  inboxRender(page);          // paint what the last visit already knew about
+  await inboxRefresh(page);
+  await inboxAuto(page);
+}
+
 function stkInit() {
   stkRenderConfig();
   stkRenderRules();
@@ -14654,6 +14953,9 @@ function showPage(p, hub) {
   if (p === 'learning' && typeof renderLearning === 'function') renderLearning();
   if (p === 'alloccheck' && typeof alInit === 'function') alInit();
   if (p === 'stock' && typeof stkInit === 'function') stkInit();
+  if ((p === 'stock' || p === 'allocvalidate') && typeof inboxInit === 'function') {
+    inboxInit(p === 'stock' ? 'stock' : 'validator');
+  }
   window.scrollTo(0, 0);
 }
 
