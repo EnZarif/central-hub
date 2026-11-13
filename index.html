@@ -70,6 +70,103 @@
     --radius: 10px; --radius-lg: 14px;
   }
 
+  /* ── QUICK LINKS CHOOSER ────────────────────────────────────────────
+     Which apps appear in the rail, and in what order. Kept per browser: it
+     is a convenience, not something that needs to follow you to a phone. */
+  .qlc-ov { position: fixed; inset: 0; z-index: 80; background: rgba(3,5,8,0.74);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    display: grid; place-items: center; padding: 16px; animation: zDrop .22s ease; }
+  .qlc-ov[hidden] { display: none !important; }
+  .qlc { width: min(440px, 100%); max-height: 78vh; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--border-md); border-radius: 18px;
+    box-shadow: 0 30px 70px -36px rgba(0,0,0,1); padding: 20px 22px 22px; }
+  .qlc h3 { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 17px;
+    font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .qlc > p { margin: 0 0 14px; font-size: 12.5px; color: var(--text-3); line-height: 1.55; }
+  .qlc-row { display: flex; align-items: center; gap: 11px; padding: 9px 0;
+    border-top: 1px solid var(--border); }
+  .qlc-row i.ti { font-size: 17px; flex-shrink: 0; color: var(--ac, var(--teal-text)); width: 20px; text-align: center; }
+  .qlc-n { flex: 1 1 auto; min-width: 0; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .qlc-row.off { opacity: 0.45; }
+  .qlc-b { background: var(--surface2); border: 1px solid var(--border); color: var(--text-3);
+    width: 28px; height: 28px; border-radius: 8px; cursor: pointer; flex-shrink: 0;
+    font-size: 13px; line-height: 1; font-family: inherit;
+    transition: color .14s, border-color .14s; }
+  .qlc-b:hover:not(:disabled) { color: var(--text); border-color: var(--border-md); }
+  .qlc-b:disabled { opacity: 0.28; cursor: default; }
+  .qlc-t { width: 40px; height: 23px; border-radius: 12px; flex-shrink: 0; cursor: pointer;
+    background: var(--surface2); border: 1px solid var(--border); position: relative;
+    transition: background .18s, border-color .18s; }
+  .qlc-t::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px;
+    border-radius: 50%; background: var(--text-3);
+    transition: transform .2s cubic-bezier(.22,.9,.26,1), background .18s; }
+  .qlc-t[aria-pressed="true"] { background: var(--green-bg);
+    border-color: color-mix(in srgb, var(--green-text) 44%, transparent); }
+  .qlc-t[aria-pressed="true"]::after { transform: translateX(17px); background: var(--green-text); }
+  .qlc-ft { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 18px; }
+
+  /* ── THE BOARD ──────────────────────────────────────────────────────
+     A hub is a list of services, not a wall of cards. One line each: what it
+     is, what state it is in, its figures, when it last ran - read down like
+     the run sheet on a depot wall. Cards made you scan six boxes to find the
+     one with a number on it. */
+  .board { border: 1px solid var(--border-md); border-radius: 16px; overflow: hidden;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent), color-mix(in srgb, var(--bg) 86%, transparent));
+    box-shadow: 0 24px 50px -30px rgba(0,0,0,0.95);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .board-hd { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 13px 18px; border-bottom: 1px solid var(--border-md);
+    background: color-mix(in srgb, var(--bg) 60%, transparent);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+  .board-hd b { color: var(--teal-text); font-weight: 600; }
+  .board-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-text);
+    position: relative; flex-shrink: 0; }
+  .board-dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 1px solid var(--green-text); animation: ping 1.9s cubic-bezier(0,.5,.4,1) infinite; }
+  @keyframes ping { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+  .board-cols { display: grid; grid-template-columns: 1fr 128px 210px 96px; gap: 14px;
+    padding: 9px 18px; border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface2) 55%, transparent);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9.5px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+  .brow { display: grid; grid-template-columns: 1fr 128px 210px 96px; gap: 14px;
+    align-items: center; width: 100%; padding: 15px 18px; cursor: pointer;
+    background: none; border: none; border-bottom: 1px solid var(--border);
+    font-family: inherit; color: inherit; text-align: left; position: relative;
+    transition: background .16s; animation: zRise .5s cubic-bezier(.22,.9,.26,1) both; }
+  .brow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+    background: var(--ac, var(--teal-text)); transition: width .18s; }
+  .brow:hover { background: color-mix(in srgb, var(--ac, var(--teal-text)) 7%, transparent); }
+  .brow:hover::before { width: 3px; box-shadow: 0 0 16px -1px var(--ac, var(--teal-text)); }
+  .brow:focus-visible { outline: 2px solid var(--ac, var(--teal-text)); outline-offset: -2px; }
+  .brow:last-child { border-bottom: none; }
+  .brow-n { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 16.5px;
+    font-weight: 700; letter-spacing: -0.015em; min-width: 0; display: flex;
+    align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .brow-n i { font-size: 16px; color: var(--ac, var(--teal-text)); align-self: center; }
+  .brow-d { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px;
+    font-weight: 400; color: var(--text-3); letter-spacing: 0; }
+  .brow-s { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--sc, var(--ac, var(--teal-text))); }
+  .brow-f { display: flex; gap: 15px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+  .brow-f b { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 18px;
+    font-weight: 800; letter-spacing: -0.02em; display: block; color: var(--fc, var(--text)); }
+  .brow-f span { font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-3); }
+  .brow-t { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px;
+    color: var(--text-3); text-align: right; }
+  @media (max-width: 900px) {
+    .board-cols { display: none; }
+    .brow { grid-template-columns: 1fr; row-gap: 9px; }
+    .brow-t { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .brow { animation: none; }
+    .board-dot::after { animation: none; }
+  }
+
   /* ── STAT TILES ─────────────────────────────────────────────────────
      The verdict counts were only ever readable on the fold headers, which
      means you had to scan five collapsed rows to learn the shape of the
@@ -275,19 +372,17 @@
   body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 90px; }
   /* Clear the fixed nav. It is 110px at its tallest, with the clock card in
      it, and the greeting was sliding underneath. */
-  .wrap { padding: 2rem 3rem 4rem; margin-left: 62px; }
+  .wrap { padding: 2rem 3rem 4rem; margin-left: 66px; }
 
   /* ── THE GROUND ─────────────────────────────────────────────────────
      Two fixed layers behind everything: a violet well at the bottom of the
      page, and a survey grid that only lights where the pointer is. The well
      is atmosphere and stays put whichever accent is chosen - otherwise every
      accent would repaint the whole room. */
-  body::after {
-    content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
-    background:
-      radial-gradient(90% 62% at 50% 104%, color-mix(in srgb, var(--well-1) 40%, transparent), transparent 70%),
-      radial-gradient(70% 46% at 50% 100%, color-mix(in srgb, var(--well-2) 62%, transparent), transparent 72%);
-  }
+  /* The violet well is gone. It read as a glow bleeding up from nowhere on
+     a page whose content stops halfway down, and the grid under the pointer
+     is the only ground this app actually needs. --well-1 stays defined
+     because the heading gradients still run through it. */
   #hub-grid-bg {
     position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background-image:
@@ -321,7 +416,7 @@
      so opening the rail never pushes the work around - it opens over its
      own gutter. Below 760px this all gives way to the drawer rules further
      down, which were already vertical. */
-  .nav { width: 62px; background: color-mix(in srgb, var(--surface) 92%, transparent);
+  .nav { width: 66px; background: color-mix(in srgb, var(--surface) 92%, transparent);
     backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
     border-right: 0.5px solid var(--border); border-bottom: none;
     position: fixed; top: 0; left: 0; bottom: 0; right: auto;
@@ -330,7 +425,18 @@
     z-index: 60; overflow: hidden; white-space: nowrap; gap: 0;
     transition: width 0.26s cubic-bezier(.22,.9,.26,1), box-shadow 0.26s; }
   .nav:hover, .nav:focus-within, .nav.rail-pin {
-    width: 238px; box-shadow: 28px 0 56px -32px rgba(0,0,0,0.96); }
+    width: 262px; box-shadow: 28px 0 56px -32px rgba(0,0,0,0.96); }
+  /* The quick-links header: a + that opens the chooser, and the caption that
+     says what the list is. Both only mean anything once the rail is open. */
+  .ql-head { display: flex; align-items: center; gap: 12px; padding: 2px 0 12px 13px; flex-shrink: 0; }
+  .ql-add { width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center;
+    background: none; border: none; cursor: pointer; border-radius: 9px; font-size: 19px;
+    line-height: 1; color: var(--text-3);
+    transition: color .15s, background .15s, transform .2s cubic-bezier(.22,.9,.26,1); }
+  .ql-add:hover { color: var(--teal-text); background: var(--surface2); transform: rotate(90deg); }
+  .ql-add:focus-visible { outline: 2px solid var(--teal-text); outline-offset: 1px; }
+  .ql-cap { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; }
   .nav-logo { display: flex; align-items: center; gap: 12px; padding: 0 0 12px 13px;
     font-size: 15px; font-weight: 600; color: var(--text); flex-shrink: 0;
     background: none; border: none; font-family: inherit; cursor: pointer; }
@@ -339,12 +445,13 @@
   /* A scrollbar inside a 62px rail is mostly scrollbar. */
   .nav-links { scrollbar-width: none; }
   .nav-links::-webkit-scrollbar { width: 0; height: 0; }
-  .nav-wordmark, .nav-btn span, .nav-sec, .rail-cap, .cwc-body-rail {
+  .nav-wordmark, .nav-btn span, .nav-sec, .rail-cap, .ql-cap, .cwc-body-rail {
     opacity: 0; transition: opacity 0.2s ease 0.05s; }
   .nav:hover .nav-wordmark, .nav:focus-within .nav-wordmark, .nav.rail-pin .nav-wordmark,
   .nav:hover .nav-btn span, .nav:focus-within .nav-btn span, .nav.rail-pin .nav-btn span,
   .nav:hover .nav-sec, .nav:focus-within .nav-sec, .nav.rail-pin .nav-sec,
   .nav:hover .rail-cap, .nav:focus-within .rail-cap, .nav.rail-pin .rail-cap,
+  .nav:hover .ql-cap, .nav:focus-within .ql-cap, .nav.rail-pin .ql-cap,
   .nav:hover .cwc-body-rail, .nav:focus-within .cwc-body-rail, .nav.rail-pin .cwc-body-rail { opacity: 1; }
   /* A divider that reads as a divider once the labels are there, and as a
      plain rule while the rail is shut. */
@@ -383,8 +490,8 @@
   .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px;
     flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
   .nav-section-label { display: none; }
-  .nav-btn { width: calc(100% - 12px); margin: 0 6px; padding: 7px; font-size: 13.5px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
-  .nav-btn i { font-size: 16px; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
+  .nav-btn { width: calc(100% - 12px); margin: 0 6px; padding: 9px 7px; font-size: 14.5px; font-weight: 500; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
+  .nav-btn i { font-size: 18px; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
   .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); transform: translateY(-1px); }
   .nav-btn:active { transform: scale(0.96); }
   /* per-hub icon tiles: monochrome gold, opacity-tiered */
@@ -752,7 +859,10 @@
   /* ── Bento hub layout: the first card in Home/Helpdesk/Personal's grid becomes a bigger "hero"
      tile spanning 2 rows, with a gradient built from the active theme's own accent colour
      (--teal) fading into that theme's --hero-bg — was navy-only, now applies to every theme ── */
-  .hub-grid { grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); }
+  /* A hub renders one board, not a row of cards, so the container that used
+     to lay those cards out has to stop being a grid - otherwise the board is
+     squeezed into a single 248px column. */
+  .hub-grid { display: block; grid-template-columns: none; }
   /* The hero tile is gone. One tool was twice the height of the others for
      no reason anyone could point at - it was first in the list, not more
      important - and it carried a maroon gradient that belonged to a theme
@@ -4265,26 +4375,34 @@
 
 <div class="nav-scrim" id="nav-scrim" onclick="closeMobileNav()"></div>
 
+<div class="qlc-ov" id="qlc-ov" hidden>
+  <div class="qlc" role="dialog" aria-modal="true" aria-labelledby="qlc-h">
+    <h3 id="qlc-h">Quick links</h3>
+    <p>Switch an app off to take it out of the rail, and move the ones you open every
+      morning to the top. Widgets, Search and Settings always stay.</p>
+    <div id="qlc-rows"></div>
+    <div class="qlc-ft">
+      <button class="generate-btn" style="width:auto;margin:0;padding:9px 18px" onclick="qlcClose()">Done</button>
+      <button class="qlc-b" style="width:auto;padding:0 14px;height:36px;border-radius:10px" onclick="qlcReset()">Reset to default</button>
+    </div>
+  </div>
+</div>
+
 <nav class="nav">
   <button class="nav-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
   <button class="rail-pin-btn" id="rail-pin" onclick="toggleRailPin()" aria-pressed="false"
     title="Keep the rail open" aria-label="Keep the rail open">&#10011;</button>
-  <div class="nav-links">
-    <button class="nav-btn" data-page="home" onclick="showPage('home')"><i class="ti ti-home-2"></i><span>Home</span></button>
-    <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Task Manager</span></button>
-    <button class="nav-btn" data-page="helpdesk" onclick="showPage('helpdesk')"><i class="ti ti-headset"></i><span>Helpdesk</span></button>
-    <button class="nav-btn" data-page="dispatch" onclick="showPage('dispatch')"><i class="ti ti-route"></i><span>Dispatch</span></button>
-
-    <div class="nav-sec-row"><span class="nav-sec">More</span><i></i></div>
-    <button class="nav-btn" data-page="projects" onclick="showPage('projects')"><i class="ti ti-folders"></i><span>Projects</span></button>
-    <button class="nav-btn" data-page="personal" onclick="showPage('personal')"><i class="ti ti-user-heart"></i><span>Personal</span></button>
-    <button class="nav-btn" data-page="learning" onclick="showPage('learning')"><i class="ti ti-school"></i><span>Learning</span></button>
+  <div class="ql-head">
+    <button class="ql-add" onclick="qlcOpen()" title="Choose quick links" aria-label="Choose quick links">+</button>
+    <span class="ql-cap">Quick links</span>
   </div>
+  <div class="nav-links" id="ql-links"></div>
   <div class="nav-bottom">
     <div class="nav-sec-row"><span class="nav-sec">Utility</span><i></i></div>
     <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
     <button class="nav-btn nav-search-btn" onclick="openGlobalSearch()" title="Search everything (tasks, job list, checklists, meetings, ideas)"><i class="ti ti-search"></i><span>Search</span></button>
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
+    <button class="nav-btn" onclick="qlcOpen()" title="Choose quick links"><i class="ti ti-adjustments"></i><span>Configure</span></button>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
         <div class="cwc-section">
@@ -7069,6 +7187,112 @@ function zAnimatePage(root) {
     r.style.animationDelay = (60 + i * 45) + 'ms';
   });
 }
+
+// ===== QUICK LINKS =====
+// The rail's list is yours to choose. Everything the app can navigate to is
+// offered; six are on by default. Widgets, Search and Settings are not in
+// here at all - they sit in Utility below and never leave, because a rail
+// you can empty of its own settings is a rail you cannot fix.
+const QL_ALL = [
+  { id: 'home',         label: 'Home',                 icon: 'ti-home-2',     ac: 'var(--teal-text)' },
+  { id: 'tasks',        label: 'Task Manager',         icon: 'ti-checklist',  ac: 'var(--green-text)' },
+  { id: 'helpdesk',     label: 'Helpdesk',             icon: 'ti-headset',    ac: 'var(--purple-text)' },
+  { id: 'dispatch',     label: 'Dispatch',             icon: 'ti-route',      ac: 'var(--amber-text)' },
+  { id: 'allocvalidate',label: 'Allocation Validator', icon: 'ti-shield-check', ac: 'var(--coral-text)' },
+  { id: 'stock',        label: 'Stock Checks',         icon: 'ti-package',    ac: 'var(--green-text)' },
+  { id: 'alloccheck',   label: 'Allocation Lookup',    icon: 'ti-map-search', ac: 'var(--teal-text)' },
+  { id: 'kpi',          label: 'KPI Report',           icon: 'ti-report-analytics', ac: 'var(--amber-text)' },
+  { id: 'projects',     label: 'Projects',             icon: 'ti-folders',    ac: 'var(--teal-text)' },
+  { id: 'personal',     label: 'Personal',             icon: 'ti-user-heart', ac: 'var(--pink-text)' },
+  { id: 'learning',     label: 'Learning',             icon: 'ti-school',     ac: 'var(--green-text)' },
+  { id: 'meetings',     label: 'Meetings',             icon: 'ti-notes',      ac: 'var(--green-text)' },
+  { id: 'message',      label: 'Daily Message',        icon: 'ti-message-2',  ac: 'var(--purple-text)' },
+  { id: 'templates',    label: 'Templates',            icon: 'ti-template',   ac: 'var(--coral-text)' },
+  { id: 'suburbcheck',  label: 'Suburb Checker',       icon: 'ti-map-pin',    ac: 'var(--amber-text)' },
+];
+const QL_DEFAULT = ['home', 'allocvalidate', 'stock', 'alloccheck', 'tasks', 'kpi'];
+const QL_KEY = 'zarif_quicklinks';
+
+function qlById(id) { return QL_ALL.find(a => a.id === id) || null; }
+function qlLoad() {
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem(QL_KEY) || 'null'); } catch (e) {}
+  // With nothing saved the defaults lead, in the order they are listed, and
+  // everything else follows - so a first run reads the way it was designed
+  // rather than in whatever order the master list happens to be in.
+  const order = (c && Array.isArray(c.order) ? c.order : QL_DEFAULT.slice()).filter(qlById);
+  QL_ALL.forEach(a => { if (!order.includes(a.id)) order.push(a.id); });
+  let on = (c && c.on && typeof c.on === 'object') ? c.on : null;
+  if (!on) { on = {}; QL_ALL.forEach(a => { on[a.id] = QL_DEFAULT.includes(a.id); }); }
+  return { order, on };
+}
+function qlSave() { try { localStorage.setItem(QL_KEY, JSON.stringify(qlCfg)); } catch (e) {} }
+let qlCfg = qlLoad();
+
+function renderQuickLinks() {
+  const host = document.getElementById('ql-links');
+  if (!host) return;
+  host.innerHTML = qlCfg.order.filter(id => qlCfg.on[id]).map(id => {
+    const a = qlById(id);
+    return `<button class="nav-btn" data-page="${a.id}" style="--ni:${a.ac}"
+      onclick="showPage('${a.id}')" title="${esc(a.label)}">
+      <i class="ti ${a.icon}"></i><span>${esc(a.label)}</span></button>`;
+  }).join('');
+  // the open page has to stay marked after a rebuild
+  const open = document.querySelector('.page.active');
+  if (open) {
+    const id = open.id.replace(/^page-/, '');
+    host.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === id));
+  }
+}
+
+function qlcRender() {
+  const rows = document.getElementById('qlc-rows');
+  if (!rows) return;
+  rows.innerHTML = qlCfg.order.map((id, i) => {
+    const a = qlById(id);
+    if (!a) return '';
+    return `<div class="qlc-row${qlCfg.on[id] ? '' : ' off'}" style="--ac:${a.ac}">
+      <i class="ti ${a.icon}"></i>
+      <span class="qlc-n">${esc(a.label)}</span>
+      <button class="qlc-b" data-up="${id}" aria-label="Move ${esc(a.label)} up"${i === 0 ? ' disabled' : ''}>\u2191</button>
+      <button class="qlc-b" data-down="${id}" aria-label="Move ${esc(a.label)} down"${i === qlCfg.order.length - 1 ? ' disabled' : ''}>\u2193</button>
+      <button class="qlc-t" data-on="${id}" aria-pressed="${qlCfg.on[id] ? 'true' : 'false'}"
+        aria-label="Show ${esc(a.label)} in the rail"></button>
+    </div>`;
+  }).join('');
+}
+function qlcOpen() { qlcRender(); const o = document.getElementById('qlc-ov'); if (o) o.hidden = false; }
+function qlcClose() { const o = document.getElementById('qlc-ov'); if (o) o.hidden = true; }
+function qlcReset() {
+  try { localStorage.removeItem(QL_KEY); } catch (e) {}
+  qlCfg = qlLoad(); qlcRender(); renderQuickLinks();
+}
+document.addEventListener('click', e => {
+  const ov = document.getElementById('qlc-ov');
+  if (ov && e.target === ov) { qlcClose(); return; }
+  const rows = document.getElementById('qlc-rows');
+  if (!rows || !rows.contains(e.target)) return;
+  const b = e.target.closest('button');
+  if (!b) return;
+  const up = b.getAttribute('data-up'), dn = b.getAttribute('data-down'), tg = b.getAttribute('data-on');
+  if (tg) { qlCfg.on[tg] = !qlCfg.on[tg]; }
+  else if (up || dn) {
+    const id = up || dn, i = qlCfg.order.indexOf(id), j = up ? i - 1 : i + 1;
+    if (i < 0 || j < 0 || j >= qlCfg.order.length) return;
+    qlCfg.order[i] = qlCfg.order[j]; qlCfg.order[j] = id;
+  } else { return; }
+  qlSave(); qlcRender(); renderQuickLinks();
+});
+document.addEventListener('keydown', e => {
+  const o = document.getElementById('qlc-ov');
+  if (e.key === 'Escape' && o && !o.hidden) qlcClose();
+});
+(function bootQuickLinks() {
+  const go = () => renderQuickLinks();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
 
 // ===== RAIL =====
 // Pinning is a per-browser convenience, so localStorage is the right home
@@ -16342,23 +16566,84 @@ function pageAccent(p) {
   return (m && PAGE_AC[m.color]) || 'var(--teal-text)';
 }
 
+// When each tool last produced something. Set by the wrappers at the end of
+// the file; a tool that has never run in this session simply has no entry,
+// and the board says so rather than inventing a time.
+const TOOL_RAN = {};
+function toolRanAt(p) {
+  const t = TOOL_RAN[p];
+  if (!t) return '';
+  return new Date(t).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+// The figures on the board are only ever ones the app can actually answer
+// right now. A tool with nothing loaded gets a status and no numbers, which
+// is the truth; inventing a row of zeroes would read as a result.
+function hubBoardState(p) {
+  const F = (v, k, c) => ({ v: Number(v).toLocaleString(), k, c });
+  try {
+    if (p === 'allocvalidate' && typeof alValOut !== 'undefined' && alValOut && alValOut.length) {
+      const bad = alValOut.filter(r => r.verdict === 'mismatch').length;
+      const un = alValOut.filter(r => r.verdict === 'unknown' || r.verdict === 'nozone').length;
+      return { status: bad ? `${bad} mismatch` : 'all agreed', sc: bad ? 'var(--coral-text)' : 'var(--green-text)',
+        figures: [F(alValOut.length, 'rows'), F(bad, 'wrong', 'var(--coral-text)'), F(un, 'unjudged', 'var(--amber-text)')] };
+    }
+    if (p === 'stock' && typeof stkOut !== 'undefined' && stkOut && stkOut.length) {
+      const shown = stkOut.filter(h => !h.hidden);
+      const notes = (typeof stkNoteHits !== 'undefined' ? stkNoteHits.length : 0);
+      const parts = new Set(shown.filter(h => h.loc && h.model).map(h => stkTerm(h.model).toLowerCase())).size;
+      return { status: `${shown.length} waiting`, sc: 'var(--amber-text)',
+        figures: [F(shown.length, 'jobs'), F(parts, 'parts'), F(notes, 'notes', 'var(--amber-text)')] };
+    }
+    if (p === 'alloccheck' && typeof alRows !== 'undefined' && alRows && alRows.length) {
+      return { status: 'ready', sc: 'var(--teal-text)',
+        figures: [F(alRows.length, 'sites'), F(alAllocNames.length, 'depots')], when: 'cached' };
+    }
+    if (p === 'suburbcheck' && typeof svResults !== 'undefined' && svResults && svResults.length) {
+      return { status: `${svResults.length} checked`, sc: 'var(--teal-text)', figures: [F(svResults.length, 'rows')] };
+    }
+  } catch (e) { /* a tool that is mid-load answers nothing, which is fine */ }
+  return { status: 'open', sc: 'var(--text-3)', figures: [] };
+}
+
 function renderHubs() {
   HUBS.forEach(h => {
     const grid = document.getElementById('hub-grid-' + h);
     if (grid) {
       const pages = hubLayout[h];
       if (!pages.length) {
-        grid.innerHTML = `<div class="app-card soon" style="--ac:var(--text-3)"><div class="app-card-icon c-pink"><i class="ti ti-sparkles"></i></div><div class="app-card-title">Coming soon</div><div class="app-card-desc">Nothing here yet. Add apps to this hub from Settings → Organise hubs.</div><div class="app-card-meta"><i class="ti ti-clock"></i>Empty</div></div>`;
+        grid.innerHTML = `<div class="board"><div class="board-hd">
+          <span>${esc(String((HUB_META[h] || {}).title || h).toUpperCase())}</span><span>·</span><span>EMPTY</span>
+        </div><div class="brow" style="--ac:var(--text-3);cursor:default">
+          <span class="brow-n"><i class="ti ti-sparkles"></i>Nothing here yet
+            <span class="brow-d">Add apps to this hub from Settings → Organise hubs.</span></span>
+          <span class="brow-s" style="--sc:var(--text-3)">empty</span><span></span><span></span>
+        </div></div>`;
       } else {
-        grid.innerHTML = pages.map(p => {
-          const m = PAGES[p];
-          return `<div class="app-card" style="--ac:${pageAccent(p)}" onclick="showPage('${p}','${h}')">
-            <div class="app-card-icon ${m.color}"><i class="ti ${m.icon}"></i></div>
-            <div class="app-card-title">${m.title}</div>
-            <div class="app-card-desc">${m.desc}</div>
-            <div class="app-card-meta"><i class="ti ti-arrow-right"></i>Open</div>
-          </div>`;
-        }).join('');
+        const meta = HUB_META[h] || { title: h };
+        grid.innerHTML = `<div class="board">
+          <div class="board-hd">
+            <span class="board-dot"></span>
+            <span>${esc(String(meta.title).toUpperCase())}</span><span>·</span>
+            <span>${esc(new Date().toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase())}</span>
+            <span style="margin-left:auto"><b>${pages.length}</b> SERVICE${pages.length !== 1 ? 'S' : ''}</span>
+          </div>
+          <div class="board-cols"><span>Service</span><span>Status</span><span>Figures</span><span>Last run</span></div>
+          ${pages.map((p, i) => {
+            const m = PAGES[p];
+            const st = hubBoardState(p);
+            const when = st.when || toolRanAt(p) || '—';
+            return `<button class="brow" style="--ac:${pageAccent(p)};animation-delay:${60 + i * 55}ms"
+              onclick="showPage('${p}','${h}')">
+              <span class="brow-n"><i class="ti ${m.icon}"></i>${esc(m.title)}
+                <span class="brow-d">${esc(m.desc)}</span></span>
+              <span class="brow-s" style="--sc:${st.sc}">${esc(st.status)}</span>
+              <span class="brow-f">${st.figures.map(f =>
+                `<span><b${f.c ? ` style="--fc:${f.c}"` : ''}>${f.v}</b><span>${esc(f.k)}</span></span>`).join('')}</span>
+              <span class="brow-t">${esc(when)}</span>
+            </button>`;
+          }).join('')}
+        </div>`;
       }
     }
     const sub = document.getElementById('nav-sub-' + h);
@@ -16431,6 +16716,7 @@ function showPage(p, hub) {
   if (typeof updatePomoFloat === 'function') updatePomoFloat();
   if (p === 'home' && typeof renderHomeDashboard === 'function') renderHomeDashboard();
   if (p === 'home' && typeof initHome === 'function') initHome();
+  if (typeof HUBS !== 'undefined' && HUBS.indexOf(p) >= 0 && typeof renderHubs === 'function') renderHubs();
   if (typeof zAnimatePage === 'function') requestAnimationFrame(() => zAnimatePage(document.getElementById('page-' + p)));
   if (p === 'meetings' && typeof updateMtgAnzPanel === 'function') updateMtgAnzPanel();
   if (p === 'meetings' && typeof updateMtgContextPanel === 'function') updateMtgContextPanel();
@@ -25081,11 +25367,13 @@ document.addEventListener('pointerup', e => {
 // The three tools replace their entire output when they re-run, which takes
 // the entrance animations with it. Wrapping them is less invasive than
 // threading a call through every return path inside each one.
+const TOOL_RAN_BY = { alRun: 'alloccheck', alValRun: 'allocvalidate', stkRun: 'stock' };
 ['alRun', 'alValRun', 'stkRun'].forEach(fn => {
   const orig = window[fn];
   if (typeof orig !== 'function') return;
   window[fn] = function () {
     const out = orig.apply(this, arguments);
+    if (typeof TOOL_RAN === 'object') TOOL_RAN[TOOL_RAN_BY[fn]] = Date.now();
     if (typeof zAnimatePage === 'function') requestAnimationFrame(() => zAnimatePage());
     return out;
   };
