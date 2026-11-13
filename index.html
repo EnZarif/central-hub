@@ -70,6 +70,55 @@
     --radius: 10px; --radius-lg: 14px;
   }
 
+  /* ── STAT TILES ─────────────────────────────────────────────────────
+     The verdict counts were only ever readable on the fold headers, which
+     means you had to scan five collapsed rows to learn the shape of the
+     file. As tiles they are one glance, and the meter under each gives the
+     share without a second number to read. */
+  .z-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+    gap: 11px; margin: 14px 0 16px; }
+  .z-tile { position: relative; overflow: hidden; min-width: 0;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    border: 1px solid var(--border); border-radius: 13px; padding: 13px 15px 13px 17px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform .18s cubic-bezier(.22,.9,.26,1), border-color .18s, box-shadow .18s;
+    animation: mcardIn .5s cubic-bezier(.22,.9,.26,1) both; }
+  .z-tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--ac, var(--teal-text)), color-mix(in srgb, var(--ac, var(--teal-text)) 20%, transparent));
+    transition: width .18s, box-shadow .18s; }
+  .z-tile:hover { transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--ac, var(--teal-text)) 36%, var(--border));
+    box-shadow: 0 18px 34px -24px rgba(0,0,0,0.9); }
+  .z-tile:hover::before { width: 4px; box-shadow: 0 0 18px -2px var(--ac, var(--teal-text)); }
+  .z-tile.zero { opacity: .5; }
+  .z-tile.zero:hover { transform: none; }
+  .z-tile-k { font-size: 10px; font-weight: 700; letter-spacing: 0.085em;
+    text-transform: uppercase; color: var(--text-3); }
+  .z-tile-v { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 28px;
+    font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-top: 3px;
+    font-variant-numeric: tabular-nums; color: var(--ac, var(--teal-text)); }
+  .z-tile-s { font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
+  .z-tile-m { height: 5px; border-radius: 3px; background: var(--surface2);
+    overflow: hidden; margin-top: 9px; }
+  .z-tile-m > i { display: block; height: 100%; border-radius: 3px; width: var(--pct, 0%);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--ac, var(--teal-text)) 50%, transparent), var(--ac, var(--teal-text)));
+    animation: zFill .95s cubic-bezier(.22,.9,.26,1) .15s both; }
+  @media (prefers-reduced-motion: reduce) {
+    .z-tile { animation: none; }
+    .z-tile-m > i { animation: none; }
+  }
+
+  /* The rows under them get the prototype's treatment: the site and its zone
+     stack in one cell so the eye reads the place once, and the row lights on
+     hover rather than sitting flat. */
+  .al-rows td, .al-rows th { padding: 11px 14px; }
+  .al-rows thead th { font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--text-3);
+    background: color-mix(in srgb, var(--surface2) 70%, transparent); }
+  .al-rows tbody tr { transition: background .14s; }
+  .al-rows tbody tr:hover { background: var(--surface2); }
+  .al-sub { display: block; font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
   /* ── TOOL PAGES ─────────────────────────────────────────────────────
      Panel chrome for the helpdesk and dispatch tools. The .header block each
      page already has becomes the panel's header strip, so none of them needs
@@ -10898,11 +10947,10 @@ function alValRun() {
   };
 
   const groupRows = list => `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
-      <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Technician</th><th>Zone expects</th><th>Why</th></tr></thead>
+      <thead><tr><th>Job</th><th>Site &amp; zone</th><th>Technician</th><th>Zone expects</th><th>Why</th></tr></thead>
       <tbody>${list.map(r => `<tr>
         <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '\u2014'}</td>
-        <td>${esc(r.site || '\u2014')}</td>
-        <td>${esc(r.zoneName || r.zone || '\u2014')}</td>
+        <td>${esc(r.site || '\u2014')}<span class="al-sub">${esc(r.zoneName || r.zone || '')}</span></td>
         <td>${esc(r.tech || '\u2014')}${(r.how === 'city' || r.how === 'named' || r.how === 'saved')
           ? `<span class="al-was">${r.how === 'saved' ? 'you set' : 'read as'} ${esc(r.resolved)}</span>` : ''}</td>
         <td>${esc(r.expected || '\u2014')}</td>
@@ -10966,6 +11014,28 @@ function alValRun() {
     ['match', 'Correct', 'ti-circle-check', 'the technician is the one the zone calls for']
   ];
 
+  // One tile per verdict, in the order you care about them: what is wrong
+  // first, what cannot be judged next, what is fine last. A verdict with no
+  // rows still gets its tile, dimmed - a zero is an answer, and a tile that
+  // vanishes makes the row jump about between files.
+  const TILES = [
+    ['mismatch', 'Mismatch',      'wrong depot for the zone',    'var(--coral-text)'],
+    ['notech',   'No technician', 'nobody allocated',            'var(--text-3)'],
+    ['unknown',  "Can't judge",   'name resolves to nothing',    'var(--amber-text)'],
+    ['nozone',   'Zone unknown',  'no sites in the sheet',       'var(--teal-text)'],
+    ['match',    'Agreed',        'technician matches the zone', 'var(--green-text)'],
+  ];
+  const tiles = `<div class="z-tiles">${TILES.map(([k, label, note, ac]) => {
+    const c = n(k);
+    const pct = results.length ? Math.round(c / results.length * 100) : 0;
+    return `<div class="z-tile${c ? '' : ' zero'}" style="--ac:${ac}">
+      <div class="z-tile-k">${label}</div>
+      <div class="z-tile-v">${c.toLocaleString()}</div>
+      <div class="z-tile-s">${esc(note)}</div>
+      <div class="z-tile-m"><i style="--pct:${pct}%"></i></div>
+    </div>`;
+  }).join('')}</div>`;
+
   out.innerHTML = `
     ${flagged.length ? `<div class="al-vbanner">
       <i class="ti ti-alert-triangle"></i>
@@ -10985,6 +11055,8 @@ function alValRun() {
       </span>
       <span class="al-vbanner-n">${results.length.toLocaleString()} rows checked</span>
     </div>`}
+
+    ${tiles}
 
     ${flagged.length ? `<div class="al-vsec">
       <div class="al-vsec-hd bad">
@@ -12241,15 +12313,45 @@ function stkRun() {
   const nOpen = stkOpenGroup.has('fromnotes');
   const mOpen = stkOpenGroup.has('maybenotes');
 
+  // Tiles rather than five numbers in one sentence. "From the notes" keeps
+  // amber wherever it appears, and a zero still gets its tile so the row
+  // does not reshuffle between files.
+  const stkTiles = !shown.length ? '' : `<div class="z-tiles">
+    <div class="z-tile" style="--ac:var(--green-text)">
+      <div class="z-tile-k">Waiting on a part</div>
+      <div class="z-tile-v">${shown.length.toLocaleString()}</div>
+      <div class="z-tile-s">job${shown.length !== 1 ? 's' : ''} of ${stkRows.length.toLocaleString()} in the file</div>
+      <div class="z-tile-m"><i style="--pct:${stkRows.length ? Math.round(shown.length / stkRows.length * 100) : 0}%"></i></div>
+    </div>
+    <div class="z-tile" style="--ac:var(--teal-text)">
+      <div class="z-tile-k">Parts to find</div>
+      <div class="z-tile-v">${nParts.toLocaleString()}</div>
+      <div class="z-tile-s">across ${locList.length.toLocaleString()} location${locList.length !== 1 ? 's' : ''}</div>
+    </div>
+    <div class="z-tile${stkNoteHits.length ? '' : ' zero'}" style="--ac:var(--amber-text)">
+      <div class="z-tile-k">From the notes</div>
+      <div class="z-tile-v">${stkNoteHits.length.toLocaleString()}</div>
+      <div class="z-tile-s">the code did not say replacement</div>
+      <div class="z-tile-m"><i style="--pct:${shown.length ? Math.round(stkNoteHits.length / shown.length * 100) : 0}%"></i></div>
+    </div>
+    <div class="z-tile${stkNoteMaybe.length ? '' : ' zero'}" style="--ac:var(--text-3)">
+      <div class="z-tile-k">Worth a look</div>
+      <div class="z-tile-v">${stkNoteMaybe.length.toLocaleString()}</div>
+      <div class="z-tile-s">hinted at, not counted</div>
+    </div>
+    ${nHidden ? `<div class="z-tile" style="--ac:var(--coral-text)">
+      <div class="z-tile-k">Hidden by you</div>
+      <div class="z-tile-v">${nHidden.toLocaleString()}</div>
+      <div class="z-tile-s">still in the download</div>
+    </div>` : ''}
+  </div>`;
+
   out.innerHTML = `
     ${shown.length ? `<div class="stk-banner">
       <i class="ti ti-package"></i>
       <span class="stk-banner-t">
         <strong>${shown.length.toLocaleString()} job${shown.length !== 1 ? 's are' : ' is'} waiting on a replacement part</strong>
-        <span>${nParts.toLocaleString()} part${nParts !== 1 ? 's' : ''} across ${locList.length.toLocaleString()} location${locList.length !== 1 ? 's' : ''}${stkNoteHits.length
-          ? ` \u00b7 ${stkNoteHits.length.toLocaleString()} of them read from the notes, not the code` : ''}${other
-          ? ` \u00b7 the other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement` : ''}${nHidden
-          ? ` \u00b7 ${nHidden.toLocaleString()} hidden by your list` : ''}.</span>
+        <span>The other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement.</span>
       </span>
       <button class="generate-btn" onclick="stkDownload()"${nHidden
         ? ` title="Includes the ${nHidden.toLocaleString()} you have hidden, each marked as hidden"` : ''}>
@@ -12264,6 +12366,8 @@ function stkRun() {
           : 'No row carries one of the fault values picked as a replacement. Change setup above to pick others.'}</span>
       </span>
     </div>`}
+
+    ${stkTiles}
 
     ${shown.length ? `<div class="stk-seg-row">
       <span class="stk-seg-l">Search the warehouse by</span>
