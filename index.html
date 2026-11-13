@@ -455,6 +455,31 @@
   /* A divider that reads as a divider once the labels are there, and as a
      plain rule while the rail is shut. */
   .nav-sec-row { display: flex; align-items: center; gap: 8px; padding: 12px 13px 4px; flex-shrink: 0; }
+  /* Utility folds away by default. It is four things you touch once a week
+     next to six you touch every morning, so it starts shut - but the header
+     stays a real row with its own icon, which means it is still reachable
+     while the rail is icon-only. A group you can only open by first opening
+     something else is a group you cannot open. */
+  .nav-util-hd { width: calc(100% - 12px); margin: 6px 6px 2px; padding: 8px;
+    display: flex; align-items: center; gap: 12px; background: none; border: none;
+    border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-3); text-align: left; white-space: nowrap;
+    transition: color 0.15s, background 0.15s; }
+  .nav-util-hd:hover { color: var(--text); background: var(--surface2); }
+  .nav-util-hd:focus-visible { outline: 2px solid var(--teal-text); outline-offset: -2px; }
+  .nav-util-hd > i { font-size: 21px; width: 30px; height: 30px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: var(--text-3); }
+  .nav-util-hd .nav-util-l { flex: 1 1 auto; opacity: 0; transition: opacity 0.2s ease 0.05s; }
+  .nav-util-hd .nav-util-chev { font-size: 15px; width: auto; height: auto;
+    opacity: 0; transition: opacity 0.2s ease 0.05s, transform 0.24s cubic-bezier(.22,.9,.26,1); }
+  .nav:hover .nav-util-l, .nav:focus-within .nav-util-l, .nav.rail-pin .nav-util-l,
+  .nav:hover .nav-util-chev, .nav:focus-within .nav-util-chev, .nav.rail-pin .nav-util-chev { opacity: 1; }
+  .nav.util-open .nav-util-chev { transform: rotate(90deg); }
+  .nav.util-open .nav-util-hd { color: var(--text-2); }
+  .nav-util-items { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+  .nav:not(.util-open) .nav-util-items { display: none; }
+  .nav.util-open .nav-util-items { animation: zDrop .26s cubic-bezier(.22,.9,.26,1); }
   .nav-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
   .nav-sec-row i { flex: 1 1 auto; height: 1px; background: var(--border); display: block; }
   /* The pin used to be a plus-shaped glyph sitting a few pixels from the
@@ -4403,11 +4428,18 @@
   </div>
   <div class="nav-links" id="ql-links"></div>
   <div class="nav-bottom">
-    <div class="nav-sec-row"><span class="nav-sec">Utility</span><i></i></div>
-    <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
-    <button class="nav-btn nav-search-btn" onclick="openGlobalSearch()" title="Search everything (tasks, job list, checklists, meetings, ideas)"><i class="ti ti-search"></i><span>Search</span></button>
-    <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
-    <button class="nav-btn" onclick="qlcOpen()" title="Choose quick links"><i class="ti ti-adjustments"></i><span>Configure</span></button>
+    <button class="nav-util-hd" id="nav-util-hd" onclick="toggleUtility()" aria-expanded="false"
+      aria-controls="nav-util-items" title="Widgets, Search, Settings and Configure">
+      <i class="ti ti-dots"></i>
+      <span class="nav-util-l">Utility</span>
+      <i class="ti ti-chevron-right nav-util-chev"></i>
+    </button>
+    <div class="nav-util-items" id="nav-util-items">
+      <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
+      <button class="nav-btn nav-search-btn" onclick="openGlobalSearch()" title="Search everything (tasks, job list, checklists, meetings, ideas)"><i class="ti ti-search"></i><span>Search</span></button>
+      <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
+      <button class="nav-btn" onclick="qlcOpen()" title="Choose quick links"><i class="ti ti-adjustments"></i><span>Configure</span></button>
+    </div>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
         <div class="cwc-section">
@@ -7300,6 +7332,31 @@ document.addEventListener('keydown', e => {
 })();
 
 // ===== RAIL =====
+// Utility starts shut. Opening it is remembered, because somebody who lives
+// in Settings should not have to open it every morning.
+function toggleUtility() {
+  const nav = document.querySelector('.nav');
+  const hd = document.getElementById('nav-util-hd');
+  if (!nav) return;
+  const on = !nav.classList.contains('util-open');
+  nav.classList.toggle('util-open', on);
+  if (hd) hd.setAttribute('aria-expanded', String(on));
+  try { localStorage.setItem('zarif_rail_util', on ? '1' : '0'); } catch (e) {}
+}
+(function restoreUtility() {
+  let on = false;
+  try { on = localStorage.getItem('zarif_rail_util') === '1'; } catch (e) {}
+  if (!on) return;
+  const go = () => {
+    const nav = document.querySelector('.nav');
+    const hd = document.getElementById('nav-util-hd');
+    if (nav) nav.classList.add('util-open');
+    if (hd) hd.setAttribute('aria-expanded', 'true');
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
+
 // Pinning is a per-browser convenience, so localStorage is the right home
 // for it - it never needs to reach another device or be read back by anyone.
 function toggleRailPin() {
