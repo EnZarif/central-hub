@@ -2502,6 +2502,8 @@
   .al-vgrp-ico { font-size:14px; }
   .al-vgrp-ico.unknown, .al-vgrp-ico.nozone { color:var(--amber-text); }
   .al-vgrp-ico.notech { color:var(--text-3); }
+  .al-vgrp-ico.notes { color:var(--blue-text); }
+  .al-vgrp-ico.warn { color:var(--amber-text); }
   .al-vgrp-ico.match { color:var(--green-text); }
   .al-vgrp-l { font-size:12.5px; font-weight:600; }
   .al-vgrp-n { font-size:11px; font-weight:700; border-radius:8px; padding:2px 8px;
@@ -2542,6 +2544,30 @@
   /* Every fault value in the file, as a chip. Anything with "replacement" in
      it is picked for you - the rest are shown so a value like
      "Replacement - Scanner" is one click away instead of silently missing. */
+  /* Reading the notes. Blue because it is a second source for the same
+     answer rather than a problem with it - teal is already the warehouse and
+     its links, amber and red are things gone wrong, and a job the notes
+     caught is neither. */
+  .stk-note-sw { margin-top:12px; padding:11px 13px; border:0.5px solid var(--border);
+    border-left:2.5px solid var(--blue-text); border-radius:9px; background:var(--surface2);
+    display:flex; flex-direction:column; gap:5px; }
+  .stk-note-lb { display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600;
+    color:var(--text-1); cursor:pointer; }
+  .stk-note-lb input { width:15px; height:15px; margin:0; accent-color:var(--blue-text);
+    cursor:pointer; flex-shrink:0; }
+  .stk-note-why { font-size:11.5px; line-height:1.55; color:var(--text-3); }
+  /* Not cut and not ellipsed: the whole point of the quote is that you can
+     read the sentence and judge the catch for yourself. */
+  .stk-nq { display:block; font-size:11.5px; line-height:1.55; color:var(--text-2);
+    font-style:italic; max-width:46ch; white-space:normal; overflow-wrap:anywhere; }
+  .stk-np { font-style:normal; font-weight:700; color:var(--blue-text);
+    background:var(--blue-bg); border-radius:4px; padding:0 3px; }
+  .stk-vnote { display:inline-flex; align-items:center; gap:4px; margin-top:3px; font-size:10px;
+    font-weight:700; letter-spacing:.02em; color:var(--blue-text); background:var(--blue-bg);
+    border-radius:5px; padding:2px 6px; width:fit-content; }
+  .stk-vnote .ti { font-size:11px; }
+  .stk-rule-to.yes { color:var(--blue-text); }
+
   .stk-fsec { margin-top:16px; padding-top:14px; border-top:0.5px solid var(--border); }
   .stk-fhd { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
   .stk-fhd-l { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
@@ -10338,6 +10364,12 @@ const STK_CON_ICONS = ['ti-circle-filled','ti-square-filled','ti-triangle-filled
                        'ti-star-filled','ti-hexagon-filled','ti-diamond-filled'];
 const STK_BLANK = '(blank)';
 const STK_FAULT_CHIPS = 14;
+const STK_NOTES_KEY = 'zarif_stk_notes_on';
+const STK_NOTE_WORDS_KEY = 'zarif_stk_note_phrases';
+let stkNotesOn = null;        // read the notes column as well as the fault code
+let stkNoteWords = null;      // phrase -> {phrase, verdict} you taught it
+let stkNoteHits = [];         // rows counted because of their notes, not the code
+let stkNoteMaybe = [];        // rows the notes hint at but do not say outright
 
 function stkGetSearchBy() {
   if (stkSearchBy === null) stkSearchBy = dbGet(STK_SEARCH_KEY) === 'code' ? 'code' : 'model';
@@ -10567,7 +10599,10 @@ function stkRenderRules() {
   const hkeys = Object.keys(hid).sort((a, b) =>
     String(hid[a].contract || '').localeCompare(String(hid[b].contract || '')) ||
     String(hid[a].model || '').localeCompare(String(hid[b].model || '')));
-  if (!keys.length && !hkeys.length) { el.innerHTML = ''; return; }
+  const words = stkGetNoteWords();
+  const nkeys = Object.keys(words).sort((a, b) =>
+    String(words[a].verdict || '').localeCompare(String(words[b].verdict || '')) || a.localeCompare(b));
+  if (!keys.length && !hkeys.length && !nkeys.length) { el.innerHTML = ''; return; }
   const hopen = stkOpenGroup.has('hidden');
   const hiddenBlock = hkeys.length ? `<div class="al-vgrp stk-rules${hopen ? ' open' : ''}">
     <button class="al-vgrp-hd" onclick="stkToggleGroup('hidden')" aria-expanded="${hopen}">
@@ -10584,9 +10619,29 @@ function stkRenderRules() {
       <span><button class="stk-rule-x" onclick="stkShowPair(${escAttr(JSON.stringify(k))})">Show again</button></span>
     </div>`).join('') : ''}
   </div>` : '';
-  if (!keys.length) { el.innerHTML = hiddenBlock; return; }
+  // What you taught the notes reader, and which way. Without this the lesson
+  // is invisible and permanent: a phrase ruled out in haste would go on
+  // quietly suppressing jobs with nothing on screen to say so.
+  const nopen = stkOpenGroup.has('words');
+  const noteBlock = nkeys.length ? `<div class="al-vgrp stk-rules${nopen ? ' open' : ''}">
+    <button class="al-vgrp-hd" onclick="stkToggleGroup('words')" aria-expanded="${nopen}">
+      <i class="ti ti-chevron-right al-vgrp-chev${nopen ? ' open' : ''}"></i>
+      <i class="ti ti-file-text al-vgrp-ico notes"></i>
+      <span class="al-vgrp-l">Phrases you taught it</span>
+      <span class="al-vgrp-n">${nkeys.length.toLocaleString()}</span>
+      <span class="al-vgrp-note">these beat the built-in reading, in both directions</span>
+    </button>
+    ${nopen ? nkeys.map(k => `<div class="stk-rule">
+      <span class="stk-rule-from">\u201c${esc(k)}\u201d</span>
+      <i class="ti ti-arrow-right"></i>
+      <span class="stk-rule-to${words[k].verdict === 'no' ? '' : ' yes'}">${words[k].verdict === 'no'
+        ? 'never a replacement' : 'always a replacement'}</span>
+      <span><button class="stk-rule-x" onclick="stkForgetNote(${escAttr(JSON.stringify(k))})">Forget</button></span>
+    </div>`).join('') : ''}
+  </div>` : '';
+  const rulesBlock = !keys.length ? '' : (() => {
   const open = stkOpenGroup.has('rules');
-  el.innerHTML = hiddenBlock + `<div class="al-vgrp stk-rules${open ? ' open' : ''}">
+  return `<div class="al-vgrp stk-rules${open ? ' open' : ''}">
     <button class="al-vgrp-hd" onclick="stkToggleGroup('rules')" aria-expanded="${open}">
       <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
       <i class="ti ti-bookmark al-vgrp-ico match"></i>
@@ -10604,6 +10659,8 @@ function stkRenderRules() {
       </span>
     </div>`).join('') : ''}
   </div>`;
+  })();
+  el.innerHTML = hiddenBlock + noteBlock + rulesBlock;
 }
 
 // Which warehouse to look in, and whether that was stated or worked out.
@@ -10619,6 +10676,177 @@ function stkLocation(tech) {
     read: 'Matched ' + t.alloc + ' \u2014 \u201c' + t.person + '\u201d read as the technician\u2019s name' };
   return { loc: raw, kind: 'asis',
     read: 'Not an allocation in the sheet \u2014 searched exactly as the file writes it' };
+}
+
+// ---- Reading the notes ----------------------------------------------------
+// The fault code is a closed list, so it gets chips. The notes are free text
+// written by whoever took the call, so they get a reader instead.
+//
+// Deliberately phrases, not a language model. Three reasons: it runs on the
+// whole file in a few milliseconds with nothing to pay and nothing to send
+// anywhere; it can always say which words it went on, so a wrong answer is
+// visible rather than mysterious; and field notes are repetitive enough that
+// a phrase list plus the ability to teach it covers the ground. A model would
+// read novel phrasing better and cost a key in a file that ships to the
+// browser, which is not a trade worth making for this.
+//
+// Two tiers, because the honest answer is sometimes "maybe". A strong phrase
+// says a part is owing and counts the job. A weak one only says something is
+// wrong, which is what a fault code already said, so it goes to a list you
+// can glance at rather than into the count.
+
+// One note holds several facts. "Replaced the fuse but the main board needs
+// replacing" is a job done and a part owing at once, and only splitting on
+// the join keeps them apart.
+const STK_NOTE_SPLIT = /[.;!?\n\u2022]+|\s+(?:but|however|although|though|whilst)\s+/i;
+
+const STK_NOTE_STRONG = [
+  /\b(?:needs?|need|requires?|require|needing|requiring)\s+(?:a\s+|an\s+|another\s+|the\s+)?(?:new|replacement|spare|swap\s?out|swap|exchange)(?:\s+(?!if|when|as|to|and|or|but|so|that|which|until|unless)\w+)?\b/,
+  /\b(?:needs?|need|requires?|require)\s+(?:to\s+be\s+)?(?:replac|swapp?|exchang)\w*/,
+  /\breplacement\s+(?:is\s+|will\s+be\s+)?(?:required|needed|necessary|requested|approved)\b/,
+  /\b(?:to|will|should|must|needs\s+to)\s+be\s+(?:replaced|swapped|exchanged|changed\s+out)\b/,
+  /\bdue\s+for\s+(?:replacement|renewal)\b/,
+  /\bbeyond\s+(?:economical\s+)?repair\b/,
+  /\b(?:not\s+|un)repairable\b/,
+  /\birreparable\b/,
+  /\b(?:cannot|can\s?not|unable\s+to)\s+(?:be\s+)?repair\w*/,
+  /\bwrit(?:e|ten)[\s-]?off\b/,
+  /\b(?:doa|rma|eol)\b/,
+  /\bend\s+of\s+life\b/,
+  /\b(?:awaiting|await|waiting\s+(?:on|for))\s+(?:a\s+|the\s+)?(?:new\s+)?(?:part|parts|unit|replacement|spare|stock|hardware)\b/,
+  /\b(?:part|parts|unit|replacement|spare)s?\s+(?:is\s+|are\s+|has\s+been\s+|have\s+been\s+)?(?:on\s+order|ordered|required|needed)\b/,
+  /\border(?:ed)?\s+(?:in\s+)?(?:a\s+)?(?:new|replacement|spare)\b/,
+  /\bswap\s?out\s+(?:required|needed|approved)\b/,
+  // The trigger word is often nowhere near its subject: "a new unit might be
+  // required", "returned for replacement", "if required, replace the
+  // scanner". Each of those is a part owing, and none of the patterns above
+  // sees it, because they all expect the need and the thing to be neighbours.
+  /\b(?:new|replacement|spare|another)\s+(?:\w+\s+){0,3}(?:required|needed|requested|ordered|on\s+order)\b/,
+  /\bfor\s+(?:a\s+|the\s+)?(?:replacement|swap\s?out|swap|exchange)\b/,
+  /\breplace\s+(?:the|this|that|a|an|his|her|their)(?:\s+(?!if|when|as|to|and|or|but|so|that|which|until|unless)\w+)?\b/,
+  /\bstock\s+(?:required|needed)\b/,
+  /\bfaulty\s+(?:unit|device|part)\s+to\s+be\s+(?:returned|swapped|exchanged|collected)\b/
+];
+
+const STK_NOTE_WEAK = [
+  /\bfaulty\b/, /\bnot\s+working\b/, /\bno\s+power\b/, /\bdead\b/,
+  /\b(?:won'?t|will\s+not|wont)\s+(?:power|turn|boot|start|come)\b/,
+  /\bburn(?:t|ed)\b/, /\b(?:water|liquid)\s+damage/, /\bcracked\b/, /\bsmashed\b/,
+  /\bphysical(?:ly)?\s+damage/, /\bkeeps?\s+(?:failing|dropping|crashing|resetting)\b/,
+  /\bintermittent\b/, /\bfailed\b/, /\bbeyond\s+use\b/, /\bunusable\b/
+];
+
+// These cancel or soften a phrase only when they sit in front of it. That
+// matters: "no power" carries its own "no" and must survive, while "no
+// replacement required" must not, and the difference is only the position.
+const STK_NOTE_NEG  = /\b(?:no|not|n't|never|without|nil|none|neither|nor|cancel(?:led)?)\b/;
+const STK_NOTE_COND = /\b(?:may|might|could|possibly|potentially|perhaps|if|pending|tbc|quote[ds]?|quotation|approval|subject\s+to)\b/;
+// Work already finished owes no part. Only consulted when nothing strong
+// matched, so "to be replaced" is never mistaken for "replaced".
+const STK_NOTE_DONE = /\b(?:replaced|swapped\s+(?:out|over)|exchanged|refitted|rectified|resolved|repaired)\b/;
+const STK_NOTE_WINDOW = 26;
+
+function stkNoteKey(p) { return String(p || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function stkGetNoteWords() {
+  if (stkNoteWords === null) {
+    const saved = dbGet(STK_NOTE_WORDS_KEY);
+    stkNoteWords = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return stkNoteWords;
+}
+function stkLearnNote(phrase, verdict) {
+  const k = stkNoteKey(phrase);
+  if (!k) return;
+  const all = stkGetNoteWords();
+  all[k] = { phrase: k, verdict };
+  dbSet(STK_NOTE_WORDS_KEY, all);
+  stkRun();
+  stkRenderRules();
+}
+function stkForgetNote(key) {
+  const all = stkGetNoteWords();
+  delete all[key];
+  dbSet(STK_NOTE_WORDS_KEY, all);
+  stkRun();
+  stkRenderRules();
+}
+function stkNotesOnGet() {
+  if (stkNotesOn === null) stkNotesOn = dbGet(STK_NOTES_KEY) !== false;
+  return stkNotesOn;
+}
+function stkSetNotesOn(v) {
+  stkNotesOn = !!v;
+  dbSet(STK_NOTES_KEY, stkNotesOn);
+  if (stkDone) stkRun();
+}
+
+// Whatever sits in front of a phrase decides whether it still stands - and
+// "in front of" is the whole point. "No power" carries its own "no" and must
+// survive; "no replacement required" must not, and only the position tells
+// them apart.
+//
+// A softener gets looked for inside the phrase as well, which negation does
+// not. "A new unit might be required" is one match running from "new" to
+// "required" with the "might" buried in the middle, so a look-behind alone
+// would read it as settled. That asymmetry is safe because no phrase in
+// either list contains may, might, if or pending of its own, while several
+// legitimately contain no.
+function stkNoteGuard(clause, at, hit) {
+  const before = clause.slice(Math.max(0, at - STK_NOTE_WINDOW), at);
+  if (STK_NOTE_NEG.test(before))  return 'no';
+  if (STK_NOTE_COND.test(before) || STK_NOTE_COND.test(hit || '')) return 'maybe';
+  return 'yes';
+}
+
+function stkNoteScan(clause, list) {
+  for (let i = 0; i < list.length; i++) {
+    const m = list[i].exec(clause);
+    if (m) return { phrase: m[0].trim(), guard: stkNoteGuard(clause, m.index, m[0]) };
+  }
+  return null;
+}
+
+// { verdict:'yes'|'maybe'|'no', phrase, clause } - the phrase and the clause
+// it came from both travel with the answer, because the whole point is that
+// the page can show what it went on.
+function stkReadNote(text) {
+  const raw = String(text === undefined || text === null ? '' : text).trim();
+  if (!raw) return { verdict: 'no', phrase: '', clause: '' };
+  const low = raw.toLowerCase().replace(/\s+/g, ' ');
+
+  // What you taught it wins outright, in both directions. A phrase you ruled
+  // out stops the row even when something strong also matched, because that
+  // is exactly the correction you were making.
+  const taught = stkGetNoteWords();
+  let yes = null;
+  for (const k in taught) {
+    if (!k || low.indexOf(k) < 0) continue;
+    if (taught[k].verdict === 'no') return { verdict: 'no', phrase: k, clause: raw, taught: true };
+    yes = k;
+  }
+  if (yes) return { verdict: 'yes', phrase: yes, clause: raw, taught: true };
+
+  let best = { verdict: 'no', phrase: '', clause: '' };
+  const rank = { no: 0, maybe: 1, yes: 2 };
+  low.split(STK_NOTE_SPLIT).forEach(part => {
+    const c = part.trim();
+    if (!c) return;
+    const strong = stkNoteScan(c, STK_NOTE_STRONG);
+    if (strong) {
+      if (strong.guard !== 'no' && rank[strong.guard] > rank[best.verdict]) {
+        best = { verdict: strong.guard, phrase: strong.phrase, clause: c };
+      }
+      return;
+    }
+    // Nothing strong here, so finished work rules the clause out entirely -
+    // a fault that was fixed on the visit is not a part to go and fetch.
+    if (STK_NOTE_DONE.test(c)) return;
+    const weak = stkNoteScan(c, STK_NOTE_WEAK);
+    if (weak && weak.guard !== 'no' && rank.maybe > rank[best.verdict]) {
+      best = { verdict: 'maybe', phrase: weak.phrase, clause: c };
+    }
+  });
+  return best;
 }
 
 function stkFaultKey(v) {
@@ -10689,6 +10917,7 @@ function stkRenderMapper() {
     ${stkHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
   </select>`;
   const faultCol = svAutoDetect(stkHeaders, ['Fault Description','Fault','Fault Desc'], ['fault','problem','symptom']);
+  const noteCol = svAutoDetect(stkHeaders, ['Reported notes','Reported Notes','Notes','Reported Fault','Comments'], ['note','comment','remark','descript']);
   el.innerHTML =
     `<div class="sv-col-row"><span class="sv-col-label">Model column</span>${sel('stk-c-model', svAutoDetect(stkHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Fault column</span>${sel('stk-c-fault', faultCol, 'stkOnFaultCol()')}</div>
@@ -10696,6 +10925,17 @@ function stkRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Job number <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-id', svAutoDetect(stkHeaders, ['Job #','Job Number','Job ID','ID'], ['jobid','job']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-site', svAutoDetect(stkHeaders, ['Location Name','Site','Store'], ['location','site','store']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Contract <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-con', svAutoDetect(stkHeaders, ['Contract','Contract Name','Client','Account'], ['contract','client','account']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Reported notes <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-note', noteCol, 'stkOnNoteCol()')}</div>
+     <div class="stk-note-sw" id="stk-note-sw"${noteCol ? '' : ' style="display:none;"'}>
+       <label class="stk-note-lb">
+         <input type="checkbox" id="stk-note-on"${stkNotesOnGet() ? ' checked' : ''}
+           onchange="stkSetNotesOn(this.checked)">
+         <span>Read the notes as well as the fault code</span>
+       </label>
+       <span class="stk-note-why">Counts a job whose notes say a part is owing even when the code
+         does not \u2014 &ldquo;needs a new scanner&rdquo;, &ldquo;beyond repair&rdquo;, &ldquo;awaiting parts&rdquo;.
+         Every one it finds is listed with the words it went on, and you can overrule any of them.</span>
+     </div>
      <div class="stk-fsec" id="stk-faults-sec"></div>
      <div class="stk-cfg-go">
        <button class="generate-btn" onclick="stkFind()">
@@ -10709,6 +10949,13 @@ function stkRenderMapper() {
 }
 
 function stkOnChange() { if (stkDone) stkRun(); }
+
+function stkOnNoteCol() {
+  const col = document.getElementById('stk-c-note')?.value || '';
+  const sw = document.getElementById('stk-note-sw');
+  if (sw) sw.style.display = col ? '' : 'none';
+  if (stkDone) stkRun();
+}
 
 function stkOnFaultCol() {
   const col = document.getElementById('stk-c-fault')?.value || '';
@@ -10733,7 +10980,8 @@ function stkRenderConfig() {
     const pick = id => document.getElementById(id)?.value || '';
     if (nEl) nEl.textContent = `${stkRows.length.toLocaleString()} rows`;
     if (cEl) cEl.textContent = [pick('stk-c-model'), pick('stk-c-fault'), pick('stk-c-tech'),
-      pick('stk-c-id'), pick('stk-c-site'), pick('stk-c-con')].filter(Boolean).join('  \u00b7  ');
+      pick('stk-c-id'), pick('stk-c-site'), pick('stk-c-con'),
+      pick('stk-c-note')].filter(Boolean).join('  \u00b7  ');
   }
 }
 
@@ -10789,6 +11037,21 @@ function stkSiteLines(jobs) {
   </span>`).join('')}</span>`;
 }
 
+// The words it went on, inside the sentence they came from. Both, because the
+// phrase alone can look damning out of context and the sentence alone makes
+// you hunt for what triggered it.
+function stkNoteCell(note) {
+  if (!note || !note.phrase) return '\u2014';
+  const c = String(note.clause || '').trim();
+  const p = String(note.phrase || '').trim();
+  const at = c.toLowerCase().indexOf(p.toLowerCase());
+  const body = at < 0
+    ? `<b class="stk-np">${esc(p)}</b>`
+    : esc(c.slice(0, at)) + `<b class="stk-np">${esc(c.slice(at, at + p.length))}</b>` + esc(c.slice(at + p.length));
+  return `<span class="stk-nq">\u201c${body}\u201d${note.taught
+    ? ' <i class="ti ti-bookmark" title="Matched a phrase you taught it"></i>' : ''}</span>`;
+}
+
 function stkModelLabel(P, i) {
   const t = P.models.size === 1 ? [...P.models][0] : P.term;
   return `<span class="stk-model-top">
@@ -10807,14 +11070,20 @@ function stkSubLabel(P) {
   const word = P.ruled ? 'saved as' : 'searched as';
   // On a merged row the heading is already the search name, so repeating it
   // would say nothing; what is worth saying is which models collapsed into it.
-  if (P.models.size > 1) return `<span class="stk-model-t${saved}">${esc([...P.models].join('  \u00b7  '))}</span>`;
+  const fromN = P.jobs.filter(j => j.via === 'notes').length;
+  const tag = fromN ? `<span class="stk-vnote" title="${escAttr(
+    fromN + ' of these ' + (fromN === 1 ? 'was' : 'were') +
+    ' counted from the reported notes, not the fault code')}"><i class="ti ti-file-text"></i>${
+    fromN === P.jobs.length ? 'from the notes' : fromN + ' from the notes'}</span>` : '';
+  if (P.models.size > 1) return `<span class="stk-model-t${saved}">${esc([...P.models].join('  \u00b7  '))}</span>${tag}`;
   const only = [...P.models][0] || '';
-  return only === P.term ? '' : `<span class="stk-model-t${saved}">${word} ${esc(P.term)}</span>`;
+  return (only === P.term ? '' : `<span class="stk-model-t${saved}">${word} ${esc(P.term)}</span>`) + tag;
 }
 
 async function stkLoad(file) {
   if (!file) return;
   stkOut = null; stkDone = false; stkOpenGroup = new Set();
+  stkNoteHits = []; stkNoteMaybe = [];
   stkFaultList = []; stkFaultPick = null; stkFaultCol = ''; stkShowAllFaults = false;
   stkRenderConfig();
   const res = document.getElementById('stk-result');
@@ -10854,6 +11123,7 @@ function stkRun() {
   const idCol    = document.getElementById('stk-c-id')?.value;
   const siteCol  = document.getElementById('stk-c-site')?.value;
   const conCol   = document.getElementById('stk-c-con')?.value;
+  const noteCol  = document.getElementById('stk-c-note')?.value;
   const out = document.getElementById('stk-result');
   if (!out) return;
   if (!stkRows.length || !stkDone || !modelCol || !faultCol || !techCol) {
@@ -10863,17 +11133,33 @@ function stkRun() {
   }
 
   const picked = stkFaultPick || new Set();
+  const useNotes = !!noteCol && stkNotesOnGet();
   const hits = [];
+  stkNoteMaybe = [];
   stkRows.forEach((row, i) => {
-    if (!picked.has(stkFaultKey(row[faultCol]))) return;
+    const byFault = picked.has(stkFaultKey(row[faultCol]));
+    const note = useNotes ? stkReadNote(row[noteCol]) : null;
+    // The code is believed first. Reading the notes only ever adds rows the
+    // code missed, so turning it off can never take a job away that the
+    // chips above put there.
+    const byNote = !byFault && !!note && note.verdict === 'yes';
     const model = String(row[modelCol] || '').trim();
     const tech  = String(row[techCol] || '').trim();
+    if (!byFault && !byNote) {
+      if (note && note.verdict === 'maybe') {
+        stkNoteMaybe.push({ i, note, model, tech,
+          id: idCol ? String(row[idCol] || '').trim() : '',
+          site: siteCol ? String(row[siteCol] || '').trim() : '' });
+      }
+      return;
+    }
     const w = stkLocation(tech);
     const con = conCol ? String(row[conCol] || '').trim() : '';
     hits.push({ row, i, model, tech, con,
       id: idCol ? String(row[idCol] || '').trim() : '',
       site: siteCol ? String(row[siteCol] || '').trim() : '',
       loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '',
+      via: byNote ? 'notes' : 'fault', note: byNote ? note : null,
       hidden: stkIsHidden(con, model) });
   });
   stkOut = hits;
@@ -10882,6 +11168,7 @@ function stkRun() {
   // just take no part in what the page shows or counts.
   const shown = hits.filter(h => !h.hidden);
   const nHidden = hits.length - shown.length;
+  stkNoteHits = shown.filter(h => h.via === 'notes');
   const linkable = shown.filter(h => h.loc && h.model);
   const stuck = shown.filter(h => !h.loc || !h.model);
 
@@ -10931,13 +11218,16 @@ function stkRun() {
   const by = stkGetSearchBy();
   const egModel = linkable.length ? linkable[0].model : '';
   const open = stkOpenGroup.has('stuck');
+  const nOpen = stkOpenGroup.has('fromnotes');
+  const mOpen = stkOpenGroup.has('maybenotes');
 
   out.innerHTML = `
     ${shown.length ? `<div class="stk-banner">
       <i class="ti ti-package"></i>
       <span class="stk-banner-t">
         <strong>${shown.length.toLocaleString()} job${shown.length !== 1 ? 's are' : ' is'} waiting on a replacement part</strong>
-        <span>${nParts.toLocaleString()} part${nParts !== 1 ? 's' : ''} across ${locList.length.toLocaleString()} location${locList.length !== 1 ? 's' : ''}${other
+        <span>${nParts.toLocaleString()} part${nParts !== 1 ? 's' : ''} across ${locList.length.toLocaleString()} location${locList.length !== 1 ? 's' : ''}${stkNoteHits.length
+          ? ` \u00b7 ${stkNoteHits.length.toLocaleString()} of them read from the notes, not the code` : ''}${other
           ? ` \u00b7 the other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement` : ''}${nHidden
           ? ` \u00b7 ${nHidden.toLocaleString()} hidden by your list` : ''}.</span>
       </span>
@@ -11007,6 +11297,54 @@ function stkRun() {
       </section>`;
     }).join('')}</div>` : ''}
 
+    ${stkNoteHits.length ? `<div class="al-vgrp${nOpen ? ' open' : ''}" style="margin-top:16px;">
+      <button class="al-vgrp-hd" onclick="stkToggleGroup('fromnotes')" aria-expanded="${nOpen}">
+        <i class="ti ti-chevron-right al-vgrp-chev${nOpen ? ' open' : ''}"></i>
+        <i class="ti ti-file-text al-vgrp-ico notes"></i>
+        <span class="al-vgrp-l">Counted from the notes</span>
+        <span class="al-vgrp-n">${stkNoteHits.length.toLocaleString()}</span>
+        <span class="al-vgrp-note">the fault code did not say replacement \u2014 the notes did</span>
+      </button>
+      ${nOpen ? `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Model</th><th>What the notes said</th><th></th></tr></thead>
+        <tbody>${stkNoteHits.map((h, x) => `<tr>
+          <td class="pc">${h.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(h.id))}" target="_blank" rel="noopener" class="pa-jid">${esc(h.id)}</a>`
+            : 'row ' + (h.i + 2)}</td>
+          <td>${esc(h.site || '\u2014')}</td>
+          <td>${esc(h.model || '\u2014')}</td>
+          <td>${stkNoteCell(h.note)}</td>
+          <td class="pc">${h.note && h.note.phrase ? `<button class="stk-rule-x"
+            onclick="stkLearnNote(${escAttr(JSON.stringify(h.note.phrase))}, 'no')"
+            title="Stop counting any job whose notes say this">Not a replacement</button>` : ''}</td>
+        </tr>`).join('')}</tbody></table></div>` : ''}
+    </div>` : ''}
+
+    ${stkNoteMaybe.length ? `<div class="al-vgrp${mOpen ? ' open' : ''}" style="margin-top:16px;">
+      <button class="al-vgrp-hd" onclick="stkToggleGroup('maybenotes')" aria-expanded="${mOpen}">
+        <i class="ti ti-chevron-right al-vgrp-chev${mOpen ? ' open' : ''}"></i>
+        <i class="ti ti-help-circle al-vgrp-ico warn"></i>
+        <span class="al-vgrp-l">Worth a look</span>
+        <span class="al-vgrp-n">${stkNoteMaybe.length.toLocaleString()}</span>
+        <span class="al-vgrp-note">the notes say something is wrong without saying a part is owing \u2014 not counted</span>
+      </button>
+      ${mOpen ? `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Model</th><th>What the notes said</th><th></th></tr></thead>
+        <tbody>${stkNoteMaybe.map(h => `<tr>
+          <td class="pc">${h.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(h.id))}" target="_blank" rel="noopener" class="pa-jid">${esc(h.id)}</a>`
+            : 'row ' + (h.i + 2)}</td>
+          <td>${esc(h.site || '\u2014')}</td>
+          <td>${esc(h.model || '\u2014')}</td>
+          <td>${stkNoteCell(h.note)}</td>
+          <td class="pc">${h.note && h.note.phrase ? `<button class="stk-rule-x"
+            onclick="stkLearnNote(${escAttr(JSON.stringify(h.note.phrase))}, 'yes')"
+            title="Count every job whose notes say this">Count these</button>
+          <button class="stk-rule-x" onclick="stkLearnNote(${escAttr(JSON.stringify(h.note.phrase))}, 'no')"
+            title="Stop listing jobs whose notes say this">Ignore these</button>` : ''}</td>
+        </tr>`).join('')}</tbody></table></div>` : ''}
+    </div>` : ''}
+
     ${stuck.length ? `<div class="al-vgrp${open ? ' open' : ''}" style="margin-top:16px;">
       <button class="al-vgrp-hd" onclick="stkToggleGroup('stuck')" aria-expanded="${open}">
         <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
@@ -11041,6 +11379,9 @@ function stkDownload() {
       'Warehouse Location':  h.loc || '',
       'Searched For':        term,
       'Part Name Source':    !ok ? '' : (stkGetRule(h.model) ? 'Saved by you' : 'Automatic'),
+      'Counted Because':     h.via === 'notes'
+        ? 'Reported notes: \u201c' + (h.note && h.note.phrase || '') + '\u201d'
+        : 'Fault code',
       'Hidden By You':       h.hidden ? 'Yes \u2014 ' + h.model + ' under ' + h.con : '',
       'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
       'Stock Link':          ok ? stkUrl(h.loc, term) : '',
