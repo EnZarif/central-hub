@@ -10746,6 +10746,32 @@ const STK_NOTE_COND = /\b(?:may|might|could|possibly|potentially|perhaps|if|pend
 const STK_NOTE_DONE = /\b(?:replaced|swapped\s+(?:out|over)|exchanged|refitted|rectified|resolved|repaired)\b/;
 const STK_NOTE_WINDOW = 26;
 
+// The reported notes are a form, not prose. A TGCS ServiceDesk note runs to
+// well over a thousand characters of company name, address, contact numbers,
+// serial and reference numbers - and it ends by repeating the fault code and
+// its description back. Reading all of that would have the notes agreeing
+// with the code rather than adding anything to it, which is the one thing
+// this is here to do. The symptom itself sits in a labelled section, so that
+// is the part that gets read; anything that does not follow the form is read
+// whole, as before.
+const STK_NOTE_BODY = /problem and actions taken[^:]{0,24}:\s*([\s\S]*?)(?=\bseverity\s*:|\bentitlement check\s*:|$)/i;
+
+// Scheduled maintenance is a visit, never a part. The wording is boilerplate,
+// identical on every one of them, and it happens to talk about "faulty
+// equipment" and "damage" in the abstract - exactly what the weak phrases
+// look for - so it would file a photography instruction as a job worth a
+// look, every week, forever.
+const STK_NOTE_SKIP = /service plan onsite maintenance|onsite maintenance (?:guide|audit report)/i;
+
+// A weak phrase that only repeats the fault code is not a second opinion, it
+// is the same sentence twice: the code already says "No power / PSU", so the
+// note saying "no power" tells nobody anything. Only exact echoes are caught
+// here - guessing at synonyms would be claiming to understand the words.
+function stkNoteEchoes(phrase, fault) {
+  const f = String(fault || '').toLowerCase().replace(/\s+/g, ' ');
+  return !!f && !!phrase && f.indexOf(phrase) >= 0;
+}
+
 function stkNoteKey(p) { return String(p || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 function stkGetNoteWords() {
   if (stkNoteWords === null) {
@@ -10809,10 +10835,12 @@ function stkNoteScan(clause, list) {
 // { verdict:'yes'|'maybe'|'no', phrase, clause } - the phrase and the clause
 // it came from both travel with the answer, because the whole point is that
 // the page can show what it went on.
-function stkReadNote(text) {
+function stkReadNote(text, fault) {
   const raw = String(text === undefined || text === null ? '' : text).trim();
-  if (!raw) return { verdict: 'no', phrase: '', clause: '' };
-  const low = raw.toLowerCase().replace(/\s+/g, ' ');
+  if (!raw || STK_NOTE_SKIP.test(raw)) return { verdict: 'no', phrase: '', clause: '' };
+  const cut = STK_NOTE_BODY.exec(raw);
+  const body = cut && cut[1].trim().length > 3 ? cut[1] : raw;
+  const low = body.toLowerCase().replace(/\s+/g, ' ');
 
   // What you taught it wins outright, in both directions. A phrase you ruled
   // out stops the row even when something strong also matched, because that
@@ -10821,10 +10849,10 @@ function stkReadNote(text) {
   let yes = null;
   for (const k in taught) {
     if (!k || low.indexOf(k) < 0) continue;
-    if (taught[k].verdict === 'no') return { verdict: 'no', phrase: k, clause: raw, taught: true };
+    if (taught[k].verdict === 'no') return { verdict: 'no', phrase: k, clause: low, taught: true };
     yes = k;
   }
-  if (yes) return { verdict: 'yes', phrase: yes, clause: raw, taught: true };
+  if (yes) return { verdict: 'yes', phrase: yes, clause: low, taught: true };
 
   let best = { verdict: 'no', phrase: '', clause: '' };
   const rank = { no: 0, maybe: 1, yes: 2 };
@@ -10842,7 +10870,8 @@ function stkReadNote(text) {
     // a fault that was fixed on the visit is not a part to go and fetch.
     if (STK_NOTE_DONE.test(c)) return;
     const weak = stkNoteScan(c, STK_NOTE_WEAK);
-    if (weak && weak.guard !== 'no' && rank.maybe > rank[best.verdict]) {
+    if (weak && weak.guard !== 'no' && !stkNoteEchoes(weak.phrase, fault)
+        && rank.maybe > rank[best.verdict]) {
       best = { verdict: 'maybe', phrase: weak.phrase, clause: c };
     }
   });
@@ -11138,7 +11167,7 @@ function stkRun() {
   stkNoteMaybe = [];
   stkRows.forEach((row, i) => {
     const byFault = picked.has(stkFaultKey(row[faultCol]));
-    const note = useNotes ? stkReadNote(row[noteCol]) : null;
+    const note = useNotes ? stkReadNote(row[noteCol], row[faultCol]) : null;
     // The code is believed first. Reading the notes only ever adds rows the
     // code missed, so turning it off can never take a job away that the
     // chips above put there.
