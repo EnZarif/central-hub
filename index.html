@@ -70,6 +70,86 @@
     --radius: 10px; --radius-lg: 14px;
   }
 
+  /* ══ THE SIX INTERACTIONS ═══════════════════════════════════════════
+     One block, applied by class to the pages that already exist, so no page
+     markup changes. Every one of them stops dead under reduced motion at the
+     bottom of this block. */
+
+  /* 1. action.sweep — one slow sheen across a primary action on hover. Only
+     the primary: if every button shimmered none would read as the main one.
+     1.6s, because a quick bright pass reads as a glitch and a slow wide one
+     reads as a sheen. */
+  .generate-btn::after, .sidebar-action-btn.sab-task::after, .auth-gate-btn::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    transform: translateX(-120%);
+    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+  }
+  .sidebar-action-btn.sab-task, .auth-gate-btn { position: relative; overflow: hidden; }
+  .generate-btn { overflow: hidden; }
+  .generate-btn:hover::after, .sidebar-action-btn.sab-task:hover::after, .auth-gate-btn:hover::after {
+    animation: zSweep 1.6s cubic-bezier(.25,.55,.3,1);
+  }
+  @keyframes zSweep { to { transform: translateX(120%); } }
+
+  /* 2. rail.ignite — a card with an accent rail widens it and throws a glow
+     on hover, and lifts 2px. It says the card is a thing you can act on. */
+  .stk-card, .al-tdepot {
+    transition: transform .18s cubic-bezier(.22,.9,.26,1), border-color .18s, box-shadow .18s;
+  }
+  .stk-card:hover, .al-tdepot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px -22px rgba(0,0,0,0.9);
+  }
+  .stk-card:hover { border-left-width: 4px; box-shadow: 0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--green-text); }
+  .stk-card.partner:hover { box-shadow: 0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--purple-text); }
+  .stk-card.asis:hover { box-shadow: 0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--amber-text); }
+  .al-tdepot:hover { border-left-width: 4px; box-shadow: 0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--teal-text); }
+  .al-tdepot.partner:hover { box-shadow: 0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--purple-text); }
+
+  /* 3. chip.snap — a toggled chip compresses and springs back, so a click
+     that changed nothing on screen still confirms itself. */
+  .z-snap { animation: zSnap .34s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes zSnap { 0% { transform: scale(1); } 38% { transform: scale(.93); } 100% { transform: scale(1); } }
+
+  /* 4. meter.fill — bars and rings arrive from zero, so the shape of the
+     result registers before a single number is read. */
+  .z-fill { animation: zFill .95s cubic-bezier(.22,.9,.26,1) .15s both; }
+  @keyframes zFill { from { width: 0; } }
+
+  /* 5. fold.drop — a group's contents fall in rather than appearing, and the
+     chevron turns on the same curve. Short: the point is continuity. */
+  .al-vgrp.open > .sv-cov-table-wrap,
+  .al-vgrp.open > .al-val-wrap,
+  .al-vgrp.open > .stk-rule,
+  .al-vgrp.open > .al-fix,
+  .al-vgrp.open > .al-taught,
+  .esc-card.open .esc-body { animation: zDrop .3s cubic-bezier(.22,.9,.26,1); }
+  @keyframes zDrop { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: none; } }
+
+  /* 6. line.draw — a trend arrives left to right, so the shape of the week
+     registers before any single value does. The app's trend display is a bar
+     sparkline rather than an SVG line, so that is where this lands; the path
+     rule below is here for any SVG chart added later. */
+  .ins-sparkline span { transform-origin: bottom; }
+  .z-grow { animation: zGrow .5s cubic-bezier(.22,.9,.26,1) both; }
+  @keyframes zGrow { from { transform: scaleY(0); opacity: .25; } to { transform: scaleY(1); opacity: 1; } }
+  .z-draw { stroke-dasharray: var(--len, 600); animation: zDraw 1.5s cubic-bezier(.3,.8,.3,1) .2s both; }
+  @keyframes zDraw { from { stroke-dashoffset: var(--len, 600); } to { stroke-dashoffset: 0; } }
+
+  /* Rows and cards arriving in a list, staggered by index from script. */
+  .z-rise { animation: zRise .5s cubic-bezier(.22,.9,.26,1) both; }
+  @keyframes zRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .generate-btn:hover::after, .sidebar-action-btn.sab-task:hover::after, .auth-gate-btn:hover::after,
+    .z-snap, .z-fill, .z-draw, .z-rise, .z-grow,
+    .al-vgrp.open > .sv-cov-table-wrap, .al-vgrp.open > .al-val-wrap,
+    .al-vgrp.open > .stk-rule, .al-vgrp.open > .al-fix, .al-vgrp.open > .al-taught,
+    .esc-card.open .esc-body { animation: none !important; }
+    .stk-card:hover, .al-tdepot:hover { transform: none; }
+    .z-draw { stroke-dashoffset: 0; }
+  }
+
   /* ── ACCENT PICKER (settings) ── */
   .accent-picker { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; width: 100%; }
   .ap-card { display: flex; flex-direction: column; align-items: center; gap: 7px;
@@ -96,7 +176,7 @@
   body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 90px; }
   /* Clear the fixed nav. It is 110px at its tallest, with the clock card in
      it, and the greeting was sliding underneath. */
-  .wrap { padding: 7.5rem 3rem 4rem; }
+  .wrap { padding: 2rem 3rem 4rem; margin-left: 54px; }
 
   /* ── THE GROUND ─────────────────────────────────────────────────────
      Two fixed layers behind everything: a violet well at the bottom of the
@@ -136,7 +216,45 @@
   .home-greeting-word, .home-greeting-name { font-weight: 800; letter-spacing: -0.035em; }
 
   /* TOP NAV */
-  .nav { width: 100%; background: var(--surface); border-bottom: 0.5px solid var(--border); position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: row; align-items: center; padding: 9px 18px; z-index: 10; overflow: visible; gap: 18px; }
+  /* ── THE RAIL ───────────────────────────────────────────────────────
+     54px of icons down the left, widening to full labels on hover or
+     staying open pinned. The page is inset by exactly the collapsed width,
+     so opening the rail never pushes the work around - it opens over its
+     own gutter. Below 760px this all gives way to the drawer rules further
+     down, which were already vertical. */
+  .nav { width: 54px; background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-right: 0.5px solid var(--border); border-bottom: none;
+    position: fixed; top: 0; left: 0; bottom: 0; right: auto;
+    display: flex; flex-direction: column; align-items: stretch;
+    padding: 13px 0 calc(13px + env(safe-area-inset-bottom, 0px));
+    z-index: 60; overflow: hidden; white-space: nowrap; gap: 0;
+    transition: width 0.26s cubic-bezier(.22,.9,.26,1), box-shadow 0.26s; }
+  .nav:hover, .nav:focus-within, .nav.rail-pin {
+    width: 238px; box-shadow: 28px 0 56px -32px rgba(0,0,0,0.96); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; padding: 0 0 13px 11px;
+    font-size: 15px; font-weight: 600; color: var(--text); flex-shrink: 0;
+    background: none; border: none; font-family: inherit; cursor: pointer; }
+  .nav-logo .nav-logo-icon { width: 32px; height: 32px; }
+  .nav-wordmark, .nav-btn span, .nav-sec, .rail-cap, .cwc-body-rail {
+    opacity: 0; transition: opacity 0.2s ease 0.05s; }
+  .nav:hover .nav-wordmark, .nav:focus-within .nav-wordmark, .nav.rail-pin .nav-wordmark,
+  .nav:hover .nav-btn span, .nav:focus-within .nav-btn span, .nav.rail-pin .nav-btn span,
+  .nav:hover .nav-sec, .nav:focus-within .nav-sec, .nav.rail-pin .nav-sec,
+  .nav:hover .rail-cap, .nav:focus-within .rail-cap, .nav.rail-pin .rail-cap,
+  .nav:hover .cwc-body-rail, .nav:focus-within .cwc-body-rail, .nav.rail-pin .cwc-body-rail { opacity: 1; }
+  /* A divider that reads as a divider once the labels are there, and as a
+     plain rule while the rail is shut. */
+  .nav-sec-row { display: flex; align-items: center; gap: 8px; padding: 13px 13px 5px; flex-shrink: 0; }
+  .nav-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+  .nav-sec-row i { flex: 1 1 auto; height: 1px; background: var(--border); display: block; }
+  .rail-pin-btn { position: absolute; top: 15px; right: 9px; width: 26px; height: 26px;
+    display: grid; place-items: center; background: none; border: none; cursor: pointer;
+    color: var(--text-3); border-radius: 7px; font-size: 15px; opacity: 0;
+    transition: opacity 0.2s, color 0.15s, background 0.15s, transform 0.22s cubic-bezier(.22,.9,.26,1); }
+  .nav:hover .rail-pin-btn, .nav:focus-within .rail-pin-btn, .nav.rail-pin .rail-pin-btn { opacity: 1; }
+  .rail-pin-btn:hover { color: var(--text); background: var(--surface2); }
+  .nav.rail-pin .rail-pin-btn { color: var(--teal-text); transform: rotate(45deg); }
   .nav-logo { display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 600; color: var(--text); padding: 0 4px; flex-shrink: 0; }
   .nav-logo-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; perspective: 170px; }
   .nav-logo-btn { background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
@@ -159,40 +277,57 @@
   @keyframes navCubeSpin { from { transform: rotateX(-12deg) rotateY(0deg); } to { transform: rotateX(-12deg) rotateY(360deg); } }
   @keyframes navCubeColor { 0%, 100% { --nc-c1:#378ADD; --nc-c2:#7F77DD; } 50% { --nc-c1:#7F77DD; --nc-c2:#ED93B1; } }
   @media (prefers-reduced-motion: reduce) { .nav-cube { animation: none; } }
-  .nav-links { display: flex; flex-direction: row; align-items: center; gap: 3px; flex: 1; min-width: 0; overflow-x: auto; overflow-y: visible; scrollbar-width: thin; }
+  .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
   .nav-section-label { display: none; }
-  .nav-btn { padding: 8px 10px; font-size: 14px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
+  .nav-btn { width: calc(100% - 14px); margin: 0 7px; padding: 8px 10px; font-size: 14px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
   .nav-btn i { font-size: 18px; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
   .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); transform: translateY(-1px); }
   .nav-btn:active { transform: scale(0.96); }
   /* per-hub icon tiles: monochrome gold, opacity-tiered */
-  .nav-btn[data-page="home"] i { background: color-mix(in srgb, var(--amber-text) 85%, transparent); color: var(--hero-bg); }
-  .nav-btn[data-page="tasks"] i { background: color-mix(in srgb, var(--amber-text) 68%, transparent); color: var(--hero-bg); }
-  .nav-btn[data-page="tasks"].active { background: color-mix(in srgb, var(--amber-text) 24%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="helpdesk"] i { background: color-mix(in srgb, var(--amber-text) 40%, transparent); color: var(--amber-text); }
-  .nav-btn[data-page="projects"] i { background: color-mix(in srgb, var(--amber-text) 28%, transparent); color: var(--amber-text); }
-  .nav-btn[data-page="personal"] i { background: color-mix(in srgb, var(--amber-text) 18%, transparent); color: var(--amber-text); }
-  /* Widgets + Settings share one accent identity (teal) end-to-end — icon, label and press overlay all move together instead of Widgets being amber-branded and Settings being flat grey */
-  .nav-btn[data-page="widgets"], .nav-btn[data-page="settings"] { color: var(--text); }
-  .nav-btn[data-page="widgets"] i, .nav-btn[data-page="settings"] i { background: color-mix(in srgb, var(--teal) 38%, transparent); color: var(--teal-text); }
-  .nav-btn[data-page="widgets"]:hover i, .nav-btn[data-page="settings"]:hover i { background: color-mix(in srgb, var(--teal) 55%, transparent); color: var(--teal-text); transform: scale(1.08); box-shadow: 0 0 12px color-mix(in srgb, var(--teal) 45%, transparent); }
-  /* page currently open: icon fills solid so it's obvious at a glance which one you're on */
-  .nav-btn[data-page="widgets"].active i, .nav-btn[data-page="settings"].active i { background: var(--teal); color: #fff; box-shadow: 0 0 10px color-mix(in srgb, var(--teal) 55%, transparent); }
-  .nav-btn[data-page="widgets"].active, .nav-btn[data-page="settings"].active { background: color-mix(in srgb, var(--teal) 24%, transparent); box-shadow: inset 3px 0 0 var(--teal); }
-  /* pressed: icon flips to a solid filled accent for an instant, on top of the label/overlay press effect */
-  .nav-btn[data-page="widgets"]:active, .nav-btn[data-page="settings"]:active { color: var(--teal); background: var(--teal-bg); }
-  .nav-btn[data-page="widgets"]:active i, .nav-btn[data-page="settings"]:active i { background: var(--teal); color: #fff; box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 60%, transparent) inset; }
-  .nav-search-btn { color: var(--text); }
-  .nav-search-btn i { background: color-mix(in srgb, var(--teal) 38%, transparent); color: var(--teal-text); }
-  .nav-search-btn:hover i { background: color-mix(in srgb, var(--teal) 55%, transparent); color: var(--teal-text); transform: scale(1.08); box-shadow: 0 0 12px color-mix(in srgb, var(--teal) 45%, transparent); }
-  .nav-search-btn:active i { background: var(--teal); color: #fff; box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 60%, transparent) inset; }
-  /* active: tinted pill + left accent bar (gold, uniform) */
-  .nav-btn.active { color: var(--text); font-weight: 500; }
-  .nav-btn[data-page="home"].active { background: color-mix(in srgb, var(--amber-text) 24%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="helpdesk"].active { background: color-mix(in srgb, var(--amber-text) 24%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="projects"].active { background: color-mix(in srgb, var(--amber-text) 24%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-btn[data-page="personal"].active { background: color-mix(in srgb, var(--amber-text) 24%, transparent); box-shadow: inset 3px 0 0 var(--amber-text); }
-  .nav-bottom { margin-left: auto; padding-top: 0; border-top: none; display: flex; flex-direction: row; align-items: center; gap: 8px; flex-shrink: 0; }
+  /* Every rail item carries the colour its card carries on Home, so the two
+     surfaces agree: green is tasks, purple is the desk, amber is dispatch.
+     Everything in Utility stays on the accent, because those are tools for
+     the app rather than places in it. One rule each via --ni, instead of the
+     twenty near-identical rules this used to be. */
+  .nav-btn[data-page="home"]      { --ni: var(--teal-text); }
+  .nav-btn[data-page="tasks"]     { --ni: var(--green-text); }
+  .nav-btn[data-page="helpdesk"]  { --ni: var(--purple-text); }
+  .nav-btn[data-page="dispatch"]  { --ni: var(--amber-text); }
+  .nav-btn[data-page="projects"]  { --ni: var(--teal-text); }
+  .nav-btn[data-page="personal"]  { --ni: var(--pink-text); }
+  .nav-btn[data-page="learning"]  { --ni: var(--green-text); }
+  .nav-btn[data-page="widgets"], .nav-btn[data-page="settings"], .nav-search-btn { --ni: var(--teal-text); }
+
+  .nav-btn i {
+    background: color-mix(in srgb, var(--ni, var(--teal-text)) 15%, transparent);
+    color: var(--ni, var(--teal-text));
+    border: 1px solid color-mix(in srgb, var(--ni, var(--teal-text)) 24%, transparent);
+  }
+  .nav-btn:hover i {
+    background: color-mix(in srgb, var(--ni, var(--teal-text)) 26%, transparent);
+    box-shadow: 0 0 14px -2px color-mix(in srgb, var(--ni, var(--teal-text)) 70%, transparent);
+  }
+  .nav-btn:active i { transform: scale(0.94); }
+  .nav-btn.active {
+    color: var(--text); font-weight: 600;
+    background: color-mix(in srgb, var(--ni, var(--teal-text)) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--ni, var(--teal-text));
+  }
+  .nav-btn.active i {
+    background: color-mix(in srgb, var(--ni, var(--teal-text)) 34%, transparent);
+    box-shadow: 0 0 16px -3px var(--ni, var(--teal-text));
+  }
+  .nav-bottom { margin-left: 0; margin-top: auto; padding-top: 8px; border-top: none;
+    display: flex; flex-direction: column; align-items: stretch; gap: 2px; flex-shrink: 0; }
+  /* The Melbourne clock and weather stay exactly where they have always
+     been - bottom of the nav, under Settings. Collapsed it shows the time
+     alone; opening the rail brings the date and the weather with it. */
+  .clock-wx-card { margin: 8px 7px 0; }
+  .nav .cwc-top { flex-wrap: nowrap; }
+  .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-divider,
+  .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-date,
+  .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-wx { display: none !important; }
   .nav-clock { flex-shrink: 0; padding: 8px 11px; gap: 8px; }
   .nav-clock .clock-card-time-val { font-size: 18px; }
   .nav-clock .clock-card-divider { height: 26px; }
@@ -4007,11 +4142,23 @@
 
 <nav class="nav">
   <button class="nav-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
+  <button class="rail-pin-btn" id="rail-pin" onclick="toggleRailPin()" aria-pressed="false"
+    title="Keep the rail open" aria-label="Keep the rail open">&#10011;</button>
   <div class="nav-links">
-    <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
-    <button class="nav-btn nav-search-btn" onclick="openGlobalSearch()" title="Search everything (tasks, job list, checklists, meetings, ideas)"><i class="ti ti-search"></i><span>Search</span></button>
+    <button class="nav-btn" data-page="home" onclick="showPage('home')"><i class="ti ti-home-2"></i><span>Home</span></button>
+    <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i><span>Task Manager</span></button>
+    <button class="nav-btn" data-page="helpdesk" onclick="showPage('helpdesk')"><i class="ti ti-headset"></i><span>Helpdesk</span></button>
+    <button class="nav-btn" data-page="dispatch" onclick="showPage('dispatch')"><i class="ti ti-route"></i><span>Dispatch</span></button>
+
+    <div class="nav-sec-row"><span class="nav-sec">More</span><i></i></div>
+    <button class="nav-btn" data-page="projects" onclick="showPage('projects')"><i class="ti ti-folders"></i><span>Projects</span></button>
+    <button class="nav-btn" data-page="personal" onclick="showPage('personal')"><i class="ti ti-user-heart"></i><span>Personal</span></button>
+    <button class="nav-btn" data-page="learning" onclick="showPage('learning')"><i class="ti ti-school"></i><span>Learning</span></button>
   </div>
   <div class="nav-bottom">
+    <div class="nav-sec-row"><span class="nav-sec">Utility</span><i></i></div>
+    <button class="nav-btn" data-page="widgets" onclick="showPage('widgets')"><i class="ti ti-apps"></i><span>Widgets</span></button>
+    <button class="nav-btn nav-search-btn" onclick="openGlobalSearch()" title="Search everything (tasks, job list, checklists, meetings, ideas)"><i class="ti ti-search"></i><span>Search</span></button>
     <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
@@ -4029,7 +4176,7 @@
         <div class="cwc-divider" id="nav-clock-wx-divider" style="display:none"></div>
         <div class="cwc-section cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
       </div>
-      <div class="cwc-bar-track">
+      <div class="cwc-bar-track cwc-body-rail">
         <div class="cwc-bar-fill" id="nav-clock-bar"></div>
       </div>
     </div>
@@ -6717,6 +6864,112 @@ function countUpIn(scope) {
     });
   });
 }
+
+// ===== THE SIX INTERACTIONS, WIRED =====
+// The CSS above defines them; this attaches them to whatever is on screen.
+// It is all delegated or re-run on page change, so pages that rebuild their
+// own HTML - which most of them do - keep the behaviour without knowing it
+// exists.
+const zCalm = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// 3. chip.snap — delegated, so chips rendered later still snap.
+// Several of these lists rebuild their own HTML on click, which throws away
+// the element the class was just put on. So the chip is found again by its
+// position inside the nearest ancestor that has an id, once the re-render
+// has happened, and the animation is started on whatever is standing there.
+const Z_SNAPPABLE = '.stk-chip, .thp, .tab, .jl-time-btn, .amtek-tab, .ap-card, .jl-proj-filter-btn';
+function zSnap(el) {
+  if (!el || zCalm()) return;
+  el.classList.remove('z-snap');
+  void el.offsetWidth;
+  el.classList.add('z-snap');
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest(Z_SNAPPABLE);
+  if (!c || zCalm()) return;
+  zSnap(c);
+
+  const host = c.parentElement ? c.parentElement.closest('[id]') : null;
+  if (!host) return;
+  const sel = Array.from(c.classList).map(x => '.' + x)
+    .filter(x => x !== '.z-snap' && x !== '.active' && x !== '.on')[0];
+  if (!sel) return;
+  const before = Array.from(host.querySelectorAll(sel));
+  const idx = before.indexOf(c);
+  if (idx < 0) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const after = host.querySelectorAll(sel)[idx];
+    if (after && after !== c) zSnap(after);
+  }));
+}, true);
+
+// 4 + 6 + stagger. Run after a page renders: any bar with a width, any
+// <path class="z-line">, and the first rows of any table get their entrance.
+function zAnimatePage(root) {
+  if (zCalm()) return;
+  const scope = root || document;
+
+  scope.querySelectorAll('.cwc-bar-fill, .slimh-bar-fill, .sv-cov-bar-fill, .kpi-bar-fill, .ins-bar-fill, .pa-bar-fill')
+    .forEach(el => {
+      if (el.dataset.zf === '1') return;
+      el.dataset.zf = '1';
+      el.classList.add('z-fill');
+    });
+
+  // A line only animates once it knows its own length, which is the one
+  // thing CSS cannot work out for it.
+  scope.querySelectorAll('path.z-line').forEach(p => {
+    if (p.dataset.zd === '1') return;
+    p.dataset.zd = '1';
+    let len = 600;
+    try { len = Math.ceil(p.getTotalLength()) || 600; } catch (e) {}
+    p.style.setProperty('--len', len);
+    p.classList.add('z-draw');
+  });
+
+  scope.querySelectorAll('.ins-sparkline').forEach(sp => {
+    if (sp.dataset.zg === '1') return;
+    sp.dataset.zg = '1';
+    sp.querySelectorAll('span').forEach((b, i) => {
+      b.classList.add('z-grow');
+      b.style.animationDelay = (90 + i * 55) + 'ms';
+    });
+  });
+
+  scope.querySelectorAll('.al-rows tbody tr, .stk-prow, .al-vrow').forEach((r, i) => {
+    if (r.dataset.zr === '1') return;
+    r.dataset.zr = '1';
+    if (i > 11) return;             // past a dozen the stagger is just delay
+    r.classList.add('z-rise');
+    r.style.animationDelay = (60 + i * 45) + 'ms';
+  });
+}
+
+// ===== RAIL =====
+// Pinning is a per-browser convenience, so localStorage is the right home
+// for it - it never needs to reach another device or be read back by anyone.
+function toggleRailPin() {
+  const nav = document.querySelector('.nav');
+  const btn = document.getElementById('rail-pin');
+  if (!nav) return;
+  const on = !nav.classList.contains('rail-pin');
+  nav.classList.toggle('rail-pin', on);
+  if (btn) btn.setAttribute('aria-pressed', String(on));
+  try { localStorage.setItem('zarif_rail_pin', on ? '1' : '0'); } catch (e) {}
+}
+(function restoreRailPin() {
+  let on = false;
+  try { on = localStorage.getItem('zarif_rail_pin') === '1'; } catch (e) {}
+  if (!on) return;
+  const go = () => {
+    const nav = document.querySelector('.nav');
+    const btn = document.getElementById('rail-pin');
+    if (nav) nav.classList.add('rail-pin');
+    if (btn) btn.setAttribute('aria-pressed', 'true');
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
 
 // ===== ACCENT =====
 // One palette now, so the only thing left to choose is the accent. The old
@@ -15984,6 +16237,7 @@ function showPage(p, hub) {
   if (typeof updatePomoFloat === 'function') updatePomoFloat();
   if (p === 'home' && typeof renderHomeDashboard === 'function') renderHomeDashboard();
   if (p === 'home' && typeof initHome === 'function') initHome();
+  if (typeof zAnimatePage === 'function') requestAnimationFrame(() => zAnimatePage(document.getElementById('page-' + p)));
   if (p === 'meetings' && typeof updateMtgAnzPanel === 'function') updateMtgAnzPanel();
   if (p === 'meetings' && typeof updateMtgContextPanel === 'function') updateMtgContextPanel();
   if (p === 'meetings' && typeof populateMtgLinkOptions === 'function') populateMtgLinkOptions();
@@ -24628,6 +24882,19 @@ document.addEventListener('pointerup', e => {
   const btn = e.target.closest('button, .cb, .statcard.clickable, .nav-btn, .app-card');
   if (!btn) return;
   _M.animate(btn, { scale: [0.96, 1] }, { duration: 0.18, easing: [0.2, 0.85, 0.25, 1] });
+});
+
+// The three tools replace their entire output when they re-run, which takes
+// the entrance animations with it. Wrapping them is less invasive than
+// threading a call through every return path inside each one.
+['alRun', 'alValRun', 'stkRun'].forEach(fn => {
+  const orig = window[fn];
+  if (typeof orig !== 'function') return;
+  window[fn] = function () {
+    const out = orig.apply(this, arguments);
+    if (typeof zAnimatePage === 'function') requestAnimationFrame(() => zAnimatePage());
+    return out;
+  };
 });
 </script>
 
