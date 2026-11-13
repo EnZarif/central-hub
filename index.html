@@ -443,8 +443,7 @@
   .nav-logo .nav-logo-icon { width: 32px; height: 32px; perspective: 120px; }
   .nav-logo .nav-cube { width: 22px; height: 22px; }
   /* A scrollbar inside a 62px rail is mostly scrollbar. */
-  .nav-links { scrollbar-width: none; }
-  .nav-links::-webkit-scrollbar { width: 0; height: 0; }
+
   .nav-wordmark, .nav-btn span, .nav-sec, .rail-cap, .ql-cap, .cwc-body-rail {
     opacity: 0; transition: opacity 0.2s ease 0.05s; }
   .nav:hover .nav-wordmark, .nav:focus-within .nav-wordmark, .nav.rail-pin .nav-wordmark,
@@ -458,13 +457,16 @@
   .nav-sec-row { display: flex; align-items: center; gap: 8px; padding: 12px 13px 4px; flex-shrink: 0; }
   .nav-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
   .nav-sec-row i { flex: 1 1 auto; height: 1px; background: var(--border); display: block; }
-  .rail-pin-btn { position: absolute; top: 15px; right: 9px; width: 26px; height: 26px;
+  /* The pin used to be a plus-shaped glyph sitting a few pixels from the
+     chooser's plus, which made two different buttons look like one control.
+     It is a pin now, and it says so. */
+  .rail-pin-btn { position: absolute; top: 16px; right: 10px; width: 26px; height: 26px;
     display: grid; place-items: center; background: none; border: none; cursor: pointer;
-    color: var(--text-3); border-radius: 7px; font-size: 15px; opacity: 0;
-    transition: opacity 0.2s, color 0.15s, background 0.15s, transform 0.22s cubic-bezier(.22,.9,.26,1); }
+    color: var(--text-3); border-radius: 7px; font-size: 16px; opacity: 0;
+    transition: opacity 0.2s, color 0.15s, background 0.15s; }
   .nav:hover .rail-pin-btn, .nav:focus-within .rail-pin-btn, .nav.rail-pin .rail-pin-btn { opacity: 1; }
   .rail-pin-btn:hover { color: var(--text); background: var(--surface2); }
-  .nav.rail-pin .rail-pin-btn { color: var(--teal-text); transform: rotate(45deg); }
+  .nav.rail-pin .rail-pin-btn { color: var(--teal-text); background: var(--teal-bg); }
   .nav-logo { display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 600; color: var(--text); padding: 0 4px; flex-shrink: 0; }
   .nav-logo-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; perspective: 170px; }
   .nav-logo-btn { background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
@@ -488,10 +490,12 @@
   @keyframes navCubeColor { 0%, 100% { --nc-c1:#378ADD; --nc-c2:#7F77DD; } 50% { --nc-c1:#7F77DD; --nc-c2:#ED93B1; } }
   @media (prefers-reduced-motion: reduce) { .nav-cube { animation: none; } }
   .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px;
-    flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none; -ms-overflow-style: none; }
+  .nav-links::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; }
   .nav-section-label { display: none; }
-  .nav-btn { width: calc(100% - 12px); margin: 0 6px; padding: 9px 7px; font-size: 14.5px; font-weight: 500; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
-  .nav-btn i { font-size: 18px; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
+  .nav-btn { width: calc(100% - 12px); margin: 0 6px; padding: 10px 8px; font-size: 14.5px; font-weight: 500; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
+  .nav-btn i { font-size: 21px; width: 30px; height: 30px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
   .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); transform: translateY(-1px); }
   .nav-btn:active { transform: scale(0.96); }
   /* per-hub icon tiles: monochrome gold, opacity-tiered */
@@ -509,31 +513,32 @@
   .nav-btn[data-page="learning"]  { --ni: var(--green-text); }
   .nav-btn[data-page="widgets"], .nav-btn[data-page="settings"], .nav-search-btn { --ni: var(--teal-text); }
 
-  .nav-btn i {
-    background: color-mix(in srgb, var(--ni, var(--teal-text)) 15%, transparent);
-    color: var(--ni, var(--teal-text));
-    border: 1px solid color-mix(in srgb, var(--ni, var(--teal-text)) 24%, transparent);
-  }
-  .nav-btn:hover i {
-    background: color-mix(in srgb, var(--ni, var(--teal-text)) 26%, transparent);
-    box-shadow: 0 0 14px -2px color-mix(in srgb, var(--ni, var(--teal-text)) 70%, transparent);
-  }
+  .nav-btn i { background: none; border: none; color: var(--text-3); }
+  .nav-btn:hover { color: var(--text); background: var(--surface2); }
+  .nav-btn:hover i { color: var(--ni, var(--teal-text)); }
   .nav-btn:active i { transform: scale(0.94); }
+  /* The page you are on: its own colour, a tinted bed and a bar down the
+     left. One item lit at a time, which is what makes it findable. */
   .nav-btn.active {
-    color: var(--text); font-weight: 600;
-    background: color-mix(in srgb, var(--ni, var(--teal-text)) 12%, transparent);
+    color: var(--ni, var(--teal-text)); font-weight: 600;
+    background: color-mix(in srgb, var(--ni, var(--teal-text)) 11%, transparent);
     box-shadow: inset 3px 0 0 var(--ni, var(--teal-text));
   }
-  .nav-btn.active i {
-    background: color-mix(in srgb, var(--ni, var(--teal-text)) 34%, transparent);
-    box-shadow: 0 0 16px -3px var(--ni, var(--teal-text));
-  }
+  .nav-btn.active i { color: var(--ni, var(--teal-text)); }
   .nav-bottom { margin-left: 0; margin-top: auto; padding-top: 8px; border-top: none;
     display: flex; flex-direction: column; align-items: stretch; gap: 2px; flex-shrink: 0; }
   /* The Melbourne clock and weather stay exactly where they have always
      been - bottom of the nav, under Settings. Collapsed it shows the time
      alone; opening the rail brings the date and the weather with it. */
-  .clock-wx-card { margin: 8px 6px 0; padding: 9px 10px; }
+  .clock-wx-card { margin: 8px 6px 0; padding: 0; }
+  .nav .cwc-top { padding: 9px 10px; gap: 8px; }
+  .nav .cwc-section { flex: 0 1 auto; justify-content: flex-start; padding: 0; gap: 7px; }
+  .nav .cwc-time-val { font-size: 17px; font-weight: 600; }
+  .nav .cwc-ampm { font-size: 9px; }
+  .nav .cwc-weekday { font-size: 11px; }
+  .nav .cwc-day { font-size: 10px; }
+  .nav .cwc-divider { height: 20px; margin: 0 2px; }
+  .nav .cwc-bar-track { margin: 0 10px 8px; }
   .nav .cwc-top { flex-wrap: nowrap; }
   .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-divider,
   .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-date,
@@ -4391,7 +4396,7 @@
 <nav class="nav">
   <button class="nav-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
   <button class="rail-pin-btn" id="rail-pin" onclick="toggleRailPin()" aria-pressed="false"
-    title="Keep the rail open" aria-label="Keep the rail open">&#10011;</button>
+    title="Keep the rail open" aria-label="Keep the rail open"><i class="ti ti-pinned"></i></button>
   <div class="ql-head">
     <button class="ql-add" onclick="qlcOpen()" title="Choose quick links" aria-label="Choose quick links">+</button>
     <span class="ql-cap">Quick links</span>
