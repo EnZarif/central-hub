@@ -10917,7 +10917,7 @@ function stkRenderMapper() {
     ${stkHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
   </select>`;
   const faultCol = svAutoDetect(stkHeaders, ['Fault Description','Fault','Fault Desc'], ['fault','problem','symptom']);
-  const noteCol = svAutoDetect(stkHeaders, ['Reported notes','Reported Notes','Notes','Reported Fault','Comments'], ['note','comment','remark','descript']);
+  const noteCol = svAutoDetect(stkHeaders, ['Reported notes','Reported Notes','Notes','Reported Fault','Comments'], ['note','comment','remark']);
   el.innerHTML =
     `<div class="sv-col-row"><span class="sv-col-label">Model column</span>${sel('stk-c-model', svAutoDetect(stkHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Fault column</span>${sel('stk-c-fault', faultCol, 'stkOnFaultCol()')}</div>
