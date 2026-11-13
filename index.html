@@ -2676,14 +2676,26 @@
   .stk-prow-con.nocon { grid-template-columns:minmax(0,1fr); }
   .stk-prow-con > .stk-con { align-self:start; }
   .stk-sites { min-width:0; display:flex; flex-direction:column; gap:4px; }
-  .stk-site { min-width:0; display:flex; align-items:baseline; gap:7px; font-size:11px; }
+  .stk-site { min-width:0; display:flex; align-items:center; gap:8px; font-size:11.5px;
+    flex-wrap:wrap; }
   .stk-site-n { min-width:0; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .stk-site-x { flex-shrink:0; font-size:9.5px; font-weight:700; color:var(--amber-text);
     background:var(--amber-bg); border-radius:4px; padding:1px 5px; }
-  .stk-site-j { flex-shrink:0; font-variant-numeric:tabular-nums; }
-  .stk-site-j a { color:var(--teal-text); text-decoration:none; }
-  .stk-site-j a:hover { text-decoration:underline; }
-  .stk-site-j i { font-style:normal; opacity:.5; margin:0 4px; }
+  .stk-site-j { flex-shrink:0; display:flex; flex-wrap:wrap; gap:5px;
+    font-variant-numeric:tabular-nums; }
+  .stk-site-j a, .stk-site-j > span { display:inline-flex; align-items:center; min-height:27px;
+    padding:3px 10px; border-radius:7px; font-size:12.5px; font-weight:600; letter-spacing:.01em; }
+  .stk-site-j a { color:var(--teal-text); background:var(--teal-bg);
+    border:0.5px solid color-mix(in srgb, var(--teal-text) 26%, transparent);
+    text-decoration:none; transition:background .13s, border-color .13s, transform .08s; }
+  .stk-site-j a:hover { background:color-mix(in srgb, var(--teal-text) 22%, var(--surface));
+    border-color:var(--teal-text); text-decoration:none; }
+  .stk-site-j a:active { transform:translateY(1px); }
+  .stk-site-j a:focus-visible { outline:2px solid var(--teal-text); outline-offset:1px; }
+  /* A row with no job number is not a link and must not look like one. */
+  .stk-site-j > span { color:var(--text-3); background:var(--surface2); font-weight:500; }
+  /* The dots separated bare text; chips separate themselves. */
+  .stk-site-j i { display:none; }
   .stk-con { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700;
     border-radius:20px; padding:3px 9px; border:0.5px solid; white-space:nowrap; }
   .stk-con.hide-able { padding-right:3px; }
