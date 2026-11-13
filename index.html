@@ -176,7 +176,7 @@
   body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 90px; }
   /* Clear the fixed nav. It is 110px at its tallest, with the clock card in
      it, and the greeting was sliding underneath. */
-  .wrap { padding: 2rem 3rem 4rem; margin-left: 54px; }
+  .wrap { padding: 2rem 3rem 4rem; margin-left: 62px; }
 
   /* ── THE GROUND ─────────────────────────────────────────────────────
      Two fixed layers behind everything: a violet well at the bottom of the
@@ -222,7 +222,7 @@
      so opening the rail never pushes the work around - it opens over its
      own gutter. Below 760px this all gives way to the drawer rules further
      down, which were already vertical. */
-  .nav { width: 54px; background: color-mix(in srgb, var(--surface) 92%, transparent);
+  .nav { width: 62px; background: color-mix(in srgb, var(--surface) 92%, transparent);
     backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
     border-right: 0.5px solid var(--border); border-bottom: none;
     position: fixed; top: 0; left: 0; bottom: 0; right: auto;
@@ -232,10 +232,14 @@
     transition: width 0.26s cubic-bezier(.22,.9,.26,1), box-shadow 0.26s; }
   .nav:hover, .nav:focus-within, .nav.rail-pin {
     width: 238px; box-shadow: 28px 0 56px -32px rgba(0,0,0,0.96); }
-  .nav-logo { display: flex; align-items: center; gap: 10px; padding: 0 0 13px 11px;
+  .nav-logo { display: flex; align-items: center; gap: 12px; padding: 0 0 12px 13px;
     font-size: 15px; font-weight: 600; color: var(--text); flex-shrink: 0;
     background: none; border: none; font-family: inherit; cursor: pointer; }
-  .nav-logo .nav-logo-icon { width: 32px; height: 32px; }
+  .nav-logo .nav-logo-icon { width: 32px; height: 32px; perspective: 120px; }
+  .nav-logo .nav-cube { width: 22px; height: 22px; }
+  /* A scrollbar inside a 62px rail is mostly scrollbar. */
+  .nav-links { scrollbar-width: none; }
+  .nav-links::-webkit-scrollbar { width: 0; height: 0; }
   .nav-wordmark, .nav-btn span, .nav-sec, .rail-cap, .cwc-body-rail {
     opacity: 0; transition: opacity 0.2s ease 0.05s; }
   .nav:hover .nav-wordmark, .nav:focus-within .nav-wordmark, .nav.rail-pin .nav-wordmark,
@@ -245,7 +249,7 @@
   .nav:hover .cwc-body-rail, .nav:focus-within .cwc-body-rail, .nav.rail-pin .cwc-body-rail { opacity: 1; }
   /* A divider that reads as a divider once the labels are there, and as a
      plain rule while the rail is shut. */
-  .nav-sec-row { display: flex; align-items: center; gap: 8px; padding: 13px 13px 5px; flex-shrink: 0; }
+  .nav-sec-row { display: flex; align-items: center; gap: 8px; padding: 12px 13px 4px; flex-shrink: 0; }
   .nav-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
   .nav-sec-row i { flex: 1 1 auto; height: 1px; background: var(--border); display: block; }
   .rail-pin-btn { position: absolute; top: 15px; right: 9px; width: 26px; height: 26px;
@@ -280,8 +284,8 @@
   .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px;
     flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
   .nav-section-label { display: none; }
-  .nav-btn { width: calc(100% - 14px); margin: 0 7px; padding: 8px 10px; font-size: 14px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
-  .nav-btn i { font-size: 18px; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
+  .nav-btn { width: calc(100% - 12px); margin: 0 6px; padding: 7px; font-size: 13.5px; font-weight: 400; border: none; background: transparent; cursor: pointer; border-radius: 10px; color: var(--text-2); font-family: inherit; display: flex; align-items: center; gap: 11px; transition: color 0.15s, background 0.15s, transform 0.15s; text-align: left; white-space: nowrap; flex-shrink: 0; }
+  .nav-btn i { font-size: 16px; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(.2,.8,.2,1), background 0.2s, color 0.2s, box-shadow 0.2s; }
   .nav-btn:hover:not(.active) { color: var(--text); background: var(--surface2); transform: translateY(-1px); }
   .nav-btn:active { transform: scale(0.96); }
   /* per-hub icon tiles: monochrome gold, opacity-tiered */
@@ -323,7 +327,7 @@
   /* The Melbourne clock and weather stay exactly where they have always
      been - bottom of the nav, under Settings. Collapsed it shows the time
      alone; opening the rail brings the date and the weather with it. */
-  .clock-wx-card { margin: 8px 7px 0; }
+  .clock-wx-card { margin: 8px 6px 0; padding: 9px 10px; }
   .nav .cwc-top { flex-wrap: nowrap; }
   .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-divider,
   .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-date,
@@ -593,20 +597,39 @@
   }
 
   .hub-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-  .app-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.15s, transform 0.15s ease, background 0.15s; display: flex; flex-direction: column; gap: 12px; min-height: 150px; animation: taskSlideIn 0.4s cubic-bezier(.2,.85,.25,1) both; }
-  .app-card:hover { border-color: var(--border-md); transform: translateY(-2px); }
-  .app-card.soon { cursor: default; opacity: 0.6; }
-  .app-card.soon:hover { transform: none; border-color: var(--border); }
-  .app-card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 23px; flex-shrink: 0; background: linear-gradient(155deg, var(--teal), var(--amber-text)); color: #fff; }
-  /* Per-hub identity colour on Home's hub-launcher cards — matches the Hub filter
-     pills on the Tasks page (blue/amber/pink) so the same hub reads the same colour everywhere. */
-  .app-card-icon.c-blue  { background: linear-gradient(155deg, var(--blue-text), color-mix(in srgb, var(--blue-text) 40%, var(--hero-bg))); }
-  .app-card-icon.c-amber { background: linear-gradient(155deg, var(--amber-text), color-mix(in srgb, var(--amber-text) 40%, var(--hero-bg))); }
-  .app-card-icon.c-pink  { background: linear-gradient(155deg, var(--pink-text), color-mix(in srgb, var(--pink-text) 40%, var(--hero-bg))); }
-  .app-card-title { font-size: 15px; font-weight: 500; color: var(--text); }
-  .app-card-desc { font-size: 12px; color: color-mix(in srgb, var(--amber-text) 45%, var(--text-3)); line-height: 1.55; }
-  .app-card-meta { margin-top: auto; font-size: 11px; font-weight: 700; color: var(--amber-text); display: flex; align-items: center; gap: 5px; }
-  .app-card-meta i { font-size: 13px; }
+  /* Each tool keeps its own colour through --ac, set per card from its
+     PAGES entry, so a card, its rail icon and its chip on Home all agree. */
+  .app-card { position: relative; overflow: hidden; background: color-mix(in srgb, var(--surface) 82%, transparent);
+    border: 1px solid var(--border); border-radius: 16px; padding: 17px 18px 17px 20px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 10px; min-height: 148px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform .18s cubic-bezier(.22,.9,.26,1), border-color .18s, box-shadow .18s, background .18s;
+    animation: mcardIn .5s cubic-bezier(.22,.9,.26,1) both; }
+  .app-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--ac, var(--teal-text)), color-mix(in srgb, var(--ac, var(--teal-text)) 20%, transparent));
+    transition: width .18s, box-shadow .18s; }
+  .app-card:hover { transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--ac, var(--teal-text)) 40%, var(--border));
+    background: color-mix(in srgb, var(--ac, var(--teal-text)) 6%, var(--surface));
+    box-shadow: 0 22px 44px -26px rgba(0,0,0,0.95); }
+  .app-card:hover::before { width: 4px; box-shadow: 0 0 18px -2px var(--ac, var(--teal-text)); }
+  .app-card:focus-visible { outline: 2px solid var(--ac, var(--teal-text)); outline-offset: 2px; }
+  .app-card.soon { cursor: default; opacity: 0.55; }
+  .app-card.soon:hover { transform: none; border-color: var(--border); box-shadow: none; }
+  .app-card-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center;
+    justify-content: center; font-size: 19px; flex-shrink: 0;
+    color: var(--ac, var(--teal-text));
+    background: color-mix(in srgb, var(--ac, var(--teal-text)) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ac, var(--teal-text)) 28%, transparent);
+    transition: transform .2s cubic-bezier(.22,.9,.26,1); }
+  .app-card:hover .app-card-icon { transform: scale(1.07) rotate(-3deg); }
+  .app-card-title { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 16px;
+    font-weight: 700; letter-spacing: -0.015em; color: var(--text); }
+  .app-card-desc { font-size: 12.5px; color: var(--text-3); line-height: 1.55; }
+  .app-card-meta { margin-top: auto; font-size: 12px; font-weight: 600;
+    color: var(--ac, var(--teal-text)); display: flex; align-items: center; gap: 7px; }
+  .app-card-meta i { font-size: 14px; transition: transform .22s cubic-bezier(.22,.9,.26,1); }
+  .app-card:hover .app-card-meta i { transform: translateX(4px); }
   .hub-grid .app-card:nth-child(1){animation-delay:.03s}
   .hub-grid .app-card:nth-child(2){animation-delay:.08s}
   .hub-grid .app-card:nth-child(3){animation-delay:.13s}
@@ -630,25 +653,12 @@
   /* ── Bento hub layout: the first card in Home/Helpdesk/Personal's grid becomes a bigger "hero"
      tile spanning 2 rows, with a gradient built from the active theme's own accent colour
      (--teal) fading into that theme's --hero-bg — was navy-only, now applies to every theme ── */
-  .hub-grid { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; }
-  /* Re-qualified with each page's ID (not just .hub-grid) so this beats the #page-home .app-card
-     translucency override below — a plain .hub-grid selector loses to an ID selector regardless
-     of how many classes it chains, which is why a theme-agnostic generalisation needs this. */
-  #page-home .hub-grid .app-card:nth-child(1),
-  #page-helpdesk .hub-grid .app-card:nth-child(1),
-  #page-personal .hub-grid .app-card:nth-child(1) {
-    grid-row: span 2; position: relative; overflow: hidden;
-    background: linear-gradient(155deg, color-mix(in srgb, var(--teal) 70%, transparent), color-mix(in srgb, var(--hero-bg) 92%, transparent));
-    border-color: transparent;
-  }
-  .hub-grid .app-card:nth-child(1) .app-card-title,
-  .hub-grid .app-card:nth-child(1) .app-card-desc,
-  .hub-grid .app-card:nth-child(1) .app-card-meta { color: var(--text); }
-  .hub-grid .app-card:nth-child(1) .app-card-icon { background: rgba(255,255,255,0.14); color: var(--text); }
-  .home-hero-ghost-wrap { position: absolute; bottom: 18px; right: 18px; width: 110px; height: 110px; pointer-events: none; }
-  .home-hero-ghost-ring { position: absolute; inset: 0; border-radius: 50%; opacity: 0.4; background: conic-gradient(var(--text) 0%, rgba(255,255,255,0.2) 0); -webkit-mask: radial-gradient(circle, transparent 60%, black 64%); mask: radial-gradient(circle, transparent 60%, black 64%); }
-  .home-hero-ghost-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 16px; font-weight: 800; color: var(--text); opacity: 0.5; }
-  #page-home .hub-grid .app-card:nth-child(4) { grid-column: span 2; }
+  .hub-grid { grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); }
+  /* The hero tile is gone. One tool was twice the height of the others for
+     no reason anyone could point at - it was first in the list, not more
+     important - and it carried a maroon gradient that belonged to a theme
+     that no longer exists. */
+  .home-hero-ghost-wrap { display: none; }
 
   /* ── Daily briefing card on Home ── */
   .home-briefing-card { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; margin-bottom: 18px; border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 75%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 0.5px solid var(--border-md); animation: fadeIn 0.2s ease; }
@@ -16148,17 +16158,31 @@ function loadHubLayout() {
 }
 function saveHubLayout() { dbSet('zarif_hub_layout', hubLayout); }
 
+const PAGE_AC = {
+  'c-teal':   'var(--teal-text)',
+  'c-blue':   'var(--teal-text)',
+  'c-amber':  'var(--amber-text)',
+  'c-coral':  'var(--coral-text)',
+  'c-green':  'var(--green-text)',
+  'c-purple': 'var(--purple-text)',
+  'c-pink':   'var(--pink-text)',
+};
+function pageAccent(p) {
+  const m = PAGES[p];
+  return (m && PAGE_AC[m.color]) || 'var(--teal-text)';
+}
+
 function renderHubs() {
   HUBS.forEach(h => {
     const grid = document.getElementById('hub-grid-' + h);
     if (grid) {
       const pages = hubLayout[h];
       if (!pages.length) {
-        grid.innerHTML = `<div class="app-card soon"><div class="app-card-icon c-pink"><i class="ti ti-sparkles"></i></div><div class="app-card-title">Coming soon</div><div class="app-card-desc">Nothing here yet. Add apps to this hub from Settings → Organise hubs.</div><div class="app-card-meta"><i class="ti ti-clock"></i>Empty</div></div>`;
+        grid.innerHTML = `<div class="app-card soon" style="--ac:var(--text-3)"><div class="app-card-icon c-pink"><i class="ti ti-sparkles"></i></div><div class="app-card-title">Coming soon</div><div class="app-card-desc">Nothing here yet. Add apps to this hub from Settings → Organise hubs.</div><div class="app-card-meta"><i class="ti ti-clock"></i>Empty</div></div>`;
       } else {
         grid.innerHTML = pages.map(p => {
           const m = PAGES[p];
-          return `<div class="app-card" onclick="showPage('${p}','${h}')">
+          return `<div class="app-card" style="--ac:${pageAccent(p)}" onclick="showPage('${p}','${h}')">
             <div class="app-card-icon ${m.color}"><i class="ti ${m.icon}"></i></div>
             <div class="app-card-title">${m.title}</div>
             <div class="app-card-desc">${m.desc}</div>
