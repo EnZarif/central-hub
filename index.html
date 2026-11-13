@@ -70,6 +70,56 @@
     --radius: 10px; --radius-lg: 14px;
   }
 
+  /* ── TOOL PAGES ─────────────────────────────────────────────────────
+     Panel chrome for the helpdesk and dispatch tools. The .header block each
+     page already has becomes the panel's header strip, so none of them needs
+     new markup: an icon tile in the tool's colour, the title in Archivo, and
+     a rule under it that draws itself in. */
+  #page-allocvalidate .header, #page-stock .header, #page-alloccheck .header,
+  #page-kpi .header, #page-suburbcheck .header, #page-message .header,
+  #page-templates .header, #page-meetings .header {
+    align-items: center; gap: 14px; margin-bottom: 1.4rem;
+    padding: 15px 18px; border-radius: 16px;
+    background: linear-gradient(170deg, color-mix(in srgb, var(--surface) 86%, transparent), color-mix(in srgb, var(--bg) 70%, transparent));
+    border: 1px solid var(--border);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    position: relative; overflow: hidden;
+  }
+  #page-allocvalidate .header::after, #page-stock .header::after,
+  #page-alloccheck .header::after, #page-kpi .header::after,
+  #page-suburbcheck .header::after, #page-message .header::after,
+  #page-templates .header::after, #page-meetings .header::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--th, var(--teal-text)), color-mix(in srgb, var(--well-1) 70%, transparent) 55%, transparent);
+    animation: wipe .72s cubic-bezier(.22,.9,.26,1) .08s both;
+  }
+  @keyframes wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  #page-allocvalidate .header h1, #page-stock .header h1, #page-alloccheck .header h1,
+  #page-kpi .header h1, #page-suburbcheck .header h1, #page-message .header h1,
+  #page-templates .header h1, #page-meetings .header h1 {
+    font-family: 'Archivo', 'Inter', system-ui, sans-serif;
+    font-size: 19px; font-weight: 700; letter-spacing: -0.02em; gap: 12px;
+  }
+  /* The icon becomes a tile in the tool's own colour, matching its card. */
+  #page-allocvalidate .header h1 i, #page-stock .header h1 i, #page-alloccheck .header h1 i,
+  #page-kpi .header h1 i, #page-suburbcheck .header h1 i, #page-message .header h1 i,
+  #page-templates .header h1 i, #page-meetings .header h1 i {
+    width: 34px; height: 34px; border-radius: 10px; font-size: 17px;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    color: var(--th, var(--teal-text));
+    background: color-mix(in srgb, var(--th, var(--teal-text)) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--th, var(--teal-text)) 28%, transparent);
+  }
+  #page-allocvalidate { --th: var(--coral-text); }
+  #page-stock         { --th: var(--green-text); }
+  #page-alloccheck    { --th: var(--teal-text); }
+  #page-kpi           { --th: var(--amber-text); }
+  #page-suburbcheck   { --th: var(--amber-text); }
+  #page-message       { --th: var(--purple-text); }
+  #page-templates     { --th: var(--coral-text); }
+  #page-meetings      { --th: var(--green-text); }
+
   /* ══ THE SIX INTERACTIONS ═══════════════════════════════════════════
      One block, applied by class to the pages that already exist, so no page
      markup changes. Every one of them stops dead under reduced motion at the
@@ -3036,7 +3086,23 @@
     padding:7px 11px; border-radius:var(--radius); border:0.5px solid var(--border-md); background:var(--surface2);
     color:var(--text-2); cursor:pointer; white-space:nowrap; transition:all .15s; }
   .pa-more:hover { border-color:var(--teal); color:var(--teal-text); }
-  .pa-jid { color:var(--teal-text); text-decoration:none; }
+  /* The job number is the thing you click on every one of these pages, and
+     everywhere but Stock Checks it was bare 12px text. Same chip, same hit
+     area, same place in the eye. */
+  .pa-jid {
+    display: inline-flex; align-items: center; min-height: 26px;
+    padding: 2px 10px; border-radius: 7px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+    color: var(--teal-text); background: var(--teal-bg);
+    border: 1px solid color-mix(in srgb, var(--teal-text) 24%, transparent);
+    text-decoration: none;
+    transition: background .14s, border-color .14s, transform .1s;
+  }
+  .pa-jid:hover { background: color-mix(in srgb, var(--teal-text) 20%, var(--surface2));
+    border-color: var(--teal-text); text-decoration: none; }
+  .pa-jid:active { transform: translateY(1px); }
+  .pa-jid:focus-visible { outline: 2px solid var(--teal-text); outline-offset: 1px; }
   .pa-jid:hover { text-decoration:underline; }
   .pa-span { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-3); padding-bottom:7px; }
   .pa-tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:10px; margin-bottom:16px; }
