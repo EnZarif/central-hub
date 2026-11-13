@@ -2502,8 +2502,11 @@
   .al-vgrp-ico { font-size:14px; }
   .al-vgrp-ico.unknown, .al-vgrp-ico.nozone { color:var(--amber-text); }
   .al-vgrp-ico.notech { color:var(--text-3); }
-  .al-vgrp-ico.notes { color:var(--blue-text); }
-  .al-vgrp-ico.warn { color:var(--amber-text); }
+  .al-vgrp-ico.notes { color:var(--amber-text); }
+  /* Grey, not amber: the notes took amber, and two folds stacked in one
+     colour read as one list. Grey also happens to be the truer label - this
+     is the pile nothing was counted from. */
+  .al-vgrp-ico.warn { color:var(--text-3); }
   .al-vgrp-ico.match { color:var(--green-text); }
   .al-vgrp-l { font-size:12.5px; font-weight:600; }
   .al-vgrp-n { font-size:11px; font-weight:700; border-radius:8px; padding:2px 8px;
@@ -2544,29 +2547,36 @@
   /* Every fault value in the file, as a chip. Anything with "replacement" in
      it is picked for you - the rest are shown so a value like
      "Replacement - Scanner" is one click away instead of silently missing. */
-  /* Reading the notes. Blue because it is a second source for the same
-     answer rather than a problem with it - teal is already the warehouse and
-     its links, amber and red are things gone wrong, and a job the notes
-     caught is neither. */
+  /* Reading the notes, in yellow. It wants to stand apart from the teal the
+     warehouse and its links already own, and a job found this way does
+     deserve a second glance - the code never said replacement, so somebody
+     should agree the notes were read right. */
   .stk-note-sw { margin-top:12px; padding:11px 13px; border:0.5px solid var(--border);
-    border-left:2.5px solid var(--blue-text); border-radius:9px; background:var(--surface2);
+    border-left:2.5px solid var(--amber-text); border-radius:9px; background:var(--surface2);
     display:flex; flex-direction:column; gap:5px; }
   .stk-note-lb { display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600;
     color:var(--text-1); cursor:pointer; }
-  .stk-note-lb input { width:15px; height:15px; margin:0; accent-color:var(--blue-text);
+  .stk-note-lb input { width:15px; height:15px; margin:0; accent-color:var(--amber-text);
     cursor:pointer; flex-shrink:0; }
   .stk-note-why { font-size:11.5px; line-height:1.55; color:var(--text-3); }
   /* Not cut and not ellipsed: the whole point of the quote is that you can
      read the sentence and judge the catch for yourself. */
   .stk-nq { display:block; font-size:11.5px; line-height:1.55; color:var(--text-2);
     font-style:italic; max-width:46ch; white-space:normal; overflow-wrap:anywhere; }
-  .stk-np { font-style:normal; font-weight:700; color:var(--blue-text);
-    background:var(--blue-bg); border-radius:4px; padding:0 3px; }
+  .stk-np { font-style:normal; font-weight:700; color:var(--amber-text);
+    background:var(--amber-bg); border-radius:4px; padding:0 3px; }
   .stk-vnote { display:inline-flex; align-items:center; gap:4px; margin-top:3px; font-size:10px;
-    font-weight:700; letter-spacing:.02em; color:var(--blue-text); background:var(--blue-bg);
+    font-weight:700; letter-spacing:.02em; color:var(--amber-text); background:var(--amber-bg);
     border-radius:5px; padding:2px 6px; width:fit-content; }
   .stk-vnote .ti { font-size:11px; }
-  .stk-rule-to.yes { color:var(--blue-text); }
+  .stk-rule-to.yes { color:var(--amber-text); }
+  /* The depot-level hide, on the card heading rather than the part row,
+     because it is the whole place being put away and not one part of it. */
+  .stk-chd-x { background:none; border:none; color:var(--text-3); font-family:inherit;
+    font-size:11px; line-height:1; cursor:pointer; padding:4px; margin-left:4px; border-radius:5px;
+    opacity:0; transition:opacity .13s, color .13s, background .13s; }
+  .stk-card:hover .stk-chd-x, .stk-chd-x:focus-visible { opacity:.7; }
+  .stk-chd-x:hover { opacity:1; color:var(--coral-text); background:var(--coral-bg); }
 
   .stk-fsec { margin-top:16px; padding-top:14px; border-top:0.5px solid var(--border); }
   .stk-fhd { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
@@ -10352,12 +10362,14 @@ let stkSearchBy = null;       // 'model' | 'code' - read from storage on first u
 let stkRules = null;          // model name -> the warehouse name to search for it
 let stkCons = null;           // contract code -> the badge number it was given
 let stkHidden = null;         // "contract|model" pairs you never want to see
+let stkHiddenLocs = null;     // whole depots kept off every check
 let stkRowIndex = [];         // the part rows on screen, so a pencil can name one
 let stkEditing = [];          // the model name(s) the open modal is editing
 const STK_SEARCH_KEY = 'zarif_stk_search_by';
 const STK_RULES_KEY = 'zarif_stk_model_terms';
 const STK_CONS_KEY = 'zarif_stk_contract_badges';
 const STK_HIDE_KEY = 'zarif_stk_hidden_pairs';
+const STK_HIDE_LOC_KEY = 'zarif_stk_hidden_depots';
 // Six hues from the theme and six shapes, paired so the hue cycles fastest:
 // the first six contracts differ by colour alone, and no two ever share both.
 const STK_CON_ICONS = ['ti-circle-filled','ti-square-filled','ti-triangle-filled',
@@ -10496,6 +10508,45 @@ function stkIsHidden(contract, model) {
   const c = String(contract || '').trim();
   return c ? !!stkGetHidden()[stkPairKey(c, model)] : false;
 }
+// Hiding a whole depot, as opposed to a part within one. Keyed on the same
+// normalised allocation the cards group by, so "Amtek Melbourne" and
+// whatever else resolves to it go away together rather than one spelling at
+// a time. The jobs stay in the download, marked, because a part nobody told
+// you about is worse than a row you scroll past.
+function stkLocKey(name) {
+  const n = String(name || '').trim();
+  return n ? (alNormAlloc(n) || n.toLowerCase()) : '';
+}
+function stkGetHiddenLocs() {
+  if (stkHiddenLocs === null) {
+    const saved = dbGet(STK_HIDE_LOC_KEY);
+    stkHiddenLocs = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return stkHiddenLocs;
+}
+function stkLocHidden(name) {
+  const k = stkLocKey(name);
+  return !!k && !!stkGetHiddenLocs()[k];
+}
+function stkHideLoc(name) {
+  const k = stkLocKey(name);
+  if (!k) return;
+  const all = stkGetHiddenLocs();
+  all[k] = { name: String(name).trim() };
+  dbSet(STK_HIDE_LOC_KEY, all);
+  showToast('<i class="ti ti-eye-off"></i> ' + esc(String(name).trim()) +
+    ' hidden from every stock check \u2014 put it back under Hidden depots', 3600);
+  stkRun();
+  stkRenderRules();
+}
+function stkShowLoc(key) {
+  const all = stkGetHiddenLocs();
+  delete all[key];
+  dbSet(STK_HIDE_LOC_KEY, all);
+  stkRun();
+  stkRenderRules();
+}
+
 function stkHidePair(i, contract) {
   const g = stkRowIndex[i];
   if (!g || !contract) return;
@@ -10599,10 +10650,29 @@ function stkRenderRules() {
   const hkeys = Object.keys(hid).sort((a, b) =>
     String(hid[a].contract || '').localeCompare(String(hid[b].contract || '')) ||
     String(hid[a].model || '').localeCompare(String(hid[b].model || '')));
+  const hlocs = stkGetHiddenLocs();
+  const lkeys = Object.keys(hlocs).sort((a, b) =>
+    String(hlocs[a].name || a).localeCompare(String(hlocs[b].name || b)));
   const words = stkGetNoteWords();
   const nkeys = Object.keys(words).sort((a, b) =>
     String(words[a].verdict || '').localeCompare(String(words[b].verdict || '')) || a.localeCompare(b));
-  if (!keys.length && !hkeys.length && !nkeys.length) { el.innerHTML = ''; return; }
+  if (!keys.length && !hkeys.length && !nkeys.length && !lkeys.length) { el.innerHTML = ''; return; }
+  const lopen = stkOpenGroup.has('hidelocs');
+  const locBlock = lkeys.length ? `<div class="al-vgrp stk-rules${lopen ? ' open' : ''}">
+    <button class="al-vgrp-hd" onclick="stkToggleGroup('hidelocs')" aria-expanded="${lopen}">
+      <i class="ti ti-chevron-right al-vgrp-chev${lopen ? ' open' : ''}"></i>
+      <i class="ti ti-building-warehouse al-vgrp-ico notech"></i>
+      <span class="al-vgrp-l">Hidden depots</span>
+      <span class="al-vgrp-n">${lkeys.length.toLocaleString()}</span>
+      <span class="al-vgrp-note">kept off every stock check \u2014 still counted in the download</span>
+    </button>
+    ${lopen ? lkeys.map(k => `<div class="stk-rule">
+      <span class="stk-rule-from">${esc(hlocs[k].name || k)}</span>
+      <i class="ti ti-arrow-right"></i>
+      <span class="stk-rule-to">hidden</span>
+      <span><button class="stk-rule-x" onclick="stkShowLoc(${escAttr(JSON.stringify(k))})">Show again</button></span>
+    </div>`).join('') : ''}
+  </div>` : '';
   const hopen = stkOpenGroup.has('hidden');
   const hiddenBlock = hkeys.length ? `<div class="al-vgrp stk-rules${hopen ? ' open' : ''}">
     <button class="al-vgrp-hd" onclick="stkToggleGroup('hidden')" aria-expanded="${hopen}">
@@ -10660,7 +10730,7 @@ function stkRenderRules() {
     </div>`).join('') : ''}
   </div>`;
   })();
-  el.innerHTML = hiddenBlock + noteBlock + rulesBlock;
+  el.innerHTML = locBlock + hiddenBlock + noteBlock + rulesBlock;
 }
 
 // Which warehouse to look in, and whether that was stated or worked out.
@@ -11184,12 +11254,15 @@ function stkRun() {
     }
     const w = stkLocation(tech);
     const con = conCol ? String(row[conCol] || '').trim() : '';
+    const hidPair = stkIsHidden(con, model);
+    const hidLoc = !hidPair && stkLocHidden(w.loc);
     hits.push({ row, i, model, tech, con,
       id: idCol ? String(row[idCol] || '').trim() : '',
       site: siteCol ? String(row[siteCol] || '').trim() : '',
       loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '',
       via: byNote ? 'notes' : 'fault', note: byNote ? note : null,
-      hidden: stkIsHidden(con, model) });
+      hidden: hidPair || hidLoc,
+      hideWhy: hidPair ? (model + ' under ' + con) : (hidLoc ? w.loc : '') });
   });
   stkOut = hits;
 
@@ -11296,6 +11369,9 @@ function stkRun() {
           <span class="stk-chd-pill">${L.n.toLocaleString()} job${L.n !== 1 ? 's' : ''}</span>
           <span class="stk-chd-from">${L.techs.size === 1
             ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
+          <button class="stk-chd-x" onclick="stkHideLoc(${escAttr(JSON.stringify(L.name))})"
+            title="Hide ${escAttr(L.name)} from this and every future stock check"
+            aria-label="Hide ${escAttr(L.name)} from this and every future stock check"><i class="ti ti-eye-off"></i></button>
         </header>
         ${L.partList.map(Pt => {
           const buckets = [...Pt.cons].sort((a, b) =>
@@ -11411,7 +11487,7 @@ function stkDownload() {
       'Counted Because':     h.via === 'notes'
         ? 'Reported notes: \u201c' + (h.note && h.note.phrase || '') + '\u201d'
         : 'Fault code',
-      'Hidden By You':       h.hidden ? 'Yes \u2014 ' + h.model + ' under ' + h.con : '',
+      'Hidden By You':       h.hidden ? 'Yes \u2014 ' + (h.hideWhy || '') : '',
       'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
       'Stock Link':          ok ? stkUrl(h.loc, term) : '',
       'Not Linked Because':  stkBlockedWhy(h)
