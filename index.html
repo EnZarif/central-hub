@@ -2882,6 +2882,55 @@
   .al-group-name { font-size:13.5px; font-weight:650; color:var(--text); }
   .al-group-count { font-size:11px; color:var(--text-3); }
   .al-group-allocs { font-size:12px; color:var(--text-2); line-height:1.5; }
+  /* Teaching it an answer. Green, because unlike everything else in these
+     folds this is the row you can actually finish - the others are findings
+     to carry somewhere, and this one ends here. */
+  .al-fix { margin:0 0 2px; padding:13px 15px; background:var(--surface2);
+    border-bottom:0.5px solid var(--border); display:flex; flex-direction:column; gap:9px; }
+  .al-fix-hd { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600;
+    color:var(--text-1); }
+  .al-fix-hd .ti { font-size:15px; color:var(--green-text); }
+  .al-fix-note { font-size:11.5px; line-height:1.5; color:var(--text-3); }
+  .al-fix-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .al-fix-n { min-width:0; flex:0 1 auto; font-size:12.5px; font-weight:600; color:var(--text-1);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:290px; }
+  .al-fix-c { flex-shrink:0; font-size:10px; font-weight:700; color:var(--text-3);
+    background:var(--surface); border-radius:5px; padding:3px 7px; }
+  .al-fix-sel { flex:0 1 240px; min-width:170px; padding:6px 10px !important; font-size:12px !important; }
+  .al-fix-go { flex-shrink:0; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer;
+    padding:7px 14px; border-radius:7px; color:var(--green-text); background:var(--green-bg);
+    border:0.5px solid color-mix(in srgb, var(--green-text) 32%, transparent);
+    transition:background .13s, border-color .13s; }
+  .al-fix-go:hover { background:color-mix(in srgb, var(--green-text) 20%, var(--surface));
+    border-color:var(--green-text); }
+  .al-fix-go.ghost { color:var(--text-3); background:none; border-color:var(--border-md); }
+  .al-fix-go.ghost:hover { color:var(--coral-text); background:var(--coral-bg); border-color:var(--coral-text); }
+  /* The suggestion wraps to its own line rather than squeezing the control
+     it is offering a shortcut for. */
+  .al-sugg { flex:1 1 100%; display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+    padding-left:2px; }
+  .al-sugg-l { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--text-3); }
+  .al-sugg-b { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:11.5px;
+    font-weight:600; cursor:pointer; padding:5px 11px; border-radius:20px; color:var(--teal-text);
+    background:var(--teal-bg); border:0.5px solid color-mix(in srgb, var(--teal-text) 28%, transparent);
+    transition:background .13s, border-color .13s; }
+  .al-sugg-b:hover { background:color-mix(in srgb, var(--teal-text) 20%, var(--surface));
+    border-color:var(--teal-text); }
+  .al-sugg-n { font-size:9.5px; font-weight:700; opacity:.75; background:color-mix(in srgb, currentColor 18%, transparent);
+    border-radius:4px; padding:1px 5px; }
+  .al-taught { padding:4px 15px 13px; display:flex; flex-direction:column; gap:7px; }
+  .al-fix-row.taught { gap:9px; }
+  .al-fix-row.taught > .ti { color:var(--text-3); font-size:13px; }
+  .al-taught-k { display:inline-flex; align-items:center; gap:6px; font-size:12.5px;
+    font-weight:600; color:var(--text-1); }
+  .al-taught-k .ti { font-size:14px; color:var(--text-3); }
+  .al-taught-v { flex:1 1 auto; min-width:0; font-size:12.5px; color:var(--green-text); font-weight:600; }
+  .al-taught-ans { padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
+  .al-taught-ans-hd { display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--green-text); }
+  .al-taught-ans-ft { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
   .al-add-btn { margin-top:14px; padding:9px 16px; border-radius:8px; background:var(--teal-bg); border:1.5px solid var(--teal); color:var(--teal-text); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .15s; }
   .al-add-btn:hover { background:var(--teal); color:#fff; }
   .al-add-btn.ghost { background:var(--surface2); border-color:var(--border-md); color:var(--text-2); }
@@ -9003,6 +9052,31 @@ function alRun() {
   if (!raw) { out.innerHTML = ''; return; }
 
   const { rows, mode } = alSearch(raw, stateFilter);
+
+  // A zone you answered by hand has no sites in the sheet, so the search
+  // above can never find it. Ask the resolver instead - the same one the
+  // validator uses - and say plainly that this answer came from you rather
+  // than dressing it up as a consensus across sites there are none of.
+  if (!rows.length) {
+    const t = alZoneAllocation(raw);
+    if (t && t.taught) {
+      out.innerHTML = `<div class="card al-answer-card"><div class="al-taught-ans">
+        <div class="al-taught-ans-hd"><i class="ti ti-bookmark"></i> You answered this zone yourself</div>
+        <div class="al-alloc primary">
+          <div class="al-alloc-label">Technician Allocation</div>
+          <div class="al-alloc-val">${esc(t.a1 || '\u2014')}</div>
+          <div class="al-alloc-sub">${esc(t.zone)} has no sites in the allocator sheet \u2014
+            this is the answer you saved for it</div>
+        </div>
+        <div class="al-taught-ans-ft">
+          ${alOwnerPill(t.a1)}
+          <button class="al-fix-go ghost" onclick="alForgetZoneAlloc(${escAttr(JSON.stringify(String(raw).trim().toLowerCase()))})">Forget this answer</button>
+        </div>
+      </div></div>`;
+      return;
+    }
+  }
+
   if (!rows.length) {
     out.innerHTML = `<div class="card al-answer-card"><div class="al-empty">
       <i class="ti ti-map-off"></i>No match for “${esc(raw)}”${stateFilter ? ` in ${esc(stateFilter)}` : ''}.<br>
@@ -9816,6 +9890,46 @@ function alValReopen() {
   alValDone = false;
   alValRenderConfig();
 }
+// Where a technician's own work points. Every job carries the allocation its
+// zone expects, so somebody who keeps turning up in Melbourne zones is
+// probably Melbourne's - and that is evidence from this very file rather
+// than a guess about the name.
+function alValTechSuggest(tech) {
+  const mine = (alValOut || []).filter(r => r.tech === tech);
+  if (!mine.length) return [];
+  const counts = new Map();
+  mine.forEach(r => { if (r.expected) counts.set(r.expected, (counts.get(r.expected) || 0) + 1); });
+  const out = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([alloc, n]) => ({ alloc, n,
+      why: `${n} of their ${mine.length} job${mine.length !== 1 ? 's' : ''} ` +
+           `${n === 1 ? 'is' : 'are'} in a zone that expects ${alloc}` }));
+  // A misspelt company name is a different kind of clue from where the work
+  // is, so it is offered after the counts rather than mixed into them.
+  const near = alValNearestAlloc(tech);
+  if (near && !counts.has(near)) out.push({ alloc: near, n: 0,
+    why: `Closest allocation name to \u201c${tech}\u201d` });
+  return out.slice(0, 4);
+}
+
+function alValNearestAlloc(tech) {
+  const t = alNormAlloc(tech);
+  if (!t || typeof svLev !== 'function') return null;
+  let best = null, bd = Infinity;
+  (typeof alAllocNames !== 'undefined' ? alAllocNames : []).forEach(a => {
+    const d = svLev(t, alNormAlloc(a));
+    if (d < bd) { bd = d; best = a; }
+  });
+  // Only a real near-miss counts. Past about a quarter of the string the
+  // "closest" name is just the alphabet talking.
+  return best && bd <= Math.max(2, Math.floor(t.length * 0.25)) ? best : null;
+}
+
+function alValAllocOptions() {
+  return `<option value="">\u2014 pick an allocation \u2014</option>` +
+    (typeof alAllocNames !== 'undefined' ? alAllocNames : [])
+      .map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+}
+
 function alValToggleGroup(k) {
   if (alValOpenGroup.has(k)) alValOpenGroup.delete(k); else alValOpenGroup.add(k);
   alValRun();
@@ -9844,6 +9958,81 @@ function alNormAlloc(v) {
   return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+// ---- Answers you gave it --------------------------------------------------
+// Two things in a work file the allocator cannot place on its own: a zone its
+// sheet has no sites for, and a technician string it cannot read. Both are
+// the same shape of problem and both are fixed the same way - you say what it
+// is, once, and it is kept.
+//
+// They are consulted inside alZoneAllocation and alTechToAllocation rather
+// than at the call sites, so every page that resolves a zone or a technician
+// picks them up without knowing they exist: the validator, the Allocation
+// Lookup, Stock Checks and the day's call list all improve together.
+const AL_ZONES_KEY = 'zarif_al_zone_allocs';
+const AL_TECHS_KEY = 'zarif_al_tech_allocs';
+let alZoneAdds = null;
+let alTechAdds = null;
+
+function alGetZoneAdds() {
+  if (alZoneAdds === null) {
+    const saved = dbGet(AL_ZONES_KEY);
+    alZoneAdds = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return alZoneAdds;
+}
+function alGetTechAdds() {
+  if (alTechAdds === null) {
+    const saved = dbGet(AL_TECHS_KEY);
+    alTechAdds = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return alTechAdds;
+}
+
+function alSaveZoneAlloc(zone, alloc) {
+  const z = String(zone || '').trim(), a = String(alloc || '').trim();
+  if (!z) return;
+  if (!a) { showToast('<i class="ti ti-alert-circle"></i> Pick an allocation first', 2600); return; }
+  const all = alGetZoneAdds();
+  all[z.toLowerCase()] = { zone: z, a1: a, rt: '', st: '' };
+  dbSet(AL_ZONES_KEY, all);
+  showToast('<i class="ti ti-check"></i> ' + esc(z) + ' \u2192 ' + esc(a) +
+    ' \u2014 kept, and used by the lookup too', 3400);
+  alValRefreshAfterTeach();
+}
+function alForgetZoneAlloc(key) {
+  const all = alGetZoneAdds();
+  delete all[key];
+  dbSet(AL_ZONES_KEY, all);
+  alValRefreshAfterTeach();
+}
+
+function alSaveTechAlloc(tech, alloc) {
+  const t = String(tech || '').trim(), a = String(alloc || '').trim();
+  if (!t) return;
+  if (!a) { showToast('<i class="ti ti-alert-circle"></i> Pick a depot first', 2600); return; }
+  const all = alGetTechAdds();
+  all[alNormAlloc(t)] = { tech: t, alloc: a };
+  dbSet(AL_TECHS_KEY, all);
+  showToast('<i class="ti ti-check"></i> ' + esc(t) + ' \u2192 ' + esc(a) +
+    ' \u2014 kept for every future check', 3400);
+  alValRefreshAfterTeach();
+}
+function alForgetTechAlloc(key) {
+  const all = alGetTechAdds();
+  delete all[key];
+  dbSet(AL_TECHS_KEY, all);
+  alValRefreshAfterTeach();
+}
+
+// Re-run whatever is on screen. The validator has to re-judge every row,
+// because one answer can move a job out of "can't judge" and into a
+// mismatch; the lookup only has to redraw.
+function alValRefreshAfterTeach() {
+  if (typeof alValValidate === 'function' && typeof alValRows !== 'undefined'
+      && alValRows && alValRows.length) alValValidate();
+  if (typeof alRun === 'function' && document.getElementById('al-result')) alRun();
+}
+
 // What allocation a technician string stands for, and how that was decided -
 // the how is shown, so an inferred answer is never mistaken for a stated one.
 function alTechToAllocation(tech) {
@@ -9852,6 +10041,12 @@ function alTechToAllocation(tech) {
   if (AL_TECH_NONE.test(raw)) return { alloc: '', how: 'none' };
 
   const norm = alNormAlloc(raw);
+
+  // What you told it beats everything below, including a name that happens
+  // to read as something else - you looked at this one and said.
+  const taught = alGetTechAdds()[norm];
+  if (taught && taught.alloc) return { alloc: taught.alloc, how: 'saved' };
+
   const names = (typeof alAllocNames !== 'undefined' && alAllocNames) ? alAllocNames : [];
   const exact = names.find(a => alNormAlloc(a) === norm);
   if (exact) return { alloc: exact, how: 'exact' };
@@ -9898,6 +10093,10 @@ const AL_ZONE_FIXED = {
 function alZoneAllocation(zone) {
   const z = String(zone || '').trim();
   if (!z) return null;
+  // Yours first: the built-in list is a default, and you can overrule it.
+  const mine = alGetZoneAdds()[z.toLowerCase()];
+  if (mine) return { zone: mine.zone || z, a1: mine.a1, rt: mine.rt || '', st: mine.st || '',
+                     n: 0, fixed: true, taught: true };
   const fixed = AL_ZONE_FIXED[z.toLowerCase()];
   if (fixed) return { ...fixed, n: 0, fixed: true };
   if (typeof alRows === 'undefined' || !alRows) return null;
@@ -10052,6 +10251,7 @@ function alValRun() {
   // end, or an allocation with the person's name after it - has to say so. It
   // says it on the name itself: marked, with the reading in its tooltip.
   const readAs = r => {
+    if (r.how === 'saved') return `You set ${r.resolved} for \u201c${r.tech}\u201d`;
     if (r.how === 'city') return `Read \u201c${r.code}\u201d as ${r.resolved}`;
     if (r.how === 'named') return r.person
       ? `Matched ${r.resolved} \u2014 \u201c${r.person}\u201d read as the technician's name`
@@ -10088,10 +10288,62 @@ function alValRun() {
         <td class="pc">${r.jobId ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener" class="pa-jid">${esc(r.jobId)}</a>` : '\u2014'}</td>
         <td>${esc(r.site || '\u2014')}</td>
         <td>${esc(r.zoneName || r.zone || '\u2014')}</td>
-        <td>${esc(r.tech || '\u2014')}${(r.how === 'city' || r.how === 'named') ? `<span class="al-was">read as ${esc(r.resolved)}</span>` : ''}</td>
+        <td>${esc(r.tech || '\u2014')}${(r.how === 'city' || r.how === 'named' || r.how === 'saved')
+          ? `<span class="al-was">${r.how === 'saved' ? 'you set' : 'read as'} ${esc(r.resolved)}</span>` : ''}</td>
         <td>${esc(r.expected || '\u2014')}</td>
         <td class="al-vgrp-why">${esc(r.why || '')}</td>
       </tr>`).join('')}</tbody></table></div>`;
+
+  // One control per distinct zone or technician, not per row: the same zone
+  // turns up on eight jobs and you want to answer it once. The count beside
+  // each says how much hangs on the answer.
+  const fixZones = list => {
+    const zs = [...new Set(list.map(r => String(r.zone || '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+    if (!zs.length) return '';
+    return `<div class="al-fix">
+      <div class="al-fix-hd"><i class="ti ti-map-pin-plus"></i> Say which allocation these zones belong to</div>
+      <div class="al-fix-note">Kept for good, and used by the Allocation Lookup, Stock Checks
+        and the call list \u2014 not just this file.</div>
+      ${zs.map((z, i) => {
+        const n = list.filter(r => String(r.zone || '').trim() === z).length;
+        return `<div class="al-fix-row">
+          <span class="al-fix-n" title="${escAttr(z)}">${esc(z)}</span>
+          <span class="al-fix-c">${n.toLocaleString()} job${n !== 1 ? 's' : ''}</span>
+          <select class="field-input al-fix-sel" id="alfz-${i}" aria-label="Allocation for ${escAttr(z)}">${alValAllocOptions()}</select>
+          <button class="al-fix-go" onclick="alSaveZoneAlloc(${escAttr(JSON.stringify(z))}, document.getElementById('alfz-${i}').value)">Save</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  };
+
+  const fixTechs = list => {
+    const ts = [...new Set(list.map(r => String(r.tech || '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+    if (!ts.length) return '';
+    return `<div class="al-fix">
+      <div class="al-fix-hd"><i class="ti ti-user-plus"></i> Say which depot these technicians work from</div>
+      <div class="al-fix-note">A suggestion is only ever a suggestion \u2014 it says what it went on,
+        and nothing is saved until you pick it.</div>
+      ${ts.map((t, i) => {
+        const n = list.filter(r => String(r.tech || '').trim() === t).length;
+        const sug = alValTechSuggest(t);
+        return `<div class="al-fix-row wide">
+          <span class="al-fix-n" title="${escAttr(t)}">${esc(t)}</span>
+          <span class="al-fix-c">${n.toLocaleString()} job${n !== 1 ? 's' : ''}</span>
+          <select class="field-input al-fix-sel" id="alft-${i}" aria-label="Depot for ${escAttr(t)}">${alValAllocOptions()}</select>
+          <button class="al-fix-go" onclick="alSaveTechAlloc(${escAttr(JSON.stringify(t))}, document.getElementById('alft-${i}').value)">Save</button>
+          ${sug.length ? `<span class="al-sugg">
+            <span class="al-sugg-l">Suggested</span>
+            ${sug.map(sg => `<button class="al-sugg-b" title="${escAttr(sg.why)}"
+              onclick="alSaveTechAlloc(${escAttr(JSON.stringify(t))}, ${escAttr(JSON.stringify(sg.alloc))})">
+              ${esc(sg.alloc)}${sg.n ? `<span class="al-sugg-n">${sg.n}</span>` : ''}
+            </button>`).join('')}
+          </span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  };
 
   const GROUPS = [
     ['unknown', "Can't judge", 'ti-help-circle', 'the technician name could not be resolved to an allocation'],
@@ -10189,9 +10441,46 @@ function alValRun() {
           <span class="al-vgrp-n ${key}">${list.length.toLocaleString()}</span>
           <span class="al-vgrp-note">${note}</span>
         </button>
-        ${open ? groupRows(list) : ''}
+        ${open ? (key === 'nozone' ? fixZones(list) : key === 'unknown' ? fixTechs(list) : '') + groupRows(list) : ''}
       </div>`;
-    }).join('')}`;
+    }).join('')}
+
+    ${alValTaughtBlock()}`;
+}
+
+// Everything you have told it, in one place with a way to take it back. An
+// answer that cannot be seen or undone is worse than no answer: it would go
+// on quietly deciding allocations with nothing on screen to say why.
+function alValTaughtBlock() {
+  const zs = alGetZoneAdds(), ts = alGetTechAdds();
+  const zk = Object.keys(zs).sort((a, b) => String(zs[a].zone || a).localeCompare(String(zs[b].zone || b)));
+  const tk = Object.keys(ts).sort((a, b) => String(ts[a].tech || a).localeCompare(String(ts[b].tech || b)));
+  if (!zk.length && !tk.length) return '';
+  const open = alValOpenGroup.has('taught');
+  const n = zk.length + tk.length;
+  return `<div class="al-vgrp${open ? ' open' : ''}" style="margin-top:16px;">
+    <button class="al-vgrp-hd" onclick="alValToggleGroup('taught')" aria-expanded="${open}">
+      <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
+      <i class="ti ti-bookmark al-vgrp-ico match"></i>
+      <span class="al-vgrp-l">Answers you gave it</span>
+      <span class="al-vgrp-n match">${n.toLocaleString()}</span>
+      <span class="al-vgrp-note">used here, in the Allocation Lookup and in Stock Checks</span>
+    </button>
+    ${open ? `<div class="al-taught">
+      ${zk.map(k => `<div class="al-fix-row taught">
+        <span class="al-taught-k"><i class="ti ti-map-pin"></i> ${esc(zs[k].zone || k)}</span>
+        <i class="ti ti-arrow-right"></i>
+        <span class="al-taught-v">${esc(zs[k].a1 || '')}</span>
+        <button class="al-fix-go ghost" onclick="alForgetZoneAlloc(${escAttr(JSON.stringify(k))})">Forget</button>
+      </div>`).join('')}
+      ${tk.map(k => `<div class="al-fix-row taught">
+        <span class="al-taught-k"><i class="ti ti-user"></i> ${esc(ts[k].tech || k)}</span>
+        <i class="ti ti-arrow-right"></i>
+        <span class="al-taught-v">${esc(ts[k].alloc || '')}</span>
+        <button class="al-fix-go ghost" onclick="alForgetTechAlloc(${escAttr(JSON.stringify(k))})">Forget</button>
+      </div>`).join('')}
+    </div>` : ''}
+  </div>`;
 }
 
 // ---- The day's call list -------------------------------------------------
@@ -10752,6 +11041,8 @@ function stkLocation(tech) {
   const t = alTechToAllocation(raw);
   if (t.how === 'none')  return { loc: '', kind: 'none', why: '\u201c' + raw + '\u201d is not a field technician' };
   if (t.how === 'exact') return { loc: t.alloc, kind: 'named' };
+  if (t.how === 'saved') return { loc: t.alloc, kind: 'read',
+    read: 'You set ' + t.alloc + ' for \u201c' + raw + '\u201d' };
   if (t.how === 'city')  return { loc: t.alloc, kind: 'read',
     read: 'Read \u201c' + t.code + '\u201d as ' + t.alloc };
   if (t.how === 'named') return { loc: t.alloc, kind: 'read',
