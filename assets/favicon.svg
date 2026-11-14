@@ -1,9 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Central Hub">
-  <!-- Built for 16px, not scaled down from the 192 app icon: at tab size that
-       one's ring is a half-pixel and its "CH" is under 4px tall. One shape and
-       one ground survive the shrink, so that is all this has. The C is a path
-       rather than text because a favicon renders with no webfonts loaded. -->
-  <rect width="64" height="64" rx="14" fill="#111318"/>
-  <path d="M44.73 19.27A18 18 0 1 0 44.73 44.73" fill="none" stroke="#378ADD"
-        stroke-width="9" stroke-linecap="round"/>
+  <!-- The stack, built for 16px rather than scaled down from the app icon.
+       Three plates is the most that survives the shrink: at tab size the
+       gaps between them are a pixel each, so the strokes are heavy and the
+       fills are only there to keep the plates from reading as open rings.
+
+       It does not drift. The mark in the app animates because it sits still
+       on a page you are looking at; a tab icon that moves is a tab you keep
+       glancing at for no reason, and most browsers would drop the animation
+       at this size anyway. -->
+  <rect width="64" height="64" rx="14" fill="#0a0d14"/>
+  <g fill="#37c8b4" stroke="#37c8b4" stroke-width="4.5" stroke-linejoin="round">
+    <path d="M32 40.5 L50 47 L32 53.5 L14 47 Z" fill-opacity=".22"/>
+    <path d="M32 25.5 L50 32 L32 38.5 L14 32 Z" fill-opacity=".14" stroke-opacity=".62"/>
+    <path d="M32 10.5 L50 17 L32 23.5 L14 17 Z" fill-opacity=".08" stroke-opacity=".36"/>
+  </g>
 </svg>

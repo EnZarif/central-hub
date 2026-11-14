@@ -7481,6 +7481,30 @@ document.addEventListener('keydown', e => {
   else go();
 })();
 
+// The tab icon follows the accent. The file on disk is the teal default, so
+// the tab is right before any script runs and stays right in a bookmark;
+// this redraws it once the chosen accent is known, and again whenever it
+// changes. Static, not drifting - a tab icon that moves is a tab you keep
+// glancing at for no reason.
+function paintFavicon(colour) {
+  const c = colour || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#37c8b4';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+    '<rect width="64" height="64" rx="14" fill="#0a0d14"/>' +
+    '<g fill="' + c + '" stroke="' + c + '" stroke-width="4.5" stroke-linejoin="round">' +
+    '<path d="M32 40.5 L50 47 L32 53.5 L14 47 Z" fill-opacity=".22"/>' +
+    '<path d="M32 25.5 L50 32 L32 38.5 L14 32 Z" fill-opacity=".14" stroke-opacity=".62"/>' +
+    '<path d="M32 10.5 L50 17 L32 23.5 L14 17 Z" fill-opacity=".08" stroke-opacity=".36"/>' +
+    '</g></svg>';
+  let link = document.querySelector('link[rel="icon"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.type = 'image/svg+xml';
+  link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
 // ===== RAIL =====
 // Utility starts shut. Opening it is remembered, because somebody who lives
 // in Settings should not have to open it every morning.
@@ -7562,6 +7586,7 @@ function applyTheme(name) {
     c.classList.toggle('tp-active', on);
     c.setAttribute('aria-pressed', String(on));
   });
+  if (typeof paintFavicon === 'function') paintFavicon(a.c);
   return id;
 }
 
