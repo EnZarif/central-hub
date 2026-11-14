@@ -13304,6 +13304,13 @@ async function inboxAuto(page) {
 // yet counts as waiting without claiming which page it belongs to, and the
 // first visit to either tool fills that in properly.
 let inboxWaiting = { validator: 0, stock: 0, unknown: 0, total: 0 };
+// The same poll, remembered per file rather than per page, because a task has
+// to name the file it is about and know where to send you.
+let inboxWaitList = [];   // [{ key, path, file, page }]
+// Whether the last poll actually reached the bucket. A failed poll knows
+// nothing, and a reconciler that treats "I could not look" as "there is
+// nothing there" would quietly delete the tasks on a dropped connection.
+let inboxPollOk = false;
 let inboxAnnounced = false;
 
 async function inboxPoll() {
@@ -13311,32 +13318,63 @@ async function inboxPoll() {
   try {
     inboxStore();
     const uid = await inboxUid();
-    if (!uid) { inboxWaiting = zero; renderInboxAlerts(); return inboxWaiting; }
+    if (!uid) { inboxWaiting = zero; inboxPollOk = false; renderInboxAlerts(); return inboxWaiting; }
     const dir = uid + '/inbox';
     const { data, error } = await _sb.storage.from(INBOX_BUCKET)
       .list(dir, { limit: 50, sortBy: { column: 'name', order: 'desc' } });
     if (error) throw error;
     const w = { validator: 0, stock: 0, unknown: 0, total: 0 };
+    const list = [];
     (data || []).filter(o => o.name && !o.name.startsWith('.')).forEach(o => {
       const path = dir + '/' + o.name;
       const unseen = page => !inboxSeen[page + '|' + path];
       const known = inboxIndex[path] && inboxIndex[path].fits;
+      const file = inboxNiceName(o.name);
       if (!known) {
-        if (unseen('validator') || unseen('stock')) { w.unknown++; w.total++; }
+        if (unseen('validator') || unseen('stock')) {
+          w.unknown++; w.total++;
+          list.push({ key: inboxKey(path, ''), path, file, page: '' });
+        }
         return;
       }
       let any = false;
-      known.forEach(page => { if (unseen(page)) { w[page]++; any = true; } });
+      known.forEach(page => {
+        if (!unseen(page)) return;
+        w[page]++; any = true;
+        list.push({ key: inboxKey(path, page), path, file, page });
+      });
       if (any) w.total++;
     });
     inboxWaiting = w;
+    inboxWaitList = list;
+    inboxPollOk = true;
   } catch (e) {
     // Not set up, or no session. A hub nobody has wired to email should look
     // exactly as it always did.
     inboxWaiting = zero;
+    inboxWaitList = [];
+    inboxPollOk = false;
   }
   renderInboxAlerts();
   return inboxWaiting;
+}
+
+// The stored name is "<stamp>__<what the sender called it>". The stamp exists
+// to keep two reports of the same name apart; it is not what the file is.
+function inboxNiceName(name) {
+  const ix = String(name || '').indexOf('__');
+  return ix === -1 ? String(name || '') : String(name).slice(ix + 2);
+}
+
+// A task id has to survive being written into an onclick attribute, and has to
+// be the same id next poll or the task would be added again every five
+// minutes. So: the file path and the page it is for, hashed to something short
+// and alphanumeric. Same file, same page, same id - always.
+function inboxKey(path, page) {
+  const src = page + '|' + path;
+  let h = 5381;
+  for (let i = 0; i < src.length; i++) h = (((h << 5) + h) ^ src.charCodeAt(i)) >>> 0;
+  return 'ibx' + h.toString(36);
 }
 
 function inboxAlertText() {
@@ -13348,6 +13386,82 @@ function inboxAlertText() {
   if (!where.length) where.push(w.unknown + ' not read yet');
   const n = w.total;
   return n + ' file' + (n !== 1 ? 's' : '') + ' waiting \u2014 ' + where.join(' \u00b7 ');
+}
+
+// ---- the task that lets itself out ---------------------------------------
+// A badge only tells you while you are looking. The task manager is where the
+// day actually gets decided, so a file that has landed belongs there too.
+//
+// Two rules keep that from turning into litter. One task per file per tool,
+// keyed to the file itself, so five minutes of polling adds nothing the first
+// poll did not. And the reconciler removes any it finds that no longer has a
+// waiting file behind it - loaded, deleted, or binned from the inbox page -
+// so these clear themselves instead of needing to be ticked off.
+const IBX_TASK_PAGE  = { validator: 'allocvalidate', stock: 'stock', '': 'dispatch' };
+const IBX_TASK_LABEL = { validator: 'Allocation Validator', stock: 'Stock Checks', '': 'Dispatch' };
+let _ibxSyncing = false;
+
+function inboxSyncTasks() {
+  if (_ibxSyncing) return;                     // renderTasks must not loop back in
+  if (!inboxPollOk) return;                    // no listing, no opinion
+  if (typeof customTasks === 'undefined') return;
+  const want = new Map(inboxWaitList.map(f => [f.key, f]));
+  let changed = false;
+
+  // gone: the file was loaded, deleted, or never really there
+  const stale = customTasks.filter(t => t.inboxTask && !want.has(String(t.id)));
+  if (stale.length) {
+    stale.forEach(t => {
+      try { if (typeof done === 'object') delete done[taskKey(t.id)]; } catch (e) {}
+      try { if (typeof taskOverrides === 'object') delete taskOverrides[t.id]; } catch (e) {}
+    });
+    const drop = new Set(stale.map(t => String(t.id)));
+    customTasks = customTasks.filter(t => !drop.has(String(t.id)));
+    changed = true;
+  }
+
+  // new: one per waiting file, dated today so it sits in today's list
+  const have = new Set(customTasks.filter(t => t.inboxTask).map(t => String(t.id)));
+  want.forEach((f, key) => {
+    if (have.has(key)) return;
+    const label = IBX_TASK_LABEL[f.page] || 'Dispatch';
+    customTasks.push({
+      id: key,
+      freq: 'date',
+      date: todayInputDate(),
+      time: '',
+      priority: 'MEDIUM',
+      name: 'Review emailed file \u2014 ' + label,
+      days: 'all',
+      assignees: ['Me'],
+      note: f.file + '\nArrived by email. Opens ' + label + ', where it loads with one click.',
+      custom: true,
+      hub: 'dispatch',
+      inboxTask: true,
+      inboxPath: f.path,
+      inboxFile: f.file,
+      inboxPage: f.page
+    });
+    changed = true;
+  });
+
+  if (!changed) return;                        // the common case: write nothing
+  _ibxSyncing = true;
+  try {
+    saveCustomTasks();
+    if (typeof save === 'function') save();           // the done map
+    if (typeof saveTaskOverrides === 'function') saveTaskOverrides();
+    if (typeof renderTasks === 'function') renderTasks();
+  } finally {
+    _ibxSyncing = false;
+  }
+}
+
+// Where an inbox task sends you. Named so the row renderers can ask without
+// knowing how the inbox works.
+function inboxTaskGo(t) {
+  const p = IBX_TASK_PAGE[t.inboxPage || ''] || 'dispatch';
+  return `showPage('${p}','dispatch')`;
 }
 
 function renderInboxAlerts() {
@@ -13393,6 +13507,9 @@ function renderInboxAlerts() {
     showToast('<i class="ti ti-mail-down"></i> ' + esc(inboxAlertText()), 5200);
   }
   if (!w.total) inboxAnnounced = false;
+
+  // 4. the task manager: the one surface that outlives the session
+  inboxSyncTasks();
 }
 
 async function inboxInit(page) {
@@ -15805,6 +15922,7 @@ function toggleShowDone() { _showDone = !_showDone; renderTasks(); }
 // the same way wherever it is shown. Job reminders keep their detail modal,
 // which carries its own Open link button.
 function taskRowClick(t) {
+  if (t.inboxTask) return inboxTaskGo(t);
   if (t.jobReminder) return `openJobReminderDetail('${t.id}')`;
   if (taskUrlHref(t.url)) return `taskOpenLink('${t.id}')`;
   const map = { 1:'message', 3:'awjobs', 8:'calldata' };
@@ -15815,6 +15933,7 @@ function taskRowClick(t) {
 // These rows are dense, so the link shows as an icon rather than the full chip
 // the main task list uses.
 function taskRowLinkIcon(t) {
+  if (t.inboxTask) return `<i class="ti ti-mail-down task-row-link-ico" style="color:var(--amber-text)" title="${escAttr(t.inboxFile || 'Emailed file')}"></i>`;
   const href = taskUrlHref(t.url);
   return href
     ? `<i class="ti ti-link task-row-link-ico" title="Opens ${escAttr(href)}"></i>`
@@ -17443,7 +17562,8 @@ function taskHTML(t, showFreqPill) {
   // tasks: it was put there deliberately. Job reminders keep their own detail
   // modal, which already has an Open link button of its own.
   const taskHref = taskUrlHref(t.url);
-  const click = t.jobReminder ? `openJobReminderDetail('${t.id}')`
+  const click = t.inboxTask ? inboxTaskGo(t)
+    : t.jobReminder ? `openJobReminderDetail('${t.id}')`
     : taskHref ? `taskOpenLink('${t.id}')`
     : t.id === 1 ? `showPage('message')` : t.id === 8 ? `showPage('calldata')` : t.id === 3 ? `showPage('awjobs')`
     : `toggle('${t.id}')`;
@@ -17470,6 +17590,8 @@ function taskHTML(t, showFreqPill) {
     : '';
   const jobBadge = t.jobReminder
     ? `<span class="task-hub-badge" style="background:var(--amber-bg);color:var(--amber-text);"><i class="ti ti-briefcase" style="font-size:10px;margin-right:3px"></i>Job</span>`
+    : t.inboxTask
+    ? `<span class="task-hub-badge" style="background:var(--amber-bg);color:var(--amber-text);" title="${escAttr(t.inboxFile || '')}"><i class="ti ti-mail-down" style="font-size:10px;margin-right:3px"></i>Emailed</span>`
     : '';
   const streakInfo = (freq === 'daily' || STREAK_RECURRING_FREQS.includes(freq)) ? taskStreaks[t.id] : null;
   const streakBadge = (streakInfo && streakInfo.count >= 2)
