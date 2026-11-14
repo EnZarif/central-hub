@@ -2748,9 +2748,15 @@
   .esc-empty { padding: 14px; font-size: 11.5px; color: var(--text-3); text-align: center; }
 
   /* SUBURB CHECKER */
-  .sv-col-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-  .sv-col-label { font-size:12px; font-weight:600; color:var(--text-2); width:140px; flex-shrink:0; }
+  /* Seven full-width rows meant scrolling past the whole setup to reach the
+     button that runs it. Two columns at desktop width turns seven rows into
+     four, and the label sits above its select rather than stealing 140px
+     from it. */
+  .sv-cols { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:10px 14px; }
+  .sv-col-row { display:flex; flex-direction:column; align-items:stretch; gap:4px; margin-bottom:0; min-width:0; }
+  .sv-col-label { font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--text-3); width:auto; flex-shrink:0; }
   .sv-col-select { flex:1; min-width:0; }
+  .sv-cols .sv-col-select { padding:8px 11px !important; font-size:12.5px !important; }
   .sv-status-ok { color:var(--green-text) !important; }
   .sv-status-error { color:var(--coral-text) !important; }
   .sv-sum-ok { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; color:var(--green-text); font-weight:600; }
@@ -2864,6 +2870,18 @@
     color:var(--coral-text); opacity:.8; }
   .al-vsec-sub.warn { color:var(--amber-text); }
   .al-val-dl { width:auto !important; margin:0 0 0 auto !important; padding:8px 16px !important; letter-spacing:0; text-transform:none; }
+  /* The whole-file download, demoted. Quiet, small, and in the corner: it is
+     a once-in-a-while action and it was wearing the page's primary. */
+  .al-dl-quiet { margin-left:auto; font-family:inherit; font-size:11.5px; font-weight:600;
+    cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    padding:5px 11px; border-radius:8px; color:var(--text-3);
+    background:color-mix(in srgb, var(--surface2) 60%, transparent);
+    border:1px solid var(--border);
+    transition:color .15s, border-color .15s, box-shadow .15s; }
+  .al-dl-quiet:hover { color:var(--teal-text); border-color:var(--teal-text);
+    box-shadow:0 0 14px -5px var(--teal-text); }
+  .al-dl-quiet:focus-visible { outline:2px solid var(--teal-text); outline-offset:2px; }
+  .al-dl-quiet i { font-size:13px; }
 
   /* The day's call list. The same import answers a second question - who is
      out today and on what - so it gets its own section rather than a filter
@@ -3123,9 +3141,13 @@
   .stk-chip-more { background:none; border:none; color:var(--text-3); font-family:inherit; font-size:11.5px;
     font-weight:600; cursor:pointer; padding:6px 4px; }
   .stk-chip-more:hover { color:var(--text-2); text-decoration:underline; }
-  .stk-cfg-go { display:flex; align-items:center; gap:13px; margin-top:16px; padding-top:14px;
+  /* The action stays on screen while you work down the settings, instead of
+     waiting at the bottom of a card you have to scroll to the end of. */
+  .stk-cfg-go { position:sticky; bottom:0; z-index:2;
+    background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--surface) 92%, transparent) 38%);
+    display:flex; align-items:center; gap:13px; margin-top:16px; padding-top:14px;
     border-top:0.5px solid var(--border); flex-wrap:wrap; }
-  .stk-cfg-go .generate-btn { width:auto; margin:0; padding:13px 26px; font-size:14px; }
+  .stk-cfg-go .generate-btn { width:auto; margin:0; padding:11px 24px; font-size:13.5px; }
   .stk-cfg-go span { font-size:11.5px; color:var(--text-3); }
 
   .stk-banner { display:flex; align-items:center; gap:13px; padding:15px 17px; border-radius:12px;
@@ -11227,11 +11249,13 @@ function alValRenderMapper() {
   </select>`;
   const nRows = alValRows.length.toLocaleString();
   el.innerHTML =
-    `<div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('al-v-tech', svAutoDetect(alValHeaders, ['Technician','Allocated Tech','Allocated Tech Team','Tech'], ['technician','tech','allocat']))}</div>
+    `<div class="sv-cols">
+     <div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('al-v-tech', svAutoDetect(alValHeaders, ['Technician','Allocated Tech','Allocated Tech Team','Tech'], ['technician','tech','allocat']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Zone column</span>${sel('al-v-zone', svAutoDetect(alValHeaders, ['Zone','Zone Name','Geo','Geoname'], ['zone','geo']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-id', svAutoDetect(alValHeaders, ['Job #','Job ID','JobID','ID'], ['jobid','job']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Scheduled date <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-date', svAutoDetect(alValHeaders, ['Scheduled','Scheduled Date','Date','Due Date'], ['scheduled','date','due']))}</div>
+     </div>
      <div class="al-vcfg-go">
        <button class="generate-btn" onclick="alValValidate()">
          <i class="ti ti-shield-check" style="font-size:17px;"></i> Validate ${nRows} rows
@@ -11476,14 +11500,16 @@ function alValRun() {
         <span class="al-vsec-n">${flagged.length.toLocaleString()}</span>
         ${mismatch.length ? `<span class="al-vsec-sub">${mismatch.length.toLocaleString()} wrong technician</span>` : ''}
         ${notech.length ? `<span class="al-vsec-sub warn">${notech.length.toLocaleString()} unallocated</span>` : ''}
-        <button class="generate-btn al-val-dl" onclick="alValDownload()">
-          <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
+        <button class="al-dl-quiet" onclick="alValDownload()"
+          title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
+          <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button>
       </div>
       <div class="al-vlist">${flagged.map(flagRow).join('')}</div>
     </div>` : `<div class="al-vsec"><div class="al-vsec-hd">
-        <button class="generate-btn al-val-dl" style="margin-left:0 !important;" onclick="alValDownload()">
-          <i class="ti ti-download" style="font-size:15px;"></i> Download all ${results.length.toLocaleString()} rows
+        <button class="al-dl-quiet" style="margin-left:0;" onclick="alValDownload()"
+          title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
+          <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button></div></div>`}
 
     ${dateCol ? (() => {
@@ -12420,13 +12446,15 @@ function stkRenderMapper() {
   const faultCol = svAutoDetect(stkHeaders, ['Fault Description','Fault','Fault Desc'], ['fault','problem','symptom']);
   const noteCol = svAutoDetect(stkHeaders, ['Reported notes','Reported Notes','Notes','Reported Fault','Comments'], ['note','comment','remark']);
   el.innerHTML =
-    `<div class="sv-col-row"><span class="sv-col-label">Model column</span>${sel('stk-c-model', svAutoDetect(stkHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']), 'stkOnChange()')}</div>
+    `<div class="sv-cols">
+     <div class="sv-col-row"><span class="sv-col-label">Model column</span>${sel('stk-c-model', svAutoDetect(stkHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Fault column</span>${sel('stk-c-fault', faultCol, 'stkOnFaultCol()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Technician column</span>${sel('stk-c-tech', svAutoDetect(stkHeaders, ['Technician','Allocated Tech','Tech'], ['technician','tech','allocat']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Job number <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-id', svAutoDetect(stkHeaders, ['Job #','Job Number','Job ID','ID'], ['jobid','job']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-site', svAutoDetect(stkHeaders, ['Location Name','Site','Store'], ['location','site','store']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Contract <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-con', svAutoDetect(stkHeaders, ['Contract','Contract Name','Client','Account'], ['contract','client','account']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Reported notes <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-note', noteCol, 'stkOnNoteCol()')}</div>
+     </div>
      <div class="stk-note-sw" id="stk-note-sw"${noteCol ? '' : ' style="display:none;"'}>
        <label class="stk-note-lb">
          <input type="checkbox" id="stk-note-on"${stkNotesOnGet() ? ' checked' : ''}
