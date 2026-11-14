@@ -24547,7 +24547,45 @@ async function clearAllData() {
 }
 
 // ===== GLOBAL AI (Groq) =====
-const AI_MODEL = localStorage.getItem('zarif_ai_model') || 'llama-3.3-70b-versatile';
+// Groq retires models on a published schedule and does not keep the old id
+// answering. llama-3.3-70b-versatile, which this defaulted to, was shut down
+// on 16 Aug 2026; an ordinary key now gets "model does not exist or you do
+// not have access to it", which reads like a key fault and is not one.
+//
+// Retired ids are listed rather than just replaced, because the stored
+// override below would otherwise happily pin the Hub to a dead model and
+// produce the same confusing error all over again.
+const AI_DEAD_MODELS = new Set([
+  'llama-3.3-70b-versatile', 'llama-3.1-8b-instant',
+  'qwen/qwen3.6-27b', 'qwen/qwen3-32b', 'qwen-qwq-32b',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'meta-llama/llama-4-maverick-17b-128e-instruct',
+  'moonshotai/kimi-k2-instruct', 'moonshotai/kimi-k2-instruct-0905',
+  'groq/compound', 'groq/compound-mini',
+  'mixtral-8x7b-32768', 'gemma2-9b-it', 'mistral-saba-24b',
+  'llama3-70b-8192', 'llama3-8b-8192', 'deepseek-r1-distill-llama-70b'
+]);
+// Groq's own suggested replacement, and the only flagship chat model still on
+// the ordinary paid tier - the two llama ids above now say "contact sales".
+const AI_MODEL_DEFAULT = 'openai/gpt-oss-120b';
+const AI_MODEL = (() => {
+  const saved = (localStorage.getItem('zarif_ai_model') || '').trim();
+  return (saved && !AI_DEAD_MODELS.has(saved)) ? saved : AI_MODEL_DEFAULT;
+})();
+
+// gpt-oss is a reasoning model: left alone it spends tokens thinking before
+// every one-line answer this app asks it for. Low effort keeps it near the
+// latency the old model had. The flag is only valid on gpt-oss, so it is sent
+// only there - a stored override pointing somewhere else must not 400.
+function aiRequestBody(prompt) {
+  const body = {
+    model: AI_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+  };
+  if (AI_MODEL.startsWith('openai/gpt-oss')) body.reasoning_effort = 'low';
+  return body;
+}
 
 async function geminiCall(prompt) {
   const apiKey = localStorage.getItem('zarif_groq_key') || localStorage.getItem('zarif_gemini_key') || '';
@@ -24558,11 +24596,7 @@ async function geminiCall(prompt) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-    }),
+    body: JSON.stringify(aiRequestBody(prompt)),
   });
   if (!res.ok) {
     let detail = '';
@@ -24573,6 +24607,13 @@ async function geminiCall(prompt) {
     const err = new Error(detail || `Groq error ${res.status}`);
     err.status = res.status;
     err.detail = detail;
+    // Say which model, and that the key is not the problem. Without this the
+    // raw Groq text sends you back to re-paste a key that was always fine.
+    if (res.status === 404 || /does not exist|decommission|deprecat/i.test(detail)) {
+      err.detail = (detail || 'Model unavailable') +
+        ` — the Hub is asking for "${AI_MODEL}". Your key is probably fine: Groq retires models on a schedule. ` +
+        'Check console.groq.com/docs/models for a current id.';
+    }
     throw err;
   }
   const data = await res.json();
