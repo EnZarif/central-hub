@@ -989,8 +989,31 @@
     background: radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, var(--ac, var(--accent)) 30%, transparent), transparent 70%);
     filter: blur(14px); opacity: .85; transition: opacity .3s; }
   .mcard:hover .mcard-glow { opacity: 1; }
-  .holo { position: relative; height: 192px; display: block; width: 100%; transform: translateZ(42px); }
-  .mcard-b { padding: 0 20px; transform: translateZ(26px); display: flex; flex-direction: column; gap: 9px; }
+  /* The emblem is a stack of planes, not one picture. Everything used to
+     live in a single <svg>, and SVG children cannot take a CSS Z position,
+     so the art stayed flat however far the card turned - only the Task
+     Manager emblem read as 3D at all, and only because its drawing already
+     had perspective painted into it.
+     The planes are moved in 2D rather than given a real Z, which is a
+     deliberate choice and not a shortcut. Measured here, a child at
+     translateZ inside this card separates from its siblings by 0.0px at any
+     rotation: the card sets its perspective with the perspective() function
+     and carries overflow:hidden, and between them the browser flattens the
+     children into one plane. Real depth would mean dropping overflow:hidden,
+     which is what clips the glow and the rounded corners - and the last time
+     preserve-3d escaped that clip it pushed the page wider than a phone
+     screen and let the whole thing pinch-zoom.
+     Shifting each plane by its own --zn gives the same read for the eye,
+     cannot overflow, and needs no bets on flattening rules. */
+  .holo { position: relative; height: 192px; display: block; width: 100%;
+    transform: translateZ(42px); }
+  .holo-l { position: absolute; inset: 0;
+    transform: translate(calc(var(--px, 0) * var(--zn, 0) * 0.17px),
+                         calc(var(--py, 0) * var(--zn, 0) * 0.11px));
+    transition: transform .45s cubic-bezier(.22,.9,.26,1); }
+  .mcard.tilt .holo-l { transition: transform .08s linear; }
+  @media (prefers-reduced-motion: reduce) { .holo-l { transform: none; } }
+  .mcard-b { padding: 0 20px; transform: translateZ(30px); display: flex; flex-direction: column; gap: 9px; }
   .mcard-t { font-size: 25px; font-weight: 800; letter-spacing: -0.028em; line-height: 1.05; }
   .mcard-t .g { background: linear-gradient(94deg, var(--text) 20%, var(--ac, var(--accent)) 110%);
     -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -7556,19 +7579,42 @@ function holoCube(g, x, y, sz, op) {
 function buildHolo(host, kind) {
   const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   host.innerHTML = '';
-  const svg = holoEl('svg', { viewBox: '0 0 300 192', width: '100%', height: '100%',
-    'aria-hidden': 'true', style: 'display:block;overflow:visible' });
-  holoDefs(svg, kind);
+
+  // Each call returns a fresh plane at its own depth. The glow filter is
+  // defined once and referenced by id from every plane - an SVG filter
+  // resolves document-wide, so redefining it per layer would only duplicate
+  // the id and make the reference ambiguous.
+  let defsDone = false;
+  const layer = (zn) => {
+    const span = document.createElement('span');
+    span.className = 'holo-l';
+    span.style.setProperty('--zn', zn);
+    const svg = holoEl('svg', { viewBox: '0 0 300 192', width: '100%', height: '100%',
+      'aria-hidden': 'true', style: 'display:block;overflow:visible' });
+    if (!defsDone) { holoDefs(svg, kind); defsDone = true; }
+    span.appendChild(svg);
+    host.appendChild(span);
+    return svg;
+  };
+  const glow = `url(#hglow-${kind})`;
 
   if (kind === 'dispatch') {
+    // The floor sits at the back, the route and its pins stand on it, and
+    // the cubes float well in front - so they drift across the grid as the
+    // card turns instead of being glued to it.
+    const floor = layer(0);
     const g = holoEl('g', { transform: 'translate(0,66)' });
-    holoFloor(g); svg.appendChild(g);
+    holoFloor(g); floor.appendChild(g);
+
+    const route = layer(22);
+    route.appendChild(holoEl('path', { d: 'M96 124 Q150 104 212 124', fill: 'none',
+      stroke: 'currentColor', 'stroke-opacity': '.34', 'stroke-width': '1.2', 'stroke-dasharray': '3 5' }));
     [[96, 150, 26], [150, 162, 34], [212, 146, 22]].forEach((d, i) => {
-      svg.appendChild(holoEl('path', { d: `M${d[0]} ${d[1]} L${d[0]} ${d[1] - d[2]}`,
+      route.appendChild(holoEl('path', { d: `M${d[0]} ${d[1]} L${d[0]} ${d[1] - d[2]}`,
         stroke: 'currentColor', 'stroke-opacity': '.5', 'stroke-width': '1.4',
-        'stroke-linecap': 'round', filter: `url(#hglow-${kind})` }));
-      svg.appendChild(holoEl('circle', { cx: d[0], cy: d[1] - d[2], r: i === 1 ? 4.6 : 3.4,
-        fill: 'currentColor', filter: `url(#hglow-${kind})` }));
+        'stroke-linecap': 'round', filter: glow }));
+      route.appendChild(holoEl('circle', { cx: d[0], cy: d[1] - d[2], r: i === 1 ? 4.6 : 3.4,
+        fill: 'currentColor', filter: glow }));
       const halo = holoEl('circle', { cx: d[0], cy: d[1] - d[2], r: i === 1 ? 11 : 8,
         fill: 'none', stroke: 'currentColor', 'stroke-opacity': '.42', 'stroke-width': '1' });
       if (!calm) {
@@ -7577,59 +7623,79 @@ function buildHolo(host, kind) {
         halo.appendChild(holoEl('animate', { attributeName: 'stroke-opacity', values: '.45;0',
           dur: (2.6 + i * 0.4) + 's', repeatCount: 'indefinite' }));
       }
-      svg.appendChild(halo);
+      route.appendChild(halo);
     });
-    svg.appendChild(holoEl('path', { d: 'M96 124 Q150 104 212 124', fill: 'none',
-      stroke: 'currentColor', 'stroke-opacity': '.34', 'stroke-width': '1.2', 'stroke-dasharray': '3 5' }));
+
+    const air = layer(46);
     const cg = holoEl('g', {});
     holoCube(cg, 60, 44, 11, .34); holoCube(cg, 243, 34, 9, .26); holoCube(cg, 206, 62, 7, .2);
-    svg.appendChild(cg);
+    air.appendChild(cg);
 
   } else if (kind === 'tasks') {
-    [[150, 150, 86, .1], [150, 124, 74, .16], [150, 98, 62, .24], [150, 72, 50, .34]].forEach(p => {
-      const [x, y, w, o] = p;
-      svg.appendChild(holoEl('path', {
-        d: `M${x} ${y - w * 0.3} L${x + w} ${y} L${x} ${y + w * 0.3} L${x - w} ${y} Z`,
-        fill: 'currentColor', 'fill-opacity': o * 0.5,
-        stroke: 'currentColor', 'stroke-opacity': o + .3, 'stroke-width': '1' }));
-      for (let k = -1; k <= 1; k++) {
-        svg.appendChild(holoEl('line', { x1: x - w * 0.42, y1: y + k * 5,
-          x2: x + w * 0.42, y2: y + k * 5 - w * 0.1, stroke: 'currentColor',
-          'stroke-opacity': (o * 0.8).toFixed(2), 'stroke-width': '1' }));
-      }
-    });
-    svg.appendChild(holoEl('circle', { cx: 150, cy: 60, r: 27, fill: 'none', stroke: 'currentColor',
+    // Four stacked planes that were already drawn in perspective. Giving
+    // each one a real depth means they now separate as you move rather than
+    // only looking as though they would.
+    [[150, 150, 86, .1, 0], [150, 124, 74, .16, 13], [150, 98, 62, .24, 26], [150, 72, 50, .34, 38]]
+      .forEach(p => {
+        const [x, y, w, o, zn] = p;
+        const sv = layer(zn);
+        sv.appendChild(holoEl('path', {
+          d: `M${x} ${y - w * 0.3} L${x + w} ${y} L${x} ${y + w * 0.3} L${x - w} ${y} Z`,
+          fill: 'currentColor', 'fill-opacity': o * 0.5,
+          stroke: 'currentColor', 'stroke-opacity': o + .3, 'stroke-width': '1' }));
+        for (let k = -1; k <= 1; k++) {
+          sv.appendChild(holoEl('line', { x1: x - w * 0.42, y1: y + k * 5,
+            x2: x + w * 0.42, y2: y + k * 5 - w * 0.1, stroke: 'currentColor',
+            'stroke-opacity': (o * 0.8).toFixed(2), 'stroke-width': '1' }));
+        }
+      });
+    const top = layer(50);
+    top.appendChild(holoEl('circle', { cx: 150, cy: 60, r: 27, fill: 'none', stroke: 'currentColor',
       'stroke-opacity': '.75', 'stroke-width': '2.4', 'stroke-linecap': 'round',
       'stroke-dasharray': '170', 'stroke-dashoffset': '64', transform: 'rotate(-90 150 60)',
-      filter: `url(#hglow-${kind})` }));
-    svg.appendChild(holoEl('path', { d: 'M141 60 l6 6 12-13', fill: 'none', stroke: 'currentColor',
+      filter: glow }));
+    top.appendChild(holoEl('path', { d: 'M141 60 l6 6 12-13', fill: 'none', stroke: 'currentColor',
       'stroke-width': '2.6', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
-      filter: `url(#hglow-${kind})` }));
+      filter: glow }));
 
   } else {
-    [[88, 30, .3], [64, 22, .22], [40, 14, .16]].forEach(o => {
-      svg.appendChild(holoEl('ellipse', { cx: 150, cy: 96, rx: o[0], ry: o[1], fill: 'none',
-        stroke: 'currentColor', 'stroke-opacity': o[2], 'stroke-width': '1.1' }));
+    // The hardest of the three. Concentric ellipses rotated a few degrees
+    // still look like concentric ellipses, which is why this card read as
+    // completely flat. Put each orbit on its own plane with its satellites
+    // and they pull apart into an actual orbital system.
+    const rings = [[88, 30, .3, 0], [64, 22, .22, 17], [40, 14, .16, 31]];
+    const svs = rings.map(r => {
+      const sv = layer(r[3]);
+      sv.appendChild(holoEl('ellipse', { cx: 150, cy: 96, rx: r[0], ry: r[1], fill: 'none',
+        stroke: 'currentColor', 'stroke-opacity': r[2], 'stroke-width': '1.1' }));
+      return sv;
     });
-    svg.appendChild(holoEl('circle', { cx: 150, cy: 96, r: 13, fill: 'currentColor',
-      'fill-opacity': '.18', stroke: 'currentColor', 'stroke-width': '1.6',
-      filter: `url(#hglow-${kind})` }));
-    svg.appendChild(holoEl('path', { d: 'M141 97a9 9 0 0118 0v6a4 4 0 01-4 4h-3', fill: 'none',
-      stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round' }));
-    [[62, 96, 3.6, 0], [238, 96, 3.6, 1], [150, 66, 3, 2], [150, 126, 3, 3],
-     [96, 78, 2.6, 4], [205, 115, 2.6, 5]].forEach(p => {
-      const c = holoEl('circle', { cx: p[0], cy: p[1], r: p[2], fill: 'currentColor',
-        filter: `url(#hglow-${kind})` });
+
+    // A satellite belongs to the orbit it sits on, so it travels with it.
+    const dot = (sv, x, y, r, i) => {
+      const c = holoEl('circle', { cx: x, cy: y, r, fill: 'currentColor', filter: glow });
       if (!calm) c.appendChild(holoEl('animate', { attributeName: 'fill-opacity',
-        values: '.35;1;.35', dur: (2.2 + p[3] * 0.45) + 's', repeatCount: 'indefinite' }));
-      svg.appendChild(c);
-    });
-    svg.appendChild(holoEl('path', { d: 'M174 72a34 34 0 018 16', fill: 'none', stroke: 'currentColor',
+        values: '.35;1;.35', dur: (2.2 + i * 0.45) + 's', repeatCount: 'indefinite' }));
+      sv.appendChild(c);
+    };
+    dot(svs[0], 62, 96, 3.6, 0);
+    dot(svs[0], 238, 96, 3.6, 1);
+    dot(svs[1], 150, 66, 3, 2);
+    dot(svs[1], 150, 126, 3, 3);
+    dot(svs[2], 96, 78, 2.6, 4);
+    dot(svs[2], 205, 115, 2.6, 5);
+
+    svs[0].appendChild(holoEl('path', { d: 'M174 72a34 34 0 018 16', fill: 'none', stroke: 'currentColor',
       'stroke-opacity': '.5', 'stroke-width': '1.4', 'stroke-linecap': 'round' }));
-    svg.appendChild(holoEl('path', { d: 'M182 62a46 46 0 0110 24', fill: 'none', stroke: 'currentColor',
+    svs[0].appendChild(holoEl('path', { d: 'M182 62a46 46 0 0110 24', fill: 'none', stroke: 'currentColor',
       'stroke-opacity': '.3', 'stroke-width': '1.4', 'stroke-linecap': 'round' }));
+
+    const core = layer(48);
+    core.appendChild(holoEl('circle', { cx: 150, cy: 96, r: 13, fill: 'currentColor',
+      'fill-opacity': '.18', stroke: 'currentColor', 'stroke-width': '1.6', filter: glow }));
+    core.appendChild(holoEl('path', { d: 'M141 97a9 9 0 0118 0v6a4 4 0 01-4 4h-3', fill: 'none',
+      stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round' }));
   }
-  host.appendChild(svg);
 }
 
 let _holoReady = false;
@@ -7679,13 +7745,21 @@ function initHome() {
       card.addEventListener('pointermove', ev => {
         const r = card.getBoundingClientRect();
         card.classList.add('tilt');
-        card.style.setProperty('--rx', (-((ev.clientY - r.top) / r.height - .5) * 8).toFixed(2) + 'deg');
-        card.style.setProperty('--ry', (((ev.clientX - r.left) / r.width - .5) * 11).toFixed(2) + 'deg');
+        // -1..1 across the card, which is what the emblem's planes read to
+        // decide how far each of them slides.
+        const px = ((ev.clientX - r.left) / r.width - .5) * 2;
+        const py = ((ev.clientY - r.top) / r.height - .5) * 2;
+        card.style.setProperty('--rx', (-py * 5).toFixed(2) + 'deg');
+        card.style.setProperty('--ry', (px * 7).toFixed(2) + 'deg');
+        card.style.setProperty('--px', px.toFixed(3));
+        card.style.setProperty('--py', py.toFixed(3));
       });
       card.addEventListener('pointerleave', () => {
         card.classList.remove('tilt');
         card.style.setProperty('--rx', '0deg');
         card.style.setProperty('--ry', '0deg');
+        card.style.setProperty('--px', '0');
+        card.style.setProperty('--py', '0');
       });
     });
     document.querySelectorAll('.sec-card').forEach((c, i) => {
