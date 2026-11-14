@@ -21321,13 +21321,25 @@ function renderKpiOpsList() {
       ${nSent ? `<button class="exc-b" style="--bc:var(--text-3)" onclick="kpiOpsResetToday()"><i class="ti ti-rotate"></i>Reset</button>` : ''}
     </div>
     <div class="kpi-ops-mode">
-      <span>Outlook button sends:</span>
+      <span>Opens in:</span>
+      <button class="exc-b${kpiOpsDest() === 'desktop' ? ' on' : ''}" style="--bc:var(--teal-text)"
+        onclick="kpiOpsSetDest('desktop')" title="Hands off to whatever Windows has set as the mail handler - on current Windows 11 that is New Outlook. No browser tab.">
+        <i class="ti ti-device-desktop"></i>Desktop Outlook</button>
+      <button class="exc-b${kpiOpsDest() === 'web' ? ' on' : ''}" style="--bc:var(--purple-text)"
+        onclick="kpiOpsSetDest('web')" title="Opens outlook.office.com in a new tab. Use this when you are not on your own machine.">
+        <i class="ti ti-world"></i>Outlook on the web</button>
+    </div>
+    <div class="kpi-ops-mode">
+      <span>Body:</span>
       <button class="exc-b${kpiOpsMode() === 'rich' ? ' on' : ''}" style="--bc:var(--teal-text)"
         onclick="kpiOpsSetMode('rich')" title="Keeps the coloured table. Opens Outlook with the address, CC and subject filled, and the table on your clipboard - one Ctrl+V, then Send.">
         <i class="ti ti-table"></i>Table \u00b7 paste once</button>
       <button class="exc-b${kpiOpsMode() === 'plain' ? ' on' : ''}" style="--bc:var(--amber-text)"
-        onclick="kpiOpsSetMode('plain')" title="Truly one click, but the table arrives as tab-separated plain text. Outlook's compose link cannot carry HTML.">
+        onclick="kpiOpsSetMode('plain')" title="One click, but the table arrives as plain text - and New Outlook is known to drop the line breaks out of a mailto body, so this is the worse option on the desktop app.">
         <i class="ti ti-align-left"></i>Plain text \u00b7 one click</button>
+      ${kpiOpsMode() === 'plain' && kpiOpsDest() === 'desktop'
+        ? `<span style="color:var(--amber-text)"><i class="ti ti-alert-triangle" style="font-size:11px"></i>
+           New Outlook drops line breaks from a mailto body \u2014 the table will arrive as one run-on line.</span>` : ''}
     </div>`;
 
   const strip = snapStripHtml('kpiops', [
@@ -21493,10 +21505,26 @@ let kpiOpsCurrentIdx = 0;
 //           body. Truly one click, but the table is plain text.
 const KPIOPS_OUTLOOK_WEB = 'https://outlook.office.com/mail/deeplink/compose';
 const KPIOPS_MODE_KEY = 'zarif_kpi_ops_outlook_mode';
+const KPIOPS_DEST_KEY = 'zarif_kpi_ops_dest';
 // Deeplinks over a few thousand characters get truncated or rejected, and a
 // multi-day email is the long one. Past this the body is left out and the
 // clipboard carries it instead.
 const KPIOPS_URL_MAX = 1800;
+
+// Where the compose window opens. mailto: hands off to whatever Windows has
+// registered as the mail handler, which on an up-to-date Windows 11 is New
+// Outlook - so this opens the desktop app you already have open, with no
+// browser tab in the way. The web deeplink stays for when you are not at
+// your own machine.
+function kpiOpsDest() {
+  try { return localStorage.getItem(KPIOPS_DEST_KEY) === 'web' ? 'web' : 'desktop'; }
+  catch (e) { return 'desktop'; }
+}
+
+function kpiOpsSetDest(d) {
+  try { localStorage.setItem(KPIOPS_DEST_KEY, d === 'web' ? 'web' : 'desktop'); } catch (e) {}
+  renderKpiOpsList();
+}
 
 function kpiOpsMode() {
   try { return localStorage.getItem(KPIOPS_MODE_KEY) === 'plain' ? 'plain' : 'rich'; }
@@ -21509,10 +21537,17 @@ function kpiOpsSetMode(m) {
 }
 
 function kpiOpsOutlookUrl(fields, body) {
-  const q = ['to=' + encodeURIComponent(fields.to || ''),
-             'subject=' + encodeURIComponent(fields.subject || '')];
-  if (fields.cc) q.push('cc=' + encodeURIComponent(fields.cc));
-  let url = KPIOPS_OUTLOOK_WEB + '?' + q.join('&');
+  const web = kpiOpsDest() === 'web';
+  const q = [];
+  if (fields.cc) q.push('cc=' + encodeURIComponent(fields.cc).replace(/%40/g, '@'));
+  q.push('subject=' + encodeURIComponent(fields.subject || ''));
+  // RFC 6068 allows a bare @ in a mailto address, and some Windows mail
+  // handlers do not decode %40 in the path - the address then arrives
+  // mangled or empty. A query parameter has no such problem.
+  const addr = encodeURIComponent(fields.to || '').replace(/%40/g, '@');
+  let url = web
+    ? KPIOPS_OUTLOOK_WEB + '?to=' + encodeURIComponent(fields.to || '') + '&' + q.join('&')
+    : 'mailto:' + addr + '?' + q.join('&');
   if (body) {
     const withBody = url + '&body=' + encodeURIComponent(body);
     if (withBody.length <= KPIOPS_URL_MAX) return withBody;
@@ -21523,24 +21558,40 @@ function kpiOpsOutlookUrl(fields, body) {
 /**
  * Open the compose window for one operator.
  *
- * The window is opened in the same gesture as the click - a popup opened
+ * The window is opened in the same gesture as the click - anything opened
  * after an await is blocked by every browser - so the clipboard write is
- * started first and not waited on.
+ * started first and deliberately not waited on.
+ *
+ * A mailto: has to be an anchor click rather than window.open, which leaves
+ * a dead blank tab behind in most browsers when the target is a protocol
+ * handler rather than a page.
  */
 function kpiOpsOpenOutlook(i, ev) {
   if (ev) ev.stopPropagation();
   const b = kpiOpsBuild(i);
   if (!b) return;
   const plain = kpiOpsMode() === 'plain';
+  const web = kpiOpsDest() === 'web';
 
   if (!plain) copyRichText(b.html, b.text);   // deliberately not awaited
 
   const url = kpiOpsOutlookUrl(b.fields, plain ? b.text : '');
-  const w = window.open(url, '_blank', 'noopener');
-  if (!w) {
-    showToast('<i class="ti ti-alert-triangle"></i>Outlook could not be opened \u2014 allow popups for the Hub');
-    return;
+
+  if (web) {
+    const w = window.open(url, '_blank', 'noopener');
+    if (!w) {
+      showToast('<i class="ti ti-alert-triangle"></i>Outlook could not be opened \u2014 allow popups for the Hub');
+      return;
+    }
+  } else {
+    const a = document.createElement('a');
+    a.href = url;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
+
   kpiOpsMarkSent(b.name);
   showToast(plain
     ? '<i class="ti ti-brand-windows"></i>Outlook opened \u2014 check it over and send'
