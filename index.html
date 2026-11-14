@@ -364,6 +364,82 @@
     border-top: 1px solid var(--border); background: var(--surface2); }
   @media (max-width: 620px) { .snap-cell { min-width: 50%; flex: 1 1 50%; } }
 
+  /* ── THE NEW SURFACES ON A PHONE ──────────────────────────
+     Measured on an iPhone 15 Pro at 393x852. Three things were wrong and
+     all three were the same mistake: a row built for a desktop width with
+     the controls pinned to the right of it.
+
+     Tap targets come first. Every button on the new pages came out between
+     24 and 29px tall, against the 44px Apple asks for - fine with a mouse,
+     a coin toss with a thumb. Nothing here is smaller than 44 any more.
+
+     The chase list was the worst of it: four buttons held on one line with
+     the summary, so the text column collapsed to about one word per line
+     and the buttons sat on top of the title. The controls now get a line of
+     their own and split it evenly. */
+  @media (max-width: 760px) {
+    /* Chase list: job and summary on top, the four decisions below. */
+    .exc-row { flex-wrap: wrap; gap: 9px 10px; padding: 12px 13px; }
+    .exc-job { min-width: 0; padding-top: 1px; }
+    .exc-main { flex: 1 1 150px; }
+    .exc-sum { font-size: 13.5px; line-height: 1.35; }
+    .exc-det { font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+    .exc-acts { flex: 1 1 100%; justify-content: stretch; gap: 6px; }
+    /* Four across 393px leaves about 80px each. "Known OK" is the long one
+       and was wrapping to two lines, which made its button taller than the
+       three beside it and the row look broken. */
+    .exc-acts .exc-b { flex: 1 1 0; min-width: 0; justify-content: center;
+      min-height: 44px; padding: 4px 3px; font-size: 10.5px; gap: 3px;
+      white-space: nowrap; }
+    .exc-acts .exc-b i { font-size: 12px; }
+    .exc-fold > summary { min-height: 44px; }
+
+    /* Morning run: the step's action is a thumb target, not a link. */
+    .morn-go { min-height: 44px; padding: 10px 15px; font-size: 12.5px; }
+    .morn-step { padding: 12px 13px; }
+
+    /* Operator run: the address was being cut off mid-word to make room for
+       two buttons beside it. It gets the full width and they get their own
+       line. */
+    .kpi-upload-row { flex-wrap: wrap; gap: 9px; }
+    .kpi-upload-info { flex: 1 1 100%; min-width: 0; }
+    .kpi-upload-cols { overflow-wrap: anywhere; line-height: 1.45; }
+    .kpi-op-btns { width: 100%; gap: 7px; }
+    .kpi-op-btns .kpi-file-btn { flex: 1 1 0; justify-content: center; }
+    .kpi-file-btn, .settings-save-btn, .danger-btn { min-height: 44px; }
+    .kpi-ops-progress { flex-wrap: wrap; }
+    .kpi-ops-progress button { margin-left: 0; min-height: 44px; }
+    .kpi-ops-mode { align-items: flex-start; line-height: 1.5; }
+
+    /* Insights: four tiles stacked one per row pushed the chart off the
+       first screen. Two across fits 393px with room to spare. */
+    .insw-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .insw-tile { padding: 10px 11px; }
+    .insw-v { font-size: 18px; }
+    .insw-k { font-size: 9.5px; }
+    .insw-spark { height: 48px; }
+    /* The floating quick-add sits over the bottom right, and this line ran
+       underneath it. */
+    .insw-lines { padding-right: 56px; }
+
+    /* Trend strip: two to a row rather than four squeezed into one. */
+    .snap-cell { min-width: 50%; flex: 1 1 50%; }
+    .snap-v { font-size: 16px; }
+
+    /* Settings rows stack, so their buttons should fill the line. */
+    .settings-row-ctrl { flex-wrap: wrap; gap: 7px; }
+    .settings-row-ctrl .settings-save-btn { flex: 1 1 auto; justify-content: center; }
+  }
+
+  /* The Dynamic Island cuts into the top of a landscape viewport, and the
+     home indicator into the bottom of both. The shell already pads for
+     these; anything that pins itself to an edge has to do its own. */
+  @supports (padding: max(0px)) {
+    @media (max-width: 760px) {
+      .exc-fold-b { padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
+    }
+  }
+
   /* ── STAT TILES ─────────────────────────────────────────────────────
      The verdict counts were only ever readable on the fold headers, which
      means you had to scan five collapsed rows to learn the shape of the
