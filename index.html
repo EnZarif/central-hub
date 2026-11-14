@@ -241,6 +241,20 @@
     animation: wipe .72s cubic-bezier(.22,.9,.26,1) .08s both;
   }
   @keyframes wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  /* Title and figures. The right-hand half of a page header was empty on
+     every tool; it carries that page's own numbers now, so the state of the
+     loaded file is readable before you scroll. The clock is not here - it
+     lives in the row above, top right - so these never collide. */
+  .page-figs { display: flex; gap: 18px; margin-left: auto; flex-wrap: wrap; align-items: baseline; }
+  .page-fig b { display: block; font-family: 'Archivo', 'Inter', system-ui, sans-serif;
+    font-size: 19px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1;
+    font-variant-numeric: tabular-nums; color: var(--fc, var(--text)); }
+  .page-fig span { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3); }
+  .page-figs .page-stat { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sc, var(--text-3)); }
+  @media (max-width: 760px) { .page-figs { margin-left: 0; width: 100%; } }
+
   #page-allocvalidate .header h1, #page-stock .header h1, #page-alloccheck .header h1,
   #page-kpi .header h1, #page-suburbcheck .header h1, #page-message .header h1,
   #page-templates .header h1, #page-meetings .header h1 {
@@ -265,6 +279,50 @@
   #page-message       { --th: var(--purple-text); }
   #page-templates     { --th: var(--coral-text); }
   #page-meetings      { --th: var(--green-text); }
+
+  /* ══ SECONDARY BUTTONS: EDGE-LIT ════════════════════════════════════
+     A dark fill with a hairline accent edge that lights on hover, the same
+     glow the cards use. Every button on these pages that is not THE action
+     gets this, so the one filled pill on screen is unmistakable.
+
+     Listed by class rather than given a new one, because these buttons are
+     built in a dozen different render functions and none of them has to
+     change for this to apply. */
+  .al-add-btn, .sidebar-action-btn, .task-cal-btn, .esc-add-btn,
+  .jl-add-section-btn, .kb-manage-toggle, .al-fix-go, .qlc-b, .stk-rule-x {
+    position: relative; font-family: inherit; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border-radius: 9px; color: var(--eb, var(--teal-text));
+    background: color-mix(in srgb, var(--eb, var(--teal-text)) 7%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--eb, var(--teal-text)) 30%, transparent);
+    transition: border-color .15s, box-shadow .15s, color .15s, background .15s, transform .1s;
+  }
+  .al-add-btn:hover, .sidebar-action-btn:hover, .task-cal-btn:hover, .esc-add-btn:hover,
+  .jl-add-section-btn:hover, .kb-manage-toggle:hover, .al-fix-go:hover,
+  .qlc-b:hover:not(:disabled), .stk-rule-x:hover {
+    border-color: var(--eb, var(--teal-text));
+    box-shadow: 0 0 18px -5px var(--eb, var(--teal-text)), inset 0 0 14px -8px var(--eb, var(--teal-text));
+  }
+  .al-add-btn:active, .sidebar-action-btn:active, .task-cal-btn:active,
+  .esc-add-btn:active, .al-fix-go:active { transform: translateY(1px); }
+  .al-add-btn:focus-visible, .sidebar-action-btn:focus-visible, .task-cal-btn:focus-visible,
+  .esc-add-btn:focus-visible, .al-fix-go:focus-visible, .qlc-b:focus-visible,
+  .stk-rule-x:focus-visible, .jl-add-section-btn:focus-visible, .kb-manage-toggle:focus-visible {
+    outline: 2px solid var(--eb, var(--teal-text)); outline-offset: 2px;
+  }
+  /* each keeps the colour it means */
+  .sidebar-action-btn.sab-job { --eb: var(--purple-text); }
+  .sidebar-action-btn.sab-import { --eb: var(--text-2); }
+  .esc-add-btn { --eb: var(--coral-text); }
+  .al-fix-go { --eb: var(--green-text); }
+  .al-fix-go.ghost, .qlc-b, .jl-add-section-btn, .kb-manage-toggle, .stk-rule-x { --eb: var(--text-3); }
+  .al-fix-go.ghost:hover, .stk-rule-x:hover { --eb: var(--coral-text); }
+  .kb-manage-toggle { --eb: var(--amber-text); }
+  /* the ones that were full-width rows stay full-width rows */
+  .jl-add-section-btn, .kb-manage-toggle { width: 100%; border-radius: 0; border-left: none;
+    border-right: none; border-bottom: none; }
+  .reset { --eb: var(--text-3); }
+  .reset:hover { --eb: var(--coral-text); }
 
   /* ══ THE SIX INTERACTIONS ═══════════════════════════════════════════
      One block, applied by class to the pages that already exist, so no page
@@ -699,6 +757,19 @@
   .page-topbar.topbar-empty { margin-bottom: 1.2rem; }
   .page-topbar .clock-card { margin-left: auto; }
   .page-topbar .page-back { margin-bottom: 0; }
+  /* A breadcrumb rather than a back button: it says where you are as well as
+     where back goes, and it is a line of text instead of a 48px amber pill
+     that was the loudest thing on pages whose job is elsewhere. */
+  .crumbs { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--text-3); min-width: 0; }
+  .crumbs button { background: none; border: none; color: var(--text-3); font-family: inherit;
+    font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 4px 0;
+    border-bottom: 1px solid transparent; transition: color .15s, border-color .15s; }
+  .crumbs button:hover { color: var(--teal-text); border-bottom-color: var(--teal-text); }
+  .crumbs button:focus-visible { outline: 2px solid var(--teal-text); outline-offset: 2px; border-radius: 3px; }
+  .crumbs .crumb-sep { color: var(--border-md); }
+  .crumbs .crumb-here { color: var(--text); font-weight: 600; }
+
   .page-back { font-size: 13px; font-weight: 500; border-radius: 20px; padding: 7px 15px 7px 11px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; transition: all 0.15s; border: 1.5px solid transparent; }
   .page-back i { font-size: 15px; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
   .page-back:hover { opacity: 0.82; transform: translateX(-2px); }
@@ -2165,8 +2236,17 @@
   .del-row-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 5px; font-size: 14px; display: flex; align-items: center; }
   .del-row-btn:hover { color: var(--coral-text); background: var(--coral-bg); }
   /* Primary CTA tier — the one button per page/modal that actually does the main job (generate, save, add, copy result). Rich gradient + colored glow + press feedback marks it as the "main" action, distinct from secondary/utility buttons. */
-  .generate-btn { position: relative; width: 100%; padding: 12px; font-size: 14px; font-weight: 600; font-family: inherit; background: linear-gradient(135deg, color-mix(in srgb, var(--teal) 100%, white 22%), var(--teal) 55%, color-mix(in srgb, var(--teal) 100%, black 18%)); color: white; border: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px color-mix(in srgb, var(--teal) 100%, transparent 65%), inset 0 1px 0 rgba(255,255,255,0.18); transition: transform 0.15s, box-shadow 0.15s, filter 0.15s; margin-bottom: 16px; }
-  .generate-btn:hover { filter: brightness(1.08); box-shadow: 0 6px 20px color-mix(in srgb, var(--teal) 100%, transparent 55%), inset 0 1px 0 rgba(255,255,255,0.22); transform: translateY(-1px); }
+  /* THE PRIMARY. A pill in the accent, with the slow sheen. One per view:
+     everything else on these pages is edge-lit, below, so the single filled
+     thing on screen is the thing you came to do. The gradient slab and its
+     coloured drop shadow go - they were built when a page had one action. */
+  .generate-btn { position: relative; width: 100%; padding: 11px 20px; font-size: 13.5px;
+    font-weight: 600; font-family: inherit; background: var(--accent); color: var(--bg);
+    border: none; border-radius: 30px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 8px; box-shadow: none; overflow: hidden;
+    transition: transform 0.12s, filter 0.15s; margin-bottom: 16px; }
+  .generate-btn:hover { filter: brightness(1.08); }
+  .generate-btn:active { transform: translateY(1px); }
   .generate-btn:active { transform: translateY(0) scale(0.98); }
   .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
   .output-box { background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 20px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--text); line-height: 1.8; min-height: 120px; }
@@ -4192,13 +4272,13 @@
     .sidebar-action-row { grid-template-columns: 1fr 1fr; }
     .sidebar-action-row .sab-import { grid-column: 1 / -1; }
   }
-  .sidebar-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; font-size: 12.5px; font-weight: 700; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .15s; border: 1.5px solid; white-space: nowrap; }
-  .sidebar-action-btn.sab-task { background: var(--teal); border-color: var(--teal); color: #fff; box-shadow: 0 3px 12px rgba(74,158,232,0.35); }
-  .sidebar-action-btn.sab-task:hover { filter: brightness(1.1); }
-  .sidebar-action-btn.sab-job { background: rgba(245,164,73,0.1); border-color: rgba(245,164,73,0.45); color: #F5A449; }
-  .sidebar-action-btn.sab-job:hover { background: rgba(245,164,73,0.18); border-color: rgba(245,164,73,0.7); }
-  .sidebar-action-btn.sab-import { background: var(--green-bg); border-color: color-mix(in srgb, var(--green-text) 45%, transparent); color: var(--green-text); }
-  .sidebar-action-btn.sab-import:hover { background: color-mix(in srgb, var(--green-text) 18%, transparent); border-color: color-mix(in srgb, var(--green-text) 75%, transparent); }
+  .sidebar-action-btn { flex: 1; padding: 10px 0; font-size: 12.5px; white-space: nowrap; }
+  /* Add task is the Task Manager's primary, so it is the one filled pill in
+     this sidebar and carries the sheen; the other two are edge-lit like
+     everything else. */
+  .sidebar-action-btn.sab-task { border-radius: 30px; background: var(--accent);
+    border: 1px solid var(--accent); color: var(--bg); box-shadow: none; }
+  .sidebar-action-btn.sab-task:hover { filter: brightness(1.08); box-shadow: none; }
   /* ── Show / hide done tasks toggle ── */
   .show-done-btn { display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all .15s; flex-shrink: 0; }
   .show-done-btn:hover { color: var(--text-2); border-color: var(--text-2); }
@@ -4468,7 +4548,7 @@
 <div class="wrap">
 
   <div class="page-topbar topbar-empty">
-    <button id="page-back" class="page-back" style="display:none" onclick="goBack()"><i class="ti ti-arrow-left"></i> <span id="page-back-label">Back</span></button>
+    <nav class="crumbs" id="page-crumbs" style="display:none" aria-label="Breadcrumb"></nav>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
         <div class="cwc-section">
@@ -7243,6 +7323,26 @@ function zAnimatePage(root) {
     r.classList.add('z-rise');
     r.style.animationDelay = (60 + i * 45) + 'ms';
   });
+}
+
+// The page header's right-hand side, filled from the same source the hub
+// board reads. A page that cannot answer gets nothing there rather than a
+// row of zeroes, which would read as a result.
+function renderPageFigures(p) {
+  document.querySelectorAll('.page-figs').forEach(el => el.remove());
+  const page = document.getElementById('page-' + p);
+  if (!page || typeof hubBoardState !== 'function') return;
+  const header = page.querySelector('.header');
+  if (!header) return;
+  const st = hubBoardState(p);
+  if (!st || !st.figures || !st.figures.length) return;
+  const wrap = document.createElement('span');
+  wrap.className = 'page-figs';
+  wrap.innerHTML =
+    '<span class="page-stat" style="--sc:' + st.sc + '">' + esc(st.status) + '</span>' +
+    st.figures.map(f => '<span class="page-fig"' + (f.c ? ' style="--fc:' + f.c + '"' : '') +
+      '><b>' + esc(f.v) + '</b><span>' + esc(f.k) + '</span></span>').join('');
+  header.appendChild(wrap);
 }
 
 // ===== QUICK LINKS =====
@@ -16781,22 +16881,30 @@ function showPage(p, hub) {
   else if (hub) currentHub = hub;
   syncNavActive();
   // global back button
-  const back = document.getElementById('page-back');
-  const backLbl = document.getElementById('page-back-label');
-  const HUB_BACK_COLOR = { home:'pb-home', helpdesk:'pb-helpdesk', dispatch:'pb-helpdesk', projects:'pb-projects', personal:'pb-personal', tasks:'pb-tasks', learning:'pb-home' };
   const topbar = document.querySelector('.page-topbar');
   const backHidden = p === 'home' || p === 'projdetail' || TOP_LEVEL.includes(p);
   if (topbar) topbar.classList.toggle('topbar-empty', backHidden);
-  if (back) {
-    back.classList.remove('pb-home','pb-helpdesk','pb-projects','pb-personal','pb-tasks');
+  const crumbs = document.getElementById('page-crumbs');
+  if (crumbs) {
     if (backHidden) {
-      back.style.display = 'none';
+      crumbs.style.display = 'none';
     } else {
-      back.style.display = 'inline-flex';
-      backLbl.textContent = currentHub && HUB_META[currentHub] ? 'Back to ' + HUB_META[currentHub].title : 'Back';
-      back.classList.add(HUB_BACK_COLOR[currentHub] || 'pb-home');
+      crumbs.style.display = 'inline-flex';
+      const hub = currentHub && HUB_META[currentHub] ? currentHub : null;
+      const here = (PAGES[p] && PAGES[p].title) || (HUB_META[p] && HUB_META[p].title) || '';
+      const parts = ['<button onclick="showPage(\'home\')">Home</button>'];
+      if (hub) {
+        parts.push('<span class="crumb-sep">/</span>');
+        parts.push('<button onclick="showPage(\'' + hub + '\')">' + esc(HUB_META[hub].title) + '</button>');
+      }
+      if (here) {
+        parts.push('<span class="crumb-sep">/</span>');
+        parts.push('<span class="crumb-here">' + esc(here) + '</span>');
+      }
+      crumbs.innerHTML = parts.join('');
     }
   }
+  if (typeof renderPageFigures === 'function') renderPageFigures(p);
   if (typeof updatePomoFloat === 'function') updatePomoFloat();
   if (p === 'home' && typeof renderHomeDashboard === 'function') renderHomeDashboard();
   if (p === 'home' && typeof initHome === 'function') initHome();
@@ -25458,6 +25566,9 @@ const TOOL_RAN_BY = { alRun: 'alloccheck', alValRun: 'allocvalidate', stkRun: 's
   window[fn] = function () {
     const out = orig.apply(this, arguments);
     if (typeof TOOL_RAN === 'object') TOOL_RAN[TOOL_RAN_BY[fn]] = Date.now();
+    if (typeof renderPageFigures === 'function' && typeof currentPage !== 'undefined') {
+      renderPageFigures(currentPage);
+    }
     if (typeof zAnimatePage === 'function') requestAnimationFrame(() => zAnimatePage());
     return out;
   };
