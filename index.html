@@ -503,17 +503,12 @@
      collapsing the cube into a flat rotating rectangle. */
   @property --nc-c1 { syntax: '<color>'; inherits: true; initial-value: #378ADD; }
   @property --nc-c2 { syntax: '<color>'; inherits: true; initial-value: #7F77DD; }
-  .nav-cube { width: 28px; height: 28px; position: relative; transform-style: preserve-3d; --nc-c1:#378ADD; --nc-c2:#7F77DD; animation: navCubeSpin 9s linear infinite, navCubeColor 8s ease-in-out infinite; }
-  .nav-cube-face { position: absolute; width: 28px; height: 28px; box-sizing: border-box; border: 1px solid rgba(175,169,236,0.4); background: linear-gradient(155deg, color-mix(in srgb, var(--nc-c1) 32%, transparent), color-mix(in srgb, var(--nc-c2) 32%, transparent)); box-shadow: inset 0 0 6px rgba(255,255,255,0.1); }
-  .nav-cube-front { transform: translateZ(14px); }
-  .nav-cube-back { transform: rotateY(180deg) translateZ(14px); }
-  .nav-cube-right { transform: rotateY(90deg) translateZ(14px); }
-  .nav-cube-left { transform: rotateY(-90deg) translateZ(14px); }
-  .nav-cube-top { transform: rotateX(90deg) translateZ(14px); }
-  .nav-cube-bottom { transform: rotateX(-90deg) translateZ(14px); }
-  @keyframes navCubeSpin { from { transform: rotateX(-12deg) rotateY(0deg); } to { transform: rotateX(-12deg) rotateY(360deg); } }
-  @keyframes navCubeColor { 0%, 100% { --nc-c1:#378ADD; --nc-c2:#7F77DD; } 50% { --nc-c1:#7F77DD; --nc-c2:#ED93B1; } }
-  @media (prefers-reduced-motion: reduce) { .nav-cube { animation: none; } }
+  /* The mark: three plates on their own clocks, drifting. It replaces a
+     rotating translucent cube that belonged to the old palette and spun at a
+     speed nothing else in the app moved at. Drawn in the accent, so it
+     follows whichever one is picked. */
+  .nav-mark { width: 100%; height: 100%; display: block; overflow: visible; }
+  .nav-logo-icon { perspective: none; }
   .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 2px;
     flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
     scrollbar-width: none; -ms-overflow-style: none; }
@@ -555,15 +550,7 @@
   /* The Melbourne clock and weather stay exactly where they have always
      been - bottom of the nav, under Settings. Collapsed it shows the time
      alone; opening the rail brings the date and the weather with it. */
-  .clock-wx-card { margin: 8px 6px 0; padding: 0; }
-  .nav .cwc-top { padding: 9px 10px; gap: 8px; }
-  .nav .cwc-section { flex: 0 1 auto; justify-content: flex-start; padding: 0; gap: 7px; }
-  .nav .cwc-time-val { font-size: 17px; font-weight: 600; }
-  .nav .cwc-ampm { font-size: 9px; }
-  .nav .cwc-weekday { font-size: 11px; }
-  .nav .cwc-day { font-size: 10px; }
-  .nav .cwc-divider { height: 20px; margin: 0 2px; }
-  .nav .cwc-bar-track { margin: 0 10px 8px; }
+
   .nav .cwc-top { flex-wrap: nowrap; }
   .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-divider,
   .nav:not(:hover):not(.rail-pin):not(:focus-within) .cwc-date,
@@ -709,7 +696,7 @@
 
   /* GLOBAL BACK BUTTON */
   .page-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; flex-wrap: wrap; }
-  .page-topbar.topbar-empty { margin-bottom: 0; }
+  .page-topbar.topbar-empty { margin-bottom: 1.2rem; }
   .page-topbar .clock-card { margin-left: auto; }
   .page-topbar .page-back { margin-bottom: 0; }
   .page-back { font-size: 13px; font-weight: 500; border-radius: 20px; padding: 7px 15px 7px 11px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1.2rem; transition: all 0.15s; border: 1.5px solid transparent; }
@@ -1624,35 +1611,47 @@
   .eod-pickdate input[type="date"] { flex: 1; min-width: 0; font-family: inherit; font-size: 12px; color: var(--text); background: var(--surface2); border: 0.5px solid var(--border-md); border-radius: 8px; padding: 5px 8px; color-scheme: dark; }
 
   /* ── Nav clock + weather card (Option A) ── */
+  /* The clock, weather and date as a pill in the page's top bar. It used to
+     be a 420px-wide block, then it was squeezed into 66px of rail, and
+     neither worked. Here it has the width to carry four facts in one line on
+     every page, and the day's progress runs as a hairline along the bottom
+     edge rather than taking a row of its own. */
   .clock-wx-card {
-    display: flex; flex-direction: column; align-items: stretch;
-    border-radius: 14px; border: 1.5px solid var(--border-md);
-    background: var(--surface2); overflow: hidden; min-width: 420px; flex: 1;
+    position: relative; overflow: hidden; display: flex; align-items: center;
+    border-radius: 30px; border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    margin-left: auto; min-width: 0; flex: 0 0 auto; align-self: center;
   }
-  .cwc-top { display: flex; align-items: center; gap: 0; padding: 11px 13px; }
-  .cwc-section { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; padding: 0 12px; }
+  .cwc-top { display: flex; align-items: center; gap: 11px; padding: 8px 16px; flex-wrap: nowrap; }
+  .cwc-section { flex: 0 1 auto; display: flex; align-items: center; justify-content: flex-start;
+    gap: 7px; min-width: 0; padding: 0; }
   .cwc-ico { width: 36px; height: 36px; border-radius: 10px; background: var(--teal-bg);
     color: var(--teal-text); display: flex; align-items: center; justify-content: center;
     font-size: 18px; flex-shrink: 0; }
   .cwc-time { display: flex; align-items: baseline; gap: 3px; }
-  .cwc-time-val { font-size: 26px; font-weight: 500; letter-spacing: -0.5px; color: var(--text);
+  .cwc-time-val { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 19px;
+    font-weight: 700; letter-spacing: -0.03em; color: var(--text);
     font-variant-numeric: tabular-nums; line-height: 1; }
-  .cwc-ampm { font-size: 13px; font-weight: 600; color: var(--teal-text); }
-  .cwc-divider { width: 1px; height: 28px; background: var(--border-md); flex-shrink: 0; }
-  .cwc-date { flex-direction: column; align-items: center; line-height: 1.3; }
-  .cwc-weekday { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; }
-  .cwc-day { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
-  .cwc-wx { flex: 1; flex-direction: column; gap: 2px; }
+  .cwc-ampm { font-size: 10px; font-weight: 600; color: var(--text-3); }
+  .cwc-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+  /* One line, not two. Stacking the weekday over the date made a 38px pill
+     55px tall for no information gained. */
+  .cwc-date { flex-direction: row; align-items: baseline; gap: 6px; line-height: 1; }
+  .cwc-weekday { font-size: 12px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+  .cwc-day { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+  .cwc-wx { flex: 0 1 auto; flex-direction: row; gap: 6px; }
   .cwc-wx-main { display: flex; align-items: center; gap: 7px; }
-  .cwc-wx-icon { font-size: 17px; color: var(--teal-text); flex-shrink: 0; }
-  .cwc-wx-temp { font-size: 16px; font-weight: 500; color: var(--text); flex-shrink: 0; }
-  .cwc-wx-desc { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
-  .cwc-bar-track { height: 3px; background: rgba(255,255,255,0.05); position: relative; flex-shrink: 0; }
-  .cwc-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 0 2px 2px 0;
-    background: var(--teal); opacity: 0.55; transition: width 60s linear; }
+  .cwc-wx-icon { font-size: 16px; color: var(--amber-text); flex-shrink: 0; }
+  .cwc-wx-temp { font-size: 13px; font-weight: 600; color: var(--text-2); flex-shrink: 0; }
+  .cwc-wx-desc { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+  .cwc-bar-track { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: none; }
+  .cwc-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 0;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 45%, transparent), var(--accent));
+    opacity: 1; transition: width 60s linear; }
   @media (max-width: 760px) {
-    .clock-wx-card { min-width: 0; width: 100%; border-radius: 12px; }
-    .cwc-top { padding: 8px 12px; }
+    .clock-wx-card { min-width: 0; border-radius: 30px; }
+    .cwc-top { padding: 7px 13px; gap: 9px; }
     .cwc-date { display: none; }
     .cwc-divider:not(#nav-clock-wx-divider) { display: none; }
     .cwc-time-val { font-size: 22px; }
@@ -4356,7 +4355,14 @@
 <div id="auth-gate">
   <div class="auth-gate-card">
     <div class="auth-gate-logo">
-      <div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div>
+      <div class="nav-logo-icon"><svg class="nav-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <g><path d="M24 27.97 L41 34 L24 40.03 L7 34 Z" fill="var(--accent)" fill-opacity="0.19" stroke="var(--accent)" stroke-opacity="0.95" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="2.8s" repeatCount="indefinite"/></g>
+        <g><path d="M24 17.97 L41 24 L24 30.03 L7 24 Z" fill="var(--accent)" fill-opacity="0.12" stroke="var(--accent)" stroke-opacity="0.6" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="3.3s" repeatCount="indefinite"/></g>
+        <g><path d="M24 7.97 L41 14 L24 20.03 L7 14 Z" fill="var(--accent)" fill-opacity="0.07" stroke="var(--accent)" stroke-opacity="0.34" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="3.8s" repeatCount="indefinite"/></g>
+      </svg></div>
       <span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span>
     </div>
     <div class="auth-gate-title">Sign in</div>
@@ -4390,7 +4396,14 @@
 
 <header class="mobile-topbar">
   <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
-  <button class="mobile-topbar-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
+  <button class="mobile-topbar-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><svg class="nav-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <g><path d="M24 27.97 L41 34 L24 40.03 L7 34 Z" fill="var(--accent)" fill-opacity="0.19" stroke="var(--accent)" stroke-opacity="0.95" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="2.8s" repeatCount="indefinite"/></g>
+        <g><path d="M24 17.97 L41 24 L24 30.03 L7 24 Z" fill="var(--accent)" fill-opacity="0.12" stroke="var(--accent)" stroke-opacity="0.6" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="3.3s" repeatCount="indefinite"/></g>
+        <g><path d="M24 7.97 L41 14 L24 20.03 L7 14 Z" fill="var(--accent)" fill-opacity="0.07" stroke="var(--accent)" stroke-opacity="0.34" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="3.8s" repeatCount="indefinite"/></g>
+      </svg></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
   <button class="mobile-theme-btn" onclick="toggleTheme()" aria-label="Cycle theme"><i class="ti ti-palette"></i></button>
 </header>
 
@@ -4419,7 +4432,14 @@
 </div>
 
 <nav class="nav">
-  <button class="nav-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><div class="nav-cube"><div class="nav-cube-face nav-cube-front"></div><div class="nav-cube-face nav-cube-back"></div><div class="nav-cube-face nav-cube-right"></div><div class="nav-cube-face nav-cube-left"></div><div class="nav-cube-face nav-cube-top"></div><div class="nav-cube-face nav-cube-bottom"></div></div></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
+  <button class="nav-logo nav-logo-btn" onclick="showPage('home')"><div class="nav-logo-icon"><svg class="nav-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <g><path d="M24 27.97 L41 34 L24 40.03 L7 34 Z" fill="var(--accent)" fill-opacity="0.19" stroke="var(--accent)" stroke-opacity="0.95" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="2.8s" repeatCount="indefinite"/></g>
+        <g><path d="M24 17.97 L41 24 L24 30.03 L7 24 Z" fill="var(--accent)" fill-opacity="0.12" stroke="var(--accent)" stroke-opacity="0.6" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="3.3s" repeatCount="indefinite"/></g>
+        <g><path d="M24 7.97 L41 14 L24 20.03 L7 14 Z" fill="var(--accent)" fill-opacity="0.07" stroke="var(--accent)" stroke-opacity="0.34" stroke-width="2.8" stroke-linejoin="round"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3.2; 0 0" dur="3.8s" repeatCount="indefinite"/></g>
+      </svg></div><span class="nav-wordmark">central<span class="nav-wordmark-dot">.</span></span></button>
   <button class="rail-pin-btn" id="rail-pin" onclick="toggleRailPin()" aria-pressed="false"
     title="Keep the rail open" aria-label="Keep the rail open"><i class="ti ti-pinned"></i></button>
   <div class="ql-head">
@@ -4440,6 +4460,15 @@
       <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings"></i><span>Settings</span></button>
       <button class="nav-btn" onclick="qlcOpen()" title="Choose quick links"><i class="ti ti-adjustments"></i><span>Configure</span></button>
     </div>
+  </div>
+</nav>
+
+<div id="hub-grid-bg" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <div class="page-topbar topbar-empty">
+    <button id="page-back" class="page-back" style="display:none" onclick="goBack()"><i class="ti ti-arrow-left"></i> <span id="page-back-label">Back</span></button>
     <div class="clock-wx-card" id="nav-clock-wx" title="Melbourne time">
       <div class="cwc-top">
         <div class="cwc-section">
@@ -4456,19 +4485,10 @@
         <div class="cwc-divider" id="nav-clock-wx-divider" style="display:none"></div>
         <div class="cwc-section cwc-wx" id="nav-clock-wx-row" style="display:none"></div>
       </div>
-      <div class="cwc-bar-track cwc-body-rail">
+      <div class="cwc-bar-track">
         <div class="cwc-bar-fill" id="nav-clock-bar"></div>
       </div>
     </div>
-  </div>
-</nav>
-
-<div id="hub-grid-bg" aria-hidden="true"></div>
-
-<div class="wrap">
-
-  <div class="page-topbar topbar-empty">
-    <button id="page-back" class="page-back" style="display:none" onclick="goBack()"><i class="ti ti-arrow-left"></i> <span id="page-back-label">Back</span></button>
   </div>
 
   <!-- HOME LANDING -->
@@ -15857,7 +15877,9 @@ function tickMelbClock() {
   const hm = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }); // e.g. "6:01 pm"
   const m = hm.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
   const weekday = melbFmt({ weekday: 'long' });
-  const day = melbFmt({ day: 'numeric', month: 'long', year: 'numeric' });
+  // Short month, no year: in a clock pill the year is noise, and "14 November
+  // 2026" wrapped the date onto a second line that made the pill 55px tall.
+  const day = melbFmt({ day: 'numeric', month: 'short' });
   const timeEl = document.getElementById('melb-clock-time');
   if (timeEl) {
     timeEl.textContent = m ? m[1] : hm;
