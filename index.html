@@ -427,10 +427,10 @@
   .tp-sw-main { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 5px 6px; }
   .tp-sw-line { height: 6px; border-radius: 3px; opacity: 0.6; }
   .tp-name { font-size: 11px; font-weight: 500; color: var(--text-2); text-align: center; }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 90px; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-left: 0; padding-top: 0; }
   /* Clear the fixed nav. It is 110px at its tallest, with the clock card in
      it, and the greeting was sliding underneath. */
-  .wrap { padding: 2rem 3rem 4rem; margin-left: 66px; }
+  .wrap { padding: 1.4rem 3rem 4rem; margin-left: 66px; }
 
   /* ── THE GROUND ─────────────────────────────────────────────────────
      Two fixed layers behind everything: a violet well at the bottom of the
@@ -550,7 +550,9 @@
   .nav:hover .rail-pin-btn, .nav:focus-within .rail-pin-btn, .nav.rail-pin .rail-pin-btn { opacity: 1; }
   .rail-pin-btn:hover { color: var(--text); background: var(--surface2); }
   .nav.rail-pin .rail-pin-btn { color: var(--teal-text); background: var(--teal-bg); }
-  .nav-logo { display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 600; color: var(--text); padding: 0 4px; flex-shrink: 0; }
+  /* 13px left, the same as every rail item: 6px of button margin plus 7px of
+     button padding. That is what puts the mark on the icons' centre line. */
+  .nav-logo { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; color: var(--text); padding: 0 0 12px 13px; flex-shrink: 0; }
   .nav-logo-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; perspective: 170px; }
   .nav-logo-btn { background: none; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
   .nav-logo-btn:hover { opacity: 0.8; }
@@ -675,6 +677,10 @@
     .mobile-topbar-logo .nav-logo-icon { width: 28px; height: 28px; }
     .mobile-topbar-logo .nav-wordmark { font-size: 16px; }
 
+    /* The mobile top bar is fixed, so on phones the page still has to clear
+       it - this is the only place that 90px was ever earning its keep. */
+    body { padding-top: 90px; }
+
     /* Drawer: nav reverts to a vertical sidebar layout while it's an overlay */
     .nav { width: 270px; max-width: 84vw; height: 100vh; height: 100dvh; top: 0; bottom: 0; right: auto; z-index: 70; transform: translateX(-100%);
            flex-direction: column; align-items: stretch; padding: 18px 10px calc(16px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; overflow-x: hidden; gap: 0;
@@ -753,8 +759,8 @@
   .hero-chip-val { font-size: 14px; font-weight: 500; color: var(--text); }
 
   /* GLOBAL BACK BUTTON */
-  .page-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; flex-wrap: wrap; }
-  .page-topbar.topbar-empty { margin-bottom: 1.2rem; }
+  .page-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .page-topbar.topbar-empty { margin-bottom: 0.75rem; }
   .page-topbar .clock-card { margin-left: auto; }
   .page-topbar .page-back { margin-bottom: 0; }
   /* A breadcrumb rather than a back button: it says where you are as well as
