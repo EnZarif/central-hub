@@ -210,6 +210,20 @@
     .ibx-alert-dot::after { animation: none; }
   }
 
+  /* ── OPERATOR EMAIL RUN ──────────────────────────────── */
+  .kpi-ops-progress { display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
+    padding: 9px 13px; border-radius: 10px; font-size: 12.5px; color: var(--text-2);
+    background: color-mix(in srgb, var(--amber-text) 7%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--amber-text) 26%, transparent); }
+  .kpi-ops-progress.done { background: color-mix(in srgb, var(--green-text) 7%, var(--surface));
+    border-color: color-mix(in srgb, var(--green-text) 30%, transparent); color: var(--green-text); }
+  .kpi-ops-progress i { font-size: 15px; }
+  .kpi-ops-progress b { color: var(--text); font-weight: 700; }
+  .kpi-ops-progress.done b { color: var(--green-text); }
+  .kpi-ops-progress button { margin-left: auto; }
+  .kpi-upload-row.kpi-op-sent { opacity: .62; }
+  .kpi-upload-row.kpi-op-sent:hover { opacity: 1; }
+
   /* ── CHASE LIST ────────────────────────────────────── */
   .exc-sec { margin-bottom: 20px; }
   .exc-sec-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 9px;
@@ -21147,6 +21161,104 @@ function buildKpiOpsStatusSection(email) {
 
 // Everyone in the loaded files, skipped or not. Only the settings panel wants
 // this - it has to list a skipped operator in order to offer un-skipping them.
+// ===== OPERATOR EMAIL LOG =====
+// The KPI file gets uploaded every day and the operators each get an email
+// built from it. Two things were missing from a job done that often: which
+// ones you have already done this morning, and whether a figure you are
+// about to send somebody is normal for them.
+//
+// Both come out of the same small store. Sent marks age out after a
+// fortnight; per-operator figures are kept for 90 days, which is enough to
+// say "that is low for her" without the key growing without bound.
+const KPIOPS_KEY = 'zarif_kpi_ops_log';
+const KPIOPS_SENT_KEEP = 14;
+const KPIOPS_HIST_KEEP = 90;
+// Column 2 of KPI_OPS_COLUMNS - 'Agent answer rate'. The one figure in the
+// row an operator actually gets judged on.
+const KPIOPS_RATE_COL = 2;
+
+function kpiOpsLog() { return dbGet(KPIOPS_KEY) || { sent: {}, hist: {} }; }
+
+function kpiOpsLogSave(l) {
+  const sentCut = ymd(new Date(Date.now() - KPIOPS_SENT_KEEP * 86400000));
+  const histCut = ymd(new Date(Date.now() - KPIOPS_HIST_KEEP * 86400000));
+  Object.keys(l.sent || {}).forEach(d => { if (d < sentCut) delete l.sent[d]; });
+  Object.keys(l.hist || {}).forEach(name => {
+    Object.keys(l.hist[name]).forEach(d => { if (d < histCut) delete l.hist[name][d]; });
+    if (!Object.keys(l.hist[name]).length) delete l.hist[name];
+  });
+  dbSet(KPIOPS_KEY, l);
+}
+
+function kpiOpsRate(row) {
+  const v = parseFloat(String((row || [])[KPIOPS_RATE_COL] || '').replace(/[^0-9.\-]/g, ''));
+  return isFinite(v) ? v : null;
+}
+
+function kpiOpsSentToday() {
+  return (kpiOpsLog().sent || {})[todayInputDate()] || {};
+}
+
+function kpiOpsMarkSent(name) {
+  if (!name) return;
+  const l = kpiOpsLog();
+  const d = todayInputDate();
+  l.sent = l.sent || {};
+  l.sent[d] = l.sent[d] || {};
+  if (l.sent[d][name]) return;                 // already marked, write nothing
+  l.sent[d][name] = Date.now();
+  kpiOpsLogSave(l);
+  if (typeof renderKpiOpsList === 'function') renderKpiOpsList();
+}
+
+function kpiOpsUnmarkSent(name) {
+  const l = kpiOpsLog();
+  const d = todayInputDate();
+  if (!l.sent || !l.sent[d] || !l.sent[d][name]) return;
+  delete l.sent[d][name];
+  kpiOpsLogSave(l);
+  if (typeof renderKpiOpsList === 'function') renderKpiOpsList();
+}
+
+/**
+ * Keep each operator's answer rate, and record the day's shape for the
+ * trend strip. Called whenever the list is drawn, so it costs nothing on a
+ * day already recorded.
+ */
+function kpiOpsRecord(ops) {
+  if (!ops || !ops.length) return;
+  const l = kpiOpsLog();
+  const d = todayInputDate();
+  let changed = false;
+  const rates = [];
+  ops.forEach(([name, entries]) => {
+    const r = kpiOpsRate(entries[0].row);
+    if (r === null) return;
+    rates.push(r);
+    l.hist = l.hist || {};
+    l.hist[name] = l.hist[name] || {};
+    if (l.hist[name][d] !== r) { l.hist[name][d] = r; changed = true; }
+  });
+  if (changed) kpiOpsLogSave(l);
+  if (rates.length) {
+    snapRecord('kpiops', {
+      operators: ops.length,
+      meanAnswer: Math.round(rates.reduce((a, b) => a + b, 0) / rates.length * 10) / 10,
+      lowest: Math.round(Math.min.apply(null, rates) * 10) / 10
+    });
+  }
+}
+
+/** This operator's rate today against their own last 10 recorded days. */
+function kpiOpsOwnTrend(name, rate) {
+  if (rate === null) return null;
+  const h = (kpiOpsLog().hist || {})[name] || {};
+  const past = Object.keys(h).sort().filter(d => d !== todayInputDate()).slice(-10).map(d => h[d]);
+  if (past.length < 3) return null;            // too little to call anything unusual
+  const avg = past.reduce((a, b) => a + b, 0) / past.length;
+  return { avg: Math.round(avg * 10) / 10, delta: Math.round((rate - avg) * 10) / 10, n: past.length };
+}
+
 function _kpiOpsOperatorListAll() {
   const map = new Map();
   for (const f of kpiOpsFiles) {
@@ -21185,7 +21297,28 @@ function renderKpiOpsList() {
          skipped \u2014 change that under <strong>Operator settings</strong> below.</div>`
     : '';
   if (!ops.length) { list.innerHTML = skipNote; return; }
-  list.innerHTML = ops.map(([name, entries], i) => {
+
+  // Keep today's figures, and the day's shape for the trend strip.
+  kpiOpsRecord(ops);
+  const sent = kpiOpsSentToday();
+  const nSent = ops.filter(([n]) => sent[n]).length;
+
+  // Doing the same dozen emails every morning, the thing you lose track of
+  // is where you got to - so that is the first thing the list says.
+  const progress = `<div class="kpi-ops-progress${nSent === ops.length ? ' done' : ''}">
+      <i class="ti ${nSent === ops.length ? 'ti-circle-check' : 'ti-mail-fast'}"></i>
+      <span><b>${nSent}</b> of <b>${ops.length}</b> copied today${
+        nSent === ops.length ? ' — all done' : ''}</span>
+      ${nSent ? `<button class="exc-b" style="--bc:var(--text-3)" onclick="kpiOpsResetToday()"><i class="ti ti-rotate"></i>Reset</button>` : ''}
+    </div>`;
+
+  const strip = snapStripHtml('kpiops', [
+    { key: 'meanAnswer', label: 'Mean answer rate', lower: false, pct: true },
+    { key: 'lowest',     label: 'Lowest operator',  lower: false, pct: true },
+    { key: 'operators',  label: 'Operators',        lower: false }
+  ]);
+
+  list.innerHTML = strip + progress + ops.map(([name, entries], i) => {
     const email = entries[0].row[1] || '';
     const dateSub = entries.map(e => e.dateLabel).join(' · ');
     const hasStatus = !!buildKpiOpsStatusSection(email);
@@ -21193,14 +21326,35 @@ function renderKpiOpsList() {
       ? (hasStatus ? ' · <span style="color:var(--teal-text);">+ status time</span>'
                    : ' · <span style="color:var(--text-3);">no status match</span>')
       : '';
-    return `<div class="kpi-upload-row">
+    const isSent = !!sent[name];
+
+    // Their own recent average, not a target. A figure is only worth
+    // remarking on next to what that person normally does.
+    const rate = kpiOpsRate(entries[0].row);
+    const tr = kpiOpsOwnTrend(name, rate);
+    let trendTag = '';
+    if (tr && Math.abs(tr.delta) >= 2) {
+      const down = tr.delta < 0;
+      trendTag = ` · <span style="color:var(${down ? '--coral-text' : '--green-text'});" title="Their own mean over the last ${tr.n} recorded days is ${tr.avg}%"><i class="ti ti-arrow-${down ? 'down' : 'up'}-right" style="font-size:11px"></i>${Math.abs(tr.delta)}pts vs their usual</span>`;
+    }
+
+    return `<div class="kpi-upload-row${isSent ? ' kpi-op-sent' : ''}">
       <div class="kpi-upload-info">
-        <div class="kpi-upload-name">${esc(name)}</div>
-        <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}${statusTag}</div>
+        <div class="kpi-upload-name">${isSent
+          ? '<i class="ti ti-circle-check" style="color:var(--green-text);margin-right:6px"></i>' : ''}${esc(name)}</div>
+        <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}${statusTag}${trendTag}</div>
       </div>
-      <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">Preview &amp; copy</button>
+      <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">${
+        isSent ? 'Copy again' : 'Preview &amp; copy'}</button>
     </div>`;
   }).join('') + skipNote;
+}
+
+function kpiOpsResetToday() {
+  const l = kpiOpsLog();
+  delete (l.sent || {})[todayInputDate()];
+  kpiOpsLogSave(l);
+  renderKpiOpsList();
 }
 
 function buildKpiOpsTableHtml(row, totals) {
@@ -21378,6 +21532,10 @@ function kpiOpsModalCopy() {
   copyRichText(kpiOpsCurrentHtml, kpiOpsCurrentText).then(() => {
     const btn = document.getElementById('kpi-ops-modal-copy-btn');
     btn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Copied!';
+    // Copying one of these is the act of sending it, so it is the only
+    // honest moment to record. Nothing else in the flow knows.
+    const op = _kpiOpsOperatorList()[kpiOpsCurrentIdx];
+    if (op) kpiOpsMarkSent(op[0]);
     const nextBtn = document.getElementById('kpi-ops-modal-next-btn');
     if (kpiOpsCurrentIdx < _kpiOpsOperatorList().length - 1) nextBtn.style.display = '';
   });
