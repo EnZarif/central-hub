@@ -167,6 +167,49 @@
     .board-dot::after { animation: none; }
   }
 
+  /* ── FILES WAITING ──────────────────────────────────────────────────
+     An emailed file is the one thing in this app that arrives without you
+     doing anything, so it is the one thing that has to announce itself. The
+     rail carries a count on the pages that can use it, Home carries a line,
+     and a toast fires once a session. Amber, because it is the same amber
+     the notes reader uses: something arrived that you have not read yet. */
+  .nav-ibx { margin-left: auto; flex-shrink: 0; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px; display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600;
+    color: var(--bg); background: var(--amber-text); }
+  /* While the rail is shut the count cannot fit beside a label that is not
+     there, so it becomes a dot on the corner of the icon. */
+  .nav:not(:hover):not(.rail-pin):not(:focus-within) .nav-ibx {
+    position: absolute; top: 5px; left: 28px; margin: 0; min-width: 9px; height: 9px;
+    padding: 0; font-size: 0; border: 2px solid var(--surface); }
+  .nav-btn { position: relative; }
+
+  .ibx-alert { position: relative; z-index: 1; width: 100%; display: flex; align-items: center;
+    gap: 13px; text-align: left; font-family: inherit; cursor: pointer; margin-bottom: 14px;
+    padding: 13px 16px; border-radius: 13px; color: var(--text);
+    background: color-mix(in srgb, var(--amber-text) 8%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--amber-text) 30%, transparent);
+    transition: border-color .16s, box-shadow .16s, transform .16s;
+    animation: mcardIn .5s cubic-bezier(.22,.9,.26,1) both; }
+  .ibx-alert:hover { border-color: var(--amber-text); transform: translateY(-2px);
+    box-shadow: 0 18px 34px -24px rgba(0,0,0,.9), 0 0 24px -12px var(--amber-text); }
+  .ibx-alert:focus-visible { outline: 2px solid var(--amber-text); outline-offset: 2px; }
+  .ibx-alert-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber-text);
+    position: relative; flex-shrink: 0; }
+  .ibx-alert-dot::after { content: ""; position: absolute; inset: -5px; border-radius: 50%;
+    border: 1px solid var(--amber-text); animation: ping 2s cubic-bezier(0,.5,.4,1) infinite; }
+  .ibx-alert-t { flex: 1 1 auto; min-width: 0; }
+  .ibx-alert-t b { display: block; font-size: 13.5px; font-weight: 600; color: var(--amber-text); }
+  .ibx-alert-t span { display: block; font-size: 12px; color: var(--text-3); }
+  .ibx-alert-go { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600; color: var(--amber-text); }
+  .ibx-alert-go i { transition: transform .22s cubic-bezier(.22,.9,.26,1); }
+  .ibx-alert:hover .ibx-alert-go i { transform: translateX(4px); }
+  @media (prefers-reduced-motion: reduce) {
+    .ibx-alert { animation: none; }
+    .ibx-alert-dot::after { animation: none; }
+  }
+
   /* ── STAT TILES ─────────────────────────────────────────────────────
      The verdict counts were only ever readable on the fold headers, which
      means you had to scan five collapsed rows to learn the shape of the
@@ -4605,6 +4648,7 @@
       <h1 id="home-greeting">Good evening, Zarif</h1>
       <p id="home-date">Loading…</p>
     </div>
+    <div id="home-inbox" hidden></div>
     <div id="home-briefing"></div>
     <div id="home-highlights"></div>
     <div class="mains" id="home-mains">
@@ -7431,6 +7475,8 @@ function renderQuickLinks() {
     const id = open.id.replace(/^page-/, '');
     host.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === id));
   }
+  // the rail was just rebuilt, so the counts have to go back on
+  if (typeof renderInboxAlerts === 'function') renderInboxAlerts();
 }
 
 function qlcRender() {
@@ -13249,10 +13295,111 @@ async function inboxAuto(page) {
   await inboxLoad(page, inboxFiles.indexOf(pick));
 }
 
+// ---- "Files are waiting" -------------------------------------------------
+// Knowing a file has landed should not require already being on the page
+// that can use it. This lists the bucket - a listing, not a download - and
+// counts what has not been loaded yet, so the rail and Home can say so.
+//
+// It never downloads a file just to draw a badge. A file nobody has peeked
+// yet counts as waiting without claiming which page it belongs to, and the
+// first visit to either tool fills that in properly.
+let inboxWaiting = { validator: 0, stock: 0, unknown: 0, total: 0 };
+let inboxAnnounced = false;
+
+async function inboxPoll() {
+  const zero = { validator: 0, stock: 0, unknown: 0, total: 0 };
+  try {
+    inboxStore();
+    const uid = await inboxUid();
+    if (!uid) { inboxWaiting = zero; renderInboxAlerts(); return inboxWaiting; }
+    const dir = uid + '/inbox';
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET)
+      .list(dir, { limit: 50, sortBy: { column: 'name', order: 'desc' } });
+    if (error) throw error;
+    const w = { validator: 0, stock: 0, unknown: 0, total: 0 };
+    (data || []).filter(o => o.name && !o.name.startsWith('.')).forEach(o => {
+      const path = dir + '/' + o.name;
+      const unseen = page => !inboxSeen[page + '|' + path];
+      const known = inboxIndex[path] && inboxIndex[path].fits;
+      if (!known) {
+        if (unseen('validator') || unseen('stock')) { w.unknown++; w.total++; }
+        return;
+      }
+      let any = false;
+      known.forEach(page => { if (unseen(page)) { w[page]++; any = true; } });
+      if (any) w.total++;
+    });
+    inboxWaiting = w;
+  } catch (e) {
+    // Not set up, or no session. A hub nobody has wired to email should look
+    // exactly as it always did.
+    inboxWaiting = zero;
+  }
+  renderInboxAlerts();
+  return inboxWaiting;
+}
+
+function inboxAlertText() {
+  const w = inboxWaiting;
+  if (!w.total) return '';
+  const where = [];
+  if (w.validator) where.push(w.validator + ' for the Allocation Validator');
+  if (w.stock) where.push(w.stock + ' for Stock Checks');
+  if (!where.length) where.push(w.unknown + ' not read yet');
+  const n = w.total;
+  return n + ' file' + (n !== 1 ? 's' : '') + ' waiting \u2014 ' + where.join(' \u00b7 ');
+}
+
+function renderInboxAlerts() {
+  const w = inboxWaiting;
+
+  // 1. the rail: a count on the pages that can use them
+  document.querySelectorAll('.nav-btn[data-page]').forEach(b => {
+    const p = b.dataset.page;
+    const n = p === 'allocvalidate' ? w.validator
+            : p === 'stock' ? w.stock
+            : (p === 'dispatch' ? w.total : 0);
+    let dot = b.querySelector('.nav-ibx');
+    if (!n) { if (dot) dot.remove(); return; }
+    if (!dot) {
+      dot = document.createElement('span');
+      dot.className = 'nav-ibx';
+      b.appendChild(dot);
+    }
+    dot.textContent = n;
+    dot.title = inboxAlertText();
+  });
+
+  // 2. Home: one line above the briefing, only when there is something
+  const host = document.getElementById('home-inbox');
+  if (host) {
+    if (!w.total) { host.innerHTML = ''; host.hidden = true; }
+    else {
+      host.hidden = false;
+      const go = w.validator ? 'allocvalidate' : (w.stock ? 'stock' : 'dispatch');
+      host.innerHTML = `<button class="ibx-alert" onclick="showPage('${go}','dispatch')">
+        <span class="ibx-alert-dot"></span>
+        <span class="ibx-alert-t"><b>${esc(inboxAlertText())}</b>
+          <span>Landed by email, ready to load.</span></span>
+        <span class="ibx-alert-go">Open <i class="ti ti-arrow-right"></i></span>
+      </button>`;
+    }
+  }
+
+  // 3. once a session, a toast - so a file that arrives while the Hub is open
+  //    is not something you only find by wandering onto the right page
+  if (w.total && !inboxAnnounced && typeof showToast === 'function') {
+    inboxAnnounced = true;
+    showToast('<i class="ti ti-mail-down"></i> ' + esc(inboxAlertText()), 5200);
+  }
+  if (!w.total) inboxAnnounced = false;
+}
+
 async function inboxInit(page) {
   inboxRender(page);          // paint what the last visit already knew about
   await inboxRefresh(page);
   await inboxAuto(page);
+  inboxPoll();                // the visit has just changed what is waiting
 }
 
 function stkInit() {
@@ -17424,6 +17571,7 @@ function renderHomeDashboard() {
   // The cards carry live figures, so they refresh whenever the dashboard
   // does - the data arrives after the first paint on a cold load.
   if (typeof initHome === 'function') initHome();
+  if (typeof renderInboxAlerts === 'function') renderInboxAlerts();
 }
 
 // ===== Time-of-day-aware Home ordering =====
@@ -25356,6 +25504,15 @@ async function initApp() {
   initPixoff();
   renderWeekAtAGlance();
   renderAccountSettings();
+  // The inbox is checked on arrival and then on the Apps Script's own
+  // cadence, so a file that lands while the Hub is open still turns up.
+  // Only while the tab is visible: a background tab polling storage every
+  // five minutes forever is somebody else's battery.
+  if (typeof inboxPoll === 'function') {
+    inboxPoll();
+    setInterval(() => { if (!document.hidden) inboxPoll(); }, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) inboxPoll(); });
+  }
   initWidgetReorder();
   initLocationRouting();
 }
