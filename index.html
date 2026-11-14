@@ -257,6 +257,51 @@
   .insw-lines { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
   .insw-lines b { color: var(--text-2); font-weight: 700; }
 
+  /* ── MORNING RUN ──────────────────────────────────────── */
+  .morn-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    padding: 12px 15px; border-radius: 12px; font-size: 13.5px; color: var(--text-2);
+    background: color-mix(in srgb, var(--amber-text) 7%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--amber-text) 26%, transparent); }
+  .morn-head.all { background: color-mix(in srgb, var(--green-text) 7%, var(--surface));
+    border-color: color-mix(in srgb, var(--green-text) 30%, transparent); color: var(--green-text); }
+  .morn-head i { font-size: 17px; }
+  .morn-head b { color: var(--text); font-weight: 800; }
+  .morn-head.all b { color: var(--green-text); }
+  .morn-steps { display: flex; flex-direction: column; gap: 8px; }
+  .morn-step { display: flex; align-items: center; gap: 13px; padding: 13px 15px;
+    border: 1px solid var(--border); border-left: 3px solid var(--mc, var(--border-md));
+    border-radius: 11px; background: var(--surface);
+    transition: border-color .18s, transform .18s, box-shadow .18s;
+    animation: jlItemIn .3s cubic-bezier(.22,.9,.26,1) both; }
+  .morn-step.is-done { opacity: .66; }
+  .morn-step.is-done:hover { opacity: 1; }
+  .morn-step.is-next { border-color: color-mix(in srgb, var(--mc) 45%, var(--border));
+    box-shadow: 0 0 26px -16px var(--mc); }
+  .morn-ico { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 16px;
+    color: var(--mc); background: color-mix(in srgb, var(--mc) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mc) 26%, transparent); }
+  .morn-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .morn-t { font-size: 13.5px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 8px; }
+  .morn-next { font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--mc); background: color-mix(in srgb, var(--mc) 14%, transparent);
+    border-radius: 20px; padding: 2px 7px; }
+  .morn-d { font-size: 12px; color: var(--text-3); }
+  .morn-go { flex-shrink: 0; background: transparent; border: 1px solid var(--border-md);
+    color: var(--text-2); border-radius: 8px; padding: 6px 11px; font-size: 12px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: color .15s, border-color .15s, background .15s; }
+  .morn-go:hover { color: var(--mc); border-color: var(--mc);
+    background: color-mix(in srgb, var(--mc) 10%, transparent); }
+  .morn-go i { font-size: 13px; transition: transform .2s; }
+  .morn-go:hover i { transform: translateX(3px); }
+  @media (max-width: 560px) {
+    .morn-step { flex-wrap: wrap; }
+    .morn-go { margin-left: 43px; }
+  }
+
   /* ── CHASE LIST ────────────────────────────────────── */
   .exc-sec { margin-bottom: 20px; }
   .exc-sec-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 9px;
@@ -374,7 +419,7 @@
      new markup: an icon tile in the tool's colour, the title in Archivo, and
      a rule under it that draws itself in. */
   #page-allocvalidate .header, #page-stock .header, #page-alloccheck .header,
-  #page-exceptions .header,
+  #page-exceptions .header, #page-morning .header,
   #page-kpi .header, #page-suburbcheck .header, #page-message .header,
   #page-templates .header, #page-meetings .header {
     align-items: center; gap: 14px; margin-bottom: 1.4rem;
@@ -385,6 +430,7 @@
     position: relative; overflow: hidden;
   }
   #page-allocvalidate .header::after, #page-stock .header::after, #page-exceptions .header::after,
+  #page-morning .header::after,
   #page-alloccheck .header::after, #page-kpi .header::after,
   #page-suburbcheck .header::after, #page-message .header::after,
   #page-templates .header::after, #page-meetings .header::after {
@@ -409,7 +455,7 @@
   @media (max-width: 760px) { .page-figs { margin-left: 0; width: 100%; } }
 
   #page-allocvalidate .header h1, #page-stock .header h1, #page-alloccheck .header h1,
-  #page-exceptions .header h1,
+  #page-exceptions .header h1, #page-morning .header h1,
   #page-kpi .header h1, #page-suburbcheck .header h1, #page-message .header h1,
   #page-templates .header h1, #page-meetings .header h1 {
     font-family: 'Archivo', 'Inter', system-ui, sans-serif;
@@ -417,7 +463,7 @@
   }
   /* The icon becomes a tile in the tool's own colour, matching its card. */
   #page-allocvalidate .header h1 i, #page-stock .header h1 i, #page-alloccheck .header h1 i,
-  #page-exceptions .header h1 i,
+  #page-exceptions .header h1 i, #page-morning .header h1 i,
   #page-kpi .header h1 i, #page-suburbcheck .header h1 i, #page-message .header h1 i,
   #page-templates .header h1 i, #page-meetings .header h1 i {
     width: 34px; height: 34px; border-radius: 10px; font-size: 17px;
@@ -427,6 +473,7 @@
     border: 1px solid color-mix(in srgb, var(--th, var(--teal-text)) 28%, transparent);
   }
   #page-exceptions  { --th: var(--coral-text); }
+  #page-morning     { --th: var(--amber-text); }
   #page-calldata    { --th: var(--teal-text); }
   #page-awjobs      { --th: var(--amber-text); }
   #page-standup     { --th: var(--pink-text); }
@@ -6080,6 +6127,17 @@
     <div id="stk-rules"></div>
   </div>
 
+  <!-- MORNING RUN PAGE -->
+  <div class="page" id="page-morning">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-sunrise"></i> Morning Run</h1>
+        <p>The same five steps every morning — each one works out for itself whether you have done it</p>
+      </div>
+    </div>
+    <div id="morning-body"></div>
+  </div>
+
   <!-- CHASE LIST PAGE -->
   <div class="page" id="page-exceptions">
     <div class="header">
@@ -7146,6 +7204,137 @@ function renderBackupStatus() {
          \u00b7 ${keys} keys, ~${size}KB`;
 }
 
+// ===== MORNING RUN =====
+// The same five steps every morning across five pages, with nothing holding
+// the thread between them. Interrupted at ten you had to reconstruct where
+// you were by opening each one in turn.
+//
+// Nothing here is ticked by hand, and nothing is stored. Every step works
+// out its own state from what the tools have already recorded today, which
+// is the only version that cannot drift from reality - a checklist you tick
+// yourself is just a second thing to keep up to date.
+function morningSteps() {
+  const today = todayInputDate();
+  const ran = (src) => !!(typeof snapFor === 'function' && snapFor(src)[today]);
+  const fig = (src, k) => { const d = (typeof snapFor === 'function' ? snapFor(src)[today] : null);
+                            return d && typeof d[k] === 'number' ? d[k] : null; };
+
+  const steps = [];
+
+  // 1. has the file arrived, and has it been loaded
+  const waiting = (typeof inboxWaitList !== 'undefined' ? inboxWaitList : []).length;
+  const pollOk = typeof inboxPollOk !== 'undefined' ? inboxPollOk : false;
+  steps.push({
+    key: 'files', title: 'This morning\u2019s file', page: 'dispatch', ico: 'ti-mail-down',
+    state: !pollOk ? 'unknown' : waiting ? 'todo' : (ran('validator') || ran('stock')) ? 'done' : 'waiting',
+    line: !pollOk ? 'Cannot see the inbox right now'
+        : waiting ? `${waiting} file${waiting !== 1 ? 's' : ''} waiting to be loaded`
+        : (ran('validator') || ran('stock')) ? 'Loaded \u2014 the tools have run off it'
+        : 'Nothing waiting. If the report has not arrived yet it lands by about 09:40.',
+    go: waiting ? "showPage('allocvalidate','dispatch')" : null,
+    goLabel: 'Load it'
+  });
+
+  // 2 and 3. the two tools
+  const flagged = fig('validator', 'flagged');
+  steps.push({
+    key: 'validator', title: 'Allocation Validator', page: 'allocvalidate', ico: 'ti-shield-check',
+    state: ran('validator') ? 'done' : 'todo',
+    line: ran('validator')
+      ? (flagged ? `${flagged} job${flagged !== 1 ? 's' : ''} flagged` : 'Everything agreed')
+      : 'Not run yet today',
+    go: "showPage('allocvalidate','dispatch')", goLabel: ran('validator') ? 'Open' : 'Run it'
+  });
+
+  const parts = fig('stock', 'shown');
+  steps.push({
+    key: 'stock', title: 'Stock Checks', page: 'stock', ico: 'ti-package',
+    state: ran('stock') ? 'done' : 'todo',
+    line: ran('stock')
+      ? (parts ? `${parts} job${parts !== 1 ? 's' : ''} waiting on a part` : 'Nothing waiting on parts')
+      : 'Not run yet today',
+    go: "showPage('stock','dispatch')", goLabel: ran('stock') ? 'Open' : 'Run it'
+  });
+
+  // 4. everything flagged, triaged. "New" is the only state that is yours to
+  // clear - chasing and waiting are already decisions.
+  const c = (typeof excCounts === 'function') ? excCounts() : null;
+  const untriaged = c ? c.new : 0;
+  steps.push({
+    key: 'chase', title: 'Chase List', page: 'exceptions', ico: 'ti-list-check',
+    state: !c ? 'unknown' : untriaged ? 'todo' : c.open ? 'done' : 'done',
+    line: !c ? '\u2014'
+      : untriaged ? `${untriaged} flagged job${untriaged !== 1 ? 's' : ''} you have not looked at`
+      : c.open ? `Nothing new \u2014 ${c.open} still in hand${c.stale ? `, ${c.stale} open 3+ days` : ''}`
+      : 'Nothing outstanding',
+    go: "showPage('exceptions','dispatch')", goLabel: untriaged ? 'Triage' : 'Open'
+  });
+
+  // 5. the operator run. The expected count comes from the snapshot rather
+  // than the loaded file, so this still knows the answer after a reload.
+  const sent = (typeof kpiOpsSentToday === 'function') ? Object.keys(kpiOpsSentToday()).length : 0;
+  const expected = fig('kpiops', 'operators');
+  steps.push({
+    key: 'ops', title: 'Operator emails', page: 'kpi', ico: 'ti-mail-fast',
+    state: expected === null ? (sent ? 'done' : 'todo')
+         : sent >= expected ? 'done' : sent ? 'part' : 'todo',
+    line: expected === null
+      ? (sent ? `${sent} sent today` : 'KPI file not loaded yet today')
+      : `${sent} of ${expected} sent`,
+    go: "showPage('kpi','helpdesk')", goLabel: sent ? 'Carry on' : 'Start'
+  });
+
+  return steps;
+}
+
+const MORNING_STATE = {
+  done:    { ico: 'ti-circle-check',     tone: 'green',  label: 'done' },
+  part:    { ico: 'ti-progress',         tone: 'amber',  label: 'part way' },
+  todo:    { ico: 'ti-circle',           tone: 'text-3', label: 'to do' },
+  waiting: { ico: 'ti-clock',            tone: 'text-3', label: 'waiting' },
+  unknown: { ico: 'ti-help-circle',      tone: 'text-3', label: 'unknown' }
+};
+
+function renderMorning() {
+  const body = document.getElementById('morning-body');
+  if (!body) return;
+  const steps = morningSteps();
+  const done = steps.filter(s => s.state === 'done').length;
+  const nextIx = steps.findIndex(s => s.state === 'todo' || s.state === 'part');
+
+  const tone = t => t === 'text-3' ? 'var(--text-3)' : 'var(--' + t + '-text)';
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'this morning' : hour < 17 ? 'today' : 'today';
+
+  const head = `<div class="morn-head${done === steps.length ? ' all' : ''}">
+      <i class="ti ${done === steps.length ? 'ti-circle-check' : 'ti-sunrise'}"></i>
+      <span><b>${done}</b> of <b>${steps.length}</b> done ${esc(greet)}${
+        done === steps.length ? ' \u2014 the run is finished' : ''}</span>
+    </div>`;
+
+  const rows = steps.map((st, i) => {
+    const m = MORNING_STATE[st.state] || MORNING_STATE.todo;
+    const isNext = i === nextIx;
+    return `<div class="morn-step${st.state === 'done' ? ' is-done' : ''}${isNext ? ' is-next' : ''}"
+        style="--mc:${tone(m.tone)}">
+      <span class="morn-ico"><i class="ti ${m.ico}"></i></span>
+      <span class="morn-main">
+        <span class="morn-t">${esc(st.title)}${isNext ? '<span class="morn-next">next</span>' : ''}</span>
+        <span class="morn-d">${esc(st.line)}</span>
+      </span>
+      ${st.go ? `<button class="morn-go" onclick="${st.go}">${esc(st.goLabel)}
+        <i class="ti ti-arrow-right"></i></button>` : ''}
+    </div>`;
+  }).join('');
+
+  body.innerHTML = head + '<div class="morn-steps">' + rows + '</div>';
+
+  if (typeof renderPageFigures === 'function'
+      && document.querySelector('.page.active')?.id === 'page-morning') {
+    renderPageFigures('morning');
+  }
+}
+
 // ===== EXCEPTION QUEUE =====
 // The validator and the stock check are both stateless: they read this
 // morning's export and tell you what is wrong with it. Neither can tell you
@@ -7237,6 +7426,7 @@ function excSync(src, items, opts) {
   if (!changed) return;
   excSave(m);
   if (typeof renderExceptions === 'function') renderExceptions();
+  if (typeof renderMorning === 'function') renderMorning();
   if (typeof renderInboxAlerts === 'function') renderInboxAlerts();
 }
 
@@ -7253,6 +7443,7 @@ function excSetStatus(key, status) {
   if (status === 'done') m[key].doneDay = todayInputDate(); else delete m[key].doneDay;
   excSave(m);
   renderExceptions();
+  if (typeof renderMorning === 'function') renderMorning();
   const verb = status === 'ok' ? 'Suppressed — it will stop being raised'
              : status === 'done' ? 'Marked resolved'
              : 'Marked ' + EXC_STATUS[status].label.toLowerCase();
@@ -17868,6 +18059,7 @@ const PAGES = {
   projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
   allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
   stock:          { title:'Stock Checks',      icon:'ti-package',          color:'c-green',  desc:'Replacement jobs from a file, each with the warehouse stock link for that part at that technician.' },
+  morning:        { title:'Morning Run',       icon:'ti-sunrise',          color:'c-amber',  desc:'The same five steps every morning, each one knowing whether you have already done it today.' },
   exceptions:     { title:'Chase List',        icon:'ti-list-check',       color:'c-coral',  desc:'Everything the validator and stock check flagged, carrying what you already decided about each one.' },
 };
 // Dispatch is its own hub now. The validator, the lookup and the stock
@@ -17884,11 +18076,11 @@ const HUB_META = {
 };
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','message','meetings','templates','suburbcheck'],
-  dispatch: ['exceptions','allocvalidate','stock','alloccheck'],
+  dispatch: ['morning','exceptions','allocvalidate','stock','alloccheck'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
-const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions'];
+const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions','morning'];
 const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -17948,7 +18140,8 @@ const HUB_SEEDS = [
   { id: 'notes',        hub: 'personal', page: 'notes' },
   { id: 'learning',     hub: 'personal', page: 'learning' },
   { id: 'suburbcheck',  hub: 'helpdesk', page: 'suburbcheck' },
-  { id: 'projanalysis', hub: 'projects', page: 'projanalysis', first: true }
+  { id: 'projanalysis', hub: 'projects', page: 'projanalysis', first: true },
+  { id: 'morning',      hub: 'dispatch', page: 'morning', first: true }
 ];
 
 function applyHubSeeds(layout) {
@@ -18009,6 +18202,16 @@ function hubBoardState(p) {
       const parts = new Set(shown.filter(h => h.loc && h.model).map(h => stkTerm(h.model).toLowerCase())).size;
       return { status: `${shown.length} waiting`, sc: 'var(--amber-text)',
         figures: [F(shown.length, 'jobs'), F(parts, 'parts'), F(notes, 'notes', 'var(--amber-text)')] };
+    }
+    if (p === 'morning' && typeof morningSteps === 'function') {
+      const st = morningSteps();
+      const d = st.filter(x => x.state === 'done').length;
+      return {
+        status: d === st.length ? 'finished' : `${d} of ${st.length}`,
+        sc: d === st.length ? 'var(--green-text)' : 'var(--amber-text)',
+        figures: [F(d, 'done', d === st.length ? 'var(--green-text)' : undefined),
+                  F(st.length - d, 'left', st.length - d ? 'var(--amber-text)' : undefined)]
+      };
     }
     if (p === 'exceptions' && typeof excCounts === 'function') {
       const c = excCounts();
@@ -21619,6 +21822,7 @@ function kpiOpsMarkSent(name) {
   if (typeof logActivity === 'function') logActivity('opsmail', name);
   kpiOpsLogSave(l);
   if (typeof renderKpiOpsList === 'function') renderKpiOpsList();
+  if (typeof renderMorning === 'function') renderMorning();
 }
 
 function kpiOpsUnmarkSent(name) {
@@ -26398,6 +26602,7 @@ async function initApp() {
   renderKpiPage();
   renderKpiNicknames();
   renderExceptions();
+  renderMorning();
   renderTasks();
   renderKbFact();
   startKbRotation();
