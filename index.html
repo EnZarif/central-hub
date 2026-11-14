@@ -6307,6 +6307,27 @@
         <i class="ti ti-chevron-down s-chev"></i>
       </div>
       <div class="s-body" id="s-data">
+        <div class="ai-hint" id="backup-status"></div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Download a backup</div>
+            <div class="settings-row-desc">Every key in the Hub as one JSON file. A copy on disk survives the account going away.</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <button class="settings-save-btn" onclick="backupDownload()"><i class="ti ti-download"></i> Download</button>
+            <button class="settings-save-btn" onclick="backupToStorage(true)" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-cloud-upload"></i> Back up now</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Restore from a backup</div>
+            <div class="settings-row-desc">Replaces the keys the file contains and leaves the rest alone. Asks before it does anything.</div>
+          </div>
+          <div class="settings-row-ctrl">
+            <input type="file" id="backup-restore-input" accept=".json" style="display:none" onchange="backupRestore(this.files[0]); this.value='';">
+            <button class="settings-save-btn" onclick="document.getElementById('backup-restore-input').click()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-database-import"></i> Choose file</button>
+          </div>
+        </div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">Save appearance &amp; profile settings</div>
@@ -6953,6 +6974,151 @@ function dbSet(key, value) {
 function dbDel(key) {
   delete _db[key];
   _sb.from('hub_data').delete().eq('key', key).then(() => {});
+}
+
+// ===== BACKUP =====
+// Every piece of Hub data is one row per key in a single Supabase table on
+// a single account, and until now there was no copy of it anywhere. That
+// was survivable while the Hub only held tasks and notes you could retype.
+// It stopped being survivable once it started holding things you cannot:
+// months of daily figures, and judgements about jobs that exist nowhere
+// else.
+//
+// Two copies, because they fail differently. The file download survives the
+// account going away; the bucket copy survives you not remembering to press
+// anything. The bucket is the same imports bucket the email pipeline uses -
+// its RLS already keys on the uid being the first path segment.
+const BACKUP_DIR = 'backups';
+const BACKUP_KEEP = 30;
+const BACKUP_MARK = 'zarif_last_backup';
+
+/** Everything, exactly as stored, plus enough to know what it came from. */
+function backupPayload() {
+  return {
+    kind: 'zarif-hub-backup',
+    version: 1,
+    takenAt: new Date().toISOString(),
+    appVersion: (typeof CHANGELOG !== 'undefined' && CHANGELOG[0]) ? CHANGELOG[0].ver : '',
+    keys: Object.keys(_db).length,
+    data: JSON.parse(JSON.stringify(_db))
+  };
+}
+
+function backupFileName() {
+  return 'hub-backup-' + ymd(new Date()) + '.json';
+}
+
+/** A copy on your own disk. Nothing to configure and nothing to go wrong. */
+function backupDownload() {
+  try {
+    const blob = new Blob([JSON.stringify(backupPayload(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = backupFileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    showToast('<i class="ti ti-download"></i>Backup downloaded \u2014 ' + Object.keys(_db).length + ' keys');
+  } catch (e) {
+    showToast('<i class="ti ti-alert-triangle"></i>Could not build the backup: ' + esc(e.message));
+  }
+}
+
+/**
+ * The automatic copy. Once a day, on load, quietly - a backup you have to
+ * remember to take is one you will not have when it matters.
+ */
+async function backupToStorage(force) {
+  try {
+    const uid = await inboxUid();
+    if (!uid) return null;
+    const today = ymd(new Date());
+    if (!force && dbGet(BACKUP_MARK) === today) return null;   // already today
+
+    const path = uid + '/' + BACKUP_DIR + '/' + backupFileName();
+    const body = new Blob([JSON.stringify(backupPayload())], { type: 'application/json' });
+    const { error } = await _sb.storage.from(INBOX_BUCKET)
+      .upload(path, body, { upsert: true, contentType: 'application/json' });
+    if (error) throw error;
+
+    dbSet(BACKUP_MARK, today);
+    backupPrune(uid);                       // not awaited: tidying is not the job
+    renderBackupStatus();
+    return path;
+  } catch (e) {
+    console.warn('[backup] failed', e);
+    return null;
+  }
+}
+
+/** Keep a month. Older ones are of no use and storage is not free forever. */
+async function backupPrune(uid) {
+  try {
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET)
+      .list(uid + '/' + BACKUP_DIR, { limit: 200, sortBy: { column: 'name', order: 'desc' } });
+    if (error || !data) return;
+    const old = data.filter(o => o.name && !o.name.startsWith('.')).slice(BACKUP_KEEP);
+    if (!old.length) return;
+    await _sb.storage.from(INBOX_BUCKET)
+      .remove(old.map(o => uid + '/' + BACKUP_DIR + '/' + o.name));
+  } catch (e) { /* tidying is allowed to fail quietly */ }
+}
+
+async function backupList() {
+  try {
+    const uid = await inboxUid();
+    if (!uid) return [];
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET)
+      .list(uid + '/' + BACKUP_DIR, { limit: 50, sortBy: { column: 'name', order: 'desc' } });
+    if (error || !data) return [];
+    return data.filter(o => o.name && !o.name.startsWith('.'));
+  } catch (e) { return []; }
+}
+
+/**
+ * Restore from a file you choose.
+ *
+ * This replaces keys rather than wiping first: a backup that is missing a
+ * key should not take that key away, because the commonest reason to
+ * restore is that one thing broke, not that everything did. Clearing
+ * everything is a separate button that already exists and says so.
+ */
+function backupRestore(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let payload;
+    try { payload = JSON.parse(reader.result); }
+    catch (e) { alert('That file is not valid JSON.'); return; }
+    if (!payload || payload.kind !== 'zarif-hub-backup' || !payload.data) {
+      alert('That does not look like a Hub backup.'); return;
+    }
+    const keys = Object.keys(payload.data);
+    const when = payload.takenAt ? new Date(payload.takenAt).toLocaleString('en-AU') : 'an unknown time';
+    if (!confirm('Restore ' + keys.length + ' keys from the backup taken ' + when + '?\n\n'
+      + 'Anything in the backup replaces what is here now. Keys not in the backup are left alone.\n\n'
+      + 'This cannot be undone - take a backup first if you are not sure.')) return;
+
+    keys.forEach(k => dbSet(k, payload.data[k]));
+    showToast('<i class="ti ti-database-import"></i>Restored ' + keys.length + ' keys \u2014 reloading');
+    setTimeout(() => location.reload(), 1200);
+  };
+  reader.readAsText(file);
+}
+
+function renderBackupStatus() {
+  const el = document.getElementById('backup-status');
+  if (!el) return;
+  const last = dbGet(BACKUP_MARK);
+  const keys = Object.keys(_db).length;
+  const size = Math.round(JSON.stringify(_db).length / 1024);
+  el.innerHTML = last === ymd(new Date())
+    ? `<span style="color:var(--green-text)"><i class="ti ti-circle-check"></i> Backed up today</span>
+       \u00b7 ${keys} keys, ~${size}KB`
+    : last
+      ? `<span style="color:var(--amber-text)"><i class="ti ti-alert-triangle"></i> Last backup ${esc(last)}</span>
+         \u00b7 ${keys} keys, ~${size}KB`
+      : `<span style="color:var(--amber-text)"><i class="ti ti-alert-triangle"></i> Never backed up</span>
+         \u00b7 ${keys} keys, ~${size}KB`;
 }
 
 // ===== EXCEPTION QUEUE =====
@@ -26081,6 +26247,10 @@ async function initApp() {
   _globeLoaderActive = false;
 
   loadSettings();
+  // Once a day, on load, without being asked. A backup you have to remember
+  // to take is the one you will not have when it matters.
+  backupToStorage();
+  renderBackupStatus();
   loadWeatherSettings();
   renderHomeWeather();
   // The panel footer says "updates every 30 min" and fetchWeather buckets on
