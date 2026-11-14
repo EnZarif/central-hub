@@ -13330,10 +13330,11 @@ async function inboxPoll() {
       const unseen = page => !inboxSeen[page + '|' + path];
       const known = inboxIndex[path] && inboxIndex[path].fits;
       const file = inboxNiceName(o.name);
+      const day = inboxStampDay(o.name);
       if (!known) {
         if (unseen('validator') || unseen('stock')) {
           w.unknown++; w.total++;
-          list.push({ key: inboxKey(path, ''), path, file, page: '' });
+          list.push({ key: inboxKey(path, ''), path, file, day, page: '' });
         }
         return;
       }
@@ -13341,7 +13342,7 @@ async function inboxPoll() {
       known.forEach(page => {
         if (!unseen(page)) return;
         w[page]++; any = true;
-        list.push({ key: inboxKey(path, page), path, file, page });
+        list.push({ key: inboxKey(path, page), path, file, day, page });
       });
       if (any) w.total++;
     });
@@ -13364,6 +13365,14 @@ async function inboxPoll() {
 function inboxNiceName(name) {
   const ix = String(name || '').indexOf('__');
   return ix === -1 ? String(name || '') : String(name).slice(ix + 2);
+}
+
+// The same stamp, read as a day. Which day a file is from only started
+// mattering once the reports began arriving every morning: two days of an
+// unread report are two tasks with the same name otherwise.
+function inboxStampDay(name) {
+  const m = String(name || '').match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  return m ? m[1] + '-' + m[2] + '-' + m[3] : '';
 }
 
 // A task id has to survive being written into an onclick attribute, and has to
@@ -13399,6 +13408,19 @@ function inboxAlertText() {
 // so these clear themselves instead of needing to be ticked off.
 const IBX_TASK_PAGE  = { validator: 'allocvalidate', stock: 'stock', '': 'dispatch' };
 const IBX_TASK_LABEL = { validator: 'Allocation Validator', stock: 'Stock Checks', '': 'Dispatch' };
+
+// Today's report is just "the report" - saying the date would be noise on the
+// one task where it is obvious. Yesterday's, still sitting there unread, has
+// to say so, or two mornings of the same report are two identical rows.
+function inboxTaskName(f) {
+  const label = IBX_TASK_LABEL[f.page] || 'Dispatch';
+  const base = 'Review emailed file \u2014 ' + label;
+  if (!f.day || f.day === todayInputDate()) return base;
+  const d = new Date(f.day + 'T00:00:00');
+  if (isNaN(d)) return base;
+  const when = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+  return base + ' (' + when + ')';
+}
 let _ibxSyncing = false;
 
 function inboxSyncTasks() {
@@ -13420,7 +13442,16 @@ function inboxSyncTasks() {
     changed = true;
   }
 
-  // new: one per waiting file, dated today so it sits in today's list
+  // still here tomorrow: the name has to start saying which day it is from
+  customTasks.forEach(t => {
+    if (!t.inboxTask) return;
+    const f = want.get(String(t.id));
+    if (!f) return;
+    const name = inboxTaskName(f);
+    if (t.name !== name) { t.name = name; changed = true; }
+  });
+
+  // new: one per waiting file, dated the day it arrived
   const have = new Set(customTasks.filter(t => t.inboxTask).map(t => String(t.id)));
   want.forEach((f, key) => {
     if (have.has(key)) return;
@@ -13428,10 +13459,10 @@ function inboxSyncTasks() {
     customTasks.push({
       id: key,
       freq: 'date',
-      date: todayInputDate(),
+      date: f.day || todayInputDate(),
       time: '',
       priority: 'MEDIUM',
-      name: 'Review emailed file \u2014 ' + label,
+      name: inboxTaskName(f),
       days: 'all',
       assignees: ['Me'],
       note: f.file + '\nArrived by email. Opens ' + label + ', where it loads with one click.',

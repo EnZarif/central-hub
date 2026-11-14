@@ -36,6 +36,22 @@ var SEARCH        = 'label:hub-import has:attachment newer_than:7d';
 var DONE_LABEL    = 'hub-done';
 var MAX_BYTES     = 15 * 1024 * 1024;
 var KEEP_SEEN     = 300;
+/**
+ * How far back a message can be and still be worth uploading.
+ *
+ * This exists because the daily reports all share a subject, so Gmail files
+ * them into one long-running thread. The search matches that thread while it
+ * has anything recent in it, and getMessages() then hands back the WHOLE
+ * thread - months of it. The seen list is what stops those being re-uploaded,
+ * but it only holds KEEP_SEEN ids, so once the thread is longer than that the
+ * oldest ids fall off the end and their messages look new again.
+ *
+ * Nothing breaks when that happens - the upload is keyed on the message date
+ * and upserts, so it overwrites the same object rather than making a second
+ * copy - but it re-sends old attachments every five minutes for no reason.
+ * An age cut-off makes the eviction harmless instead of merely survivable.
+ */
+var MAX_AGE_DAYS  = 14;
 var OK_EXTENSION  = /\.(csv|xlsx|xls)$/i;
 
 /** Run this once to schedule the pickup. */
@@ -67,6 +83,8 @@ function ingest() {
     thread.getMessages().forEach(function (msg) {
       var id = msg.getId();
       if (seen[id]) return;
+      // Old message inside a still-active thread - see MAX_AGE_DAYS.
+      if (Date.now() - msg.getDate().getTime() > MAX_AGE_DAYS * 86400000) return;
 
       var any = false;
       msg.getAttachments({ includeInlineImages: false }).forEach(function (att) {
