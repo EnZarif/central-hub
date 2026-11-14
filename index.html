@@ -210,6 +210,46 @@
     .ibx-alert-dot::after { animation: none; }
   }
 
+  /* ── CHASE LIST ────────────────────────────────────── */
+  .exc-sec { margin-bottom: 20px; }
+  .exc-sec-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 9px;
+    font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--text-3); }
+  .exc-sec-hd b { color: var(--text-2); font-weight: 700; }
+  .exc-row { display: flex; align-items: flex-start; gap: 12px; padding: 11px 13px;
+    border: 1px solid var(--border); border-left: 3px solid var(--ec, var(--border-md));
+    border-radius: 10px; background: var(--surface); margin-bottom: 7px;
+    animation: jlItemIn .28s cubic-bezier(.22,.9,.26,1) both; }
+  .exc-row:hover { border-color: var(--border-md); border-left-color: var(--ec, var(--border-md)); }
+  .exc-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .exc-sum { font-size: 13px; font-weight: 600; color: var(--text); }
+  .exc-det { font-size: 11.5px; color: var(--text-3); }
+  .exc-age { font-size: 10.5px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+  .exc-age.stale { color: var(--amber-text); font-weight: 600; }
+  .exc-acts { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .exc-b { background: transparent; border: 1px solid var(--border-md); color: var(--text-3);
+    border-radius: 7px; padding: 4px 8px; font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: color .14s, border-color .14s, background .14s;
+    display: inline-flex; align-items: center; gap: 4px; }
+  .exc-b:hover { color: var(--bc, var(--text)); border-color: var(--bc, var(--border-md));
+    background: color-mix(in srgb, var(--bc, var(--text)) 9%, transparent); }
+  .exc-b.on { color: var(--bc); border-color: var(--bc);
+    background: color-mix(in srgb, var(--bc) 13%, transparent); }
+  .exc-job { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px;
+    color: var(--text-3); flex-shrink: 0; padding-top: 2px; min-width: 56px; }
+  .exc-job a { color: var(--teal-text); text-decoration: none; }
+  .exc-job a:hover { text-decoration: underline; }
+  .exc-empty { padding: 30px 20px; text-align: center; color: var(--text-3); font-size: 13px;
+    border: 1px dashed var(--border-md); border-radius: 12px; }
+  .exc-empty i { display: block; font-size: 26px; margin-bottom: 9px; color: var(--green-text); }
+  .exc-fold { border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+    margin-bottom: 8px; overflow: hidden; }
+  .exc-fold > summary { cursor: pointer; padding: 10px 13px; font-size: 12px; color: var(--text-2);
+    display: flex; align-items: center; gap: 8px; list-style: none; }
+  .exc-fold > summary::-webkit-details-marker { display: none; }
+  .exc-fold > summary:hover { background: var(--surface2); }
+  .exc-fold-b { padding: 4px 10px 10px; }
+
   /* ── TREND STRIP ──────────────────────────────────────────
      One line above a result that says whether today is normal. Quiet on
      purpose: the list underneath is the work, this is only the context. */
@@ -287,6 +327,7 @@
      new markup: an icon tile in the tool's colour, the title in Archivo, and
      a rule under it that draws itself in. */
   #page-allocvalidate .header, #page-stock .header, #page-alloccheck .header,
+  #page-exceptions .header,
   #page-kpi .header, #page-suburbcheck .header, #page-message .header,
   #page-templates .header, #page-meetings .header {
     align-items: center; gap: 14px; margin-bottom: 1.4rem;
@@ -296,7 +337,7 @@
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     position: relative; overflow: hidden;
   }
-  #page-allocvalidate .header::after, #page-stock .header::after,
+  #page-allocvalidate .header::after, #page-stock .header::after, #page-exceptions .header::after,
   #page-alloccheck .header::after, #page-kpi .header::after,
   #page-suburbcheck .header::after, #page-message .header::after,
   #page-templates .header::after, #page-meetings .header::after {
@@ -321,6 +362,7 @@
   @media (max-width: 760px) { .page-figs { margin-left: 0; width: 100%; } }
 
   #page-allocvalidate .header h1, #page-stock .header h1, #page-alloccheck .header h1,
+  #page-exceptions .header h1,
   #page-kpi .header h1, #page-suburbcheck .header h1, #page-message .header h1,
   #page-templates .header h1, #page-meetings .header h1 {
     font-family: 'Archivo', 'Inter', system-ui, sans-serif;
@@ -328,6 +370,7 @@
   }
   /* The icon becomes a tile in the tool's own colour, matching its card. */
   #page-allocvalidate .header h1 i, #page-stock .header h1 i, #page-alloccheck .header h1 i,
+  #page-exceptions .header h1 i,
   #page-kpi .header h1 i, #page-suburbcheck .header h1 i, #page-message .header h1 i,
   #page-templates .header h1 i, #page-meetings .header h1 i {
     width: 34px; height: 34px; border-radius: 10px; font-size: 17px;
@@ -336,6 +379,7 @@
     background: color-mix(in srgb, var(--th, var(--teal-text)) 14%, transparent);
     border: 1px solid color-mix(in srgb, var(--th, var(--teal-text)) 28%, transparent);
   }
+  #page-exceptions  { --th: var(--coral-text); }
   #page-calldata    { --th: var(--teal-text); }
   #page-awjobs      { --th: var(--amber-text); }
   #page-standup     { --th: var(--pink-text); }
@@ -5966,6 +6010,17 @@
     <div id="stk-rules"></div>
   </div>
 
+  <!-- CHASE LIST PAGE -->
+  <div class="page" id="page-exceptions">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-list-check"></i> Chase List</h1>
+        <p>What the two dispatch tools flagged, carrying what you already decided about each one</p>
+      </div>
+    </div>
+    <div id="exc-body"></div>
+  </div>
+
   <!-- SETTINGS PAGE -->
   <div class="page" id="page-settings">
     <div class="header">
@@ -6852,6 +6907,230 @@ function dbSet(key, value) {
 function dbDel(key) {
   delete _db[key];
   _sb.from('hub_data').delete().eq('key', key).then(() => {});
+}
+
+// ===== EXCEPTION QUEUE =====
+// The validator and the stock check are both stateless: they read this
+// morning's export and tell you what is wrong with it. Neither can tell you
+// that you already chased a job yesterday, that you are waiting on someone,
+// or that a row flagged every single morning is in fact fine. So the same
+// list gets re-read from scratch every day, and the parts of it that never
+// change are what make people stop reading it at all.
+//
+// This keeps the state, keyed to the job rather than to the day.
+const EXC_KEY = 'zarif_exceptions';
+const EXC_DONE_KEEP_DAYS = 45;
+// 'ok' is the important one: a job you have judged to be fine stays judged,
+// and stops being raised, until you say otherwise. Everything else is a
+// stage of dealing with it.
+const EXC_STATUS = {
+  new:     { label: 'New',       ico: 'ti-alert-triangle', tone: 'coral'  },
+  chasing: { label: 'Chasing',   ico: 'ti-progress',       tone: 'amber'  },
+  waiting: { label: 'Waiting',   ico: 'ti-clock-pause',    tone: 'purple' },
+  ok:      { label: 'Known OK',  ico: 'ti-shield-check',   tone: 'text-3' },
+  done:    { label: 'Resolved',  ico: 'ti-circle-check',   tone: 'green'  }
+};
+const EXC_OPEN = ['new', 'chasing', 'waiting'];
+
+function excAll() { return dbGet(EXC_KEY) || {}; }
+function excSave(m) { dbSet(EXC_KEY, m); }
+
+/**
+ * A job's identity across days. The job number is the real one; without it
+ * the next best thing is what the row is about, because a site plus a part
+ * is still the same problem tomorrow even if the file renumbers its rows.
+ */
+function excKey(src, o) {
+  const id = String(o.jobId || '').trim();
+  const tail = id || [o.site, o.model, o.tech].map(x => String(x || '').trim()).join('~');
+  return src + '|' + tail.toLowerCase();
+}
+
+/**
+ * Reconcile one source against what it is showing right now.
+ *
+ * Same shape as the inbox task sync, and for the same reason: anything that
+ * needs you to tick it off after the work is already done is worse than
+ * nothing. An item that stops appearing in the export resolves itself.
+ */
+function excSync(src, items, opts) {
+  const o = opts || {};
+  if (!o.force && !items) return;              // tool has not run: say nothing
+  const m = excAll();
+  const today = todayInputDate();
+  const seen = new Set();
+  let changed = false;
+
+  (items || []).forEach(it => {
+    const k = excKey(src, it);
+    seen.add(k);
+    const cur = m[k];
+    if (!cur) {
+      m[k] = { src, status: 'new', job: it.jobId || '', sum: it.sum || '',
+               detail: it.detail || '', page: it.page || '', note: '',
+               first: today, last: today };
+      changed = true;
+      return;
+    }
+    // It is back. Keep the judgement, refresh what it says and when it was
+    // last seen - but a resolved job that has reappeared is open again.
+    if (cur.last !== today) { cur.last = today; changed = true; }
+    if (cur.sum !== (it.sum || '')) { cur.sum = it.sum || ''; changed = true; }
+    if (cur.detail !== (it.detail || '')) { cur.detail = it.detail || ''; changed = true; }
+    if (cur.status === 'done') { cur.status = 'new'; delete cur.doneDay; changed = true; }
+  });
+
+  // Gone from the export. Anything still open is finished with - by someone,
+  // somewhere - and should not be asked about again.
+  Object.keys(m).forEach(k => {
+    const e = m[k];
+    if (e.src !== src || seen.has(k)) return;
+    if (EXC_OPEN.includes(e.status)) {
+      e.status = 'done'; e.doneDay = today; e.auto = true; changed = true;
+    }
+  });
+
+  // Resolved items age out. Suppressions never do - they are rules, not work.
+  const cutoff = ymd(new Date(Date.now() - EXC_DONE_KEEP_DAYS * 86400000));
+  Object.keys(m).forEach(k => {
+    const e = m[k];
+    if (e.status === 'done' && (e.doneDay || e.last) < cutoff) { delete m[k]; changed = true; }
+  });
+
+  if (!changed) return;
+  excSave(m);
+  if (typeof renderExceptions === 'function') renderExceptions();
+  if (typeof renderInboxAlerts === 'function') renderInboxAlerts();
+}
+
+function excSetStatus(key, status) {
+  const m = excAll();
+  if (!m[key] || !EXC_STATUS[status]) return;
+  m[key].status = status;
+  m[key].auto = false;
+  if (status === 'done') m[key].doneDay = todayInputDate(); else delete m[key].doneDay;
+  excSave(m);
+  renderExceptions();
+  const verb = status === 'ok' ? 'Suppressed — it will stop being raised'
+             : status === 'done' ? 'Marked resolved'
+             : 'Marked ' + EXC_STATUS[status].label.toLowerCase();
+  if (typeof showToast === 'function') showToast(`<i class="ti ${EXC_STATUS[status].ico}"></i>${verb}`);
+}
+
+function excSetNote(key, note) {
+  const m = excAll();
+  if (!m[key]) return;
+  m[key].note = String(note || '').slice(0, 400);
+  excSave(m);
+}
+
+/** Open items, worst first, with suppressed and resolved kept out. */
+function excOpen() {
+  const m = excAll();
+  return Object.keys(m).map(k => Object.assign({ key: k }, m[k]))
+    .filter(e => EXC_OPEN.includes(e.status))
+    .sort((a, b) => (a.first || '').localeCompare(b.first || '') || a.key.localeCompare(b.key));
+}
+
+function excCounts() {
+  const m = excAll();
+  const c = { new: 0, chasing: 0, waiting: 0, ok: 0, done: 0, open: 0, stale: 0 };
+  const staleDay = ymd(new Date(Date.now() - 3 * 86400000));
+  Object.values(m).forEach(e => {
+    c[e.status] = (c[e.status] || 0) + 1;
+    if (EXC_OPEN.includes(e.status)) {
+      c.open++;
+      if ((e.first || '') < staleDay) c.stale++;
+    }
+  });
+  return c;
+}
+
+function excTone(t) {
+  return t === 'text-3' ? 'var(--text-3)' : 'var(--' + t + '-text)';
+}
+
+function excAgeText(e) {
+  const first = e.first || todayInputDate();
+  const days = Math.round((Date.parse(todayInputDate()) - Date.parse(first)) / 86400000);
+  if (!days || days < 1) return { t: 'first seen today', stale: false };
+  // Three days is the point at which something has stopped being today's
+  // problem and started being one you keep not getting to.
+  return { t: 'open ' + days + ' day' + (days !== 1 ? 's' : ''), stale: days >= 3 };
+}
+
+function excRowHtml(e) {
+  const st = EXC_STATUS[e.status] || EXC_STATUS.new;
+  const age = excAgeText(e);
+  const k = escAttr(e.key);
+  const btn = (status, ico, label) => {
+    const on = e.status === status;
+    return '<button class="exc-b' + (on ? ' on' : '') + '" style="--bc:' + excTone(EXC_STATUS[status].tone) + '"'
+      + ' onclick="excSetStatus(&quot;' + k + '&quot;,&quot;' + status + '&quot;)"'
+      + ' title="' + escAttr(label) + '"><i class="ti ' + ico + '"></i>' + esc(label) + '</button>';
+  };
+  const gone = e.last && e.last !== todayInputDate();
+  return '<div class="exc-row" style="--ec:' + excTone(st.tone) + '">'
+    + '<span class="exc-job">' + (e.job
+        ? '<a href="' + escAttr(buildHelpdeskUrl(e.job)) + '" target="_blank" rel="noopener">' + esc(e.job) + '</a>'
+        : '\u2014') + '</span>'
+    + '<span class="exc-main">'
+    + '<span class="exc-sum">' + esc(e.sum || 'Flagged') + '</span>'
+    + (e.detail ? '<span class="exc-det">' + esc(e.detail) + '</span>' : '')
+    + '<span class="exc-age' + (age.stale ? ' stale' : '') + '">'
+    + (age.stale ? '<i class="ti ti-flame" style="font-size:11px"></i>' : '')
+    + esc(age.t) + (gone ? ' \u00b7 not in today\u2019s file' : '') + '</span>'
+    + '</span>'
+    + '<span class="exc-acts">'
+    + btn('chasing', 'ti-progress', 'Chasing')
+    + btn('waiting', 'ti-clock-pause', 'Waiting')
+    + btn('done', 'ti-check', 'Done')
+    + btn('ok', 'ti-shield-check', 'Known OK')
+    + '</span></div>';
+}
+
+function renderExceptions() {
+  const body = document.getElementById('exc-body');
+  if (!body) return;
+  const m = excAll();
+  const all = Object.keys(m).map(k => Object.assign({ key: k }, m[k]));
+  const open = excOpen();
+  if (typeof renderPageFigures === 'function'
+      && document.querySelector('.page.active')?.id === 'page-exceptions') {
+    renderPageFigures('exceptions');
+  }
+
+  if (!all.length) {
+    body.innerHTML = '<div class="exc-empty"><i class="ti ti-list-check" style="color:var(--text-3)"></i>'
+      + 'Nothing here yet. Run the Allocation Validator or Stock Checks, and whatever they flag collects here '
+      + 'and keeps whatever you decide about it.</div>';
+    return;
+  }
+
+  const sections = EXC_OPEN.map(status => {
+    const rows = open.filter(e => e.status === status);
+    if (!rows.length) return '';
+    const st = EXC_STATUS[status];
+    return '<div class="exc-sec"><div class="exc-sec-hd"><i class="ti ' + st.ico
+      + '" style="color:' + excTone(st.tone) + '"></i><b>' + rows.length + '</b> ' + esc(st.label) + '</div>'
+      + rows.map(excRowHtml).join('') + '</div>';
+  }).join('');
+
+  const suppressed = all.filter(e => e.status === 'ok');
+  const resolved = all.filter(e => e.status === 'done')
+    .sort((a, b) => (b.doneDay || '').localeCompare(a.doneDay || '')).slice(0, 25);
+
+  const fold = (title, ico, rows, hint) => rows.length
+    ? '<details class="exc-fold"><summary><i class="ti ' + ico + '"></i> ' + esc(title)
+      + ' \u00b7 <b>' + rows.length + '</b>'
+      + (hint ? ' <span style="color:var(--text-3)">\u2014 ' + esc(hint) + '</span>' : '')
+      + '</summary><div class="exc-fold-b">' + rows.map(excRowHtml).join('') + '</div></details>'
+    : '';
+
+  body.innerHTML = (sections || '<div class="exc-empty"><i class="ti ti-circle-check"></i>'
+      + 'Nothing to chase. Everything the tools flagged has been dealt with or suppressed.</div>')
+    + fold('Known OK \u2014 suppressed', 'ti-shield-check', suppressed, 'these stay quiet until you reopen them')
+    + fold('Recently resolved', 'ti-circle-check', resolved, 'kept for 45 days');
 }
 
 // ===== DAILY SNAPSHOT STORE =====
@@ -11510,6 +11789,18 @@ function alValRun() {
   const flagged = [...mismatch, ...notech];
   const judged = n('match') + flagged.length;
 
+  // Everything flagged becomes something to chase, carrying whatever you
+  // already decided about it yesterday.
+  excSync('validator', flagged.map(r => ({
+    jobId: r.jobId, site: r.site, tech: r.tech,
+    sum: (r.verdict === 'notech' ? 'Nobody allocated' : 'Wrong technician')
+       + (r.site ? ' — ' + r.site : ''),
+    detail: [r.tech ? 'Has: ' + r.tech : 'Nobody allocated',
+             r.expected ? 'Zone expects: ' + r.expected : '',
+             r.zone ? 'Zone ' + r.zone : ''].filter(Boolean).join(' · '),
+    page: 'allocvalidate'
+  })));
+
   // Today's figures, kept. Six numbers a day is all it takes to answer
   // whether the allocations are drifting, which no amount of looking at
   // one morning's list can tell you.
@@ -12911,6 +13202,13 @@ function stkRun() {
   const shown = hits.filter(h => !h.hidden);
   const nHidden = hits.length - shown.length;
   stkNoteHits = shown.filter(h => h.via === 'notes');
+
+  excSync('stock', shown.map(h => ({
+    jobId: h.id, site: h.site, model: h.model, tech: h.tech,
+    sum: 'Waiting on a part' + (h.site ? ' — ' + h.site : ''),
+    detail: [h.model, h.tech, h.loc].filter(Boolean).join(' · '),
+    page: 'stock'
+  })));
 
   snapRecord('stock', {
     total: stkRows.length,
@@ -17181,6 +17479,7 @@ const PAGES = {
   projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
   allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
   stock:          { title:'Stock Checks',      icon:'ti-package',          color:'c-green',  desc:'Replacement jobs from a file, each with the warehouse stock link for that part at that technician.' },
+  exceptions:     { title:'Chase List',        icon:'ti-list-check',       color:'c-coral',  desc:'Everything the validator and stock check flagged, carrying what you already decided about each one.' },
 };
 // Dispatch is its own hub now. The validator, the lookup and the stock
 // check all answer one question - who and what goes where - and all three
@@ -17196,11 +17495,11 @@ const HUB_META = {
 };
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','message','meetings','templates','suburbcheck'],
-  dispatch: ['allocvalidate','stock','alloccheck'],
+  dispatch: ['exceptions','allocvalidate','stock','alloccheck'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
-const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck'];
+const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions'];
 const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -17287,6 +17586,20 @@ function hubBoardState(p) {
       const parts = new Set(shown.filter(h => h.loc && h.model).map(h => stkTerm(h.model).toLowerCase())).size;
       return { status: `${shown.length} waiting`, sc: 'var(--amber-text)',
         figures: [F(shown.length, 'jobs'), F(parts, 'parts'), F(notes, 'notes', 'var(--amber-text)')] };
+    }
+    if (p === 'exceptions' && typeof excCounts === 'function') {
+      const c = excCounts();
+      // A chase list with nothing on it is a result worth showing, unlike a
+      // tool with no file loaded - so this one answers even at zero.
+      return {
+        status: c.open ? `${c.open} to chase` : 'all clear',
+        sc: c.open ? 'var(--coral-text)' : 'var(--green-text)',
+        figures: [
+          F(c.open, 'to chase', c.open ? 'var(--coral-text)' : 'var(--green-text)'),
+          F(c.stale, '3+ days', c.stale ? 'var(--amber-text)' : undefined),
+          F(c.ok, 'suppressed')
+        ]
+      };
     }
     if (p === 'alloccheck' && typeof alRows !== 'undefined' && alRows && alRows.length) {
       return { status: 'ready', sc: 'var(--teal-text)',
@@ -25428,6 +25741,7 @@ async function initApp() {
   renderSettingsDayMode();
   renderKpiPage();
   renderKpiNicknames();
+  renderExceptions();
   renderTasks();
   renderKbFact();
   startKbRotation();
