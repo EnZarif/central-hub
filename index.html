@@ -210,6 +210,28 @@
     .ibx-alert-dot::after { animation: none; }
   }
 
+  /* ── TREND STRIP ──────────────────────────────────────────
+     One line above a result that says whether today is normal. Quiet on
+     purpose: the list underneath is the work, this is only the context. */
+  .snap-strip { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap;
+    margin-bottom: 12px; border: 1px solid var(--border); border-radius: 11px;
+    background: var(--surface); overflow: hidden; }
+  .snap-cell { flex: 1 1 0; min-width: 104px; padding: 9px 13px;
+    border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
+  .snap-cell:last-child { border-right: none; }
+  .snap-k { font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-3); }
+  .snap-v { font-size: 17px; font-weight: 700; color: var(--text);
+    font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .snap-d { font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 4px; }
+  .snap-d.up   { color: var(--coral-text); }
+  .snap-d.down { color: var(--green-text); }
+  .snap-d.flat { color: var(--text-3); }
+  .snap-note { width: 100%; padding: 7px 13px; font-size: 11.5px; color: var(--text-3);
+    border-top: 1px solid var(--border); background: var(--surface2); }
+  @media (max-width: 620px) { .snap-cell { min-width: 50%; flex: 1 1 50%; } }
+
   /* ── STAT TILES ─────────────────────────────────────────────────────
      The verdict counts were only ever readable on the fold headers, which
      means you had to scan five collapsed rows to learn the shape of the
@@ -6832,6 +6854,117 @@ function dbDel(key) {
   _sb.from('hub_data').delete().eq('key', key).then(() => {});
 }
 
+// ===== DAILY SNAPSHOT STORE =====
+// The Hub remembered everything about you - tasks, notes, streaks - and
+// nothing about the work. Every figure the dispatch tools and the KPI file
+// produced was computed, shown, and thrown away, so nothing could answer
+// "is this getting better or worse", which is the question that actually
+// decides where a morning goes.
+//
+// Counts only, deliberately. dbLoad() pulls every key into memory at
+// startup, so this has to stay small forever: a year of daily digests for
+// every tool is about 40KB, while a year of job rows would be tens of
+// megabytes and would make the whole Hub slow to open. Job-level history
+// comes from the export archive in storage instead, which already has
+// every file and costs nothing here.
+const SNAP_KEY = 'zarif_snaps';
+const SNAP_KEEP_DAYS = 400;
+
+function snapAll() { return dbGet(SNAP_KEY) || {}; }
+function snapFor(source) { return snapAll()[source] || {}; }
+
+/** Days present for a source, oldest first. */
+function snapDays(source) { return Object.keys(snapFor(source)).sort(); }
+
+/**
+ * Record one day's figures for one tool.
+ *
+ * Re-running a tool on the same export - which happens every time you touch
+ * a column picker - must not pile up writes, so an identical day is a no-op
+ * and a changed one replaces rather than appends. You are looking at the
+ * same day, corrected.
+ */
+function snapRecord(source, counts, day) {
+  if (!source || !counts) return false;
+  const d = day || todayInputDate();
+  const all = snapAll();
+  const bySource = all[source] || (all[source] = {});
+  const prev = bySource[d];
+  const same = prev && Object.keys(counts).every(k => prev[k] === counts[k])
+                    && Object.keys(prev).filter(k => k !== 'at').length === Object.keys(counts).length;
+  if (same) return false;                       // the common case: write nothing
+  bySource[d] = Object.assign({}, counts, { at: Date.now() });
+
+  // A year and a bit is enough to compare against the same month last year.
+  const cutoff = ymd(new Date(Date.now() - SNAP_KEEP_DAYS * 86400000));
+  Object.keys(bySource).forEach(k => { if (k < cutoff) delete bySource[k]; });
+
+  dbSet(SNAP_KEY, all);
+  return true;
+}
+
+/**
+ * The strip itself. `fields` is [{key, label, lower}] - lower:true means a
+ * smaller number is the better one, which is what decides whether a rise is
+ * shown as good or bad. Without that a drop in "correct" would read green.
+ */
+function snapStripHtml(source, fields, opts) {
+  const o = opts || {};
+  const cells = fields.map(f => {
+    const c = snapCompare(source, f.key);
+    if (!c) return '';
+    const v = f.pct ? c.value.toFixed(1) + '%' : c.value.toLocaleString();
+    let delta = '<span class="snap-d flat">first reading</span>';
+    if (c.prev !== null && c.prev !== undefined) {
+      const diff = c.delta;
+      const worse = f.lower ? diff > 0 : diff < 0;
+      const cls = diff === 0 ? 'flat' : (worse ? 'up' : 'down');
+      const ico = diff === 0 ? 'ti-minus' : (diff > 0 ? 'ti-arrow-up-right' : 'ti-arrow-down-right');
+      const amount = f.pct ? Math.abs(diff).toFixed(1) + 'pts' : Math.abs(diff).toLocaleString();
+      delta = `<span class="snap-d ${cls}" title="Previous reading ${esc(c.prevDay)}: ${f.pct ? c.prev.toFixed(1) + '%' : c.prev.toLocaleString()}">`
+        + `<i class="ti ${ico}" style="font-size:12px"></i>${diff === 0 ? 'same as last' : amount}</span>`;
+    }
+    return `<div class="snap-cell"><span class="snap-k">${esc(f.label)}</span>`
+         + `<span class="snap-v">${v}</span>${delta}</div>`;
+  }).filter(Boolean).join('');
+  if (!cells) return '';
+  const n = snapDays(source).length;
+  const note = n < 2
+    ? 'First day recorded. From tomorrow this line says whether today is normal.'
+    : `Compared against the last ${Math.min(n - 1, 14)} recorded day${Math.min(n - 1, 14) !== 1 ? 's' : ''}${o.note ? ' · ' + o.note : ''}.`;
+  return `<div class="snap-strip">${cells}<div class="snap-note"><i class="ti ti-history" style="font-size:11px;margin-right:5px"></i>${esc(note)}</div></div>`;
+}
+
+/** [{day, value}] for one field, oldest first, days with no figure skipped. */
+function snapSeries(source, field, days) {
+  const by = snapFor(source);
+  const keys = Object.keys(by).sort();
+  const from = days ? ymd(new Date(Date.now() - days * 86400000)) : '';
+  return keys.filter(k => !from || k >= from)
+             .filter(k => typeof by[k][field] === 'number')
+             .map(k => ({ day: k, value: by[k][field] }));
+}
+
+/**
+ * Today's figure against what came before it: the previous recorded day, and
+ * the mean of the ones before that. One number alone says nothing; the point
+ * of keeping history is to be told when today is unusual.
+ */
+function snapCompare(source, field, day) {
+  const series = snapSeries(source, field);
+  if (!series.length) return null;
+  const d = day || todayInputDate();
+  const ix = series.findIndex(p => p.day === d);
+  const cur = ix === -1 ? series[series.length - 1] : series[ix];
+  const past = (ix === -1 ? series.slice(0, -1) : series.slice(0, ix));
+  if (!past.length) return { value: cur.value, day: cur.day, prev: null, avg: null, n: 0 };
+  const prev = past[past.length - 1];
+  const window = past.slice(-14);
+  const avg = window.reduce((a, p) => a + p.value, 0) / window.length;
+  return { value: cur.value, day: cur.day, prev: prev.value, prevDay: prev.day,
+           avg, n: past.length, delta: cur.value - prev.value, vsAvg: cur.value - avg };
+}
+
 // ===== PIXEL OFFICE =====
 // Character/desk/floor sprites from the "Pixel Agents" VS Code extension by
 // Pablo De Lucca (MIT License) — https://github.com/pablodelucca/pixel-agents
@@ -11377,6 +11510,20 @@ function alValRun() {
   const flagged = [...mismatch, ...notech];
   const judged = n('match') + flagged.length;
 
+  // Today's figures, kept. Six numbers a day is all it takes to answer
+  // whether the allocations are drifting, which no amount of looking at
+  // one morning's list can tell you.
+  snapRecord('validator', {
+    total: results.length,
+    match: n('match'),
+    mismatch: mismatch.length,
+    notech: notech.length,
+    unknown: n('unknown'),
+    nozone: n('nozone'),
+    flagged: flagged.length,
+    rate: judged ? Math.round(flagged.length / judged * 1000) / 10 : 0
+  });
+
   const VL = { match:'Correct', mismatch:'Mismatch', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
 
   // A mismatch is the finding; everything else is context. So the mismatches
@@ -11524,6 +11671,12 @@ function alValRun() {
   }).join('')}</div>`;
 
   out.innerHTML = `
+    ${snapStripHtml('validator', [
+      { key: 'flagged',  label: 'Needs attention', lower: true },
+      { key: 'mismatch', label: 'Mismatched',      lower: true },
+      { key: 'notech',   label: 'No technician',   lower: true },
+      { key: 'rate',     label: 'Flagged rate',    lower: true, pct: true }
+    ])}
     ${flagged.length ? `<div class="al-vbanner">
       <i class="ti ti-alert-triangle"></i>
       <span class="al-vbanner-t">
@@ -12758,6 +12911,15 @@ function stkRun() {
   const shown = hits.filter(h => !h.hidden);
   const nHidden = hits.length - shown.length;
   stkNoteHits = shown.filter(h => h.via === 'notes');
+
+  snapRecord('stock', {
+    total: stkRows.length,
+    hits: hits.length,
+    shown: shown.length,
+    hidden: nHidden,
+    viaNotes: shown.filter(h => h.via === 'notes').length,
+    maybe: stkNoteMaybe.length
+  });
   const linkable = shown.filter(h => h.loc && h.model);
   const stuck = shown.filter(h => !h.loc || !h.model);
 
@@ -12844,6 +13006,11 @@ function stkRun() {
   </div>`;
 
   out.innerHTML = `
+    ${snapStripHtml('stock', [
+      { key: 'shown',    label: 'Awaiting parts', lower: true },
+      { key: 'total',    label: 'Rows in file',   lower: false },
+      { key: 'viaNotes', label: 'Found in notes', lower: false }
+    ])}
     ${shown.length ? `<div class="stk-banner">
       <i class="ti ti-package"></i>
       <span class="stk-banner-t">
