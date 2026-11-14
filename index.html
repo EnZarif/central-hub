@@ -232,6 +232,31 @@
   .kpi-upload-row.kpi-op-sent { opacity: .62; }
   .kpi-upload-row.kpi-op-sent:hover { opacity: 1; }
 
+  /* ── INSIGHTS: THE WORK ──────────────────────────────── */
+  .insw { margin-bottom: 16px; }
+  .insw-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px; margin-bottom: 14px; }
+  .insw-tile { padding: 11px 13px; border: 1px solid var(--border); border-radius: 11px;
+    background: var(--surface2); display: flex; flex-direction: column; gap: 3px; }
+  .insw-k { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text-3); }
+  .insw-v { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1;
+    font-family: 'Archivo', 'Inter', system-ui, sans-serif; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums; }
+  .insw-f { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 3px;
+    font-variant-numeric: tabular-nums; }
+  .insw-f.good { color: var(--green-text); }
+  .insw-f.bad { color: var(--coral-text); }
+  .insw-f i { font-size: 12px; }
+  .insw-spark { display: flex; align-items: flex-end; gap: 2px; height: 56px;
+    padding: 0 2px; margin-bottom: 4px; }
+  .insw-bar { flex: 1 1 0; min-width: 2px; border-radius: 2px 2px 0 0;
+    background: linear-gradient(180deg, var(--coral-text), color-mix(in srgb, var(--coral-text) 25%, transparent)); }
+  .insw-spark-x { display: flex; justify-content: space-between; font-size: 10px;
+    color: var(--text-3); font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+  .insw-lines { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+  .insw-lines b { color: var(--text-2); font-weight: 700; }
+
   /* ── CHASE LIST ────────────────────────────────────── */
   .exc-sec { margin-bottom: 20px; }
   .exc-sec-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 9px;
@@ -7218,6 +7243,11 @@ function excSync(src, items, opts) {
 function excSetStatus(key, status) {
   const m = excAll();
   if (!m[key] || !EXC_STATUS[status]) return;
+  // Clearing an exception is the actual work of a dispatch morning, and
+  // until now nothing recorded that it had happened.
+  if (m[key].status !== status && (status === 'done' || status === 'ok')) {
+    if (typeof logActivity === 'function') logActivity('exception', m[key].sum || '');
+  }
   m[key].status = status;
   m[key].auto = false;
   if (status === 'done') m[key].doneDay = todayInputDate(); else delete m[key].doneDay;
@@ -8675,6 +8705,91 @@ function insTimeOfDay(log) {
   return { hourCounts, heat, dayCounts, totalMin, n };
 }
 
+// ===== INSIGHTS: THE WORK =====
+// The activity feed only ever knew three things - a task ticked, a meeting
+// logged, an AI call - so every card on this page measured how much the Hub
+// was used rather than how much work got done. The snapshot store has the
+// real figures and nothing was reading them.
+function insWorkHtml() {
+  const has = (src) => typeof snapDays === 'function' && snapDays(src).length;
+  if (!has('validator') && !has('stock') && !has('kpiops')
+      && !(typeof excCounts === 'function' && excCounts().open + excCounts().done)) {
+    return '';
+  }
+
+  const since = (days) => Date.now() - days * 86400000;
+  const log = (typeof activityLog !== 'undefined' && activityLog) ? activityLog : [];
+  const countOf = (type, days) => log.filter(a => a.type === type && a.t >= since(days)).length;
+
+  // A figure and what it was before it. A number on its own is a fact; a
+  // number against its own history is a finding.
+  const tile = (label, value, cmp, lower, pct) => {
+    let foot = '<span class="insw-f">first reading</span>';
+    if (cmp && cmp.prev !== null && cmp.prev !== undefined) {
+      const d = cmp.delta;
+      const worse = lower ? d > 0 : d < 0;
+      const cls = d === 0 ? '' : (worse ? ' bad' : ' good');
+      const amt = pct ? Math.abs(d).toFixed(1) + 'pts' : Math.abs(d).toLocaleString();
+      foot = d === 0
+        ? '<span class="insw-f">same as last</span>'
+        : `<span class="insw-f${cls}"><i class="ti ti-arrow-${d > 0 ? 'up' : 'down'}-right"></i>${amt} vs last</span>`;
+    }
+    return `<div class="insw-tile"><span class="insw-k">${esc(label)}</span>
+      <span class="insw-v">${value}</span>${foot}</div>`;
+  };
+
+  const tiles = [];
+  if (has('validator')) {
+    const c = snapCompare('validator', 'flagged');
+    const r = snapCompare('validator', 'rate');
+    if (c) tiles.push(tile('Jobs flagged today', c.value.toLocaleString(), c, true));
+    if (r) tiles.push(tile('Flagged rate', r.value.toFixed(1) + '%', r, true, true));
+  }
+  if (has('stock')) {
+    const c = snapCompare('stock', 'shown');
+    if (c) tiles.push(tile('Awaiting parts', c.value.toLocaleString(), c, true));
+  }
+  if (has('kpiops')) {
+    const c = snapCompare('kpiops', 'meanAnswer');
+    if (c) tiles.push(tile('Mean answer rate', c.value.toFixed(1) + '%', c, false, true));
+  }
+
+  const ex = (typeof excCounts === 'function') ? excCounts() : null;
+  const cleared7 = countOf('exception', 7);
+  const mails7 = countOf('opsmail', 7);
+  const runs30 = countOf('validator', 30);
+
+  // Thirty days of the flagged count, so a drift shows up as a shape rather
+  // than as two numbers you have to hold in your head.
+  let bars = '';
+  if (has('validator')) {
+    const series = snapSeries('validator', 'flagged', 30);
+    if (series.length > 1) {
+      const max = Math.max.apply(null, series.map(p => p.value)) || 1;
+      bars = `<div class="insw-spark" role="img"
+        aria-label="Jobs flagged per day over the last ${series.length} recorded days">`
+        + series.map(p => `<span class="insw-bar" style="height:${Math.max(4, Math.round(p.value / max * 100))}%"
+            title="${esc(p.day)}: ${p.value} flagged"></span>`).join('')
+        + `</div><div class="insw-spark-x"><span>${esc(series[0].day)}</span>
+             <span>${esc(series[series.length - 1].day)}</span></div>`;
+    }
+  }
+
+  const lines = [];
+  if (ex && ex.open) lines.push(`<b>${ex.open}</b> still to chase${ex.stale ? `, <b>${ex.stale}</b> open 3+ days` : ''}`);
+  if (cleared7) lines.push(`<b>${cleared7}</b> cleared in the last 7 days`);
+  if (ex && ex.ok) lines.push(`<b>${ex.ok}</b> suppressed as known-OK`);
+  if (mails7) lines.push(`<b>${mails7}</b> operator email${mails7 !== 1 ? 's' : ''} sent this week`);
+  if (runs30) lines.push(`validator run on <b>${runs30}</b> of the last 30 days`);
+
+  return `<div class="card ins-card insw">
+    <div class="ins-card-title"><i class="ti ti-briefcase"></i> The work</div>
+    ${tiles.length ? `<div class="insw-tiles">${tiles.join('')}</div>` : ''}
+    ${bars}
+    ${lines.length ? `<div class="insw-lines">${lines.join(' \u00b7 ')}</div>` : ''}
+  </div>`;
+}
+
 function renderInsights() {
   const body = document.getElementById('ins-body');
   if (!body) return;
@@ -8786,6 +8901,7 @@ function renderInsights() {
   }).join('');
 
   body.innerHTML = `
+    ${insWorkHtml()}
     <div class="ins-kpis">
       <div class="ins-kpi">
         ${trendChip(weekTasks, taskPrevWeek)}
@@ -12064,6 +12180,11 @@ function alValRun() {
     page: 'allocvalidate'
   })));
 
+  if (snapRecord._lastValidator !== todayInputDate()) {
+    snapRecord._lastValidator = todayInputDate();
+    if (typeof logActivity === 'function') logActivity('validator');
+  }
+
   // Today's figures, kept. Six numbers a day is all it takes to answer
   // whether the allocations are drifting, which no amount of looking at
   // one morning's list can tell you.
@@ -13472,6 +13593,11 @@ function stkRun() {
     detail: [h.model, h.tech, h.loc].filter(Boolean).join(' · '),
     page: 'stock'
   })));
+
+  if (snapRecord._lastStock !== todayInputDate()) {
+    snapRecord._lastStock = todayInputDate();
+    if (typeof logActivity === 'function') logActivity('stockrun');
+  }
 
   snapRecord('stock', {
     total: stkRows.length,
@@ -21490,6 +21616,7 @@ function kpiOpsMarkSent(name) {
   l.sent[d] = l.sent[d] || {};
   if (l.sent[d][name]) return;                 // already marked, write nothing
   l.sent[d][name] = Date.now();
+  if (typeof logActivity === 'function') logActivity('opsmail', name);
   kpiOpsLogSave(l);
   if (typeof renderKpiOpsList === 'function') renderKpiOpsList();
 }
