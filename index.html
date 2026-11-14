@@ -221,6 +221,14 @@
   .kpi-ops-progress b { color: var(--text); font-weight: 700; }
   .kpi-ops-progress.done b { color: var(--green-text); }
   .kpi-ops-progress button { margin-left: auto; }
+  .kpi-ops-mode { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin: -4px 0 12px; padding: 0 2px; font-size: 11.5px; color: var(--text-3); }
+  .kpi-ops-mode > span { margin-right: 2px; }
+  .kpi-op-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .kpi-op-send { color: var(--teal-text) !important;
+    border-color: color-mix(in srgb, var(--teal-text) 45%, transparent) !important; }
+  .kpi-op-send:hover { background: var(--teal-bg) !important;
+    border-color: var(--teal-text) !important; }
   .kpi-upload-row.kpi-op-sent { opacity: .62; }
   .kpi-upload-row.kpi-op-sent:hover { opacity: 1; }
 
@@ -6395,6 +6403,7 @@
     <div class="kpi-modal-preview" id="kpi-ops-modal-preview"></div>
     <div class="kpi-modal-actions">
       <button class="generate-btn" id="kpi-ops-modal-copy-btn" style="width:auto; margin-bottom:0; padding:18px 26px; font-size:14.5px;" onclick="kpiOpsModalCopy()"><i class="ti ti-copy" style="font-size:17px;"></i> Copy email</button>
+      <button class="generate-btn" id="kpi-ops-modal-outlook-btn" style="width:auto; margin-bottom:0; padding:18px 26px; font-size:14.5px; background:transparent; color:var(--teal-text); border:1px solid color-mix(in srgb, var(--teal-text) 45%, transparent);" onclick="kpiOpsOpenOutlook(kpiOpsCurrentIdx)"><i class="ti ti-brand-windows" style="font-size:17px;"></i> Open in Outlook</button>
       <button class="generate-btn" id="kpi-ops-modal-next-btn" style="width:auto; margin-bottom:0; padding:18px 26px; font-size:14.5px; display:none;" onclick="kpiOpsModalNext()"><i class="ti ti-arrow-right" style="font-size:17px;"></i> Next</button>
       <button class="kpi-file-btn kpi-modal-close-btn" onclick="kpiOpsModalClose()">Close</button>
     </div>
@@ -21310,6 +21319,15 @@ function renderKpiOpsList() {
       <span><b>${nSent}</b> of <b>${ops.length}</b> copied today${
         nSent === ops.length ? ' — all done' : ''}</span>
       ${nSent ? `<button class="exc-b" style="--bc:var(--text-3)" onclick="kpiOpsResetToday()"><i class="ti ti-rotate"></i>Reset</button>` : ''}
+    </div>
+    <div class="kpi-ops-mode">
+      <span>Outlook button sends:</span>
+      <button class="exc-b${kpiOpsMode() === 'rich' ? ' on' : ''}" style="--bc:var(--teal-text)"
+        onclick="kpiOpsSetMode('rich')" title="Keeps the coloured table. Opens Outlook with the address, CC and subject filled, and the table on your clipboard - one Ctrl+V, then Send.">
+        <i class="ti ti-table"></i>Table \u00b7 paste once</button>
+      <button class="exc-b${kpiOpsMode() === 'plain' ? ' on' : ''}" style="--bc:var(--amber-text)"
+        onclick="kpiOpsSetMode('plain')" title="Truly one click, but the table arrives as tab-separated plain text. Outlook's compose link cannot carry HTML.">
+        <i class="ti ti-align-left"></i>Plain text \u00b7 one click</button>
     </div>`;
 
   const strip = snapStripHtml('kpiops', [
@@ -21344,8 +21362,12 @@ function renderKpiOpsList() {
           ? '<i class="ti ti-circle-check" style="color:var(--green-text);margin-right:6px"></i>' : ''}${esc(name)}</div>
         <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}${statusTag}${trendTag}</div>
       </div>
-      <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">${
-        isSent ? 'Copy again' : 'Preview &amp; copy'}</button>
+      <span class="kpi-op-btns">
+        <button class="kpi-file-btn kpi-op-send" onclick="kpiOpsOpenOutlook(${i}, event)"
+          title="Open this email in Outlook on the web, ready to send"><i class="ti ti-brand-windows"></i> Outlook</button>
+        <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">${
+          isSent ? 'Copy again' : 'Preview'}</button>
+      </span>
     </div>`;
   }).join('') + skipNote;
 }
@@ -21454,10 +21476,83 @@ let kpiOpsCurrentHtml = '';
 let kpiOpsCurrentText = '';
 let kpiOpsCurrentIdx = 0;
 
-function kpiOpsCopy(i) {
-  kpiOpsCurrentIdx = i;
+// ===== OPEN IN OUTLOOK =====
+// What this can and cannot do, because it decides the whole design:
+//
+// Outlook's web compose deeplink takes to, cc, subject and body on the URL,
+// and HTML tags in the body are NOT honoured - they arrive as literal text.
+// mailto: is the same, worse. These emails are a coloured table; that is the
+// entire point of them. So "one click and the formatted table is in the
+// compose window" is not available from a browser without Microsoft Graph,
+// which needs an app registration in the Amtek tenant.
+//
+// Two honest modes instead:
+//   rich  - opens compose with To/Cc/Subject filled and the table already on
+//           your clipboard. One Ctrl+V, then Send. Keeps the formatting.
+//   plain - opens compose with everything filled including a tab-separated
+//           body. Truly one click, but the table is plain text.
+const KPIOPS_OUTLOOK_WEB = 'https://outlook.office.com/mail/deeplink/compose';
+const KPIOPS_MODE_KEY = 'zarif_kpi_ops_outlook_mode';
+// Deeplinks over a few thousand characters get truncated or rejected, and a
+// multi-day email is the long one. Past this the body is left out and the
+// clipboard carries it instead.
+const KPIOPS_URL_MAX = 1800;
+
+function kpiOpsMode() {
+  try { return localStorage.getItem(KPIOPS_MODE_KEY) === 'plain' ? 'plain' : 'rich'; }
+  catch (e) { return 'rich'; }
+}
+
+function kpiOpsSetMode(m) {
+  try { localStorage.setItem(KPIOPS_MODE_KEY, m === 'plain' ? 'plain' : 'rich'); } catch (e) {}
+  renderKpiOpsList();
+}
+
+function kpiOpsOutlookUrl(fields, body) {
+  const q = ['to=' + encodeURIComponent(fields.to || ''),
+             'subject=' + encodeURIComponent(fields.subject || '')];
+  if (fields.cc) q.push('cc=' + encodeURIComponent(fields.cc));
+  let url = KPIOPS_OUTLOOK_WEB + '?' + q.join('&');
+  if (body) {
+    const withBody = url + '&body=' + encodeURIComponent(body);
+    if (withBody.length <= KPIOPS_URL_MAX) return withBody;
+  }
+  return url;
+}
+
+/**
+ * Open the compose window for one operator.
+ *
+ * The window is opened in the same gesture as the click - a popup opened
+ * after an await is blocked by every browser - so the clipboard write is
+ * started first and not waited on.
+ */
+function kpiOpsOpenOutlook(i, ev) {
+  if (ev) ev.stopPropagation();
+  const b = kpiOpsBuild(i);
+  if (!b) return;
+  const plain = kpiOpsMode() === 'plain';
+
+  if (!plain) copyRichText(b.html, b.text);   // deliberately not awaited
+
+  const url = kpiOpsOutlookUrl(b.fields, plain ? b.text : '');
+  const w = window.open(url, '_blank', 'noopener');
+  if (!w) {
+    showToast('<i class="ti ti-alert-triangle"></i>Outlook could not be opened \u2014 allow popups for the Hub');
+    return;
+  }
+  kpiOpsMarkSent(b.name);
+  showToast(plain
+    ? '<i class="ti ti-brand-windows"></i>Outlook opened \u2014 check it over and send'
+    : '<i class="ti ti-clipboard-check"></i>Outlook opened \u2014 the table is on your clipboard, press Ctrl+V then send');
+}
+
+// Building one of these and showing it in the modal used to be the same
+// function, so nothing else could get at the finished email. Opening it in
+// Outlook needs the same three fields and the same two bodies.
+function kpiOpsBuild(i) {
   const ops = _kpiOpsOperatorList();
-  if (i >= ops.length) return;
+  if (i >= ops.length) return null;
   const [name, entries] = ops[i];
   const greetName = kpiNickFor(name, entries[0].row[1] || '');
 
@@ -21508,13 +21603,21 @@ function kpiOpsCopy(i) {
       textSections.join('\n\n') + statusText + '\n\nKind regards,';
   }
 
-  kpiOpsCurrentHtml = html;
-  kpiOpsCurrentText = text;
-  kpiOpsCurrentFields = {
-    to: entries[0].row[1] || '',
-    cc: KPI_OPS_CC,
-    subject: kpiOpsSubject(entries)
+  return {
+    name, entries, html, text,
+    fields: { to: entries[0].row[1] || '', cc: KPI_OPS_CC, subject: kpiOpsSubject(entries) }
   };
+}
+
+function kpiOpsCopy(i) {
+  const b = kpiOpsBuild(i);
+  if (!b) return;
+  const ops = _kpiOpsOperatorList();
+  const { html } = b;
+  kpiOpsCurrentIdx = i;
+  kpiOpsCurrentHtml = b.html;
+  kpiOpsCurrentText = b.text;
+  kpiOpsCurrentFields = b.fields;
   renderKpiOpsFields();
   document.getElementById('kpi-ops-modal-preview').innerHTML = html;
   document.getElementById('kpi-ops-modal-pos').textContent = `${i + 1} of ${ops.length}`;
