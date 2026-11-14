@@ -17552,18 +17552,52 @@ function loadHubLayout() {
       const seen = new Set(list);
       DEFAULT_HUB_LAYOUT.dispatch.forEach(p => { if (!seen.has(p)) list.push(p); });
     }
-    // Migration: existing saved layouts predate the Scratchpad page — add it to Personal once.
-    if (h === 'personal' && !list.includes('notes')) list.push('notes');
-    if (h === 'personal' && !list.includes('learning')) list.push('learning');
-    if (h === 'helpdesk' && !list.includes('suburbcheck')) list.push('suburbcheck');
-    // Saved layouts predate Project Analysis, so add it to Projects once.
-    if (h === 'projects' && !list.includes('projanalysis')) list.unshift('projanalysis');
-    // A Dispatch hub that somehow ended up empty gets its three back.
-    if (h === 'dispatch' && !list.length) list = DEFAULT_HUB_LAYOUT.dispatch.slice();
+    // A Dispatch hub that was never saved and came out empty gets the
+    // defaults. An empty one you saved yourself is a choice, not a fault.
+    if (h === 'dispatch' && !list.length && !Array.isArray(saved.dispatch)) {
+      list = DEFAULT_HUB_LAYOUT.dispatch.slice();
+    }
     layout[h] = list;
   });
   if (hadSaved && repositioned) dbSet(AL_POS_FLAG, true);
+
+  // Nothing to seed into a layout that was never saved - the defaults
+  // already contain every page. This also keeps the very first call, which
+  // runs before dbLoad with an empty cache, from writing anything.
+  if (!hadSaved) return layout;
+
+  applyHubSeeds(layout);
   return layout;
+}
+
+// Pages that were added to the Hub after people already had a saved layout.
+//
+// These used to run on every load as plain "if it is not here, add it"
+// lines, which is not a migration but a standing rule: move Suburb Checker
+// to Dispatch and the next load puts it back in Helpdesk, in both hubs at
+// once. Each seed now happens at most once, and never when the page is
+// already somewhere - moving a page is not the same as never having had it.
+const HUB_MIG_KEY = 'zarif_hub_migrations';
+const HUB_SEEDS = [
+  { id: 'notes',        hub: 'personal', page: 'notes' },
+  { id: 'learning',     hub: 'personal', page: 'learning' },
+  { id: 'suburbcheck',  hub: 'helpdesk', page: 'suburbcheck' },
+  { id: 'projanalysis', hub: 'projects', page: 'projanalysis', first: true }
+];
+
+function applyHubSeeds(layout) {
+  const done = dbGet(HUB_MIG_KEY) || {};
+  let changed = false;
+  HUB_SEEDS.forEach(m => {
+    if (done[m.id]) return;
+    const anywhere = HUBS.some(h => (layout[h] || []).includes(m.page));
+    if (!anywhere && Array.isArray(layout[m.hub])) {
+      if (m.first) layout[m.hub].unshift(m.page); else layout[m.hub].push(m.page);
+    }
+    done[m.id] = true;                        // asked and answered, either way
+    changed = true;
+  });
+  if (changed) dbSet(HUB_MIG_KEY, done);
 }
 function saveHubLayout() { dbSet('zarif_hub_layout', hubLayout); }
 
@@ -21321,25 +21355,8 @@ function renderKpiOpsList() {
       ${nSent ? `<button class="exc-b" style="--bc:var(--text-3)" onclick="kpiOpsResetToday()"><i class="ti ti-rotate"></i>Reset</button>` : ''}
     </div>
     <div class="kpi-ops-mode">
-      <span>Opens in:</span>
-      <button class="exc-b${kpiOpsDest() === 'desktop' ? ' on' : ''}" style="--bc:var(--teal-text)"
-        onclick="kpiOpsSetDest('desktop')" title="Hands off to whatever Windows has set as the mail handler - on current Windows 11 that is New Outlook. No browser tab.">
-        <i class="ti ti-device-desktop"></i>Desktop Outlook</button>
-      <button class="exc-b${kpiOpsDest() === 'web' ? ' on' : ''}" style="--bc:var(--purple-text)"
-        onclick="kpiOpsSetDest('web')" title="Opens outlook.office.com in a new tab. Use this when you are not on your own machine.">
-        <i class="ti ti-world"></i>Outlook on the web</button>
-    </div>
-    <div class="kpi-ops-mode">
-      <span>Body:</span>
-      <button class="exc-b${kpiOpsMode() === 'rich' ? ' on' : ''}" style="--bc:var(--teal-text)"
-        onclick="kpiOpsSetMode('rich')" title="Keeps the coloured table. Opens Outlook with the address, CC and subject filled, and the table on your clipboard - one Ctrl+V, then Send.">
-        <i class="ti ti-table"></i>Table \u00b7 paste once</button>
-      <button class="exc-b${kpiOpsMode() === 'plain' ? ' on' : ''}" style="--bc:var(--amber-text)"
-        onclick="kpiOpsSetMode('plain')" title="One click, but the table arrives as plain text - and New Outlook is known to drop the line breaks out of a mailto body, so this is the worse option on the desktop app.">
-        <i class="ti ti-align-left"></i>Plain text \u00b7 one click</button>
-      ${kpiOpsMode() === 'plain' && kpiOpsDest() === 'desktop'
-        ? `<span style="color:var(--amber-text)"><i class="ti ti-alert-triangle" style="font-size:11px"></i>
-           New Outlook drops line breaks from a mailto body \u2014 the table will arrive as one run-on line.</span>` : ''}
+      <i class="ti ti-info-circle" style="font-size:12px"></i>
+      <span>Outlook opens with the address, CC and subject filled and the table on your clipboard \u2014 Ctrl+V, then Send.</span>
     </div>`;
 
   const strip = snapStripHtml('kpiops', [
@@ -21503,99 +21520,55 @@ let kpiOpsCurrentIdx = 0;
 //           your clipboard. One Ctrl+V, then Send. Keeps the formatting.
 //   plain - opens compose with everything filled including a tab-separated
 //           body. Truly one click, but the table is plain text.
-const KPIOPS_OUTLOOK_WEB = 'https://outlook.office.com/mail/deeplink/compose';
-const KPIOPS_MODE_KEY = 'zarif_kpi_ops_outlook_mode';
-const KPIOPS_DEST_KEY = 'zarif_kpi_ops_dest';
-// Deeplinks over a few thousand characters get truncated or rejected, and a
-// multi-day email is the long one. Past this the body is left out and the
-// clipboard carries it instead.
-const KPIOPS_URL_MAX = 1800;
-
-// Where the compose window opens. mailto: hands off to whatever Windows has
-// registered as the mail handler, which on an up-to-date Windows 11 is New
-// Outlook - so this opens the desktop app you already have open, with no
-// browser tab in the way. The web deeplink stays for when you are not at
-// your own machine.
-function kpiOpsDest() {
-  try { return localStorage.getItem(KPIOPS_DEST_KEY) === 'web' ? 'web' : 'desktop'; }
-  catch (e) { return 'desktop'; }
-}
-
-function kpiOpsSetDest(d) {
-  try { localStorage.setItem(KPIOPS_DEST_KEY, d === 'web' ? 'web' : 'desktop'); } catch (e) {}
-  renderKpiOpsList();
-}
-
-function kpiOpsMode() {
-  try { return localStorage.getItem(KPIOPS_MODE_KEY) === 'plain' ? 'plain' : 'rich'; }
-  catch (e) { return 'rich'; }
-}
-
-function kpiOpsSetMode(m) {
-  try { localStorage.setItem(KPIOPS_MODE_KEY, m === 'plain' ? 'plain' : 'rich'); } catch (e) {}
-  renderKpiOpsList();
-}
-
-function kpiOpsOutlookUrl(fields, body) {
-  const web = kpiOpsDest() === 'web';
-  const q = [];
-  if (fields.cc) q.push('cc=' + encodeURIComponent(fields.cc).replace(/%40/g, '@'));
-  q.push('subject=' + encodeURIComponent(fields.subject || ''));
+/**
+ * The compose link for one operator.
+ *
+ * mailto: hands off to whatever Windows has registered as the mail handler,
+ * which here is New Outlook, so the compose window opens in the app already
+ * running rather than a browser tab.
+ *
+ * No body goes on the URL. A mailto body cannot carry HTML, and these emails
+ * are a coloured table - that is the whole point of them - so the table
+ * travels on the clipboard instead and the link carries only the three
+ * fields that would otherwise be retyped.
+ */
+function kpiOpsOutlookUrl(fields) {
   // RFC 6068 allows a bare @ in a mailto address, and some Windows mail
-  // handlers do not decode %40 in the path - the address then arrives
-  // mangled or empty. A query parameter has no such problem.
-  const addr = encodeURIComponent(fields.to || '').replace(/%40/g, '@');
-  let url = web
-    ? KPIOPS_OUTLOOK_WEB + '?to=' + encodeURIComponent(fields.to || '') + '&' + q.join('&')
-    : 'mailto:' + addr + '?' + q.join('&');
-  if (body) {
-    const withBody = url + '&body=' + encodeURIComponent(body);
-    if (withBody.length <= KPIOPS_URL_MAX) return withBody;
-  }
-  return url;
+  // handlers do not decode %40 - the address then arrives mangled or empty.
+  const addr = a => encodeURIComponent(a || '').replace(/%40/g, '@');
+  const q = [];
+  if (fields.cc) q.push('cc=' + addr(fields.cc));
+  q.push('subject=' + encodeURIComponent(fields.subject || ''));
+  return 'mailto:' + addr(fields.to) + '?' + q.join('&');
 }
 
 /**
- * Open the compose window for one operator.
+ * Open the compose window for one operator, with the table on the clipboard.
  *
- * The window is opened in the same gesture as the click - anything opened
- * after an await is blocked by every browser - so the clipboard write is
- * started first and deliberately not waited on.
+ * Both halves happen in the same gesture as the click: the clipboard write
+ * is started and deliberately not awaited, because anything triggered after
+ * an await has lost the user gesture a browser requires.
  *
- * A mailto: has to be an anchor click rather than window.open, which leaves
- * a dead blank tab behind in most browsers when the target is a protocol
- * handler rather than a page.
+ * The hand-off is an anchor click rather than window.open - pointing
+ * window.open at a protocol handler leaves a dead blank tab behind in most
+ * browsers.
  */
 function kpiOpsOpenOutlook(i, ev) {
   if (ev) ev.stopPropagation();
   const b = kpiOpsBuild(i);
   if (!b) return;
-  const plain = kpiOpsMode() === 'plain';
-  const web = kpiOpsDest() === 'web';
 
-  if (!plain) copyRichText(b.html, b.text);   // deliberately not awaited
+  copyRichText(b.html, b.text);               // deliberately not awaited
 
-  const url = kpiOpsOutlookUrl(b.fields, plain ? b.text : '');
-
-  if (web) {
-    const w = window.open(url, '_blank', 'noopener');
-    if (!w) {
-      showToast('<i class="ti ti-alert-triangle"></i>Outlook could not be opened \u2014 allow popups for the Hub');
-      return;
-    }
-  } else {
-    const a = document.createElement('a');
-    a.href = url;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
+  const a = document.createElement('a');
+  a.href = kpiOpsOutlookUrl(b.fields);
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 
   kpiOpsMarkSent(b.name);
-  showToast(plain
-    ? '<i class="ti ti-brand-windows"></i>Outlook opened \u2014 check it over and send'
-    : '<i class="ti ti-clipboard-check"></i>Outlook opened \u2014 the table is on your clipboard, press Ctrl+V then send');
+  showToast('<i class="ti ti-clipboard-check"></i>Outlook opened \u2014 the table is on your clipboard, press Ctrl+V then send');
 }
 
 // Building one of these and showing it in the modal used to be the same
