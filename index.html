@@ -3141,14 +3141,15 @@
   .stk-chip-more { background:none; border:none; color:var(--text-3); font-family:inherit; font-size:11.5px;
     font-weight:600; cursor:pointer; padding:6px 4px; }
   .stk-chip-more:hover { color:var(--text-2); text-decoration:underline; }
-  /* The action stays on screen while you work down the settings, instead of
-     waiting at the bottom of a card you have to scroll to the end of. */
-  .stk-cfg-go { position:sticky; bottom:0; z-index:2;
-    background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--surface) 92%, transparent) 38%);
-    display:flex; align-items:center; gap:13px; margin-top:16px; padding-top:14px;
+  /* The button that runs this lives in the file row at the top of the card,
+     where it is already on screen by the time the settings below have been
+     read. What is left down here is one line telling you so. */
+  .stk-go-top { width:auto !important; margin:0 !important; padding:10px 20px !important;
+    font-size:13px !important; flex-shrink:0; }
+  .stk-cfg-go { display:flex; align-items:center; gap:13px; margin-top:16px; padding-top:14px;
     border-top:0.5px solid var(--border); flex-wrap:wrap; }
-  .stk-cfg-go .generate-btn { width:auto; margin:0; padding:11px 24px; font-size:13.5px; }
   .stk-cfg-go span { font-size:11.5px; color:var(--text-3); }
+  .stk-cfg-go b { color:var(--text-2); font-weight:600; }
 
   .stk-banner { display:flex; align-items:center; gap:13px; padding:15px 17px; border-radius:12px;
     background:var(--green-bg); border:0.5px solid color-mix(in srgb, var(--green-text) 30%, transparent);
@@ -5875,6 +5876,9 @@
           </div>
           <input type="file" id="stk-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="stkLoad(this.files[0])">
           <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('stk-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+          <button class="generate-btn stk-go-top" id="stk-go-top" style="display:none;" onclick="stkFind()">
+            <i class="ti ti-package" style="font-size:16px;"></i> Find replacements
+          </button>
         </div>
         <div id="stk-mapper" style="display:none;margin-top:14px;"></div>
       </div>
@@ -12467,14 +12471,17 @@ function stkRenderMapper() {
      </div>
      <div class="stk-fsec" id="stk-faults-sec"></div>
      <div class="stk-cfg-go">
-       <button class="generate-btn" onclick="stkFind()">
-         <i class="ti ti-package" style="font-size:17px;"></i> Find replacements
-       </button>
-       <span>Check the columns and the fault values above, then press this.</span>
+       <span>Happy with the columns and the fault values? <b>Find replacements</b> is at the top of this card.</span>
      </div>`;
   el.style.display = '';
+  stkGoTop(true);
   if (faultCol) stkBuildFaults(faultCol);
   stkRenderFaults();
+}
+
+function stkGoTop(show) {
+  const b = document.getElementById('stk-go-top');
+  if (b) b.style.display = show ? 'inline-flex' : 'none';
 }
 
 function stkOnChange() { if (stkDone) stkRun(); }
@@ -12613,6 +12620,9 @@ async function stkLoad(file) {
   if (!file) return;
   stkOut = null; stkDone = false; stkOpenGroup = new Set();
   stkNoteHits = []; stkNoteMaybe = [];
+  // A load that fails before the mapper renders must not leave the previous
+  // file's button sitting there offering to run on nothing.
+  if (typeof stkGoTop === 'function') stkGoTop(false);
   stkFaultList = []; stkFaultPick = null; stkFaultCol = ''; stkShowAllFaults = false;
   stkRenderConfig();
   const res = document.getElementById('stk-result');
