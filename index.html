@@ -17824,6 +17824,18 @@ function applySmartSchedDate(dateStr) {
 let _weatherSettings = { city: 'Melbourne', commuteMins: 0 };
 let _weatherCache = { data: null, bucket: -1, city: '' };
 let _weatherGeoCache = {};
+// Why the last attempt produced nothing. Silence was the actual bug here:
+// offline, a blocked request, an unknown city and a renamed API field all
+// ended at the same `return null`, and the widget just was not there.
+let _weatherError = '';
+
+// Open-Meteo renamed weathercode to weather_code and kept the old spelling
+// working for a while. Ask for the current name, read whichever comes back,
+// so a rename on their side cannot blank the widget again.
+function _wxPick(o, a, b) {
+  if (!o) return undefined;
+  return o[a] !== undefined ? o[a] : o[b];
+}
 
 function loadWeatherSettings() {
   const saved = dbGet('zarif_weather_settings') || {};
@@ -17850,12 +17862,18 @@ async function testWeatherSettings() {
   if (statusEl) statusEl.textContent = 'Testing…';
   try {
     const geo = await _geocodeCity(city);
-    if (!geo) { if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Could not find "${esc(city)}" — try a different city name.</span>`; return; }
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weathercode&timezone=auto`);
+    if (!geo) {
+      // _geocodeCity knows whether this was an unknown name or a dead
+      // connection; saying "try a different city" to someone who is offline
+      // sends them to fix the one thing that is not wrong.
+      if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> ${esc(_weatherError || 'Could not find “' + city + '”')}</span>`;
+      return;
+    }
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weather_code&timezone=auto`);
     if (!res.ok) throw new Error(res.status);
     const json = await res.json();
     const temp = Math.round(json.current.temperature_2m);
-    const desc = _wmoDec(json.current.weathercode);
+    const desc = _wmoDec(_wxPick(json.current, 'weather_code', 'weathercode'));
     if (statusEl) statusEl.innerHTML = `<span style="color:var(--green-text)"><i class="ti ti-check"></i> Connected — ${esc(city)}: ${temp}°C, ${esc(desc)}</span>`;
   } catch (e) {
     if (statusEl) statusEl.innerHTML = `<span style="color:var(--coral-text)"><i class="ti ti-x"></i> Network error — ${esc(String(e))}</span>`;
@@ -17864,56 +17882,71 @@ async function testWeatherSettings() {
 async function _geocodeCity(city) {
   if (_weatherGeoCache[city]) return _weatherGeoCache[city];
   try {
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=5&language=en&format=json`);
+    if (!res.ok) { _weatherError = 'Geocoder returned ' + res.status; return null; }
     const json = await res.json();
-    if (!json.results?.length) return null;
-    const { latitude: lat, longitude: lon } = json.results[0];
-    _weatherGeoCache[city] = { lat, lon };
-    return { lat, lon };
-  } catch { return null; }
+    const list = json.results || [];
+    if (!list.length) { _weatherError = 'Could not find “' + city + '”'; return null; }
+    // Melbourne is also a city in Florida, and count=1 took whatever the
+    // geocoder ranked first. Everything else in the Hub is Australian, so
+    // prefer AU and keep the top hit for anyone who sets a city abroad.
+    const hit = list.find(r => r.country_code === 'AU') || list[0];
+    const out = { lat: hit.latitude, lon: hit.longitude };
+    _weatherGeoCache[city] = out;
+    return out;
+  } catch (e) {
+    _weatherError = String((e && e.message) || e) || 'Geocoder unreachable';
+    return null;
+  }
 }
 async function fetchWeather() {
   const { city } = _weatherSettings;
-  if (!city) return null;
+  if (!city) { _weatherError = 'No city set'; return null; }
   const bucket = Math.floor(Date.now() / 1800000);
   if (_weatherCache.data && _weatherCache.bucket === bucket && _weatherCache.city === city) return _weatherCache.data;
   try {
     const geo = await _geocodeCity(city);
-    if (!geo) return null;
+    if (!geo) return null;                       // _geocodeCity set the reason
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}` +
-      `&current=temperature_2m,weathercode,is_day` +
-      `&hourly=temperature_2m,weathercode,precipitation_probability,is_day` +
-      `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max` +
+      `&current=temperature_2m,weather_code,is_day` +
+      `&hourly=temperature_2m,weather_code,precipitation_probability,is_day` +
+      `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max` +
       `&forecast_days=7&timezone=auto`;
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) { _weatherError = 'Open-Meteo returned ' + res.status; return null; }
     const json = await res.json();
     const temp = Math.round(json.current.temperature_2m);
-    const code = json.current.weathercode;
+    const code = _wxPick(json.current, 'weather_code', 'weathercode');
     const isDay = json.current.is_day === 1;
     // Build hourly: next 12 hours from now
     const nowIso = json.current.time;
     const nowIdx = json.hourly.time.findIndex(t => t >= nowIso);
     const startIdx = nowIdx >= 0 ? nowIdx : 0;
+    const hCodes = _wxPick(json.hourly, 'weather_code', 'weathercode') || [];
     const hourly = json.hourly.time.slice(startIdx, startIdx + 12).map((t, i) => ({
       time: t.slice(11, 16),
       temp: Math.round(json.hourly.temperature_2m[startIdx + i]),
-      code: json.hourly.weathercode[startIdx + i],
+      code: hCodes[startIdx + i],
       rain: json.hourly.precipitation_probability[startIdx + i] ?? 0,
       isDay: json.hourly.is_day[startIdx + i] === 1,
     }));
     // Build daily: 7 days
+    const dCodes = _wxPick(json.daily, 'weather_code', 'weathercode') || [];
     const daily = json.daily.time.map((t, i) => ({
       date: t,
       high: Math.round(json.daily.temperature_2m_max[i]),
       low: Math.round(json.daily.temperature_2m_min[i]),
-      code: json.daily.weathercode[i],
+      code: dCodes[i],
       rain: json.daily.precipitation_probability_max[i] ?? 0,
     }));
     const result = { temp, desc: _wmoDec(code), icon: _wmoIcon(code, isDay), code, isDay, hourly, daily, city };
     _weatherCache = { data: result, bucket, city };
+    _weatherError = '';
     return result;
-  } catch { return null; }
+  } catch (e) {
+    _weatherError = String((e && e.message) || e) || 'Network error';
+    return null;
+  }
 }
 function _wmoIconHtml(code, isDay, cls) {
   const icon = `<i class="ti ${_wmoIcon(code, isDay)} ${cls}" style="color:${_wmoColor(code, isDay)}"></i>`;
@@ -18043,14 +18076,26 @@ async function renderHomeWeather() {
   const navDiv = document.getElementById('nav-clock-wx-divider');
   if (navRow) {
     if (!wx) {
-      navRow.style.display = 'none';
-      if (navDiv) navDiv.style.display = 'none';
+      // A widget that vanishes tells you nothing you can act on. One muted
+      // chip with the reason on hover, and a click to try again, turns "the
+      // weather is not working" into a question with an answer.
+      navRow.style.display = 'flex';
+      if (navDiv) navDiv.style.display = '';
       navRow.removeAttribute('data-has-wx');
-      navRow.onclick = null;
+      navRow.style.cursor = 'pointer';
+      navRow.title = (_weatherError || 'Could not load weather') + ' — click to retry';
+      navRow.onclick = () => {
+        _weatherCache = { data: null, bucket: -1, city: '' };
+        _weatherGeoCache = {};
+        renderHomeWeather();
+      };
+      navRow.innerHTML = `<div class="cwc-wx-main"><i class="ti ti-cloud-off cwc-wx-icon" style="color:var(--text-3)"></i><span class="cwc-wx-desc">unavailable</span></div>`;
     } else {
       navRow.style.display = 'flex';
       if (navDiv) navDiv.style.display = '';
       navRow.setAttribute('data-has-wx', '1');
+      navRow.style.cursor = '';
+      navRow.title = '';
       navRow.onclick = wxPanelToggle;
       const rain = _wxRainCheck(wx);
       let badge = '';
@@ -25610,6 +25655,14 @@ async function initApp() {
   loadSettings();
   loadWeatherSettings();
   renderHomeWeather();
+  // The panel footer says "updates every 30 min" and fetchWeather buckets on
+  // half an hour, but nothing ever came back to cross that line: one attempt
+  // per page load. So a failure at load was permanent for the session, and a
+  // success sat frozen at whatever the temperature was when you opened the
+  // tab. Ticking every five minutes mostly hits that cache for free, and is
+  // what lets a dropped request recover by itself.
+  setInterval(() => { if (!document.hidden) renderHomeWeather(); }, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderHomeWeather(); });
   loadMsgTemplate();
   renderHubs();
   pomoRender();
