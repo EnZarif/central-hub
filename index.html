@@ -7506,6 +7506,27 @@ function paintFavicon(colour) {
 }
 
 // ===== RAIL =====
+// The rail stays open after you click something in it because :focus-within
+// is still true - the button you just pressed holds focus, so moving the
+// pointer away does nothing and you have to click elsewhere to shake it off.
+// Letting go of focus after a pointer click fixes that: hover alone then
+// decides whether the rail is open.
+//
+// Only for pointer clicks. e.detail is 0 when a button is activated from the
+// keyboard, and blurring there would throw away someone's place in the tab
+// order and shut the rail under them mid-keystroke. Pinned rails are left
+// alone entirely - that is what pinning is for.
+document.addEventListener('click', e => {
+  if (e.detail === 0) return;
+  const nav = document.querySelector('.nav');
+  if (!nav || nav.classList.contains('rail-pin')) return;
+  if (window.matchMedia && window.matchMedia('(max-width: 760px)').matches) return;
+  const btn = e.target.closest('.nav-btn, .ql-add, .nav-util-hd, .rail-pin-btn, .nav-logo-btn');
+  if (!btn || !nav.contains(btn)) return;
+  // after the click has been handled, so nothing downstream loses its target
+  requestAnimationFrame(() => { try { btn.blur(); } catch (err) {} });
+});
+
 // Utility starts shut. Opening it is remembered, because somebody who lives
 // in Settings should not have to open it every morning.
 function toggleUtility() {
