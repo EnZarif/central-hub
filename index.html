@@ -361,7 +361,13 @@
   }
   /* each keeps the colour it means */
   .sidebar-action-btn.sab-job { --eb: var(--purple-text); }
-  .sidebar-action-btn.sab-import { --eb: var(--text-2); }
+  /* Import is green wherever it appears, so bringing a file into the Hub
+     looks the same wherever you do it. .import-btn is the hook for any new
+     one - add the class and it is already right.
+     The exception is a button that carries the accent in its own right: the
+     confirm inside the import modal is a .generate-btn, where it is the
+     primary action of the dialog rather than an import affordance. */
+  .sidebar-action-btn.sab-import, .import-btn { --eb: var(--green-text); }
   .esc-add-btn { --eb: var(--coral-text); }
   .al-fix-go { --eb: var(--green-text); }
   .al-fix-go.ghost, .qlc-b, .jl-add-section-btn, .kb-manage-toggle, .stk-rule-x { --eb: var(--text-3); }
