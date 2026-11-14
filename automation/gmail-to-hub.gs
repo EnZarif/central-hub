@@ -77,6 +77,7 @@ function ingest() {
   var pushed = 0, skipped = 0;
 
   threads.forEach(function (thread) {
+    var before = pushed;
     // Per MESSAGE, not per thread. A daily report with a constant subject
     // gets threaded by Gmail, so labelling the thread "done" would make
     // every day after the first invisible.
@@ -87,7 +88,8 @@ function ingest() {
       if (Date.now() - msg.getDate().getTime() > MAX_AGE_DAYS * 86400000) return;
 
       var any = false;
-      msg.getAttachments({ includeInlineImages: false }).forEach(function (att) {
+      var atts = msg.getAttachments({ includeInlineImages: false });
+      atts.forEach(function (att) {
         var name = att.getName();
         if (!OK_EXTENSION.test(name)) { skipped++; return; }
         if (att.getSize() > MAX_BYTES) {
@@ -105,9 +107,13 @@ function ingest() {
         }
       });
 
-      if (any || msg.getAttachments().length === 0) seen[id] = Date.now();
+      if (any || atts.length === 0) seen[id] = Date.now();
     });
-    thread.addLabel(label);
+    // Only once something has actually come out of this thread. Nothing
+    // searches on this label - it is there so you can see what the pipe has
+    // touched - and re-applying it to the same thread on every quiet run was
+    // the one Gmail WRITE in a run that had nothing to do.
+    if (pushed > before) thread.addLabel(label);
   });
 
   saveSeen(seen);
