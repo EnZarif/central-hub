@@ -32,6 +32,14 @@
 #>
 param(
   [Parameter(Mandatory = $true)][string]$JsonPath,
+  # Where to record what was sent, the moment it is known.
+  #
+  # This exists because of a real duplicate. The final SendAndReceive below
+  # can hang; the caller gave up waiting, reported the run as failed, and
+  # the mail had in fact already gone - so it was sent a second time by
+  # hand. The result must therefore survive this process being killed,
+  # which means writing it to disk before anything that might block.
+  [string]$ResultPath,
   [switch]$WhatIf
 )
 
@@ -110,9 +118,21 @@ foreach ($m in $messages) {
   }
 }
 
-# Send() queues into the outbox; this pushes it out without waiting for
-# Outlook's own send/receive cycle, which can be minutes.
-try { $ns.SendAndReceive($false) } catch { }
+$result = @{ ok = ($failed.Count -eq 0); sent = $sent; failed = $failed
+             account = $account.SmtpAddress; error = $null }
 
-Emit @{ ok = ($failed.Count -eq 0); sent = $sent; failed = $failed
-        account = $account.SmtpAddress; error = $null }
+# Record what happened BEFORE doing anything else. Everything above has
+# already left the building; from here on the only job is making sure the
+# caller finds that out, even if this process is killed.
+if ($ResultPath) {
+  try { $result | ConvertTo-Json -Depth 6 -Compress | Set-Content -Path $ResultPath -Encoding utf8 } catch { }
+}
+
+# There used to be a $ns.SendAndReceive($false) here, to flush the outbox
+# rather than wait for Outlook's own cycle. It is gone, and deliberately:
+# it could block indefinitely, which made the caller time out and report a
+# run as failed when the mail had already gone - so it got sent twice.
+# Send() submits to the outbox and Outlook delivers it; the helper holds
+# Outlook open, so there is nothing left to flush.
+
+Emit $result

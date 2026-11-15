@@ -22896,6 +22896,11 @@ const MAIL_BRIDGE_HEADER = { 'X-Hub-Mail': '1' };
 
 let _bridge = { state: 'unknown', ready: false, account: null, error: null };
 let _bridgeProbing = false;
+// Sending is slow enough to look like nothing happened - the first send of
+// the day has to start Outlook - and pressing a button twice must never put
+// two of the same email out. The bridge refuses duplicates as well; this is
+// the half that stops the second run ever starting.
+let _mailSending = false;
 
 /**
  * Is there a local Outlook we can hand mail to?
@@ -22950,6 +22955,7 @@ async function mailBridgeSend(messages) {
  * by pressing it again.
  */
 async function kpiOpsSendAll() {
+  if (_mailSending) { showToast('<i class="ti ti-hourglass"></i>Still sending \u2014 give it a moment'); return; }
   const b = await mailBridgeProbe();
   if (!b.ready) {
     showToast('<i class="ti ti-x"></i>' + esc(b.error || 'Outlook is not available'), 6000);
@@ -22979,6 +22985,7 @@ async function kpiOpsSendAll() {
       + (messages.length === 1 ? '' : 's') + ' now, from ' + (b.account || 'Outlook') + '?\n\n'
       + preview + '\n\nThis sends real mail immediately.')) return;
 
+  _mailSending = true;
   const btn = document.getElementById('kpi-ops-sendall-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i>Sending ' + messages.length + '\u2026'; }
 
@@ -22990,7 +22997,10 @@ async function kpiOpsSendAll() {
     });
     renderKpiOpsList();
     if (r.ok) {
-      showToast('<i class="ti ti-mail-check"></i>Sent ' + r.sent + ' email' + (r.sent === 1 ? '' : 's'), 5200);
+      const dup = r.skippedDuplicates
+        ? ' \u00b7 ' + r.skippedDuplicates + ' skipped as already sent' : '';
+      showToast('<i class="ti ti-mail-check"></i>Sent ' + r.sent + ' email'
+        + (r.sent === 1 ? '' : 's') + dup, 5200);
     } else {
       // Partial sends are the case worth being precise about: the ones that
       // went are marked, the ones that did not are still on the list.
@@ -22999,8 +23009,12 @@ async function kpiOpsSendAll() {
         + (r.failed || []).length + ' failed' + (f ? ' \u2014 ' + esc(String(f.error).slice(0, 90)) : ''), 9000);
     }
   } catch (e) {
-    showToast('<i class="ti ti-x"></i>' + esc(e.message), 8000);
+    // The one thing never to say here is that nothing was sent, because
+    // that is exactly what is not known - and acting on it sends twice.
+    showToast('<i class="ti ti-alert-triangle"></i>Lost contact while sending \u2014 check Sent Items '
+      + 'before trying again, some may have gone. (' + esc(e.message) + ')', 12000);
   } finally {
+    _mailSending = false;
     if (btn) { btn.disabled = false; renderKpiOpsList(); }
   }
 }
@@ -23008,24 +23022,33 @@ async function kpiOpsSendAll() {
 /** One operator, same path. */
 async function kpiOpsSendOne(i, ev) {
   if (ev) ev.stopPropagation();
+  if (_mailSending) { showToast('<i class="ti ti-hourglass"></i>Still sending \u2014 give it a moment'); return; }
   const b = await mailBridgeProbe();
   if (!b.ready) { kpiOpsOpenOutlook(i, null); return; }   // fall back to the old way
   const x = kpiOpsBuild(i);
   if (!x) return;
   if (!x.fields.to) { showToast('<i class="ti ti-x"></i>No address for ' + esc(x.name), 5000); return; }
   if (!confirm('Send ' + x.name + '\u2019s email to ' + x.fields.to + ' now?')) return;
+  _mailSending = true;
   try {
     const r = await mailBridgeSend([{ to: x.fields.to, cc: x.fields.cc,
                                       subject: x.fields.subject, html: x.html }]);
-    if (r.ok) {
+    if (r.skippedDuplicates) {
+      kpiOpsMarkSent(x.name);
+      renderKpiOpsList();
+      showToast('<i class="ti ti-shield-check"></i>Already sent in the last 15 minutes \u2014 not sent again', 7000);
+    } else if (r.ok) {
       kpiOpsMarkSent(x.name);
       renderKpiOpsList();
       showToast('<i class="ti ti-mail-check"></i>Sent to ' + esc(x.fields.to));
     } else {
-      showToast('<i class="ti ti-x"></i>' + esc(((r.failed || [])[0] || {}).error || r.error || 'Failed'), 8000);
+      showToast('<i class="ti ti-x"></i>' + esc(((r.failed || [])[0] || {}).error || r.error || 'Failed'), 9000);
     }
   } catch (e) {
-    showToast('<i class="ti ti-x"></i>' + esc(e.message), 8000);
+    showToast('<i class="ti ti-alert-triangle"></i>Lost contact while sending \u2014 check Sent Items '
+      + 'before trying again. (' + esc(e.message) + ')', 12000);
+  } finally {
+    _mailSending = false;
   }
 }
 
