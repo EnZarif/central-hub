@@ -53,6 +53,18 @@ var KEEP_SEEN     = 300;
  */
 var MAX_AGE_DAYS  = 14;
 var OK_EXTENSION  = /\.(csv|xlsx|xls)$/i;
+/**
+ * Where the Hub looks to find out whether this script is still alive.
+ *
+ * Until now the only sign that the pipe was working was files appearing, so
+ * the only sign that it had stopped was files not appearing - which looks
+ * exactly like a quiet day. A trigger that gets disabled, an expired
+ * authorisation or a blown daily quota would all fail in that same silence.
+ *
+ * So every run writes a row whether it pushed anything or not. The run
+ * itself is the signal; what it carried is secondary.
+ */
+var HEARTBEAT_KEY = 'zarif_import_heartbeat';
 
 /** Run this once to schedule the pickup. */
 function installTrigger() {
@@ -117,7 +129,50 @@ function ingest() {
   });
 
   saveSeen(seen);
+
+  // The last run that actually carried a file, kept here rather than read
+  // back from Supabase so a quiet run stays a single write.
+  if (pushed > 0) PROP.setProperty('LAST_PUSH', String(Date.now()));
+
+  // Never let a bookkeeping write break the pickup it is reporting on: the
+  // files are the job, this row is only how you find out about them.
+  try {
+    heartbeat(url, key, {
+      at: Date.now(),
+      pushed: pushed,
+      skipped: skipped,
+      threads: threads.length,
+      lastPush: Number(PROP.getProperty('LAST_PUSH') || 0) || null
+    });
+  } catch (e) {
+    Logger.log('Heartbeat failed (ingest was fine): ' + e.message);
+  }
+
   Logger.log('Pushed ' + pushed + ' file(s), skipped ' + skipped + '.');
+}
+
+/** One upserted row in hub_data, which is where the Hub reads it from. */
+function heartbeat(url, key, payload) {
+  var endpoint = url.replace(/\/+$/, '') + '/rest/v1/hub_data';
+  var res = UrlFetchApp.fetch(endpoint, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({
+      key: HEARTBEAT_KEY,
+      value: payload,
+      updated_at: new Date().toISOString()
+    }),
+    headers: {
+      apikey: key,
+      Authorization: 'Bearer ' + key,
+      Prefer: 'resolution=merge-duplicates'
+    },
+    muteHttpExceptions: true
+  });
+  var code = res.getResponseCode();
+  if (code < 200 || code >= 300) {
+    throw new Error('Supabase said ' + code + ': ' + res.getContentText().slice(0, 200));
+  }
 }
 
 function upload(url, key, uid, att, when) {

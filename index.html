@@ -7510,6 +7510,48 @@ function commuteWindowCheck() {
   }).catch(e => console.warn('[commute]', e.message));
 }
 
+// ---- import pipeline health ---------------------------------------------
+// The Apps Script that collects the emailed files writes a row on every run,
+// carrying nothing but the fact that it ran. Two different things can go
+// wrong and they want different words:
+//
+//   the script stopped        - no row for hours. Nothing is being collected
+//                               and nothing will be until it is restarted.
+//   the script runs, quietly  - row is fresh, but nothing has come through
+//                               for days. The pipe is fine; the sender is not.
+//
+// Before this the only evidence of either was files not appearing, which is
+// indistinguishable from a quiet week.
+const IMPORT_KEY = 'zarif_import_heartbeat';
+// The trigger fires every five minutes, so two hours is twenty-four missed
+// runs - late enough that it is not a blip, early enough to act on the day.
+const IMPORT_SILENT_MINS = 120;
+const IMPORT_QUIET_DAYS = 2;
+
+function hfdAgo(mins) {
+  if (mins < 90) return mins + ' min ago';
+  const h = Math.round(mins / 60);
+  if (h < 36) return h + ' hour' + (h === 1 ? '' : 's') + ' ago';
+  return Math.round(h / 24) + ' days ago';
+}
+
+/**
+ * Working days between then and today, counted against your own roster
+ * rather than a guess at which days are weekends - a day you marked off is
+ * a day no file was expected.
+ */
+function hfdWorkingDaysSince(ms) {
+  const d = new Date(ms); d.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let n = 0, guard = 0;
+  d.setDate(d.getDate() + 1);          // the day it last arrived does not count
+  while (d <= today && guard++ < 90) {
+    if (getDayMode(ymd(d)) === 'working') n++;
+    d.setDate(d.getDate() + 1);
+  }
+  return n;
+}
+
 // ---- commute: the bits the page talks to --------------------------------
 function commuteToggleDir() {
   const c = commuteGet();
@@ -7682,6 +7724,33 @@ function hfdRows() {
         go: "showPage('settings')" });
     }
   } catch (e) { console.warn('[feed] commute', e); }
+
+  // 5. Is the pipe that feeds half this app still running?
+  try {
+    const hb = dbGet(IMPORT_KEY);
+    // No row at all means the heartbeat has never been deployed, which is
+    // not the same as a pipeline that has stopped - so it says nothing.
+    if (hb && hb.at) {
+      const quiet = Math.round((Date.now() - hb.at) / 60000);
+      if (quiet > IMPORT_SILENT_MINS) {
+        // Top of the list regardless of what else is on it: everything
+        // downstream is working from data that stopped arriving.
+        out.push({ p: 0, ac: 'coral', ico: 'ti-plug-connected-x',
+          t: 'Import pipeline silent',
+          s: 'Last ran ' + hfdAgo(quiet) + ' \u2014 nothing is being collected',
+          go: "window.open('https://script.google.com/home/my','_blank')" });
+      } else if (hb.lastPush) {
+        const missed = hfdWorkingDaysSince(hb.lastPush);
+        // Only worth saying on a day a file was actually due.
+        if (missed >= IMPORT_QUIET_DAYS && getTodayDayMode() === 'working') {
+          out.push({ p: 6, ac: 'amber', ico: 'ti-mail-off', badge: String(missed),
+            t: 'No file in ' + missed + ' working days',
+            s: 'The pickup is running \u2014 nothing is arriving to pick up',
+            go: "showPage('dispatch')" });
+        }
+      }
+    }
+  } catch (e) { console.warn('[feed] heartbeat', e); }
 
   // Explicit ranking rather than the order the sources happen to be read in.
   // The drive outranks the ordinary chase bucket because it expires at the
