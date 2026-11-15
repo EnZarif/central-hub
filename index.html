@@ -370,6 +370,19 @@
     border-top: 1px solid var(--border); background: var(--surface2); }
   @media (max-width: 620px) { .snap-cell { min-width: 50%; flex: 1 1 50%; } }
 
+  /* ── COMMUTE ETA ─────────────────────────────────────── */
+  .cmt-match { display: flex; gap: 10px; align-items: baseline; font-size: 12px;
+    padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .cmt-match span { color: var(--text-3); width: 44px; flex-shrink: 0; font-weight: 600; }
+  .cmt-match b { color: var(--text-2); font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+  .cmt-match i { color: var(--text-3); }
+  .cmt-res { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+    padding: 11px 13px; border-radius: 11px; background: var(--teal-bg);
+    border: 1px solid color-mix(in srgb, var(--teal-text) 30%, transparent); }
+  .cmt-res > b { font-size: 19px; font-weight: 800; color: var(--teal-text);
+    font-family: 'Archivo', 'Inter', system-ui, sans-serif; }
+  .cmt-res > span { font-size: 12px; color: var(--text-3); flex: 1 1 140px; }
+
   /* ══ MOBILE: LIQUID GLASS ═══════════════════════════════
      Phone only. Everything in here sits behind max-width:760px and changes
      nothing on a desktop.
@@ -5078,6 +5091,7 @@
       <p id="home-date">Loading…</p>
     </div>
     <div id="home-inbox" hidden></div>
+    <div id="home-commute" hidden></div>
     <div id="home-briefing"></div>
     <div id="home-highlights"></div>
     <div class="mains" id="home-mains">
@@ -6436,10 +6450,56 @@
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">Commute time</div>
-            <div class="settings-row-desc">Typical drive to work (minutes) — shown in the morning briefing</div>
+            <div class="settings-row-desc">A fallback figure in minutes, used if the lookup below has nothing to say</div>
           </div>
           <div class="settings-row-ctrl">
             <input type="number" class="settings-input" id="settings-commute-mins" placeholder="30" style="width:80px;" min="0" max="300">
+          </div>
+        </div>
+
+        <div class="card-title s-toggle" onclick="toggleSettingsSection('s-commute'); renderCommute()" style="margin-top:18px;">
+          <i class="ti ti-car"></i> Commute ETA
+          <i class="ti ti-chevron-down s-chev"></i>
+        </div>
+        <div class="s-body" id="s-commute">
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Home address</div>
+              <div class="settings-row-desc">Street, suburb and state — the more complete, the better the match</div>
+            </div>
+            <div class="settings-row-ctrl">
+              <input type="text" class="settings-input" id="commute-home-input" placeholder="12 Example St, Bentleigh VIC" style="min-width:230px;">
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Work address</div>
+              <div class="settings-row-desc">Same again for the other end of the drive</div>
+            </div>
+            <div class="settings-row-ctrl">
+              <input type="text" class="settings-input" id="commute-work-input" placeholder="1 Example Rd, Mulgrave VIC" style="min-width:230px;">
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Direction</div>
+              <div class="settings-row-desc">Which way the 4:30pm check looks up</div>
+            </div>
+            <div class="settings-row-ctrl">
+              <button class="settings-save-btn" id="commute-dir-btn" onclick="commuteToggleDir()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-arrow-right"></i> Work to home</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px;">
+            <button class="settings-save-btn" onclick="commuteSaveAddresses()"><i class="ti ti-map-pin-check"></i> Look up &amp; save</button>
+            <button class="settings-save-btn" onclick="commuteCheckNow()" style="background:transparent;color:var(--text-2);border:0.5px solid var(--border-md);box-shadow:none;"><i class="ti ti-route"></i> Check now</button>
+          </div>
+          <div id="commute-status"></div>
+          <div class="ai-hint" style="margin-top:10px;">
+            Checked once between <strong>4:30 and 4:55pm</strong> while the Hub is open.
+            Addresses are matched by <strong>OpenStreetMap</strong> and the drive is timed by
+            <strong>OSRM</strong> — both free, neither needs a key, and neither knows about live traffic.
+            Log what a drive actually took a few times and the Hub works out your own
+            allowance for the hour and applies it.
           </div>
         </div>
         <div class="ai-hint">Powered by <strong>Open-Meteo</strong> — free, no API key needed. Refreshes every 30 min.</div>
@@ -7281,6 +7341,243 @@ function dbSet(key, value) {
 function dbDel(key) {
   delete _db[key];
   _sb.from('hub_data').delete().eq('key', key).then(() => {});
+}
+
+// ===== COMMUTE ETA =====
+// Two addresses, a driving time between them, checked once in the late
+// afternoon so it is on screen before you leave.
+//
+// The honest limit first, because it decides how the number is labelled:
+// the free router gives FREE-FLOW time. It knows the roads and the speed
+// limits; it does not know that it is 4:40pm on the Monash. That is exactly
+// the hour you are asking about, so a raw figure would be optimistic in the
+// one case it is wanted.
+//
+// So the Hub learns the gap instead. Log what the drive actually took a few
+// times and it works out your own ratio against free-flow and applies it
+// from then on, saying which of the two it is showing. Three samples is the
+// threshold - fewer than that and one bad crash day would set the factor.
+const COMMUTE_KEY = 'zarif_commute';
+const COMMUTE_GEO = 'https://nominatim.openstreetmap.org/search';
+const COMMUTE_OSRM = 'https://router.project-osrm.org/route/v1/driving/';
+// The window to look in, as minutes from midnight. Checked once inside it.
+const COMMUTE_FROM = 16 * 60 + 30;   // 4:30pm
+const COMMUTE_TO   = 16 * 60 + 55;   // 4:55pm
+const COMMUTE_MIN_SAMPLES = 3;
+const COMMUTE_KEEP = 40;
+
+function commuteGet() {
+  const c = dbGet(COMMUTE_KEY) || {};
+  return { home: c.home || null, work: c.work || null,
+           samples: Array.isArray(c.samples) ? c.samples : [],
+           today: c.today || null,
+           // The check runs at half four, so the drive it is about is the
+           // one home. That is the default until you say otherwise.
+           reverse: c.reverse === undefined ? true : !!c.reverse };
+}
+function commuteSave(c) { dbSet(COMMUTE_KEY, c); }
+
+/**
+ * An address to a point on the map.
+ *
+ * Nominatim takes free text and will answer even when it has understood you
+ * badly - a street in the wrong suburb comes back as confidently as the
+ * right one. So whatever it matched is handed back and shown, and you
+ * confirm it rather than the Hub assuming.
+ */
+async function commuteGeocode(addr) {
+  const q = String(addr || '').trim();
+  if (!q) return null;
+  const url = COMMUTE_GEO + '?format=json&limit=1&countrycodes=au&addressdetails=1&q=' + encodeURIComponent(q);
+  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error('Address lookup returned ' + res.status);
+  const list = await res.json();
+  if (!list || !list.length) throw new Error('No match for \u201c' + q + '\u201d');
+  const h = list[0];
+  return { addr: q, lat: parseFloat(h.lat), lon: parseFloat(h.lon),
+           label: h.display_name || q };
+}
+
+/** Free-flow driving time in minutes, and the distance, between two points. */
+async function commuteRoute(a, b) {
+  const url = COMMUTE_OSRM + a.lon + ',' + a.lat + ';' + b.lon + ',' + b.lat + '?overview=false';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Router returned ' + res.status);
+  const j = await res.json();
+  if (j.code !== 'Ok' || !j.routes || !j.routes.length) throw new Error('No driving route found');
+  const r = j.routes[0];
+  return { mins: Math.round(r.duration / 60), km: Math.round(r.distance / 1000 * 10) / 10 };
+}
+
+/**
+ * Your own ratio of real time to free-flow, from the days you logged.
+ * Null until there are enough of them to mean anything.
+ */
+function commuteFactor(c) {
+  const pairs = (c || commuteGet()).samples.filter(s => s.est > 0 && s.actual > 0);
+  if (pairs.length < COMMUTE_MIN_SAMPLES) return null;
+  const recent = pairs.slice(-10);
+  const mean = recent.reduce((a, s) => a + s.actual / s.est, 0) / recent.length;
+  return { factor: Math.round(mean * 100) / 100, n: recent.length };
+}
+
+/** Run the lookup. Returns {mins, km, adjusted, factor} or throws. */
+async function commuteCheck(force) {
+  const c = commuteGet();
+  if (!c.home || !c.work) throw new Error('Set both addresses first');
+  const today = todayInputDate();
+  if (!force && c.today && c.today.day === today) return c.today;
+
+  const from = c.reverse ? c.work : c.home;
+  const to   = c.reverse ? c.home : c.work;
+  const r = await commuteRoute(from, to);
+  const f = commuteFactor(c);
+  const out = { day: today, at: Date.now(), freeFlow: r.mins, km: r.km,
+                mins: f ? Math.round(r.mins * f.factor) : r.mins,
+                factor: f ? f.factor : null, n: f ? f.n : 0 };
+  c.today = out;
+  commuteSave(c);
+  renderCommute();
+  return out;
+}
+
+/** What you say it actually took, which is what teaches the factor. */
+function commuteLogActual(mins) {
+  const n = parseInt(mins, 10);
+  const c = commuteGet();
+  if (!n || n <= 0 || !c.today) return;
+  c.samples = c.samples.filter(s => s.day !== c.today.day);
+  c.samples.push({ day: c.today.day, est: c.today.freeFlow, actual: n });
+  if (c.samples.length > COMMUTE_KEEP) c.samples = c.samples.slice(-COMMUTE_KEEP);
+  commuteSave(c);
+  renderCommute();
+  const f = commuteFactor(c);
+  showToast(f
+    ? `<i class="ti ti-car"></i>Logged \u2014 your drives run about ${Math.round((f.factor - 1) * 100)}% over free-flow`
+    : `<i class="ti ti-car"></i>Logged \u2014 ${COMMUTE_MIN_SAMPLES - c.samples.length} more and the Hub can allow for traffic`);
+}
+
+/**
+ * The window check. Fires once inside 4:30-4:55pm, on whatever tick of the
+ * clock happens to be running, and never twice in a day.
+ */
+let _commuteTried = '';
+function commuteWindowCheck() {
+  const c = commuteGet();
+  if (!c.home || !c.work) return;
+  const today = todayInputDate();
+  if (_commuteTried === today) return;
+  if (c.today && c.today.day === today) { _commuteTried = today; return; }
+  const now = new Date();
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (mins < COMMUTE_FROM || mins > COMMUTE_TO) return;
+  _commuteTried = today;
+  commuteCheck().then(r => {
+    if (!r) return;
+    showToast(`<i class="ti ti-car"></i>Drive ${c.reverse ? 'home' : 'to work'} about <b>${r.mins} min</b>`
+      + (r.factor ? ' (traffic allowed for)' : ' at free-flow') + ` \u00b7 ${r.km} km`);
+  }).catch(e => console.warn('[commute]', e.message));
+}
+
+// ---- commute: the bits the page talks to --------------------------------
+function commuteToggleDir() {
+  const c = commuteGet();
+  c.reverse = !c.reverse;
+  commuteSave(c);
+  renderCommute();
+}
+
+async function commuteSaveAddresses() {
+  const el = document.getElementById('commute-status');
+  const home = (document.getElementById('commute-home-input').value || '').trim();
+  const work = (document.getElementById('commute-work-input').value || '').trim();
+  if (!home || !work) { el.innerHTML = '<span style="color:var(--coral-text)">Both addresses are needed.</span>'; return; }
+  el.innerHTML = '<span style="color:var(--text-3)">Looking both up\u2026</span>';
+  try {
+    const h = await commuteGeocode(home);
+    // Nominatim asks for no more than one call a second, and this is the
+    // only place the Hub makes two in a row.
+    await new Promise(r => setTimeout(r, 1100));
+    const w = await commuteGeocode(work);
+    const c = commuteGet();
+    c.home = h; c.work = w; c.today = null;   // addresses changed, so re-time it
+    commuteSave(c);
+    renderCommute();
+    showToast('<i class="ti ti-map-pin-check"></i>Addresses saved');
+  } catch (e) {
+    el.innerHTML = '<span style="color:var(--coral-text)"><i class="ti ti-x"></i> ' + esc(e.message) + '</span>';
+  }
+}
+
+async function commuteCheckNow() {
+  const el = document.getElementById('commute-status');
+  if (el) el.innerHTML = '<span style="color:var(--text-3)">Timing the drive\u2026</span>';
+  try { await commuteCheck(true); }
+  catch (e) {
+    if (el) el.innerHTML = '<span style="color:var(--coral-text)"><i class="ti ti-x"></i> ' + esc(e.message) + '</span>';
+  }
+}
+
+function commuteAskActual() {
+  const c = commuteGet();
+  if (!c.today) return;
+  const v = prompt('How many minutes did the drive actually take?');
+  if (v === null) return;
+  commuteLogActual(v);
+}
+
+function renderCommute() {
+  const c = commuteGet();
+  const f = commuteFactor(c);
+
+  // ---- Settings panel ----
+  const el = document.getElementById('commute-status');
+  if (el) {
+    const hi = document.getElementById('commute-home-input');
+    const wi = document.getElementById('commute-work-input');
+    if (hi && !hi.value && c.home) hi.value = c.home.addr;
+    if (wi && !wi.value && c.work) wi.value = c.work.addr;
+    const dir = document.getElementById('commute-dir-btn');
+    if (dir) dir.innerHTML = c.reverse
+      ? '<i class="ti ti-arrow-left"></i> Work to home'
+      : '<i class="ti ti-arrow-right"></i> Home to work';
+
+    const matched = (label, p) => p
+      ? `<div class="cmt-match"><span>${label}</span><b>${esc(p.label)}</b></div>`
+      : `<div class="cmt-match"><span>${label}</span><i>not set</i></div>`;
+
+    // The matched address is shown in full, because the lookup will answer
+    // confidently with the wrong street and this is the only way to tell.
+    el.innerHTML = matched('Home', c.home) + matched('Work', c.work)
+      + (c.today
+        ? `<div class="cmt-res"><b>${c.today.mins} min</b>
+             <span>${c.today.km} km \u00b7 ${c.today.factor
+               ? `free-flow ${c.today.freeFlow} min, plus your usual ${Math.round((c.today.factor - 1) * 100)}%`
+               : 'free-flow, no traffic allowance yet'}</span>
+             <button class="exc-b" style="--bc:var(--teal-text)" onclick="commuteAskActual()">
+               <i class="ti ti-stopwatch"></i>Log what it took</button></div>`
+        : '')
+      + (f
+        ? `<div class="ai-hint" style="margin-top:8px">Your drives run about <strong>${Math.round((f.factor - 1) * 100)}%</strong> over free-flow, from ${f.n} logged ${f.n === 1 ? 'trip' : 'trips'}.</div>`
+        : c.samples.length
+          ? `<div class="ai-hint" style="margin-top:8px">${c.samples.length} of ${COMMUTE_MIN_SAMPLES} logged trips \u2014 a few more and the Hub can allow for the hour.</div>`
+          : '');
+  }
+
+  // ---- Home ----
+  const host = document.getElementById('home-commute');
+  if (!host) return;
+  const t = c.today;
+  if (!t || t.day !== todayInputDate()) { host.hidden = true; host.innerHTML = ''; return; }
+  host.hidden = false;
+  host.innerHTML = `<button class="ibx-alert" style="--ac:var(--teal-text)" onclick="showPage('settings')">
+      <span class="ibx-alert-dot" style="background:var(--teal-text)"></span>
+      <span class="ibx-alert-t">
+        <b style="color:var(--teal-text)">Drive ${c.reverse ? 'home' : 'to work'} about ${t.mins} min</b>
+        <span>${t.km} km \u00b7 ${t.factor ? 'traffic allowed for from your own trips' : 'free-flow \u2014 no traffic data'}</span>
+      </span>
+      <span class="ibx-alert-go" style="color:var(--teal-text)">Settings <i class="ti ti-arrow-right"></i></span>
+    </button>`;
 }
 
 // ===== BACKUP =====
@@ -17595,7 +17892,7 @@ function _ambientPalette(nowMin) {
 }
 function tickMelbClock() {
   const nowMin = melbNowMinutes();
-  if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); checkReminders(nowMin); checkEodWrap(nowMin); }
+  if (nowMin !== _dueSoonLastMin) { _dueSoonLastMin = nowMin; renderDueSoon(); checkReminders(nowMin); checkEodWrap(nowMin); commuteWindowCheck(); }
   const hm = melbFmt({ hour: 'numeric', minute: '2-digit', hour12: true }); // e.g. "6:01 pm"
   const m = hm.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
   const weekday = melbFmt({ weekday: 'long' });
@@ -26692,6 +26989,7 @@ async function initApp() {
   // to take is the one you will not have when it matters.
   backupToStorage();
   renderBackupStatus();
+  renderCommute();
   loadWeatherSettings();
   renderHomeWeather();
   // The panel footer says "updates every 30 min" and fetchWeather buckets on
