@@ -22649,7 +22649,9 @@ function renderKpiOpsList() {
   // which buttons the rows get, so the answer is fetched once and the list
   // repaints when it lands.
   const canSend = _bridge.state === 'up' && _bridge.ready;
-  if (_bridge.state === 'unknown') mailBridgeProbe().then(() => renderKpiOpsList());
+  // Re-ask whenever the answer has gone stale, not only on the very first
+  // paint. The _bridgeProbing check keeps this from chasing its own tail.
+  if (!_bridgeProbing && !mailBridgeFresh()) mailBridgeProbe().then(() => renderKpiOpsList());
   const left = ops.length - nSent;
 
   const sendAll = canSend && left
@@ -22680,7 +22682,10 @@ function renderKpiOpsList() {
         ? `Sending directly through Outlook as <strong>${esc(_bridge.account || 'you')}</strong> \u2014 no window opens, no Ctrl+V.`
         : `Outlook opens with the address, CC and subject filled and the table on your clipboard \u2014 Ctrl+V, then Send.`}</span>
       ${!canSend && _bridge.state !== 'unknown'
-        ? `<span class="kpi-ops-mode-why">${esc(_bridge.error || '')}</span>` : ''}
+        ? `<span class="kpi-ops-mode-why">${esc(_bridge.error || '')}
+             <button class="exc-b" style="--bc:var(--amber-text);margin-left:6px"
+               onclick="mailBridgeProbe(true).then(renderKpiOpsList)">
+               <i class="ti ti-refresh"></i>Check again</button></span>` : ''}
     </div>`;
 
   const strip = snapStripHtml('kpiops', [
@@ -22903,7 +22908,15 @@ const MAIL_BRIDGE = 'http://127.0.0.1:8765';
 // answers preflights for the Hub - so a hostile page cannot reach /send.
 const MAIL_BRIDGE_HEADER = { 'X-Hub-Mail': '1' };
 
-let _bridge = { state: 'unknown', ready: false, account: null, error: null };
+// `at` is when this was last established. Without it the first answer of
+// the page's life was kept for the life of the page - so a check that
+// happened to land while Outlook was restarting left the Hub insisting
+// Outlook was unavailable until a reload, long after it had come back.
+let _bridge = { state: 'unknown', ready: false, account: null, error: null, at: 0 };
+// A working answer is stable. A failing one usually is not: closing
+// Outlook, or catching it mid-start, fails for seconds, not minutes.
+const BRIDGE_OK_TTL = 5 * 60 * 1000;
+const BRIDGE_BAD_TTL = 15 * 1000;
 let _bridgeProbing = false;
 // Sending is slow enough to look like nothing happened - the first send of
 // the day has to start Outlook - and pressing a button twice must never put
@@ -22917,9 +22930,15 @@ let _mailSending = false;
  * 'down'  - the watcher is not running at all.
  * 'up'    - it answered, and `ready` says whether Outlook can actually send.
  */
+function mailBridgeFresh() {
+  if (_bridge.state === 'unknown') return false;
+  const ttl = _bridge.ready ? BRIDGE_OK_TTL : BRIDGE_BAD_TTL;
+  return (Date.now() - _bridge.at) < ttl;
+}
+
 async function mailBridgeProbe(force) {
   if (_bridgeProbing) return _bridge;
-  if (!force && _bridge.state !== 'unknown') return _bridge;
+  if (!force && mailBridgeFresh()) return _bridge;
   _bridgeProbing = true;
   try {
     // A short timeout: the whole point is that nothing waits on this.
@@ -22934,10 +22953,11 @@ async function mailBridgeProbe(force) {
     clearTimeout(t);
     if (!res.ok) throw new Error('bridge returned ' + res.status);
     const j = await res.json();
-    _bridge = { state: 'up', ready: !!j.ready, account: j.account || null, error: j.error || null };
+    _bridge = { state: 'up', ready: !!j.ready, account: j.account || null,
+                error: j.error || null, at: Date.now() };
   } catch (e) {
-    _bridge = { state: 'down', ready: false, account: null,
-                error: 'The local helper is not running \u2014 start the Hub with start.bat.' };
+    _bridge = { state: 'down', ready: false, account: null, at: Date.now(),
+                error: 'The local helper is not running \u2014 it starts automatically at login.' };
   } finally {
     _bridgeProbing = false;
   }
@@ -22957,6 +22977,20 @@ async function mailBridgeSend(messages) {
 }
 
 /**
+ * The state to act on when someone has actually pressed a button.
+ *
+ * A cached "no" is not good enough here. Outlook is routinely unavailable
+ * for a few seconds - it was closed, or it is still starting - and
+ * refusing on a stale answer is how a working setup looks broken. So a
+ * negative is always confirmed against the helper before it is believed.
+ */
+async function mailBridgeReady() {
+  let b = await mailBridgeProbe();
+  if (!b.ready) b = await mailBridgeProbe(true);
+  return b;
+}
+
+/**
  * The whole run, in one press.
  *
  * Only operators not already marked sent today are included, so pressing it
@@ -22965,7 +22999,7 @@ async function mailBridgeSend(messages) {
  */
 async function kpiOpsSendAll() {
   if (_mailSending) { showToast('<i class="ti ti-hourglass"></i>Still sending \u2014 give it a moment'); return; }
-  const b = await mailBridgeProbe();
+  const b = await mailBridgeReady();
   if (!b.ready) {
     showToast('<i class="ti ti-x"></i>' + esc(b.error || 'Outlook is not available'), 6000);
     return;
@@ -23048,7 +23082,7 @@ async function kpiOpsSendAll() {
  */
 async function kpiOpsSendTest() {
   if (_mailSending) { showToast('<i class="ti ti-hourglass"></i>Still sending \u2014 give it a moment'); return; }
-  const b = await mailBridgeProbe();
+  const b = await mailBridgeReady();
   if (!b.ready) {
     showToast('<i class="ti ti-x"></i>' + esc(b.error || 'Outlook is not available'), 7000);
     return;
@@ -23113,7 +23147,7 @@ async function kpiOpsSendTest() {
 async function kpiOpsSendOne(i, ev) {
   if (ev) ev.stopPropagation();
   if (_mailSending) { showToast('<i class="ti ti-hourglass"></i>Still sending \u2014 give it a moment'); return; }
-  const b = await mailBridgeProbe();
+  const b = await mailBridgeReady();
   if (!b.ready) { kpiOpsOpenOutlook(i, null); return; }   // fall back to the old way
   const x = kpiOpsBuild(i);
   if (!x) return;
