@@ -25093,6 +25093,99 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.43.0', type: 'minor', date: '15 Nov 2026', title: 'Security: an open table removed, and an escaper that missed quotes', changes: [
+    'The pixel_agents table behind the Pixel Office widget allowed anyone holding the publishable key to read and write it — and that key is in the page source of a site on the public web. An unauthenticated request returned the account name, local folder paths and live session activity',
+    'Its own policy comment claimed it mirrored hub_data. It did not: hub_data enforces row level security correctly, verified by an unauthenticated read and write. This was the only genuinely open table in the project',
+    'Pixel Office is gone — widget, styles and script — the rows are deleted, and automation/drop_pixel_agents.sql drops the table itself',
+    'Removing it also took the Supabase client out of the local helper, which now holds no credentials of any kind',
+    'esc() escaped only < and >, while most of this app builds attributes — a value carrying a double quote closed the attribute early, so a site name from an uploaded sheet could add its own event handler inside a page holding a live session. It now escapes & < > " and the apostrophe as well, across 28 attribute sites',
+    'Added escJsArg() for values going into onclick, where entities are decoded before the JavaScript is parsed — three places were building those arguments by hand and two would have broken under the wider escaping',
+  ]},
+  { ver: '4.42.0', type: 'major', date: '15 Nov 2026', title: 'Operator emails send themselves, instead of opening fifteen windows', changes: [
+    'The Hub always built these completely — address, CC, subject and the table — but no browser can send mail, so the run meant fifteen windows, fifteen pastes and fifteen clicks on Send',
+    'A local helper now hands finished messages straight to desktop Outlook. Send all clears the whole run in one press; each row keeps its own Send; a half-finished run resumes where it stopped',
+    'Needs no app registration, no admin consent and no Power Automate licence — it drives the Outlook profile already signed in on this machine',
+    'Added "Test to me": one email to your own address, nobody on CC, no operator involved. The subject carries the time so it can be repeated immediately',
+    'The helper listens on loopback only, checks the calling site against an allowlist and requires a header a browser will not send cross-origin without permission first',
+    'Nothing is load-bearing: with the helper stopped, or Outlook unable to send, the buttons stay exactly as they were and the page says why',
+    'Sends can no longer be double-counted — the same recipient and subject inside fifteen minutes is refused, and a lost connection says to check Sent Items rather than claiming nothing was sent',
+  ]},
+  { ver: '4.41.0', type: 'minor', date: '15 Nov 2026', title: 'Import heartbeat — find out when the pipe stops, not weeks later', changes: [
+    'Half the app runs on files collected from email, and the only sign it was working was files appearing — so the only sign it had stopped was files not appearing, which looks exactly like a quiet day',
+    'Every run of the collector now records that it ran, whether it carried anything or not',
+    'Two different problems, said differently: no record for two hours means the collector has stopped and ranks above everything else on Home; a fresh record with nothing collected for two working days ranks last, because it is information rather than alarm',
+    'Working days are counted against your own day-mode roster, and the quiet-days notice is suppressed entirely on a day marked off',
+  ]},
+  { ver: '4.40.0', type: 'minor', date: '15 Nov 2026', title: 'Home feed — the things waiting on you, beside the greeting', changes: [
+    'The greeting never filled the width, so the whole column under the clock was empty. It now carries a "Needs you" feed',
+    'Rows come from what the Hub already knows: overdue dated tasks, files waiting in the Inbox, the Chase List split into stale and ordinary, and today\'s drive',
+    'It disappears. With nothing to say it renders nothing at all and the hero goes back to being the greeting — a panel showing four zeroes every quiet morning teaches you to stop looking at it',
+    'Rank is explicit rather than whatever order the sources are read in: the drive outranks the ordinary chase bucket because it expires at the end of the day',
+    'The Inbox and commute banners that used to sit full-width under the greeting are rows in this feed now',
+  ]},
+  { ver: '4.39.0', type: 'minor', date: '15 Nov 2026', title: 'Commute ETA from a home and a work address', changes: [
+    'Set both addresses under Settings → Weather & Commute; the Hub checks the drive once between 4:30 and 4:55pm and puts the answer on Home',
+    'Addresses are matched by OpenStreetMap and the drive timed by OSRM — both free, neither needs a key',
+    'The matched address is shown back in full, because the lookup answers a bad address as confidently as a good one',
+    'Honest about what it knows: the router gives free-flow time and has no idea it is 4:40pm on the Monash, so the figure is labelled free-flow until it has something better',
+    'Log what a drive actually took a few times and the Hub works out your own ratio against free-flow and applies it. Three trips minimum, so one bad crash day cannot set it',
+  ]},
+  { ver: '4.38.1', type: 'patch', date: '15 Nov 2026', title: 'Removed GPS location routing', changes: [
+    'All location-routing features removed — this PC blocks location data, so they could never do anything',
+    'The commute time setting stays, and now works from fixed addresses instead',
+  ]},
+  { ver: '4.38.0', type: 'minor', date: '15 Nov 2026', title: 'Phone: centred properly, then made of glass', changes: [
+    'Content was not centred on a phone — the layout still reserved 66px for the desktop rail that is not there, leaving everything pulled off to one side',
+    'Nav labels were invisible until the drawer was scrolled',
+    'iOS-style material on phones only: blur with a saturation lift so colour bleeds through, and a bright hairline along the edge where light would catch — the hairline is what sells it',
+    'Real blur is spent only on the four pieces of fixed chrome. A blur is recomputed against everything painted behind it, so putting one on rows inside a scrolling list is the difference between glass and a slideshow',
+    'Falls back to solid surfaces under iOS Reduce Transparency, and anywhere backdrop-filter is unavailable',
+    'Theme cycler removed from the phone bar — it is set once, it lives in Settings, and it was holding a permanent 40px next to the two controls actually used',
+  ]},
+  { ver: '4.37.0', type: 'minor', date: '14 Nov 2026', title: 'The new pages fit a phone', changes: [
+    'Chase List, Morning Run, Insights and the operator email run all reflow properly at phone width',
+    '44px minimum tap targets throughout; Insights tiles go two-up instead of overflowing',
+  ]},
+  { ver: '4.36.1', type: 'patch', date: '14 Nov 2026', title: 'Home cards are actually three-dimensional now', changes: [
+    'Only the Task Manager card tilted — Helpdesk and Dispatch had the same markup but no depth',
+    'The existing translateZ values were doing nothing at all: the card sets perspective and hides overflow, which flattens its children. Measured separation at any rotation was 0.0px',
+    'Replaced with pointer-driven parallax — layers now shift against each other by real measured amounts as the cursor moves',
+  ]},
+  { ver: '4.36.0', type: 'minor', date: '14 Nov 2026', title: 'Morning Run — one page for the five steps you do every day', changes: [
+    'A single page for the morning routine, with each step derived from state the Hub already holds rather than a checklist you tick twice',
+    'Steps know whether they are done: a file loaded, an email sent, a chase item moved',
+  ]},
+  { ver: '4.35.0', type: 'minor', date: '14 Nov 2026', title: 'The Hub backs itself up, twice, without being asked', changes: [
+    'Every Hub key lives in one table on one account, and until now there was no copy of it anywhere',
+    'A snapshot is taken to storage automatically and kept for 30 days, and can be downloaded as a file at any time',
+    'Restore from any listed snapshot, with the date and size shown before anything is overwritten',
+  ]},
+  { ver: '4.34.0', type: 'minor', date: '14 Nov 2026', title: 'Operator emails: know where you got to, and what is unusual', changes: [
+    'Doing the same dozen emails every morning, the thing you lose track of is where you got to — so the list now says how many are done and marks each one as it goes',
+    'Each operator is compared against their own recent average rather than a shared target, and a figure is only remarked on when it is meaningfully off their usual',
+    'Open an operator email straight into desktop Outlook with address, CC and subject filled and the table on the clipboard',
+    'Removed the web-Outlook and plain-text paths — neither was ever used',
+  ]},
+  { ver: '4.33.0', type: 'minor', date: '14 Nov 2026', title: 'Chase List — the dispatch tools stop forgetting', changes: [
+    'Allocation, stock and job issues raised by the dispatch tools now persist as a list with their own state: new, chasing, waiting, known OK, resolved',
+    'A job keeps its identity across days, so the same problem tomorrow is the same row rather than a new one',
+    'Anything open for three days or more is marked stale, because at that point it has stopped being today\'s problem and started being one you keep not getting to',
+    'Resolved items age out after 45 days',
+  ]},
+  { ver: '4.32.0', type: 'minor', date: '14 Nov 2026', title: 'The Hub remembers the work, not just the settings', changes: [
+    'A daily snapshot of what the dispatch tools found — counts only, so the whole history stays small enough to load at startup',
+    'Insights now reports the work rather than the app: exceptions raised, operator emails sent, validator and stock runs',
+    'Trend strips on the dispatch pages compare today against the recent run of days',
+  ]},
+  { ver: '4.31.0', type: 'minor', date: '14 Nov 2026', title: 'NSLA report removed', changes: [
+    'Every NSLA feature, page and template removed — the report is no longer produced',
+  ]},
+  { ver: '4.30.1', type: 'patch', date: '14 Nov 2026', title: 'Weather, the AI model, and import buttons that went grey', changes: [
+    'Weather had been failing silently. It now says when it could not load and offers a retry, rather than showing nothing and leaving you to guess',
+    'Moved off the Llama model Groq retired in August — the AI features were returning model-not-found against a perfectly valid key. Known-dead models are now recognised and replaced automatically',
+    'Import buttons are green again everywhere that has no accent rule of its own',
+    'The email collector stops writing to Gmail on runs that found nothing, and handles the reports that arrive every morning rather than only the first',
+  ]},
   { ver: '4.30.0', type: 'minor', date: '19 Jul 2026', title: 'Amtek Projects card: animated expand, scrollable rows, redesigned header', changes: [
     'Tapping a project row now animates open with a height transition — chevron rotates 90°, count badge pops to scale, and the progress bar slides in 120ms after the expand settles; collapsing reverses all of it without a re-render',
     'Items inside an expanded project scroll when there are more than ~5; dates, badges, and action buttons are all visible at full height',
