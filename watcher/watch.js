@@ -1,219 +1,24 @@
-// Tails ~/.claude/projects/**/*.jsonl and pushes live agent status to Supabase
-// for the "Pixel Office" widget in index.html. Local-only by necessity: Claude
-// Code's session transcripts only exist on this machine.
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const { createClient } = require('@supabase/supabase-js');
+// Central Hub local helper.
+//
+// This process exists for one reason: a browser cannot send email, and the
+// Hub needs to hand finished operator emails to desktop Outlook. It runs on
+// this machine, started at login by start-helper.vbs, and listens on
+// loopback for the Hub to call.
+//
+// It used to do a second job - tailing Claude Code session transcripts and
+// pushing live agent status to Supabase for a "Pixel Office" widget. That
+// is gone, and deliberately. The table it wrote to was readable and
+// writable by anyone holding the publishable key, and that key is in the
+// Hub's page source on the public web. Anyone who looked could read the
+// local filesystem paths of every project, which included the account name.
+// The widget was decorative; the exposure was not.
+//
+// Removing it also took the Supabase client out of this process, so the
+// helper now has no network dependency and no credentials of any kind.
 
-const SUPABASE_URL = 'https://qwceyzswwtyqiozxnlah.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_7iT7MOE7JMGv5Vl0j_13iw_s5tyQTMJ';
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
-const POLL_MS = 3000;
-const IDLE_AFTER_MS = 90 * 1000;
-const STALE_AFTER_MS = 15 * 60 * 1000;
-// A tool_use with no matching tool_result yet after this long almost always
-// means it's sitting on a permission prompt rather than just executing.
-const PERMISSION_WAIT_MS = 8 * 1000;
-
-const READ_TOOLS = new Set(['Read', 'Glob', 'Grep']);
-const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit']);
-
-// sessionId -> { offset, status, lastTool, lastChangeTs, projectPath, pendingToolUse }
-const sessions = new Map();
-
-function findJsonlFiles() {
-  const out = [];
-  let projectDirs;
-  try {
-    projectDirs = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true });
-  } catch {
-    return out;
-  }
-  for (const dirent of projectDirs) {
-    if (!dirent.isDirectory()) continue;
-    const dirPath = path.join(PROJECTS_DIR, dirent.name);
-    let files;
-    try {
-      files = fs.readdirSync(dirPath);
-    } catch {
-      continue;
-    }
-    for (const f of files) {
-      if (f.endsWith('.jsonl')) out.push(path.join(dirPath, f));
-    }
-  }
-  return out;
-}
-
-function statusFromEntry(entry) {
-  if (entry.type === 'assistant' && Array.isArray(entry.message?.content)) {
-    const toolUse = entry.message.content.find((c) => c.type === 'tool_use');
-    if (toolUse) {
-      const name = toolUse.name;
-      const ts = entry.timestamp ? Date.parse(entry.timestamp) : Date.now();
-      if (READ_TOOLS.has(name)) return { status: 'reading', tool: name, toolUseId: toolUse.id, ts };
-      if (WRITE_TOOLS.has(name)) return { status: 'typing', tool: name, toolUseId: toolUse.id, ts };
-      if (name === 'Bash') return { status: 'running', tool: name, toolUseId: toolUse.id, ts };
-      if (name === 'Task') return { status: 'delegating', tool: name, toolUseId: toolUse.id, ts };
-      return { status: 'running', tool: name, toolUseId: toolUse.id, ts };
-    }
-    const hasText = entry.message.content.some((c) => c.type === 'text');
-    if (hasText) return { status: 'waiting', tool: null };
-  }
-  return null;
-}
-
-function toolResultIdFromEntry(entry) {
-  if (entry.type === 'user' && Array.isArray(entry.message?.content)) {
-    const result = entry.message.content.find((c) => c.type === 'tool_result');
-    if (result) return result.tool_use_id;
-  }
-  return null;
-}
-
-function processFile(filePath, sessionId) {
-  const stat = fs.statSync(filePath);
-  const now = Date.now();
-  const prev = sessions.get(sessionId);
-  const offset = prev?.offset ?? 0;
-
-  if (stat.size < offset) {
-    // File shrank/rotated — restart from scratch
-    sessions.delete(sessionId);
-    return processFile(filePath, sessionId);
-  }
-  if (stat.size === offset && prev) {
-    maybeMarkIdle(sessionId, now);
-    return;
-  }
-
-  const fd = fs.openSync(filePath, 'r');
-  const length = stat.size - offset;
-  const buf = Buffer.alloc(length);
-  fs.readSync(fd, buf, 0, length, offset);
-  fs.closeSync(fd);
-
-  const chunk = buf.toString('utf8');
-  const lines = chunk.split('\n').filter(Boolean);
-
-  let projectPath = prev?.projectPath;
-  let status = prev?.status ?? 'idle';
-  let lastTool = prev?.lastTool ?? null;
-  let pendingToolUse = prev?.pendingToolUse ?? null;
-  let lastChangeTs = now;
-
-  for (const line of lines) {
-    let entry;
-    try {
-      entry = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    if (entry.cwd) projectPath = entry.cwd;
-
-    const resolvedId = toolResultIdFromEntry(entry);
-    if (resolvedId && pendingToolUse?.id === resolvedId) {
-      pendingToolUse = null;
-      if (status === 'permission') status = 'thinking';
-    }
-
-    if (entry.type === 'user' && entry.message?.role === 'user' && !resolvedId) {
-      status = 'thinking';
-      lastTool = null;
-      pendingToolUse = null;
-    }
-
-    const inferred = statusFromEntry(entry);
-    if (inferred) {
-      status = inferred.status;
-      lastTool = inferred.tool;
-      if (inferred.toolUseId) pendingToolUse = { id: inferred.toolUseId, name: inferred.tool, ts: inferred.ts };
-    }
-  }
-
-  sessions.set(sessionId, {
-    offset: stat.size,
-    status,
-    lastTool,
-    lastChangeTs,
-    projectPath,
-    pendingToolUse,
-  });
-}
-
-function maybeMarkIdle(sessionId, now) {
-  const s = sessions.get(sessionId);
-  if (!s) return;
-  if (s.status !== 'idle' && now - s.lastChangeTs > IDLE_AFTER_MS) {
-    s.status = 'idle';
-  }
-}
-
-function maybeMarkAwaitingPermission(sessionId, now) {
-  const s = sessions.get(sessionId);
-  if (!s?.pendingToolUse) return false;
-  if (now - s.pendingToolUse.ts > PERMISSION_WAIT_MS) {
-    s.status = 'permission';
-    s.lastTool = s.pendingToolUse.name;
-    return true;
-  }
-  return false;
-}
-
-async function syncToSupabase() {
-  const now = Date.now();
-  for (const [sessionId, s] of sessions) {
-    if (now - s.lastChangeTs > STALE_AFTER_MS) {
-      sessions.delete(sessionId);
-      await sb.from('pixel_agents').delete().eq('session_id', sessionId);
-      continue;
-    }
-    if (!maybeMarkAwaitingPermission(sessionId, now)) maybeMarkIdle(sessionId, now);
-    const { error } = await sb.from('pixel_agents').upsert({
-      session_id: sessionId,
-      project_path: s.projectPath ?? null,
-      status: s.status,
-      last_tool: s.lastTool,
-      updated_at: new Date().toISOString(),
-    });
-    if (error) console.error('[pixel-agents] upsert error for', sessionId, error.message);
-  }
-}
-
-async function tick() {
-  const now = Date.now();
-  const files = findJsonlFiles();
-  for (const filePath of files) {
-    let stat;
-    try {
-      stat = fs.statSync(filePath);
-    } catch {
-      continue;
-    }
-    if (now - stat.mtimeMs > STALE_AFTER_MS) continue;
-    const sessionId = path.basename(filePath, '.jsonl');
-    try {
-      processFile(filePath, sessionId);
-    } catch (err) {
-      console.error('[pixel-agents] failed to process', filePath, err.message);
-    }
-  }
-  await syncToSupabase();
-}
-
-console.log('[pixel-agents] watching', PROJECTS_DIR);
-tick();
-setInterval(tick, POLL_MS);
-
-// The Hub's bridge to desktop Outlook. It rides along in this process
-// because this is the only piece of the Hub that already runs locally, and
-// sending mail needs a local mail client. A failure to start it must never
-// take the agent watcher down with it.
 try {
   require('./mail-bridge').start();
 } catch (err) {
   console.error('[mail-bridge] failed to start:', err.message);
+  process.exit(1);
 }

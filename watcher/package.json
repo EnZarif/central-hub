@@ -1,12 +1,11 @@
 {
-  "name": "central-hub-pixel-agents-watcher",
+  "name": "central-hub-local-helper",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Loopback bridge that hands the Hub's operator emails to desktop Outlook.",
   "main": "watch.js",
   "scripts": {
     "start": "node watch.js"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
-  }
+  "dependencies": {}
 }
