@@ -22948,8 +22948,10 @@ async function mailBridgeProbe(force) {
     // probe that lands during a cold start must wait for it rather than
     // give up and report the helper as missing.
     const t = setTimeout(() => ctl.abort(), force ? 60000 : 20000);
-    const res = await fetch(MAIL_BRIDGE + '/health' + (force ? '?force=1' : ''),
-                            { headers: MAIL_BRIDGE_HEADER, signal: ctl.signal });
+    // no-store on this side too: the helper sets the header, but a probe
+    // must never be answered from the browser's own cache either.
+    const res = await fetch(MAIL_BRIDGE + '/health' + (force ? '?force=1&t=' + Date.now() : ''),
+                            { headers: MAIL_BRIDGE_HEADER, signal: ctl.signal, cache: 'no-store' });
     clearTimeout(t);
     if (!res.ok) throw new Error('bridge returned ' + res.status);
     const j = await res.json();
@@ -23118,7 +23120,14 @@ async function kpiOpsSendTest() {
     </div>`;
   }
 
-  if (!confirm('Send a test email to ' + b.account + '?\n\nNo CC, no operator involved.\nBody: ' + source.replace(/<[^>]*>/g, ''))) return;
+  // Worth saying before the first test rather than after: a message you send
+  // to yourself appears twice in a threaded view - once as the copy you sent,
+  // once as the copy you received. That is not a duplicate, and mistaking it
+  // for one costs an afternoon.
+  if (!confirm('Send a test email to ' + b.account + '?\n\n'
+      + 'No CC, no operator involved.\nBody: ' + source.replace(/<[^>]*>/g, '')
+      + '\n\nNote: because this goes to you, your inbox will show it twice in one '
+      + 'thread — the sent copy and the received copy. That is normal, not a duplicate.')) return;
 
   _mailSending = true;
   const btn = document.getElementById('kpi-ops-test-btn');
@@ -23127,7 +23136,8 @@ async function kpiOpsSendTest() {
     const r = await mailBridgeSend([{ to: b.account, cc: '', subject, html }]);
     if (r.ok && r.sent) {
       showToast('<i class="ti ti-mail-check"></i>Test sent to ' + esc(b.account)
-        + ' \u2014 subject \u201c' + esc(subject) + '\u201d', 8000);
+        + ' \u2014 \u201c' + esc(subject) + '\u201d. Two in the thread is the sent and '
+        + 'received copy, not a duplicate.', 9000);
     } else if (r.skippedDuplicates) {
       // Should not happen, since the subject is unique - worth saying if it does.
       showToast('<i class="ti ti-shield-check"></i>Refused as a duplicate, which is unexpected here', 8000);

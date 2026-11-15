@@ -162,7 +162,17 @@ async function health(force) {
 
 function send(res, code, obj) {
   const body = JSON.stringify(obj);
-  res.writeHead(code, { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) });
+  res.writeHead(code, {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(body),
+    // /health is a GET whose answer changes from minute to minute. Without
+    // this the browser is entitled to keep the first reply it saw and
+    // serve it back for the life of the page - which would show Outlook as
+    // unavailable long after it came back, and no amount of re-asking on
+    // this side would ever be seen.
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Pragma': 'no-cache'
+  });
   res.end(body);
 }
 
