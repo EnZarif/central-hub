@@ -22658,11 +22658,20 @@ function renderKpiOpsList() {
          <i class="ti ti-mail-fast"></i>Send all ${left}</button>`
     : '';
 
+  // Only worth showing when sending is actually possible - there is
+  // nothing to test otherwise.
+  const testBtn = canSend
+    ? `<button class="exc-b" id="kpi-ops-test-btn" style="--bc:var(--text-3)"
+         onclick="kpiOpsSendTest()" title="Send one email to yourself. No CC, no operator involved.">
+         <i class="ti ti-flask"></i>Test to me</button>`
+    : '';
+
   const progress = `<div class="kpi-ops-progress${nSent === ops.length ? ' done' : ''}">
       <i class="ti ${nSent === ops.length ? 'ti-circle-check' : 'ti-mail-fast'}"></i>
       <span><b>${nSent}</b> of <b>${ops.length}</b> ${canSend ? 'sent' : 'copied'} today${
         nSent === ops.length ? ' — all done' : ''}</span>
       ${sendAll}
+      ${testBtn}
       ${nSent ? `<button class="exc-b" style="--bc:var(--text-3)" onclick="kpiOpsResetToday()"><i class="ti ti-rotate"></i>Reset</button>` : ''}
     </div>
     <div class="kpi-ops-mode">
@@ -23013,6 +23022,87 @@ async function kpiOpsSendAll() {
     // that is exactly what is not known - and acting on it sends twice.
     showToast('<i class="ti ti-alert-triangle"></i>Lost contact while sending \u2014 check Sent Items '
       + 'before trying again, some may have gone. (' + esc(e.message) + ')', 12000);
+  } finally {
+    _mailSending = false;
+    if (btn) { btn.disabled = false; renderKpiOpsList(); }
+  }
+}
+
+/**
+ * One email to yourself, nobody on CC, as many times as you like.
+ *
+ * Two details make it safe to lean on:
+ *
+ *   The address is whatever account Outlook is signed in as, read back
+ *   from the bridge rather than written down here. It cannot be pointed
+ *   at an operator by accident, and it does not go stale if the account
+ *   changes.
+ *
+ *   The subject carries the time, so every test is a new subject. The
+ *   bridge refuses a repeat of the same recipient and subject within
+ *   fifteen minutes - exactly what you want for the real run, and exactly
+ *   what would stop you testing twice in a row.
+ *
+ * The body is a real operator email when a file is loaded, because the
+ * whole question a test answers is whether the table survives the trip.
+ */
+async function kpiOpsSendTest() {
+  if (_mailSending) { showToast('<i class="ti ti-hourglass"></i>Still sending \u2014 give it a moment'); return; }
+  const b = await mailBridgeProbe();
+  if (!b.ready) {
+    showToast('<i class="ti ti-x"></i>' + esc(b.error || 'Outlook is not available'), 7000);
+    return;
+  }
+  if (!b.account) { showToast('<i class="ti ti-x"></i>Outlook did not report an address to send to', 7000); return; }
+
+  const now = new Date();
+  const stamp = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const subject = 'Hub send test \u2014 ' + stamp;
+
+  // The real thing if there is one, so this tests the actual payload.
+  let html = null, source = 'a sample table';
+  try {
+    const ops = _kpiOpsOperatorList();
+    if (ops.length) {
+      const x = kpiOpsBuild(0);
+      if (x && x.html) { html = x.html; source = esc(x.name) + '\u2019s real email'; }
+    }
+  } catch (e) { console.warn('[mail test] could not build a real body', e); }
+
+  if (!html) {
+    html = `<div style="font-family:Aptos,sans-serif; font-size:12pt;">
+      <p>This is a test from the Central Hub, sent through desktop Outlook.</p>
+      <table style="border-collapse:collapse;">
+        <tr><th style="border:1px solid #999;padding:6px 10px;background:#4472C4;color:#fff;">Column</th>
+            <th style="border:1px solid #999;padding:6px 10px;background:#4472C4;color:#fff;">Value</th></tr>
+        <tr><td style="border:1px solid #999;padding:6px 10px;">Formatting</td>
+            <td style="border:1px solid #999;padding:6px 10px;">If this is a table with a blue header, HTML survived.</td></tr>
+        <tr><td style="border:1px solid #999;padding:6px 10px;">Sent at</td>
+            <td style="border:1px solid #999;padding:6px 10px;">${esc(now.toString())}</td></tr>
+      </table>
+      <p>Nobody is on CC and no operator received anything.</p>
+    </div>`;
+  }
+
+  if (!confirm('Send a test email to ' + b.account + '?\n\nNo CC, no operator involved.\nBody: ' + source.replace(/<[^>]*>/g, ''))) return;
+
+  _mailSending = true;
+  const btn = document.getElementById('kpi-ops-test-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i>Sending\u2026'; }
+  try {
+    const r = await mailBridgeSend([{ to: b.account, cc: '', subject, html }]);
+    if (r.ok && r.sent) {
+      showToast('<i class="ti ti-mail-check"></i>Test sent to ' + esc(b.account)
+        + ' \u2014 subject \u201c' + esc(subject) + '\u201d', 8000);
+    } else if (r.skippedDuplicates) {
+      // Should not happen, since the subject is unique - worth saying if it does.
+      showToast('<i class="ti ti-shield-check"></i>Refused as a duplicate, which is unexpected here', 8000);
+    } else {
+      showToast('<i class="ti ti-x"></i>' + esc(((r.failed || [])[0] || {}).error || r.error || 'Failed'), 10000);
+    }
+  } catch (e) {
+    showToast('<i class="ti ti-alert-triangle"></i>Lost contact while sending \u2014 check Sent Items. ('
+      + esc(e.message) + ')', 12000);
   } finally {
     _mailSending = false;
     if (btn) { btn.disabled = false; renderKpiOpsList(); }
