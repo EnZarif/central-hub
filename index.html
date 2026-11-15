@@ -27497,7 +27497,6 @@ async function initApp() {
   tickMelbClock();
   setInterval(tickMelbClock, 1000);
   updateNotifPermStatus();
-  initPixoff();
   renderWeekAtAGlance();
   renderAccountSettings();
   // The inbox is checked on arrival and then on the Apps Script's own
@@ -27534,7 +27533,26 @@ async function handleSignIn(e) {
   showAuthGate(false);
   const loadEl = document.getElementById('app-loading');
   if (loadEl) loadEl.style.display = 'flex';
-  initApp();
+  initApp().catch(bootFailed);
+}
+
+/**
+ * initApp() is async, so anything it throws becomes a rejected promise. Left
+ * alone that is completely silent: no console error, no banner, and every
+ * step after the throw simply never happens.
+ *
+ * It bit exactly that way once. A call to a function that had been deleted
+ * sat a few lines above the inbox polling setup, so the poll and its timer
+ * were never installed, the Hub stopped noticing files that had arrived, and
+ * nothing anywhere said why. Startup failing quietly is worse than startup
+ * failing loudly.
+ */
+function bootFailed(err) {
+  console.error('[boot] initApp did not finish:', err);
+  try {
+    showToast('<i class="ti ti-alert-triangle"></i>The Hub did not finish starting — '
+      + esc(String(err && err.message || err)) + '. Some parts will not update until you reload.', 15000);
+  } catch (e) { /* the toast itself is part of what may not have started */ }
 }
 
 async function handleForgotPassword() {
@@ -27563,7 +27581,7 @@ async function renderAccountSettings() {
 (async () => {
   const { data: { session } } = await _sb.auth.getSession();
   if (session) {
-    initApp();
+    initApp().catch(bootFailed);
   } else {
     const loadEl = document.getElementById('app-loading');
     if (loadEl) loadEl.style.display = 'none';
