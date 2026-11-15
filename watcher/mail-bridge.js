@@ -37,9 +37,16 @@ const PORT = 8765;
 const HOST = '127.0.0.1';
 const PS_SCRIPT = path.join(__dirname, '..', 'automation', 'send-outlook.ps1');
 
-// The Hub is served by start.bat on :8000. HUB_MAIL_ORIGINS exists so a
-// different local port can be allowed without editing this file.
+// Where the Hub actually runs. The Vercel address is the real one - the
+// Hub opens at login as an Edge app window pointing there - and the
+// localhost pair only matter when it is served from start.bat instead.
+//
+// Because the Vercel page is https and this is loopback, the browser will
+// ask permission the first time ("allow local network access"). That is a
+// one-off prompt, not a block, and there is nothing to send for it: the
+// old Access-Control-Allow-Private-Network header is deprecated.
 const ALLOWED_ORIGINS = new Set([
+  'https://central-hub-rosy.vercel.app',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
   ...String(process.env.HUB_MAIL_ORIGINS || '')
@@ -189,6 +196,13 @@ function start() {
   server.listen(PORT, HOST, () => {
     log('listening on http://' + HOST + ':' + PORT);
     log('allowed origins:', [...ALLOWED_ORIGINS].join(', '));
+    // Warm the answer now rather than on the first question. Checking
+    // Outlook means starting it over COM, which takes the better part of
+    // ten seconds - long enough that a page asking on load would give up
+    // and report the helper as unavailable when it is merely thinking.
+    health(true)
+      .then(h => log('outlook:', h.ready ? ('ready as ' + h.account) : ('not ready - ' + h.error)))
+      .catch(e => log('outlook preflight failed:', e.message));
   });
 }
 

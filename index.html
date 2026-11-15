@@ -22910,7 +22910,11 @@ async function mailBridgeProbe(force) {
   try {
     // A short timeout: the whole point is that nothing waits on this.
     const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), force ? 60000 : 4000);
+    // Checking Outlook means starting it over COM. The bridge warms that
+    // answer when it launches, so the usual case returns at once - but a
+    // probe that lands during a cold start must wait for it rather than
+    // give up and report the helper as missing.
+    const t = setTimeout(() => ctl.abort(), force ? 60000 : 20000);
     const res = await fetch(MAIL_BRIDGE + '/health' + (force ? '?force=1' : ''),
                             { headers: MAIL_BRIDGE_HEADER, signal: ctl.signal });
     clearTimeout(t);
