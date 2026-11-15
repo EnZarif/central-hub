@@ -1095,6 +1095,16 @@
     /* Mobile: sidebar becomes a slide-out hamburger drawer */
     html { overflow-x: hidden; }
     body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; overflow-x: hidden; max-width: 100%; }
+    /* Home pulls itself up 2rem to sit under a top bar that is empty on
+       that page. On a wide screen that is free, because the clock pill is
+       away to the right of the greeting. On a phone the pill is 274px wide
+       once it is carrying weather and a rain warning, the greeting is full
+       width, and the two land on top of each other - which only showed up
+       once the weather had something to say. */
+    /* body-qualified because the base rule sets this further down the
+       sheet and would otherwise win on source order at equal specificity. */
+    body #page-home { margin-top: 0; }
+
     /* The 66px margin is the width of the desktop rail. On a phone the rail
        is a drawer that slides in over the top, so that margin was 66px of
        dead space down the left of every page - which is why nothing looked
