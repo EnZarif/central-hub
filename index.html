@@ -184,32 +184,6 @@
     padding: 0; font-size: 0; border: 2px solid var(--surface); }
   .nav-btn { position: relative; }
 
-  .ibx-alert { position: relative; z-index: 1; width: 100%; display: flex; align-items: center;
-    gap: 13px; text-align: left; font-family: inherit; cursor: pointer; margin-bottom: 14px;
-    padding: 13px 16px; border-radius: 13px; color: var(--text);
-    background: color-mix(in srgb, var(--amber-text) 8%, var(--surface));
-    border: 1px solid color-mix(in srgb, var(--amber-text) 30%, transparent);
-    transition: border-color .16s, box-shadow .16s, transform .16s;
-    animation: mcardIn .5s cubic-bezier(.22,.9,.26,1) both; }
-  .ibx-alert:hover { border-color: var(--amber-text); transform: translateY(-2px);
-    box-shadow: 0 18px 34px -24px rgba(0,0,0,.9), 0 0 24px -12px var(--amber-text); }
-  .ibx-alert:focus-visible { outline: 2px solid var(--amber-text); outline-offset: 2px; }
-  .ibx-alert-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber-text);
-    position: relative; flex-shrink: 0; }
-  .ibx-alert-dot::after { content: ""; position: absolute; inset: -5px; border-radius: 50%;
-    border: 1px solid var(--amber-text); animation: ping 2s cubic-bezier(0,.5,.4,1) infinite; }
-  .ibx-alert-t { flex: 1 1 auto; min-width: 0; }
-  .ibx-alert-t b { display: block; font-size: 13.5px; font-weight: 600; color: var(--amber-text); }
-  .ibx-alert-t span { display: block; font-size: 12px; color: var(--text-3); }
-  .ibx-alert-go { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
-    font-size: 12.5px; font-weight: 600; color: var(--amber-text); }
-  .ibx-alert-go i { transition: transform .22s cubic-bezier(.22,.9,.26,1); }
-  .ibx-alert:hover .ibx-alert-go i { transform: translateX(4px); }
-  @media (prefers-reduced-motion: reduce) {
-    .ibx-alert { animation: none; }
-    .ibx-alert-dot::after { animation: none; }
-  }
-
   /* ── OPERATOR EMAIL RUN ──────────────────────────────── */
   .kpi-ops-progress { display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
     padding: 9px 13px; border-radius: 10px; font-size: 12.5px; color: var(--text-2);
@@ -370,6 +344,62 @@
     border-top: 1px solid var(--border); background: var(--surface2); }
   @media (max-width: 620px) { .snap-cell { min-width: 50%; flex: 1 1 50%; } }
 
+  /* ── HOME FEED ──────────────────────────────────────── */
+  /* The right-hand column of the landing page. The greeting never filled
+     the width, so the space beside it was doing nothing; this puts the
+     things that are waiting on you there, where you already look first. */
+  .home-hero-row { display: grid; grid-template-columns: 1fr minmax(0, 400px);
+    gap: 40px; align-items: start; margin-bottom: 1.6rem; position: relative; z-index: 1; }
+  .home-hero-row .hub-head { margin-bottom: 0; }
+  /* The landing page deliberately slides up under the top bar, and the clock
+     pill shares this column's right edge - so the feed starts below it
+     rather than behind it. Only needed while the two sit side by side. */
+  .home-feed { display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    margin-top: 26px; }
+  .home-feed[hidden] { display: none; }
+  .hfd-h { display: flex; align-items: center; justify-content: space-between; }
+  .hfd-h b { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--text); }
+  .hfd-h i { font-style: normal; font-size: 11px; color: var(--text-3);
+    background: var(--surface2); padding: 2px 8px; border-radius: 20px;
+    border: 0.5px solid var(--border); }
+  .hfd-al { width: 100%; display: flex; align-items: center; gap: 11px; padding: 11px 13px;
+    border-radius: 12px; background: var(--surface); border: 0.5px solid var(--border);
+    cursor: pointer; position: relative; overflow: hidden; text-align: left;
+    font-family: inherit; color: inherit;
+    transition: transform .18s cubic-bezier(.22,.9,.26,1), border-color .18s, box-shadow .18s; }
+  /* The accent bar is what tells one row from another at a glance - the
+     icon says which tool, the bar says how much it matters. */
+  .hfd-al::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2.5px; background: var(--ac); }
+  .hfd-al:hover { transform: translateY(-2px); border-color: var(--ac);
+    box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--ac) 70%, transparent); }
+  .hfd-al:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
+  .hfd-ic { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center;
+    justify-content: center; font-size: 15px; flex-shrink: 0;
+    background: color-mix(in srgb, var(--ac) 13%, transparent); color: var(--ac); }
+  .hfd-t { flex: 1 1 auto; min-width: 0; }
+  .hfd-t b { display: block; font-size: 12.5px; font-weight: 600; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hfd-t > span { display: block; font-size: 11px; color: var(--text-3); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hfd-go { flex-shrink: 0; font-size: 13px; color: var(--text-3);
+    display: flex; align-items: center; }
+  .hfd-go b { font-family: 'Archivo', 'Inter', system-ui, sans-serif; font-size: 15px;
+    font-weight: 800; color: var(--ac); }
+  .hfd-go i { transition: transform .22s cubic-bezier(.22,.9,.26,1); }
+  .hfd-al:hover .hfd-go i { transform: translateX(4px); }
+  /* Below this the greeting and the feed stop fitting side by side without
+     squeezing both, so the feed drops underneath instead. */
+  @media (max-width: 980px) {
+    .home-hero-row { grid-template-columns: 1fr; gap: 18px; }
+    .home-feed { margin-top: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hfd-al, .hfd-go i { transition: none; }
+    .hfd-al:hover { transform: none; }
+  }
+
   /* ── COMMUTE ETA ─────────────────────────────────────── */
   .cmt-match { display: flex; gap: 10px; align-items: baseline; font-size: 12px;
     padding: 5px 0; border-bottom: 1px solid var(--border); }
@@ -469,7 +499,7 @@
 
     /* — content surfaces: tint and hairline, no blur — */
     .card, .exc-row, .morn-step, .insw-tile, .snap-strip, .kpi-ops-progress,
-    .exc-fold, .morn-head, .task, .statcard, .ins-card, .sec-card, .header {
+    .exc-fold, .morn-head, .task, .statcard, .ins-card, .sec-card, .header, .hfd-al {
       background-image: linear-gradient(180deg, var(--g-spec), transparent 42%);
       box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent);
     }
@@ -5086,12 +5116,13 @@
   <!-- HOME LANDING -->
   <div class="page active" id="page-home">
     <div class="home-particles" id="home-particles"></div>
-    <div class="hub-head">
-      <h1 id="home-greeting">Good evening, Zarif</h1>
-      <p id="home-date">Loading…</p>
+    <div class="home-hero-row">
+      <div class="hub-head">
+        <h1 id="home-greeting">Good evening, Zarif</h1>
+        <p id="home-date">Loading…</p>
+      </div>
+      <div class="home-feed" id="home-feed" hidden></div>
     </div>
-    <div id="home-inbox" hidden></div>
-    <div id="home-commute" hidden></div>
     <div id="home-briefing"></div>
     <div id="home-highlights"></div>
     <div class="mains" id="home-mains">
@@ -7565,19 +7596,122 @@ function renderCommute() {
   }
 
   // ---- Home ----
-  const host = document.getElementById('home-commute');
+  // The drive is one row of the Home feed now, not a banner of its own.
+  renderHomeFeed();
+}
+
+// ===== HOME FEED =====
+// The right-hand column of the landing page: the things that are waiting on
+// you, and nothing else.
+//
+// The rule that makes it worth having is that it disappears. A panel showing
+// four zeroes every quiet morning teaches you to stop looking at it, so when
+// there is nothing to say this renders nothing at all and the hero goes back
+// to being just the greeting. Everything here is derived at paint time from
+// state the Hub already keeps - the feed stores nothing of its own, so there
+// is no second copy to go stale.
+const HFD_MAX = 4;
+
+/**
+ * One row per thing that wants you, most urgent first.
+ *
+ * Each source is wrapped on its own, because this panel sits at the top of
+ * the first screen you see: a tool that has not loaded yet should cost its
+ * own row, never the whole landing page.
+ */
+function hfdRows() {
+  const out = [];
+  const today = todayInputDate();
+  const days = (from) => Math.round((Date.parse(today) - Date.parse(from)) / 86400000);
+
+  // 1. Tasks whose date has already gone past. Dated tasks are the only ones
+  //    that can genuinely be late - a daily that was missed is just a daily.
+  try {
+    const late = getAllTasks().filter(t =>
+      t.freq === 'date' && t.date && t.date < today && !isDone(t.id));
+    if (late.length) {
+      const oldest = late.map(t => t.date).sort()[0];
+      const d = days(oldest);
+      out.push({ p: 1, ac: 'coral', ico: 'ti-alarm', badge: String(late.length),
+        t: late.length + (late.length === 1 ? ' task overdue' : ' tasks overdue'),
+        s: 'Oldest ' + d + ' day' + (d === 1 ? '' : 's') + ' late',
+        go: "showPage('tasks')" });
+    }
+  } catch (e) { console.warn('[feed] tasks', e); }
+
+  // 2. Files that landed by email and have not been loaded yet.
+  try {
+    const w = inboxWaiting;
+    if (w && w.total) {
+      const go = w.validator ? 'allocvalidate' : (w.stock ? 'stock' : 'dispatch');
+      out.push({ p: 2, ac: 'amber', ico: 'ti-inbox', t: inboxAlertText(),
+        s: 'Landed by email, ready to load.',
+        go: "showPage('" + go + "','dispatch')" });
+    }
+  } catch (e) { console.warn('[feed] inbox', e); }
+
+  // 3. The Chase List, split in two. Something open since Monday is a
+  //    different problem from something raised an hour ago, and collapsing
+  //    them into one count is how the old one gets lost.
+  try {
+    const c = excCounts();
+    if (c.stale) {
+      out.push({ p: 3, ac: 'coral', ico: 'ti-flag', badge: String(c.stale),
+        t: c.stale + (c.stale === 1 ? ' job' : ' jobs') + ' waiting 3+ days',
+        s: 'No movement on the Chase List',
+        go: "showPage('exceptions','dispatch')" });
+    }
+    if (c.open - c.stale > 0) {
+      const n = c.open - c.stale;
+      out.push({ p: 5, ac: 'amber', ico: 'ti-progress', badge: String(n),
+        t: n + (n === 1 ? ' job open' : ' jobs open') + ' to chase',
+        s: 'Raised in the last few days',
+        go: "showPage('exceptions','dispatch')" });
+    }
+  } catch (e) { console.warn('[feed] chase', e); }
+
+  // 4. Today's drive, once the afternoon check has run.
+  try {
+    const c = commuteGet();
+    const t = c.today;
+    if (t && t.day === today) {
+      out.push({ p: 4, ac: 'teal', ico: 'ti-car',
+        t: 'Drive ' + (c.reverse ? 'home' : 'to work') + ' about ' + t.mins + ' min',
+        s: t.km + ' km \u00b7 ' + (t.factor ? 'traffic allowed for from your own trips'
+                                           : 'free-flow \u2014 no traffic data'),
+        go: "showPage('settings')" });
+    }
+  } catch (e) { console.warn('[feed] commute', e); }
+
+  // Explicit ranking rather than the order the sources happen to be read in.
+  // The drive outranks the ordinary chase bucket because it expires at the
+  // end of the day: a job raised this morning will still be there tomorrow.
+  return out.sort((a, b) => a.p - b.p);
+}
+
+function renderHomeFeed() {
+  const host = document.getElementById('home-feed');
   if (!host) return;
-  const t = c.today;
-  if (!t || t.day !== todayInputDate()) { host.hidden = true; host.innerHTML = ''; return; }
+  // This paints at the top of the first screen, and it can be reached
+  // before the app has finished booting (an inbox poll landing early, say),
+  // so a source that is not ready yet costs the feed and nothing else.
+  let all;
+  try { all = hfdRows(); }
+  catch (e) { console.warn('[feed]', e); host.hidden = true; host.innerHTML = ''; return; }
+  const rows = all.slice(0, HFD_MAX);
+  if (!rows.length) { host.hidden = true; host.innerHTML = ''; return; }
   host.hidden = false;
-  host.innerHTML = `<button class="ibx-alert" style="--ac:var(--teal-text)" onclick="showPage('settings')">
-      <span class="ibx-alert-dot" style="background:var(--teal-text)"></span>
-      <span class="ibx-alert-t">
-        <b style="color:var(--teal-text)">Drive ${c.reverse ? 'home' : 'to work'} about ${t.mins} min</b>
-        <span>${t.km} km \u00b7 ${t.factor ? 'traffic allowed for from your own trips' : 'free-flow \u2014 no traffic data'}</span>
-      </span>
-      <span class="ibx-alert-go" style="color:var(--teal-text)">Settings <i class="ti ti-arrow-right"></i></span>
-    </button>`;
+  // Say "4 of 6" when the list is longer than the panel, so the count is
+  // never describing rows that are not on screen.
+  const tally = rows.length < all.length ? rows.length + ' of ' + all.length : String(all.length);
+  host.innerHTML = `<div class="hfd-h"><b>Needs you</b><i>${esc(tally)}</i></div>`
+    + rows.map(r => `<button class="hfd-al" style="--ac:var(--${r.ac}-text)" onclick="${r.go}">
+        <span class="hfd-ic"><i class="ti ${r.ico}"></i></span>
+        <span class="hfd-t"><b>${esc(r.t)}</b><span>${esc(r.s)}</span></span>
+        <span class="hfd-go">${r.badge
+          ? '<b>' + esc(r.badge) + '</b>'
+          : '<i class="ti ti-arrow-right"></i>'}</span>
+      </button>`).join('');
 }
 
 // ===== BACKUP =====
@@ -15049,21 +15183,9 @@ function renderInboxAlerts() {
     dot.title = inboxAlertText();
   });
 
-  // 2. Home: one line above the briefing, only when there is something
-  const host = document.getElementById('home-inbox');
-  if (host) {
-    if (!w.total) { host.innerHTML = ''; host.hidden = true; }
-    else {
-      host.hidden = false;
-      const go = w.validator ? 'allocvalidate' : (w.stock ? 'stock' : 'dispatch');
-      host.innerHTML = `<button class="ibx-alert" onclick="showPage('${go}','dispatch')">
-        <span class="ibx-alert-dot"></span>
-        <span class="ibx-alert-t"><b>${esc(inboxAlertText())}</b>
-          <span>Landed by email, ready to load.</span></span>
-        <span class="ibx-alert-go">Open <i class="ti ti-arrow-right"></i></span>
-      </button>`;
-    }
-  }
+  // 2. Home: a row in the feed beside the greeting, only when there is
+  //    something waiting.
+  renderHomeFeed();
 
   // 3. once a session, a toast - so a file that arrives while the Hub is open
   //    is not something you only find by wandering onto the right page
@@ -19320,6 +19442,7 @@ function renderHomeDashboard() {
   // does - the data arrives after the first paint on a cold load.
   if (typeof initHome === 'function') initHome();
   if (typeof renderInboxAlerts === 'function') renderInboxAlerts();
+  renderHomeFeed();
 }
 
 // ===== Time-of-day-aware Home ordering =====
