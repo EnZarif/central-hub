@@ -297,9 +297,15 @@
     background: color-mix(in srgb, var(--mc) 10%, transparent); }
   .morn-go i { font-size: 13px; transition: transform .2s; }
   .morn-go:hover i { transform: translateX(3px); }
+  /* Wrapping the action under the step only happened when the title was
+     long enough to push it, so three steps kept their button on the right
+     and two dropped it underneath - the same list rendered two ways. The
+     row stays on one line and the text column shrinks instead, which is
+     also about 200px less scrolling over five steps. */
   @media (max-width: 560px) {
-    .morn-step { flex-wrap: wrap; }
-    .morn-go { margin-left: 43px; }
+    .morn-step { gap: 10px; }
+    .morn-main { min-width: 0; }
+    .morn-go { flex-shrink: 0; }
   }
 
   /* ── CHASE LIST ────────────────────────────────────── */
@@ -363,6 +369,146 @@
   .snap-note { width: 100%; padding: 7px 13px; font-size: 11.5px; color: var(--text-3);
     border-top: 1px solid var(--border); background: var(--surface2); }
   @media (max-width: 620px) { .snap-cell { min-width: 50%; flex: 1 1 50%; } }
+
+  /* ══ MOBILE: LIQUID GLASS ═══════════════════════════════
+     Phone only. Everything in here sits behind max-width:760px and changes
+     nothing on a desktop.
+
+     What makes Apple's material read as glass is not the blur on its own -
+     it is three things together: the blur, a saturation lift so colour from
+     the content behind bleeds through and tints it, and a bright hairline
+     along the top edge where light would catch. The hairline is what sells
+     it; a blurred panel without one just looks out of focus.
+
+     Real backdrop-filter is spent only on the four pieces of fixed chrome.
+     A blur is resolved against everything painted behind it, so putting one
+     on rows inside a scrolling list makes the phone recompute them every
+     frame - that is the difference between this feeling like glass and
+     feeling like a slideshow. Content surfaces get the tint and the
+     hairline without the blur, which is most of the look for none of the
+     cost. */
+  @media (max-width: 760px) {
+    :root {
+      --g-blur: blur(26px) saturate(185%);
+      --g-tint: color-mix(in srgb, var(--surface) 58%, transparent);
+      --g-tint-strong: color-mix(in srgb, var(--surface) 74%, transparent);
+      --g-edge: color-mix(in srgb, var(--text) 13%, transparent);
+      --g-spec: color-mix(in srgb, #fff 13%, transparent);
+      --g-lift: 0 10px 34px -18px rgba(0,0,0,.9);
+    }
+
+    /* — fixed chrome: the only four things that get a real blur — */
+    .mobile-topbar, .mobile-bottom-bar, .nav, .mobile-fab {
+      -webkit-backdrop-filter: var(--g-blur);
+      backdrop-filter: var(--g-blur);
+    }
+    .mobile-topbar {
+      background: var(--g-tint);
+      border-bottom: 1px solid var(--g-edge);
+      box-shadow: inset 0 -1px 0 color-mix(in srgb, #000 18%, transparent), var(--g-lift);
+    }
+    /* The specular edge. On the top bar light catches the bottom lip,
+       because the panel hangs above the content it is lensing. */
+    .mobile-topbar::after, .mobile-bottom-bar::before {
+      content: ""; position: absolute; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--g-spec) 18%, var(--g-spec) 82%, transparent);
+      pointer-events: none;
+    }
+    .mobile-topbar::after { bottom: 0; }
+    .mobile-bottom-bar::before { top: 0; }
+    .mobile-bottom-bar {
+      background: var(--g-tint) !important;
+      border-top: 1px solid var(--g-edge);
+      -webkit-backdrop-filter: var(--g-blur) !important;
+      backdrop-filter: var(--g-blur) !important;
+    }
+    .nav {
+      background: var(--g-tint-strong) !important;
+      border-right: 1px solid var(--g-edge);
+    }
+    body.nav-open .nav {
+      box-shadow: 1px 0 0 var(--g-spec), 18px 0 60px -22px rgba(0,0,0,.95);
+    }
+    /* The scrim is part of the material too: a plain black wash reads as a
+       curtain, a blurred one reads as the page sitting behind glass. */
+    .nav-scrim { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+
+    .mobile-fab {
+      box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 32%, transparent),
+                  0 10px 28px -10px color-mix(in srgb, var(--teal) 75%, transparent),
+                  0 2px 10px -2px rgba(0,0,0,.6);
+    }
+
+    /* The desktop design put a backdrop blur on page headers, the Home
+       section cards and the clock pill - 17 of them, six on Home alone,
+       every one of which the phone would have to resolve again on every
+       frame of a scroll. They keep the tint and the hairline and give the
+       blur back; against the page background it was buying almost nothing
+       visually and costing the most. */
+    .sec-card, .header, .clock-wx-card, .app-card {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+    /* One blur for the rail, not two: an existing .nav rule was still
+       setting a weaker one over the top of the material. */
+    .nav { -webkit-backdrop-filter: var(--g-blur) !important;
+           backdrop-filter: var(--g-blur) !important; }
+
+    /* — content surfaces: tint and hairline, no blur — */
+    .card, .exc-row, .morn-step, .insw-tile, .snap-strip, .kpi-ops-progress,
+    .exc-fold, .morn-head, .task, .statcard, .ins-card, .sec-card, .header {
+      background-image: linear-gradient(180deg, var(--g-spec), transparent 42%);
+      box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent);
+    }
+    /* A squircle is closer to iOS than a plain rounded rectangle, and the
+       bigger radius is what stops the tint looking like a flat panel. */
+    .card, .exc-fold, .snap-strip { border-radius: 18px; }
+    .exc-row, .morn-step, .insw-tile, .kpi-ops-progress, .morn-head { border-radius: 15px; }
+
+    /* — controls — */
+    .exc-b, .morn-go, .kpi-file-btn, .settings-save-btn, .danger-btn, .generate-btn {
+      border-radius: 13px;
+      background-image: linear-gradient(180deg, var(--g-spec), transparent 60%);
+    }
+    .exc-b:active, .morn-go:active, .kpi-file-btn:active,
+    .settings-save-btn:active, .danger-btn:active, .generate-btn:active,
+    .mobile-fab:active { transform: scale(.965); }
+    .exc-b, .morn-go, .kpi-file-btn, .settings-save-btn, .danger-btn,
+    .generate-btn, .mobile-fab, .mobile-menu-btn {
+      transition: transform .12s cubic-bezier(.2,.9,.3,1), background .15s, border-color .15s;
+    }
+
+    /* — touch behaviour — */
+    /* 300ms is what a browser waits to see if a tap was a double-tap. On a
+       page with no zoom to speak of it is just lag on every button. */
+    button, a, .exc-b, .morn-go, .nav-btn, .mobile-fab { touch-action: manipulation; }
+    * { -webkit-tap-highlight-color: transparent; }
+    /* Stop a scroll that reaches the end of a list from dragging the page
+       behind it. */
+    .wrap, .nav, .exc-fold-b { overscroll-behavior: contain; }
+    /* Hover styling on a touch screen sticks after a tap until you tap
+       something else, so the last thing you touched stays lit. */
+    .exc-row:hover, .morn-step:hover, .kpi-upload-row:hover { border-color: var(--border); }
+  }
+
+  /* iOS Reduce Transparency, and anything that cannot do backdrop-filter,
+     both need the material to fall back to something solid rather than to
+     a pane you cannot read text through. */
+  @media (max-width: 760px) and (prefers-reduced-transparency: reduce) {
+    .mobile-topbar, .mobile-bottom-bar, .nav, .mobile-fab {
+      -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    }
+    .mobile-topbar, .mobile-bottom-bar { background: var(--surface) !important; }
+    .nav { background: var(--surface) !important; }
+    .card, .exc-row, .morn-step, .insw-tile, .snap-strip, .kpi-ops-progress,
+    .exc-fold, .morn-head { background-image: none; }
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    @media (max-width: 760px) {
+      .mobile-topbar, .mobile-bottom-bar { background: var(--surface) !important; }
+      .nav { background: var(--surface) !important; }
+    }
+  }
 
   /* ── THE NEW SURFACES ON A PHONE ──────────────────────────
      Measured on an iPhone 15 Pro at 393x852. Three things were wrong and
@@ -949,7 +1095,24 @@
     /* Mobile: sidebar becomes a slide-out hamburger drawer */
     html { overflow-x: hidden; }
     body { padding-left: 0; padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: 0; overflow-x: hidden; max-width: 100%; }
-    .wrap { padding: 1.25rem 1rem 3rem; }
+    /* The 66px margin is the width of the desktop rail. On a phone the rail
+       is a drawer that slides in over the top, so that margin was 66px of
+       dead space down the left of every page - which is why nothing looked
+       centred and the content sat about 100px narrower than the screen. */
+    .wrap { padding: 1.25rem 1rem 3rem; margin-left: 0; }
+
+    /* The rail's labels are opacity:0 until :hover, :focus-within or
+       .rail-pin says otherwise. A drawer slid open by a tap satisfies none
+       of those, so the labels stayed invisible - and appeared only when
+       scrolling happened to put focus or a stray hover on the nav. Open on
+       a phone means open: the drawer is 270px wide and the labels belong. */
+    .nav-wordmark, .nav-btn span, .nav-sec, .rail-cap, .ql-cap, .cwc-body-rail,
+    .nav-util-l, .nav-util-chev, .rail-pin-btn { opacity: 1 !important; }
+    /* Same reason: the waiting-files count collapses to a dot on a shut
+       rail, and a drawer is never shut while you are looking at it. */
+    .nav .nav-ibx { position: static !important; top: auto !important; left: auto !important;
+      margin: 0 0 0 auto !important; min-width: 18px !important; height: 18px !important;
+      padding: 0 5px !important; font-size: 10px !important; border: none !important; }
 
     /* Top app bar */
     .mobile-topbar { display: flex; align-items: center; gap: 11px; position: fixed; top: 0; left: 0; right: 0;
@@ -961,7 +1124,11 @@
     .mobile-menu-btn:active, .mobile-theme-btn:active { background: var(--border-md); transform: scale(0.92); }
     .mobile-theme-btn { background: conic-gradient(from 0deg, var(--teal-text), var(--coral-text), var(--green-text), var(--purple-text), var(--pink-text), var(--teal-text)); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); font-size: 18px; }
     .mobile-theme-btn:active { background: conic-gradient(from 0deg, var(--teal-text), var(--coral-text), var(--green-text), var(--purple-text), var(--pink-text), var(--teal-text)); transform: scale(0.92) rotate(60deg); }
-    .mobile-theme-btn { margin-left: auto; }
+    /* The theme cycler is gone from the phone bar. It is a thing you set
+       once, it lives in Settings > Appearance, and on a 393px bar it was
+       taking a permanent 40px slot next to the two controls you actually
+       use. */
+    .mobile-theme-btn { display: none !important; }
     .mobile-topbar-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--text); min-width: 0; }
     .mobile-topbar-logo span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mobile-topbar-logo .nav-logo-icon { width: 28px; height: 28px; }
