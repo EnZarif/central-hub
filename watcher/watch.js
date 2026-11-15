@@ -207,3 +207,13 @@ async function tick() {
 console.log('[pixel-agents] watching', PROJECTS_DIR);
 tick();
 setInterval(tick, POLL_MS);
+
+// The Hub's bridge to desktop Outlook. It rides along in this process
+// because this is the only piece of the Hub that already runs locally, and
+// sending mail needs a local mail client. A failure to start it must never
+// take the agent watcher down with it.
+try {
+  require('./mail-bridge').start();
+} catch (err) {
+  console.error('[mail-bridge] failed to start:', err.message);
+}

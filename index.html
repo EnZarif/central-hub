@@ -344,6 +344,8 @@
     border-top: 1px solid var(--border); background: var(--surface2); }
   @media (max-width: 620px) { .snap-cell { min-width: 50%; flex: 1 1 50%; } }
 
+  .kpi-ops-mode-why { display: block; margin-top: 3px; color: var(--amber-text); font-size: 11px; }
+
   /* ── HOME FEED ──────────────────────────────────────── */
   /* The right-hand column of the landing page. The greeting never filled
      the width, so the space beside it was doing nothing; this puts the
@@ -22643,15 +22645,33 @@ function renderKpiOpsList() {
 
   // Doing the same dozen emails every morning, the thing you lose track of
   // is where you got to - so that is the first thing the list says.
+  // Whether the local bridge can send decides both the verb used here and
+  // which buttons the rows get, so the answer is fetched once and the list
+  // repaints when it lands.
+  const canSend = _bridge.state === 'up' && _bridge.ready;
+  if (_bridge.state === 'unknown') mailBridgeProbe().then(() => renderKpiOpsList());
+  const left = ops.length - nSent;
+
+  const sendAll = canSend && left
+    ? `<button class="exc-b" id="kpi-ops-sendall-btn" style="--bc:var(--teal-text)"
+         onclick="kpiOpsSendAll()" title="Send every remaining operator email through Outlook">
+         <i class="ti ti-mail-fast"></i>Send all ${left}</button>`
+    : '';
+
   const progress = `<div class="kpi-ops-progress${nSent === ops.length ? ' done' : ''}">
       <i class="ti ${nSent === ops.length ? 'ti-circle-check' : 'ti-mail-fast'}"></i>
-      <span><b>${nSent}</b> of <b>${ops.length}</b> copied today${
+      <span><b>${nSent}</b> of <b>${ops.length}</b> ${canSend ? 'sent' : 'copied'} today${
         nSent === ops.length ? ' — all done' : ''}</span>
+      ${sendAll}
       ${nSent ? `<button class="exc-b" style="--bc:var(--text-3)" onclick="kpiOpsResetToday()"><i class="ti ti-rotate"></i>Reset</button>` : ''}
     </div>
     <div class="kpi-ops-mode">
-      <i class="ti ti-info-circle" style="font-size:12px"></i>
-      <span>Outlook opens with the address, CC and subject filled and the table on your clipboard \u2014 Ctrl+V, then Send.</span>
+      <i class="ti ti-${canSend ? 'mail-check' : 'info-circle'}" style="font-size:12px"></i>
+      <span>${canSend
+        ? `Sending directly through Outlook as <strong>${esc(_bridge.account || 'you')}</strong> \u2014 no window opens, no Ctrl+V.`
+        : `Outlook opens with the address, CC and subject filled and the table on your clipboard \u2014 Ctrl+V, then Send.`}</span>
+      ${!canSend && _bridge.state !== 'unknown'
+        ? `<span class="kpi-ops-mode-why">${esc(_bridge.error || '')}</span>` : ''}
     </div>`;
 
   const strip = snapStripHtml('kpiops', [
@@ -22687,8 +22707,11 @@ function renderKpiOpsList() {
         <div class="kpi-upload-cols">${esc(email)} — ${esc(dateSub)}${statusTag}${trendTag}</div>
       </div>
       <span class="kpi-op-btns">
-        <button class="kpi-file-btn kpi-op-send" onclick="kpiOpsOpenOutlook(${i}, event)"
-          title="Open this email in Outlook on the web, ready to send"><i class="ti ti-brand-windows"></i> Outlook</button>
+        ${canSend
+          ? `<button class="kpi-file-btn kpi-op-send" onclick="kpiOpsSendOne(${i}, event)"
+               title="Send this email now through Outlook"><i class="ti ti-send"></i> Send</button>`
+          : `<button class="kpi-file-btn kpi-op-send" onclick="kpiOpsOpenOutlook(${i}, event)"
+               title="Open this email in Outlook, ready to send"><i class="ti ti-brand-windows"></i> Outlook</button>`}
         <button class="kpi-file-btn" onclick="kpiOpsCopy(${i})">${
           isSent ? 'Copy again' : 'Preview'}</button>
       </span>
@@ -22848,6 +22871,160 @@ function kpiOpsOutlookUrl(fields) {
  * window.open at a protocol handler leaves a dead blank tab behind in most
  * browsers.
  */
+// ===== OUTLOOK BRIDGE =====
+// Sending, rather than opening, the operator emails.
+//
+// The Hub has always built these completely - address, CC, subject and the
+// HTML table. What it could not do is send one, because no browser can. So
+// the run was fifteen mailto: links: fifteen windows, fifteen Ctrl+V,
+// fifteen clicks on Send, every morning.
+//
+// The missing piece is a local mail client, and there is already a local
+// process - the watcher that start.bat launches. It now also listens on
+// loopback and hands batches to desktop Outlook through PowerShell. No app
+// registration, no admin consent, no Power Automate licence: it is your own
+// Outlook profile, automated as you.
+//
+// Everything here degrades rather than breaks. If the watcher is not
+// running, or Outlook has no account configured, the buttons stay exactly
+// as they were and the page says why.
+const MAIL_BRIDGE = 'http://127.0.0.1:8765';
+// Required on every call. A browser will not attach a custom header to a
+// cross-origin request without a preflight first, and the bridge only
+// answers preflights for the Hub - so a hostile page cannot reach /send.
+const MAIL_BRIDGE_HEADER = { 'X-Hub-Mail': '1' };
+
+let _bridge = { state: 'unknown', ready: false, account: null, error: null };
+let _bridgeProbing = false;
+
+/**
+ * Is there a local Outlook we can hand mail to?
+ *
+ * 'down'  - the watcher is not running at all.
+ * 'up'    - it answered, and `ready` says whether Outlook can actually send.
+ */
+async function mailBridgeProbe(force) {
+  if (_bridgeProbing) return _bridge;
+  if (!force && _bridge.state !== 'unknown') return _bridge;
+  _bridgeProbing = true;
+  try {
+    // A short timeout: the whole point is that nothing waits on this.
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), force ? 60000 : 4000);
+    const res = await fetch(MAIL_BRIDGE + '/health' + (force ? '?force=1' : ''),
+                            { headers: MAIL_BRIDGE_HEADER, signal: ctl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error('bridge returned ' + res.status);
+    const j = await res.json();
+    _bridge = { state: 'up', ready: !!j.ready, account: j.account || null, error: j.error || null };
+  } catch (e) {
+    _bridge = { state: 'down', ready: false, account: null,
+                error: 'The local helper is not running \u2014 start the Hub with start.bat.' };
+  } finally {
+    _bridgeProbing = false;
+  }
+  return _bridge;
+}
+
+/** Hand a batch to Outlook. Resolves to the sender's own report. */
+async function mailBridgeSend(messages) {
+  const res = await fetch(MAIL_BRIDGE + '/send', {
+    method: 'POST',
+    headers: Object.assign({ 'Content-Type': 'application/json' }, MAIL_BRIDGE_HEADER),
+    body: JSON.stringify({ messages })
+  });
+  const j = await res.json().catch(() => ({ error: 'Unreadable reply from the sender' }));
+  if (!res.ok) throw new Error(j.error || ('Sender returned ' + res.status));
+  return j;
+}
+
+/**
+ * The whole run, in one press.
+ *
+ * Only operators not already marked sent today are included, so pressing it
+ * twice does not send twice, and a run interrupted halfway can be resumed
+ * by pressing it again.
+ */
+async function kpiOpsSendAll() {
+  const b = await mailBridgeProbe();
+  if (!b.ready) {
+    showToast('<i class="ti ti-x"></i>' + esc(b.error || 'Outlook is not available'), 6000);
+    return;
+  }
+
+  const ops = _kpiOpsOperatorList();
+  const sent = kpiOpsSentToday();
+  const todo = ops.map((o, i) => i).filter(i => !sent[ops[i][0]]);
+  if (!todo.length) { showToast('<i class="ti ti-circle-check"></i>Everyone has had theirs today'); return; }
+
+  const built = todo.map(i => kpiOpsBuild(i)).filter(Boolean);
+  const messages = built.map(x => ({
+    to: x.fields.to, cc: x.fields.cc, subject: x.fields.subject, html: x.html
+  }));
+  const noAddress = built.filter(x => !x.fields.to).map(x => x.name);
+  if (noAddress.length) {
+    showToast('<i class="ti ti-x"></i>No address for ' + esc(noAddress.join(', ')), 6000);
+    return;
+  }
+
+  // Fifteen emails leaving as real mail is not something to do on a stray
+  // click, and it cannot be taken back - so it is named and counted first.
+  const names = built.map(x => x.name);
+  const preview = names.slice(0, 6).join(', ') + (names.length > 6 ? ', and ' + (names.length - 6) + ' more' : '');
+  if (!confirm('Send ' + messages.length + ' operator email'
+      + (messages.length === 1 ? '' : 's') + ' now, from ' + (b.account || 'Outlook') + '?\n\n'
+      + preview + '\n\nThis sends real mail immediately.')) return;
+
+  const btn = document.getElementById('kpi-ops-sendall-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i>Sending ' + messages.length + '\u2026'; }
+
+  try {
+    const r = await mailBridgeSend(messages);
+    const failedTo = new Set((r.failed || []).map(f => String(f.to || '').toLowerCase()));
+    built.forEach(x => {
+      if (!failedTo.has(String(x.fields.to || '').toLowerCase())) kpiOpsMarkSent(x.name);
+    });
+    renderKpiOpsList();
+    if (r.ok) {
+      showToast('<i class="ti ti-mail-check"></i>Sent ' + r.sent + ' email' + (r.sent === 1 ? '' : 's'), 5200);
+    } else {
+      // Partial sends are the case worth being precise about: the ones that
+      // went are marked, the ones that did not are still on the list.
+      const f = (r.failed || [])[0];
+      showToast('<i class="ti ti-alert-triangle"></i>Sent ' + r.sent + ', '
+        + (r.failed || []).length + ' failed' + (f ? ' \u2014 ' + esc(String(f.error).slice(0, 90)) : ''), 9000);
+    }
+  } catch (e) {
+    showToast('<i class="ti ti-x"></i>' + esc(e.message), 8000);
+  } finally {
+    if (btn) { btn.disabled = false; renderKpiOpsList(); }
+  }
+}
+
+/** One operator, same path. */
+async function kpiOpsSendOne(i, ev) {
+  if (ev) ev.stopPropagation();
+  const b = await mailBridgeProbe();
+  if (!b.ready) { kpiOpsOpenOutlook(i, null); return; }   // fall back to the old way
+  const x = kpiOpsBuild(i);
+  if (!x) return;
+  if (!x.fields.to) { showToast('<i class="ti ti-x"></i>No address for ' + esc(x.name), 5000); return; }
+  if (!confirm('Send ' + x.name + '\u2019s email to ' + x.fields.to + ' now?')) return;
+  try {
+    const r = await mailBridgeSend([{ to: x.fields.to, cc: x.fields.cc,
+                                      subject: x.fields.subject, html: x.html }]);
+    if (r.ok) {
+      kpiOpsMarkSent(x.name);
+      renderKpiOpsList();
+      showToast('<i class="ti ti-mail-check"></i>Sent to ' + esc(x.fields.to));
+    } else {
+      showToast('<i class="ti ti-x"></i>' + esc(((r.failed || [])[0] || {}).error || r.error || 'Failed'), 8000);
+    }
+  } catch (e) {
+    showToast('<i class="ti ti-x"></i>' + esc(e.message), 8000);
+  }
+}
+
 function kpiOpsOpenOutlook(i, ev) {
   if (ev) ev.stopPropagation();
   const b = kpiOpsBuild(i);
