@@ -3771,17 +3771,17 @@
   .stk-cfg-go span { font-size:11.5px; color:var(--text-3); }
   .stk-cfg-go b { color:var(--text-2); font-weight:600; }
 
+  /* Only the empty state is left. The green one that used to sit here was
+     saying what the tile under it says with its working shown, and carried a
+     download of the file you had just uploaded. With nothing waiting there
+     are no tiles at all, so this is what is left to say so. */
   .stk-banner { display:flex; align-items:center; gap:13px; padding:15px 17px; border-radius:12px;
-    background:var(--green-bg); border:0.5px solid color-mix(in srgb, var(--green-text) 30%, transparent);
+    background:var(--surface2); border:0.5px solid var(--border-md);
     position:relative; overflow:hidden; }
-  .stk-banner > .ti { font-size:22px; color:var(--green-text); flex-shrink:0; }
-  .stk-banner.none > .ti { color:var(--text-3); }
-  .stk-banner.none { background:var(--surface2); border-color:var(--border-md); }
+  .stk-banner > .ti { font-size:22px; color:var(--text-3); flex-shrink:0; }
   .stk-banner-t { min-width:0; display:flex; flex-direction:column; gap:3px; }
-  .stk-banner-t strong { font-size:14px; font-weight:700; color:var(--green-text); }
-  .stk-banner.none .stk-banner-t strong { color:var(--text); }
+  .stk-banner-t strong { font-size:14px; font-weight:700; color:var(--text); }
   .stk-banner-t span { font-size:12px; color:var(--text-2); }
-  .stk-banner .generate-btn { width:auto; margin:0 0 0 auto; padding:9px 16px; font-size:11.5px; flex-shrink:0; }
 
   /* Which search term the warehouse wants is the one thing this page cannot
      know from the file, so it is a switch rather than a guess. */
@@ -13730,8 +13730,8 @@ function stkIsHidden(contract, model) {
 // Hiding a whole depot, as opposed to a part within one. Keyed on the same
 // normalised allocation the cards group by, so "Amtek Melbourne" and
 // whatever else resolves to it go away together rather than one spelling at
-// a time. The jobs stay in the download, marked, because a part nobody told
-// you about is worse than a row you scroll past.
+// a time. The jobs stay in the day's figures, because a part nobody told you
+// about is worse than a row you scroll past.
 function stkLocKey(name) {
   const n = String(name || '').trim();
   return n ? (alNormAlloc(n) || n.toLowerCase()) : '';
@@ -14114,7 +14114,7 @@ function stkRenderRules() {
       <i class="ti ti-building-warehouse al-vgrp-ico notech"></i>
       <span class="al-vgrp-l">Hidden depots</span>
       <span class="al-vgrp-n">${lkeys.length.toLocaleString()}</span>
-      <span class="al-vgrp-note">kept off every stock check \u2014 still counted in the download</span>
+      <span class="al-vgrp-note">kept off every stock check \u2014 still counted in the day\u2019s figures</span>
     </button>
     ${lopen ? lkeys.map(k => `<div class="stk-rule">
       <span class="stk-rule-from">${esc(hlocs[k].name || k)}</span>
@@ -14788,8 +14788,8 @@ function stkRun() {
   });
   stkOut = hits;
 
-  // Hidden rows stay in stkOut so the download still accounts for them; they
-  // just take no part in what the page shows or counts.
+  // Hidden rows stay in stkOut so the day's figures still account for them;
+  // they just take no part in what the page shows or counts.
   const shown = hits.filter(h => !h.hidden);
   const nHidden = hits.length - shown.length;
   stkNoteHits = shown.filter(h => h.via === 'notes');
@@ -14874,7 +14874,6 @@ function stkRun() {
   });
 
   const nParts = new Set(linkable.map(h => stkTerm(h.model).toLowerCase())).size;
-  const other = stkRows.length - hits.length;
   // Commonest contract first, so the legend reads in the order the work does.
   const conCount = new Map();
   shown.forEach(h => { if (h.con) conCount.set(h.con, (conCount.get(h.con) || 0) + 1); });
@@ -14942,7 +14941,7 @@ function stkRun() {
     ${nHidden ? `<div class="z-tile" style="--ac:var(--coral-text)">
       <div class="z-tile-k">Hidden by you</div>
       <div class="z-tile-v">${nHidden.toLocaleString()}</div>
-      <div class="z-tile-s">still in the download</div>
+      <div class="z-tile-s">still counted in the day\u2019s figures</div>
     </div>` : ''}
   </div>`;
 
@@ -14952,17 +14951,7 @@ function stkRun() {
       { key: 'total',    label: 'Rows in file',   lower: false },
       { key: 'viaNotes', label: 'Found in notes', lower: false }
     ])}
-    ${shown.length ? `<div class="stk-banner">
-      <i class="ti ti-package"></i>
-      <span class="stk-banner-t">
-        <strong>${shown.length.toLocaleString()} job${shown.length !== 1 ? 's are' : ' is'} waiting on a replacement part</strong>
-        <span>The other ${other.toLocaleString()} row${other !== 1 ? 's were' : ' was'} not a replacement.</span>
-      </span>
-      <button class="generate-btn" onclick="stkDownload()"${nHidden
-        ? ` title="Includes the ${nHidden.toLocaleString()} you have hidden, each marked as hidden"` : ''}>
-        <i class="ti ti-download" style="font-size:15px;"></i> Download all ${hits.length.toLocaleString()}
-      </button>
-    </div>` : `<div class="stk-banner none">
+    ${shown.length ? '' : `<div class="stk-banner none">
       <i class="ti ti-info-circle"></i>
       <span class="stk-banner-t">
         <strong>Nothing is waiting on a part</strong>
@@ -15139,42 +15128,6 @@ function stkRun() {
 
   // The ticks from earlier this morning, back onto a freshly built board.
   stkPaintDone();
-}
-
-function stkDownload() {
-  if (!stkOut || !stkOut.length) return;
-  const HOW = { named: 'Named in the file', read: 'Read from the technician name',
-                asis: 'Not in the allocation sheet \u2014 used as written' };
-  const data = stkOut.map(h => {
-    const ok = h.loc && h.model;
-    const term = ok ? stkTerm(h.model) : '';
-    return {
-      ...h.row,
-      'Warehouse Location':  h.loc || '',
-      'Searched For':        term,
-      'Part Name Source':    !ok ? '' : (stkGetRule(h.model) ? 'Saved by you' : 'Automatic'),
-      'Counted Because':     h.via === 'notes'
-        ? 'Reported notes: \u201c' + (h.note && h.note.phrase || '') + '\u201d'
-        : 'Fault code',
-      'Hidden By You':       h.hidden ? 'Yes \u2014 ' + (h.hideWhy || '') : '',
-      'Zone':                h.zone || '',
-      'Allocation Check':    !h.av ? '' : ({
-                               match:    'Correct',
-                               mismatch: 'WRONG DEPOT',
-                               nozone:   'Zone not in the allocator',
-                               notech:   'Nobody allocated',
-                               unknown:  'Could not judge the technician'
-                             })[h.av.verdict] || '',
-      'Zone Expects':        h.av && h.av.verdict === 'mismatch' ? (h.av.expected || '') : '',
-      'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
-      'Stock Link':          ok ? stkUrl(h.loc, term) : '',
-      'Not Linked Because':  stkBlockedWhy(h)
-    };
-  });
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Stock Checks');
-  XLSX.writeFile(wb, `${stkName || 'jobs'}_stock_checks.xlsx`);
 }
 
 // ---- Inbox: the files that arrive by email ---------------------------------
@@ -25689,6 +25642,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.46.2', type: 'patch', date: '16 Nov 2026', title: 'Stock Checks says it once', changes: [
+    'The green banner said &ldquo;14 jobs are waiting on a replacement part, the other 62 rows were not&rdquo; directly above a tile saying &ldquo;14 \u2014 jobs of 76 in the file&rdquo;. The same sentence twice, and the tile is the one that shows its working',
+    'The Download all button is gone with it, and so is the spreadsheet behind it \u2014 it handed back the file you had just uploaded with the page\u2019s own columns bolted on, which is not a thing anyone was going to open',
+    'The four places that promised a download now say what is actually true: a hidden depot or part is still counted in the day\u2019s figures. A line that outlives the thing it describes is worse than no line',
+    'The empty state stays. With nothing waiting there are no tiles at all, so it is the only thing left that can say so',
+    'The page now opens on the figures, with the wrong-depot escalation first when there is one',
+  ]},
   { ver: '4.46.1', type: 'patch', date: '16 Nov 2026', title: 'Wrong depot now reads as an escalation, not as the fifth number', changes: [
     'As one of five identical tiles it was being read as another figure about the morning. It is the only thing on the page that says work is about to be done against the wrong building, and it needed to look like it',
     'With something to report it stops being a tile: it leads the row, takes two columns, fills with its own colour, keeps the glow the others only get on hover, and breathes once every few seconds',
