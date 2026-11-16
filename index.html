@@ -3671,6 +3671,71 @@
   /* The two depots in the group below, told apart by more than position. */
   .stk-mis-has { color:var(--coral-text); font-weight:600; }
   .stk-mis-want { color:var(--green-text); font-weight:600; }
+
+  /* ---- The wrong-depot tile, when it has something to say -----------------
+     Everything else in that row is a number about the morning. This one is
+     the only thing on the page that says work is about to be done against
+     the wrong building, and as one of five identical boxes it read as the
+     fifth number rather than as a stop sign.
+
+     So when it is not zero it stops being a tile: it takes two columns,
+     fills with its own colour, keeps the glow the others only get on hover,
+     breathes once every few seconds, and is a button - because an escalation
+     you cannot act on from where it is shouting at you is just decoration.
+     At zero it goes back to being the quietest tile in the row. */
+  .z-tile.escalate { grid-column: span 2;
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--coral-text) 17%, var(--surface)),
+      color-mix(in srgb, var(--coral-text) 7%, var(--surface)));
+    border-color: color-mix(in srgb, var(--coral-text) 50%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--coral-text) 16%, transparent),
+                0 20px 44px -22px color-mix(in srgb, var(--coral-text) 62%, transparent);
+    padding: 15px 17px 15px 21px; cursor: pointer; text-align: left;
+    font-family: inherit; width: 100%; display: block; }
+  .z-tile.escalate::before { width: 5px;
+    background: var(--coral-text);
+    box-shadow: 0 0 20px -1px var(--coral-text); }
+  .z-tile.escalate:hover { transform: translateY(-2px);
+    border-color: var(--coral-text);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--coral-text) 30%, transparent),
+                0 24px 50px -20px color-mix(in srgb, var(--coral-text) 78%, transparent); }
+  .z-tile.escalate:focus-visible { outline: 2px solid var(--coral-text); outline-offset: 2px; }
+  .z-tile.escalate:active { transform: translateY(0); }
+  /* One slow breath. Fast enough to catch the eye on a page you are
+     scrolling, slow enough not to nag at someone reading the rows below. */
+  @keyframes zEscalate {
+    0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--coral-text) 16%, transparent),
+                           0 20px 44px -22px color-mix(in srgb, var(--coral-text) 62%, transparent); }
+    50%      { box-shadow: 0 0 0 1px color-mix(in srgb, var(--coral-text) 40%, transparent),
+                           0 22px 52px -20px color-mix(in srgb, var(--coral-text) 95%, transparent); }
+  }
+  .z-tile.escalate { animation: mcardIn .5s cubic-bezier(.22,.9,.26,1) both,
+                                zEscalate 3.4s ease-in-out 1s infinite; }
+  .z-esc-k { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--coral-text); }
+  .z-esc-k .ti { font-size: 13px; }
+  .z-tile.escalate .z-tile-v { font-size: 34px; color: var(--coral-text);
+    text-shadow: 0 0 26px color-mix(in srgb, var(--coral-text) 45%, transparent); }
+  .z-tile.escalate .z-tile-s { color: var(--text-2); font-size: 12px; }
+  .z-esc-go { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+    font-size: 11px; font-weight: 700; color: var(--coral-text);
+    border-bottom: 1px solid color-mix(in srgb, var(--coral-text) 45%, transparent);
+    padding-bottom: 1px; }
+  .z-esc-go .ti { font-size: 12px; transition: transform .16s; }
+  .z-tile.escalate:hover .z-esc-go .ti { transform: translateX(3px); }
+  @media (max-width: 760px) { .z-tile.escalate { grid-column: 1 / -1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .z-tile.escalate { animation: none !important; }
+    .z-esc-go .ti { transition: none !important; }
+  }
+  /* And when you follow it down, the group says which one you arrived at. */
+  @keyframes zFlash {
+    from { box-shadow: 0 0 0 2px var(--coral-text),
+                       0 0 34px -4px color-mix(in srgb, var(--coral-text) 85%, transparent); }
+    to   { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent; }
+  }
+  .al-vgrp.flash { border-radius: 11px; animation: zFlash 1.5s ease-out 1; }
+  @media (prefers-reduced-motion: reduce) { .al-vgrp.flash { animation: none !important; } }
   .stk-rule-to.yes { color:var(--amber-text); }
   /* The depot-level hide, on the card heading rather than the part row,
      because it is the whole place being put away and not one part of it. */
@@ -14366,6 +14431,22 @@ function stkToggleFault(i) {
   if (stkDone) stkRun();
 }
 function stkMoreFaults() { stkShowAllFaults = true; stkRenderFaults(); }
+// Pressing the escalation. It opens the list if it is shut, takes you to it,
+// and marks it on arrival - landing somewhere mid-page with no idea which of
+// the blocks you were sent to is the thing you pressed for is worse than not
+// being taken anywhere.
+function stkShowAlloc() {
+  if (!stkOpenGroup.has('alloc')) { stkOpenGroup.add('alloc'); stkRun(); }
+  const el = document.getElementById('stk-alloc-grp');
+  if (!el) return;
+  try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  catch (e) { el.scrollIntoView(); }
+  el.classList.remove('flash');
+  void el.offsetWidth;            // restart the animation if it is still on
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 1700);
+}
+
 function stkToggleGroup(k) {
   if (stkOpenGroup.has(k)) stkOpenGroup.delete(k); else stkOpenGroup.add(k);
   if (k === 'rules' || k === 'hidden') stkRenderRules(); else stkRun();
@@ -14808,7 +14889,33 @@ function stkRun() {
   // Tiles rather than five numbers in one sentence. "From the notes" keeps
   // amber wherever it appears, and a zero still gets its tile so the row
   // does not reshuffle between files.
+  // The wrong-depot tile is built apart from the others because it does not
+  // behave like them: with something to report it leads the row as an
+  // escalation you can press, and with nothing it goes quietly to the end.
+  // The row does reshuffle when it fires - on purpose. That is the point of
+  // an escalation, and it is the one thing here that cannot wait for you to
+  // read left to right.
+  const allocTile = !zoneCol ? '' : (stkAllocBad.length
+    ? `<button type="button" class="z-tile escalate" style="--ac:var(--coral-text)"
+         onclick="stkShowAlloc()"
+         title="${escAttr('Show the ' + stkAllocBad.length + ' job'
+           + (stkAllocBad.length !== 1 ? 's' : '') + ' whose technician does not belong to the job\u2019s zone')}">
+        <span class="z-esc-k"><i class="ti ti-alert-hexagon-filled"></i>Wrong depot</span>
+        <div class="z-tile-v">${stkAllocBad.length.toLocaleString()}</div>
+        <div class="z-tile-s">${stkAllocBad.length === 1 ? 'job is' : 'jobs are'} being looked up at a
+          warehouse their zone does not point to${allocUnsure
+            ? ' \u00b7 ' + allocUnsure.toLocaleString() + ' could not be judged' : ''}</div>
+        <span class="z-esc-go">Show me which <i class="ti ti-arrow-down"></i></span>
+      </button>`
+    : `<div class="z-tile zero" style="--ac:var(--green-text)">
+        <div class="z-tile-k">Wrong depot</div>
+        <div class="z-tile-v">0</div>
+        <div class="z-tile-s">every allocation agrees with its zone${allocUnsure
+          ? ' \u00b7 ' + allocUnsure.toLocaleString() + ' could not be judged' : ''}</div>
+      </div>`);
+
   const stkTiles = !shown.length ? '' : `<div class="z-tiles">
+    ${stkAllocBad.length ? allocTile : ''}
     <div class="z-tile" style="--ac:var(--green-text)">
       <div class="z-tile-k">Waiting on a part</div>
       <div class="z-tile-v">${shown.length.toLocaleString()}</div>
@@ -14831,14 +14938,7 @@ function stkRun() {
       <div class="z-tile-v">${stkNoteMaybe.length.toLocaleString()}</div>
       <div class="z-tile-s">hinted at, not counted</div>
     </div>
-    ${zoneCol ? `<div class="z-tile${stkAllocBad.length ? '' : ' zero'}" style="--ac:var(--coral-text)">
-      <div class="z-tile-k">Wrong depot</div>
-      <div class="z-tile-v">${stkAllocBad.length.toLocaleString()}</div>
-      <div class="z-tile-s">${stkAllocBad.length
-        ? 'looked up where the zone does not point'
-        : 'every allocation agrees with its zone'}</div>
-      ${allocUnsure ? `<div class="z-tile-s" style="opacity:.7">${allocUnsure.toLocaleString()} could not be judged</div>` : ''}
-    </div>` : ''}
+    ${stkAllocBad.length ? '' : allocTile}
     ${nHidden ? `<div class="z-tile" style="--ac:var(--coral-text)">
       <div class="z-tile-k">Hidden by you</div>
       <div class="z-tile-v">${nHidden.toLocaleString()}</div>
@@ -14946,7 +15046,7 @@ function stkRun() {
       </section>`;
     }).join('')}</div>` : ''}
 
-    ${stkAllocBad.length ? `<div class="al-vgrp${aOpen ? ' open' : ''}" style="margin-top:16px;">
+    ${stkAllocBad.length ? `<div class="al-vgrp${aOpen ? ' open' : ''}" id="stk-alloc-grp" style="margin-top:16px;">
       <button class="al-vgrp-hd" onclick="stkToggleGroup('alloc')" aria-expanded="${aOpen}">
         <i class="ti ti-chevron-right al-vgrp-chev${aOpen ? ' open' : ''}"></i>
         <i class="ti ti-map-pin-off al-vgrp-ico bad"></i>
@@ -25589,6 +25689,15 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.46.1', type: 'patch', date: '16 Nov 2026', title: 'Wrong depot now reads as an escalation, not as the fifth number', changes: [
+    'As one of five identical tiles it was being read as another figure about the morning. It is the only thing on the page that says work is about to be done against the wrong building, and it needed to look like it',
+    'With something to report it stops being a tile: it leads the row, takes two columns, fills with its own colour, keeps the glow the others only get on hover, and breathes once every few seconds',
+    'It is a button. An escalation you cannot act on from where it is shouting at you is decoration \u2014 pressing it opens the list, takes you to it, and marks it on arrival so you know which block you were sent to',
+    'The row reshuffles when it fires, on purpose. That is the point of an escalation and it is the one thing here that cannot wait for you to read left to right',
+    'At zero it goes back to the end of the row as the quietest tile there, in green, saying every allocation agrees with its zone',
+    'On a phone it takes the whole row rather than sharing a line with an ordinary number, which was the thing it is meant to stop doing',
+    'The breathing stops under Reduce Motion',
+  ]},
   { ver: '4.46.0', type: 'minor', date: '16 Nov 2026', title: 'Stock Checks will not send you to the wrong warehouse', changes: [
     'Pick the new Zone column and every job is checked the way the Allocation Validator checks it: does the technician on this job belong to the zone the job is in',
     'This matters more here than it looks. Every stock link on the page is built from the technician\u2019s depot \u2014 so a technician who does not belong to the zone means the link is pointing at their warehouse rather than the one the zone calls for, and the answer you get back is about the wrong building',
