@@ -3733,8 +3733,8 @@
   .stk-prow:hover { background:rgba(255,255,255,.035); }
   /* The count leads the row. How many of a part you need is the thing you act
      on, and it was previously a 38px chip in the middle of the line. */
-  .stk-prow-main { display:grid; grid-template-columns:46px minmax(0,1fr) 96px;
-    gap:12px; align-items:center; }
+  .stk-prow-main { display:grid; grid-template-columns:46px minmax(0,1fr) 96px 86px;
+    gap:11px; align-items:center; }
   .stk-qty-big { display:flex; flex-direction:column; align-items:center; justify-content:center;
     width:46px; height:46px; border-radius:10px; background:var(--surface2);
     border:0.5px solid var(--border-md); }
@@ -3839,6 +3839,90 @@
   .stk-prow:hover .stk-go, .stk-go:hover { background:color-mix(in srgb, var(--teal) 24%, transparent);
     border-color:var(--teal); color:var(--text); }
   .stk-go .ti { font-size:11px; }
+
+  /* Done, per part row and per depot. A stock check is forty warehouse pages
+     opened one at a time, and the thing you lose halfway through is not an
+     answer - it is which rows you have already been through. So each part
+     row carries a tick, and the depot heading carries one for the lot.
+
+     It clears itself every morning, because the file does: a tick means "I
+     checked this today", and a tick that outlived its file would be a lie.
+     The button stays at full strength on a row that is done while the row
+     around it dims - the tick is the one thing you still have to be able to
+     read and click on a row you want to put back. */
+  .stk-done { display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    font-family:inherit; font-size:11px; font-weight:600; color:var(--text-3);
+    background:var(--surface2); border:0.5px solid var(--border-md); border-radius:7px;
+    padding:7px 0; cursor:pointer; transition:background .14s, border-color .14s, color .14s; }
+  .stk-done:hover { color:var(--green-text); background:var(--green-bg);
+    border-color:color-mix(in srgb, var(--green-text) 40%, transparent); }
+  .stk-done.on { color:var(--green-text); background:var(--green-bg);
+    border-color:color-mix(in srgb, var(--green-text) 34%, transparent); }
+  .stk-done:focus-visible { outline:2px solid var(--green-text); outline-offset:1px; }
+  .stk-done .ti { font-size:13px; }
+  .stk-prow.done .stk-prow-main > :not(.stk-done),
+  .stk-prow.done .stk-prow-con { opacity:.36; transition:opacity .16s; }
+  .stk-prow.done:hover .stk-prow-main > :not(.stk-done),
+  .stk-prow.done:hover .stk-prow-con { opacity:.82; }
+  .stk-prow.done .stk-model-n { text-decoration:line-through; text-decoration-thickness:1px; }
+
+  /* The depot heading: how far through this card you are, and one button for
+     all of it. The count says nothing until there is something to say. */
+  .stk-chd-prog { font-size:10px; font-weight:700; border-radius:5px; padding:3px 7px;
+    background:var(--surface2); color:var(--text-2); font-variant-numeric:tabular-nums; }
+  .stk-chd-prog:empty { display:none; }
+  .stk-chd-prog.full { background:var(--green-bg); color:var(--green-text); }
+  .stk-chd-all { background:none; border:0.5px solid var(--border-md); color:var(--text-3);
+    font-family:inherit; font-size:10.5px; font-weight:600; border-radius:6px; padding:4px 9px;
+    cursor:pointer; opacity:0; white-space:nowrap;
+    transition:opacity .13s, color .13s, border-color .13s, background .13s; }
+  .stk-card:hover .stk-chd-all, .stk-chd-all:focus-visible, .stk-card.all-done .stk-chd-all { opacity:1; }
+  .stk-chd-all:hover { color:var(--green-text); background:var(--green-bg);
+    border-color:color-mix(in srgb, var(--green-text) 40%, transparent); }
+  /* Nothing hovers on a touch screen, so a button that only appears on hover
+     is a button that does not exist there. */
+  @media (hover: none) { .stk-chd-all { opacity:1; } }
+  .stk-card.all-done { border-left-color:color-mix(in srgb, var(--green-text) 40%, var(--border)); }
+  .stk-card.all-done .stk-chd-n { color:var(--text-2); }
+
+  /* One line for the whole run, under the tiles: the number you want when you
+     come back from lunch. It turns green only when every part is ticked. */
+  .stk-prog { display:flex; align-items:center; gap:12px; margin-top:12px; padding:10px 14px;
+    border-radius:10px; background:var(--surface2); border:0.5px solid var(--border-md);
+    flex-wrap:wrap; transition:background .2s, border-color .2s; }
+  .stk-prog > .ti { font-size:16px; color:var(--text-3); flex-shrink:0; }
+  .stk-prog.full { background:var(--green-bg);
+    border-color:color-mix(in srgb, var(--green-text) 30%, transparent); }
+  .stk-prog.full > .ti { color:var(--green-text); }
+  .stk-prog-t { font-size:12px; color:var(--text-2); }
+  .stk-prog-t b { color:var(--text); font-weight:700; font-variant-numeric:tabular-nums; }
+  .stk-prog.full .stk-prog-t, .stk-prog.full .stk-prog-t b { color:var(--green-text); }
+  .stk-prog-bar { flex:0 1 240px; min-width:70px; max-width:240px; height:5px; border-radius:3px;
+    background:var(--border-md); overflow:hidden; }
+  .stk-prog-bar > i { display:block; height:100%; width:var(--pct, 0%); border-radius:3px;
+    background:linear-gradient(90deg, color-mix(in srgb, var(--green-text) 50%, transparent), var(--green-text));
+    transition:width .32s cubic-bezier(.4,0,.2,1); }
+  .stk-prog-x { flex-shrink:0; margin-left:auto; background:none; border:none; color:var(--text-3); font-family:inherit;
+    font-size:11px; font-weight:600; padding:4px 8px; border-radius:5px; cursor:pointer;
+    transition:color .13s, background .13s; }
+  .stk-prog-x:hover { color:var(--coral-text); background:var(--coral-bg); }
+  @media (prefers-reduced-motion: reduce) {
+    .stk-done, .stk-chd-all, .stk-prog, .stk-prog-bar > i { transition:none !important; }
+  }
+  /* On a phone the two buttons take a line of their own under the model,
+     rather than a fourth column squeezing the one piece of text the row is
+     about. Both get the 44px this app holds itself to everywhere else. */
+  @media (max-width: 560px) {
+    .stk-prow-main { grid-template-columns:42px minmax(0,1fr) auto; gap:9px 10px; }
+    .stk-prow-main > .stk-qty-big { grid-row:1 / span 2; }
+    .stk-prow-main > .stk-model { grid-column:2 / -1; grid-row:1; }
+    .stk-prow-main > .stk-go { grid-column:2; grid-row:2; justify-self:start;
+      min-height:44px; padding:0 16px; }
+    .stk-prow-main > .stk-done { grid-column:3; grid-row:2;
+      min-height:44px; padding:0 16px; }
+    /* Nothing hovers here either, so the depot button has to be on screen. */
+    .stk-chd-all { opacity:1; padding:6px 10px; }
+  }
   .al-vgrp-hd { padding:9px 14px; }
   @media (prefers-reduced-motion: reduce) {
     .al-vbanner::after, .al-vrow { animation:none !important; }
@@ -13378,6 +13462,8 @@ let stkCons = null;           // contract code -> the badge number it was given
 let stkHidden = null;         // "contract|model" pairs you never want to see
 let stkHiddenLocs = null;     // whole depots kept off every check
 let stkRowIndex = [];         // the part rows on screen, so a pencil can name one
+let stkLocIndex = [];         // the depot cards on screen, each with its row slots
+let stkChecked = null;        // { day, rows } - the parts ticked off today
 let stkEditing = [];          // the model name(s) the open modal is editing
 const STK_SEARCH_KEY = 'zarif_stk_search_by';
 const STK_RULES_KEY = 'zarif_stk_model_terms';
@@ -13391,6 +13477,7 @@ const STK_CON_ICONS = ['ti-circle-filled','ti-square-filled','ti-triangle-filled
 const STK_BLANK = '(blank)';
 const STK_FAULT_CHIPS = 14;
 const STK_NOTES_KEY = 'zarif_stk_notes_on';
+const STK_DONE_KEY = 'zarif_stk_checked';
 const STK_NOTE_WORDS_KEY = 'zarif_stk_note_phrases';
 let stkNotesOn = null;        // read the notes column as well as the fault code
 let stkNoteWords = null;      // phrase -> {phrase, verdict} you taught it
@@ -13577,6 +13664,171 @@ function stkShowPair(key) {
   dbSet(STK_HIDE_KEY, h);
   stkRun();
   stkRenderRules();
+}
+
+// ---- Done: which parts you have already checked today ---------------------
+// Ticking a part off is not a setting and not a verdict about the part - it is
+// a note about this morning, and it is worth keeping only until this morning
+// is over. So the whole list is stamped with the day it belongs to and thrown
+// away on sight if that day has passed. The alternative, keeping ticks until
+// something clears them, means arriving to a board that claims you have
+// already done today's work.
+//
+// Keyed on the depot and the search term rather than on jobs: the row IS one
+// warehouse page for one part at one place, so that is the unit of work, and
+// the key survives a reshuffle of the file or a second file the same day.
+function stkToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+    + '-' + String(d.getDate()).padStart(2, '0');
+}
+function stkGetChecked() {
+  const today = stkToday();
+  if (stkChecked === null) {
+    const saved = dbGet(STK_DONE_KEY);
+    stkChecked = (saved && typeof saved === 'object' && saved.day === today
+      && saved.rows && typeof saved.rows === 'object')
+      ? { day: today, rows: saved.rows } : { day: today, rows: {} };
+  } else if (stkChecked.day !== today) {
+    // The Hub is left open for days at a time, so the rollover has to happen
+    // here rather than only at startup.
+    stkChecked = { day: today, rows: {} };
+  }
+  return stkChecked;
+}
+function stkDoneKey(loc, term) {
+  return stkLocKey(loc) + '||' + String(term || '').trim().toLowerCase();
+}
+function stkRowDone(loc, term) {
+  const t = String(term || '').trim();
+  return t ? !!stkGetChecked().rows[stkDoneKey(loc, t)] : false;
+}
+function stkSaveChecked() { dbSet(STK_DONE_KEY, stkGetChecked()); }
+
+function stkDoneBtnHtml(on) {
+  return '<i class="ti ' + (on ? 'ti-circle-check-filled' : 'ti-circle')
+    + '"></i><span>' + (on ? 'Checked' : 'Done') + '</span>';
+}
+function stkDoneTitle(on, loc) {
+  return on ? 'Checked \u2014 click to put it back on the list'
+            : 'Mark this part checked at ' + loc;
+}
+function stkLocProgText(done, total) {
+  if (!done) return '';
+  return done === total ? 'all ' + total + ' checked' : done + ' of ' + total;
+}
+
+function stkToggleDone(i) {
+  const g = stkRowIndex[i];
+  if (!g || !g.term) return;
+  const c = stkGetChecked();
+  const k = stkDoneKey(g.loc, g.term);
+  if (c.rows[k]) delete c.rows[k]; else c.rows[k] = Date.now();
+  stkSaveChecked();
+  stkPaintDone();
+}
+// The whole depot at once. If every part there is already ticked the button
+// clears them instead, because the mistake you make with a button like this
+// is pressing it on the wrong card.
+function stkDoneLoc(lix) {
+  const L = stkLocIndex[lix];
+  if (!L || !L.ixs.length) return;
+  const c = stkGetChecked();
+  const rows = L.ixs.map(i => stkRowIndex[i]).filter(g => g && g.term);
+  if (!rows.length) return;
+  const allOn = rows.every(g => c.rows[stkDoneKey(g.loc, g.term)]);
+  rows.forEach(g => {
+    const k = stkDoneKey(g.loc, g.term);
+    if (allOn) delete c.rows[k]; else c.rows[k] = Date.now();
+  });
+  stkSaveChecked();
+  stkPaintDone();
+  showToast('<i class="ti ti-' + (allOn ? 'rotate' : 'circle-check') + '"></i> '
+    + esc(L.name) + (allOn ? ' is back on the list'
+      : ' \u2014 all ' + rows.length + ' part' + (rows.length !== 1 ? 's' : '') + ' checked'), 2600);
+}
+function stkClearDone() {
+  const c = stkGetChecked();
+  if (!Object.keys(c.rows).length) return;
+  c.rows = {};
+  stkSaveChecked();
+  stkPaintDone();
+}
+
+function stkProgCounts() {
+  let done = 0, total = 0;
+  stkRowIndex.forEach(g => {
+    if (!g || !g.term) return;
+    total++;
+    if (stkRowDone(g.loc, g.term)) done++;
+  });
+  return { done, total };
+}
+function stkProgInner(done, total) {
+  const full = total > 0 && done === total;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  return '<i class="ti ti-' + (full ? 'circle-check' : 'progress') + '"></i>'
+    + '<span class="stk-prog-t">' + (full
+      ? 'Every part checked \u2014 <b>all ' + total.toLocaleString() + '</b> of them'
+      : '<b>' + done.toLocaleString() + '</b> of <b>' + total.toLocaleString()
+        + '</b> part' + (total !== 1 ? 's' : '') + ' checked today')
+    + '</span>'
+    + '<span class="stk-prog-bar"><i style="--pct:' + pct + '%"></i></span>'
+    + (done ? '<button class="stk-prog-x" onclick="stkClearDone()"'
+      + ' title="Clear every tick and start the run again">Start over</button>' : '');
+}
+function stkProgHtml() {
+  const { done, total } = stkProgCounts();
+  if (!total) return '';
+  return '<div class="stk-prog' + (done === total ? ' full' : '') + '" id="stk-prog">'
+    + stkProgInner(done, total) + '</div>';
+}
+
+// Repaint rather than re-run: stkRun() rebuilds every card from the file, and
+// a tick is not worth watching forty cards fade back in for.
+function stkPaintDone() {
+  const out = document.getElementById('stk-result');
+  if (!out) return;
+  out.querySelectorAll('.stk-prow[data-stk-ix]').forEach(el => {
+    const g = stkRowIndex[+el.dataset.stkIx];
+    if (!g || !g.term) return;
+    const on = stkRowDone(g.loc, g.term);
+    el.classList.toggle('done', on);
+    const b = el.querySelector('.stk-done');
+    if (b) {
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.title = stkDoneTitle(on, g.loc);
+      b.innerHTML = stkDoneBtnHtml(on);
+    }
+  });
+  out.querySelectorAll('.stk-card[data-stk-lix]').forEach(card => {
+    const L = stkLocIndex[+card.dataset.stkLix];
+    if (!L) return;
+    const rows = L.ixs.map(i => stkRowIndex[i]).filter(g => g && g.term);
+    const d = rows.filter(g => stkRowDone(g.loc, g.term)).length;
+    const full = rows.length > 0 && d === rows.length;
+    card.classList.toggle('all-done', full);
+    const pill = card.querySelector('.stk-chd-prog');
+    if (pill) {
+      pill.textContent = stkLocProgText(d, rows.length);
+      pill.classList.toggle('full', full);
+    }
+    const all = card.querySelector('.stk-chd-all');
+    if (all) {
+      all.textContent = full ? 'Undo all' : 'Mark all';
+      all.title = full
+        ? 'Put every part at ' + L.name + ' back on the list'
+        : 'Mark all ' + rows.length + ' part' + (rows.length !== 1 ? 's' : '')
+          + ' at ' + L.name + ' checked';
+    }
+  });
+  const bar = document.getElementById('stk-prog');
+  if (bar) {
+    const { done, total } = stkProgCounts();
+    bar.classList.toggle('full', total > 0 && done === total);
+    bar.innerHTML = stkProgInner(done, total);
+  }
 }
 
 function stkEditTerm(i) {
@@ -14349,11 +14601,19 @@ function stkRun() {
   });
   const locList = [...locs.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
   stkRowIndex = [];
+  stkLocIndex = [];
   locList.forEach(L => {
     L.partList = [...L.parts.values()]
       .sort((a, b) => b.jobs.length - a.jobs.length || a.term.localeCompare(b.term));
-    // Each part row gets a slot, so its pencil can name the models behind it.
-    L.partList.forEach(Pt => { Pt.ix = stkRowIndex.length; stkRowIndex.push({ models: [...Pt.models] }); });
+    // Each part row gets a slot, so its pencil can name the models behind it -
+    // and its depot and search term, so the tick beside it can say which row
+    // it is without either string going through an onclick.
+    L.partList.forEach(Pt => {
+      Pt.ix = stkRowIndex.length;
+      stkRowIndex.push({ models: [...Pt.models], loc: L.name, term: Pt.term });
+    });
+    L.lix = stkLocIndex.length;
+    stkLocIndex.push({ name: L.name, ixs: L.partList.map(Pt => Pt.ix) });
   });
 
   const nParts = new Set(linkable.map(h => stkTerm(h.model).toLowerCase())).size;
@@ -14429,6 +14689,8 @@ function stkRun() {
 
     ${stkTiles}
 
+    ${stkProgHtml()}
+
     ${shown.length ? `<div class="stk-seg-row">
       <span class="stk-seg-l">Search the warehouse by</span>
       <span class="stk-seg">
@@ -14445,12 +14707,22 @@ function stkRun() {
 
     ${locList.length ? `<div class="stk-grid">${locList.map((L, i) => {
       const cls = L.kind === 'asis' ? ' asis' : (alOwner(L.name).key === 'partner' ? ' partner' : '');
-      return `<section class="stk-card${cls}" style="animation-delay:${Math.min(i, 12) * 0.03}s">
+      const lDone = L.partList.filter(Pt => stkRowDone(L.name, Pt.term)).length;
+      const lFull = L.partList.length > 0 && lDone === L.partList.length;
+      return `<section class="stk-card${cls}${lFull ? ' all-done' : ''}" data-stk-lix="${L.lix}"
+        style="animation-delay:${Math.min(i, 12) * 0.03}s">
         <header class="stk-chd">
           <span class="stk-chd-n${L.read ? ' read' : ''}"${L.read ? ` title="${escAttr(L.read)}"` : ''}>${esc(L.name)}</span>
           <span class="stk-chd-pill">${L.n.toLocaleString()} job${L.n !== 1 ? 's' : ''}</span>
+          <span class="stk-chd-prog${lFull ? ' full' : ''}">${stkLocProgText(lDone, L.partList.length)}</span>
           <span class="stk-chd-from">${L.techs.size === 1
             ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
+          <button class="stk-chd-all" onclick="stkDoneLoc(${L.lix})"
+            title="${escAttr(lFull
+              ? 'Put every part at ' + L.name + ' back on the list'
+              : 'Mark all ' + L.partList.length + ' part'
+                + (L.partList.length !== 1 ? 's' : '') + ' at ' + L.name + ' checked')}"
+            >${lFull ? 'Undo all' : 'Mark all'}</button>
           <button class="stk-chd-x" onclick="stkHideLoc(${escAttr(JSON.stringify(L.name))})"
             title="Hide ${escAttr(L.name)} from this and every future stock check"
             aria-label="Hide ${escAttr(L.name)} from this and every future stock check"><i class="ti ti-eye-off"></i></button>
@@ -14462,7 +14734,8 @@ function stkRun() {
           // there to warn about, so it is read off the sites, not the total.
           const piled = Pt.jobs.length > 1 && stkSiteGroups(Pt.jobs).some(g => g.jobs.length > 1);
           const sites = stkSiteGroups(Pt.jobs).length;
-          return `<div class="stk-prow">
+          const pDone = stkRowDone(L.name, Pt.term);
+          return `<div class="stk-prow${pDone ? ' done' : ''}" data-stk-ix="${Pt.ix}">
           <div class="stk-prow-main">
             <span class="stk-qty-big${piled ? ' many' : ''}" title="${escAttr(
               `${Pt.jobs.length} needed at ${esc(L.name)}` +
@@ -14477,6 +14750,9 @@ function stkRun() {
             <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
               Check stock <i class="ti ti-arrow-up-right"></i>
             </a>
+            <button class="stk-done${pDone ? ' on' : ''}" onclick="stkToggleDone(${Pt.ix})"
+              aria-pressed="${pDone ? 'true' : 'false'}"
+              title="${escAttr(stkDoneTitle(pDone, L.name))}">${stkDoneBtnHtml(pDone)}</button>
           </div>
           <div class="stk-prow-con${conCol ? '' : ' nocon'}">${buckets.map(([c, js]) =>
             (conCol ? stkConChip(c, js.length, Pt.ix) : '') + stkSiteLines(js)).join('')}</div>
@@ -14552,6 +14828,9 @@ function stkRun() {
           <td class="al-vgrp-why">${esc(stkBlockedWhy(h))}</td>
         </tr>`).join('')}</tbody></table></div>` : ''}
     </div>` : ''}`;
+
+  // The ticks from earlier this morning, back onto a freshly built board.
+  stkPaintDone();
 }
 
 function stkDownload() {
@@ -25093,6 +25372,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.44.0', type: 'minor', date: '16 Nov 2026', title: 'Stock Checks: tick off the part you just looked up', changes: [
+    'A stock check is forty warehouse pages opened one at a time, and the thing you lose halfway through is not an answer \u2014 it is which rows you have already been through. Every part row now carries a Done tick beside its Check stock link',
+    'The depot heading has one for the whole card, and says how far through it you are. Press it on a card already finished and it clears that card instead, because the mistake you make with a button like that is pressing it on the wrong one',
+    'One line under the tiles counts the lot, with a Start over when you want the run back',
+    'Ticks clear themselves every morning, because the file does \u2014 a tick means "I checked this today", and one that outlived its file would be a lie',
+    'Keyed on the depot and the search term rather than the job number, so the same part at the same place stays ticked through a reshuffle of the file, a change of setup, or a second file the same day',
+    'A ticked row dims and rules itself through, but its tick stays at full strength \u2014 that is the one thing you still have to be able to read and press on a row you want to put back',
+  ]},
   { ver: '4.43.0', type: 'minor', date: '15 Nov 2026', title: 'Security: an open table removed, and an escaper that missed quotes', changes: [
     'The pixel_agents table behind the Pixel Office widget allowed anyone holding the publishable key to read and write it — and that key is in the page source of a site on the public web. An unauthenticated request returned the account name, local folder paths and live session activity',
     'Its own policy comment claimed it mirrored hub_data. It did not: hub_data enforces row level security correctly, verified by an unauthenticated read and write. This was the only genuinely open table in the project',
