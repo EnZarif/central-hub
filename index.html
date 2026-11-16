@@ -3582,6 +3582,7 @@
      is the pile nothing was counted from. */
   .al-vgrp-ico.warn { color:var(--text-3); }
   .al-vgrp-ico.match { color:var(--green-text); }
+  .al-vgrp-ico.bad { color:var(--coral-text); }
   .al-vgrp-l { font-size:12.5px; font-weight:600; }
   .al-vgrp-n { font-size:11px; font-weight:700; border-radius:8px; padding:2px 8px;
     background:var(--surface2); color:var(--text-2); }
@@ -3643,6 +3644,33 @@
     font-weight:700; letter-spacing:.02em; color:var(--amber-text); background:var(--amber-bg);
     border-radius:5px; padding:2px 6px; width:fit-content; }
   .stk-vnote .ti { font-size:11px; }
+
+  /* ---- The allocation check -----------------------------------------------
+     This page builds every warehouse link from the technician's depot, so a
+     technician who does not belong to the job's zone means the link is
+     pointing at the wrong warehouse. That is worth more than a footnote: it
+     sits on the part row itself, on the individual job, and as a group of its
+     own underneath, because the row is about to be acted on.
+
+     Coral rather than the amber the notes use. Amber on this page means
+     "look closer at this"; this one means "this is wrong". */
+  .stk-vmis { display:inline-flex; align-items:center; gap:4px; margin-top:3px; font-size:10px;
+    font-weight:700; letter-spacing:.02em; color:var(--coral-text); background:var(--coral-bg);
+    border:0.5px solid color-mix(in srgb, var(--coral-text) 30%, transparent);
+    border-radius:5px; padding:2px 6px; width:fit-content; max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:help; }
+  .stk-vmis .ti { font-size:11px; flex-shrink:0; }
+  /* The job chip itself, so you can tell which of the four on a row it is. */
+  .stk-site-j a.mis, .stk-site-j > span.mis { color:var(--coral-text); background:var(--coral-bg);
+    border-color:color-mix(in srgb, var(--coral-text) 38%, transparent); }
+  .stk-site-j a.mis:hover { background:color-mix(in srgb, var(--coral-text) 22%, var(--surface));
+    border-color:var(--coral-text); }
+  /* .stk-site-j i is hidden - that rule is there to kill the dot separators,
+     and it would take this warning with it. */
+  .stk-site-j i.stk-jmis { display:inline-flex; font-size:10px; margin-right:4px; }
+  /* The two depots in the group below, told apart by more than position. */
+  .stk-mis-has { color:var(--coral-text); font-weight:600; }
+  .stk-mis-want { color:var(--green-text); font-weight:600; }
   .stk-rule-to.yes { color:var(--amber-text); }
   /* The depot-level hide, on the card heading rather than the part row,
      because it is the whole place being put away and not one part of it. */
@@ -12839,6 +12867,40 @@ function alZoneAllocation(zone) {
            st: alConsensus(rows, 'st').value, n: rows.length };
 }
 
+// Whether the technician on a job belongs to the zone the job is in.
+//
+// This used to live inside alValRun() as a chain of else-ifs. It is out here
+// now because Stock Checks asks the same question: that page builds its
+// warehouse links from the technician's depot, so a technician who does not
+// belong to the zone means the stock is being looked up at the wrong
+// warehouse. Two pages asking the same question of the same file must not be
+// able to answer it differently, so there is one answer and both call it.
+//
+// Order matters and is deliberate: a zone the allocator has never heard of
+// is reported as such rather than as a mismatch, because there is nothing to
+// mismatch against; and a technician who cannot be resolved is separated
+// from one who resolves to the wrong depot, since one needs reading and the
+// other needs reassigning.
+function alVerdict(tech, zone) {
+  const zi = alZoneAllocation(zone);
+  const ti = alTechToAllocation(tech);
+  const z = String(zone || '').trim();
+  const out = (verdict, why) => ({
+    verdict, why, zi, ti,
+    expected: zi ? zi.a1 : '',
+    zoneName: zi ? zi.zone : '',
+    resolved: ti.alloc || '',
+    how: ti.how
+  });
+  if (!zi)                       return out('nozone',  'Zone "' + (z || '(blank)') + '" is not in the allocator');
+  if (ti.how === 'blank')        return out('notech',  'Nobody is allocated to this job');
+  if (ti.how === 'none')         return out('notech',  '"' + tech + '" is not a field technician');
+  if (ti.how === 'unknown')      return out('unknown', 'Could not tell which allocation "' + tech + '" belongs to');
+  if (ti.unknownAlloc)           return out('unknown', ti.alloc + ' is not an allocation in the sheet');
+  if (alNormAlloc(ti.alloc) === alNormAlloc(zi.a1)) return out('match', '');
+  return out('mismatch', 'Zone expects ' + zi.a1);
+}
+
 async function alValLoad(file) {
   if (!file) return;
   alValOut = null;
@@ -12927,21 +12989,11 @@ function alValRun() {
     // paDate takes the shapes the helpdesk exports use - "2026-06-30 05:00 PM",
     // dd/mm/yyyy and plain ISO - and gives back a sortable YYYY-MM-DD.
     const sched = dateCol ? paDate(row[dateCol]) : '';
-    const zi = alZoneAllocation(zone);
-    const ti = alTechToAllocation(tech);
-
-    let verdict, why;
-    if (!zi)                           { verdict = 'nozone';  why = `Zone "${zone || '(blank)'}" is not in the allocator`; }
-    // A job nobody is going to is as much a problem as one with the wrong
-    // name on it, so it is flagged beside the mismatches rather than filed
-    // away as context. It keeps its own verdict so the two stay tellable
-    // apart - one needs reassigning, the other needs allocating at all.
-    else if (ti.how === 'blank')       { verdict = 'notech';  why = 'Nobody is allocated to this job'; }
-    else if (ti.how === 'none')        { verdict = 'notech';  why = `"${tech}" is not a field technician`; }
-    else if (ti.how === 'unknown')     { verdict = 'unknown'; why = `Could not tell which allocation "${tech}" belongs to`; }
-    else if (ti.unknownAlloc)          { verdict = 'unknown'; why = `${ti.alloc} is not an allocation in the sheet`; }
-    else if (alNormAlloc(ti.alloc) === alNormAlloc(zi.a1)) { verdict = 'match'; why = ''; }
-    else                               { verdict = 'mismatch'; why = `Zone expects ${zi.a1}`; }
+    // One shared judge, so this page and Stock Checks can never disagree
+    // about the same job. A job nobody is going to keeps its own verdict
+    // from a job with the wrong name on it - one needs allocating at all,
+    // the other needs reassigning.
+    const { verdict, why, zi, ti } = alVerdict(tech, zone);
 
     return { row, jobId, site, tech, zone, sched, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
@@ -13483,6 +13535,7 @@ let stkNotesOn = null;        // read the notes column as well as the fault code
 let stkNoteWords = null;      // phrase -> {phrase, verdict} you taught it
 let stkNoteHits = [];         // rows counted because of their notes, not the code
 let stkNoteMaybe = [];        // rows the notes hint at but do not say outright
+let stkAllocBad = [];         // jobs whose technician does not belong to their zone
 
 function stkGetSearchBy() {
   if (stkSearchBy === null) stkSearchBy = dbGet(STK_SEARCH_KEY) === 'code' ? 'code' : 'model';
@@ -14359,6 +14412,7 @@ function stkRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Job number <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-id', svAutoDetect(stkHeaders, ['Job #','Job Number','Job ID','ID'], ['jobid','job']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-site', svAutoDetect(stkHeaders, ['Location Name','Site','Store'], ['location','site','store']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Contract <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-con', svAutoDetect(stkHeaders, ['Contract','Contract Name','Client','Account'], ['contract','client','account']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Zone <span style="font-weight:400;color:var(--text-3)">(optional \u2014 checks the allocation)</span></span>${sel('stk-c-zone', svAutoDetect(stkHeaders, ['Zone','Geo','Geo Zone','Area','Region'], ['zone','geo','area','region']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Reported notes <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-note', noteCol, 'stkOnNoteCol()')}</div>
      </div>
      <div class="stk-note-sw" id="stk-note-sw"${noteCol ? '' : ' style="display:none;"'}>
@@ -14459,9 +14513,36 @@ function stkSiteGroups(jobs) {
 }
 
 function stkJobLinks(jobs) {
-  return jobs.map(j => j.id
-    ? `<a href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${esc(j.id)}</a>`
-    : `<span>row ${j.i + 2}</span>`).join('<i>\u00b7</i>');
+  return jobs.map(j => {
+    const bad = !!(j.av && j.av.verdict === 'mismatch');
+    const tip = !bad ? '' : ' title="' + escAttr('Allocated to ' + (j.tech || '(blank)')
+      + ' \u2014 zone ' + (j.zone || '(blank)') + ' expects ' + j.av.expected) + '"';
+    const mark = bad ? '<i class="ti ti-alert-triangle stk-jmis"></i>' : '';
+    return j.id
+      ? `<a class="stk-jl${bad ? ' mis' : ''}"${tip} href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${mark}${esc(j.id)}</a>`
+      : `<span class="stk-jl${bad ? ' mis' : ''}"${tip}>${mark}row ${j.i + 2}</span>`;
+  }).join('<i>\u00b7</i>');
+}
+
+// What the part row says when some of the jobs on it are allocated away from
+// their zone. It names the depot the zone calls for when they all agree,
+// because "2 belong to Pentagon Perth" is actionable where "2 are wrong" is
+// only alarming.
+function stkMisLabel(P) {
+  const mis = P.jobs.filter(j => j.av && j.av.verdict === 'mismatch');
+  if (!mis.length) return '';
+  const want = [...new Set(mis.map(j => j.av.expected).filter(Boolean))];
+  const txt = want.length === 1
+    ? (mis.length === P.jobs.length ? 'zone expects ' + want[0]
+       : mis.length + (mis.length === 1 ? ' expects ' : ' expect ') + want[0])
+    : mis.length + ' allocated elsewhere';
+  return `<span class="stk-vmis" title="${escAttr(
+    mis.length + ' of the ' + P.jobs.length + ' job' + (P.jobs.length !== 1 ? 's' : '')
+    + ' on this row ' + (mis.length === 1 ? 'is' : 'are')
+    + ' allocated to a technician their zone does not call for'
+    + (want.length === 1 ? ', which is ' + want[0] : '')
+    + ' \u2014 so this stock is being looked up at the wrong depot')
+    }"><i class="ti ti-map-pin-off"></i>${esc(txt)}</span>`;
 }
 
 // One line per site under a contract: the name, a loud count when that single
@@ -14565,6 +14646,7 @@ function stkRun() {
   const siteCol  = document.getElementById('stk-c-site')?.value;
   const conCol   = document.getElementById('stk-c-con')?.value;
   const noteCol  = document.getElementById('stk-c-note')?.value;
+  const zoneCol  = document.getElementById('stk-c-zone')?.value;
   const out = document.getElementById('stk-result');
   if (!out) return;
   if (!stkRows.length || !stkDone || !modelCol || !faultCol || !techCol) {
@@ -14575,6 +14657,17 @@ function stkRun() {
 
   const picked = stkFaultPick || new Set();
   const useNotes = !!noteCol && stkNotesOnGet();
+  // One verdict per distinct technician-and-zone pair rather than per row.
+  // Scoped to this run, so an answer you teach the allocator is picked up
+  // the next time the page is drawn rather than being cached past its truth.
+  const avMemo = new Map();
+  const avFor = (tech, zone) => {
+    const mk = String(tech) + '\u0000' + String(zone);
+    if (avMemo.has(mk)) return avMemo.get(mk);
+    const v = alVerdict(tech, zone);
+    avMemo.set(mk, v);
+    return v;
+  };
   const hits = [];
   stkNoteMaybe = [];
   stkRows.forEach((row, i) => {
@@ -14596,9 +14689,15 @@ function stkRun() {
     }
     const w = stkLocation(tech);
     const con = conCol ? String(row[conCol] || '').trim() : '';
+    // The warehouse link on this page is built from the technician's depot,
+    // so a technician who does not belong to the job's zone means the stock
+    // is about to be looked up at the wrong warehouse. Same judge as the
+    // Allocation Validator, and only asked when a zone column is picked.
+    const zone = zoneCol ? String(row[zoneCol] || '').trim() : '';
+    const av = zoneCol ? avFor(tech, zone) : null;
     const hidPair = stkIsHidden(con, model);
     const hidLoc = !hidPair && stkLocHidden(w.loc);
-    hits.push({ row, i, model, tech, con,
+    hits.push({ row, i, model, tech, con, zone, av,
       id: idCol ? String(row[idCol] || '').trim() : '',
       site: siteCol ? String(row[siteCol] || '').trim() : '',
       loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '',
@@ -14636,6 +14735,12 @@ function stkRun() {
   });
   const linkable = shown.filter(h => h.loc && h.model);
   const stuck = shown.filter(h => !h.loc || !h.model);
+  // Only the mismatches are a finding here. A job with nobody on it, or a
+  // technician that could not be read, never produced a warehouse link in
+  // the first place and is already sitting under "No link possible".
+  stkAllocBad = shown.filter(h => h.av && h.av.verdict === 'mismatch');
+  const allocUnsure = zoneCol
+    ? shown.filter(h => h.av && (h.av.verdict === 'nozone' || h.av.verdict === 'unknown')).length : 0;
 
   // One card per warehouse, one row per thing to search for. The jobs stay
   // visible inside the row, so nothing is folded away - only the duplicate
@@ -14697,6 +14802,7 @@ function stkRun() {
   const egModel = linkable.length ? linkable[0].model : '';
   const open = stkOpenGroup.has('stuck');
   const nOpen = stkOpenGroup.has('fromnotes');
+  const aOpen = stkOpenGroup.has('alloc');
   const mOpen = stkOpenGroup.has('maybenotes');
 
   // Tiles rather than five numbers in one sentence. "From the notes" keeps
@@ -14725,6 +14831,14 @@ function stkRun() {
       <div class="z-tile-v">${stkNoteMaybe.length.toLocaleString()}</div>
       <div class="z-tile-s">hinted at, not counted</div>
     </div>
+    ${zoneCol ? `<div class="z-tile${stkAllocBad.length ? '' : ' zero'}" style="--ac:var(--coral-text)">
+      <div class="z-tile-k">Wrong depot</div>
+      <div class="z-tile-v">${stkAllocBad.length.toLocaleString()}</div>
+      <div class="z-tile-s">${stkAllocBad.length
+        ? 'looked up where the zone does not point'
+        : 'every allocation agrees with its zone'}</div>
+      ${allocUnsure ? `<div class="z-tile-s" style="opacity:.7">${allocUnsure.toLocaleString()} could not be judged</div>` : ''}
+    </div>` : ''}
     ${nHidden ? `<div class="z-tile" style="--ac:var(--coral-text)">
       <div class="z-tile-k">Hidden by you</div>
       <div class="z-tile-v">${nHidden.toLocaleString()}</div>
@@ -14817,6 +14931,7 @@ function stkRun() {
             <span class="stk-model">
               ${stkModelLabel(Pt, Pt.ix)}
               ${stkSubLabel(Pt)}
+              ${stkMisLabel(Pt)}
             </span>
             <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
               Check stock <i class="ti ti-arrow-up-right"></i>
@@ -14830,6 +14945,28 @@ function stkRun() {
         </div>`; }).join('')}
       </section>`;
     }).join('')}</div>` : ''}
+
+    ${stkAllocBad.length ? `<div class="al-vgrp${aOpen ? ' open' : ''}" style="margin-top:16px;">
+      <button class="al-vgrp-hd" onclick="stkToggleGroup('alloc')" aria-expanded="${aOpen}">
+        <i class="ti ti-chevron-right al-vgrp-chev${aOpen ? ' open' : ''}"></i>
+        <i class="ti ti-map-pin-off al-vgrp-ico bad"></i>
+        <span class="al-vgrp-l">Looked up at the wrong depot</span>
+        <span class="al-vgrp-n">${stkAllocBad.length.toLocaleString()}</span>
+        <span class="al-vgrp-note">the technician on these does not belong to the job\u2019s zone \u2014 so the stock link above is pointing at their depot, not the one the zone calls for</span>
+      </button>
+      ${aOpen ? `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Zone</th><th>Part</th><th>Looked up at</th><th>Zone expects</th></tr></thead>
+        <tbody>${stkAllocBad.map(h => `<tr>
+          <td class="pc">${h.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(h.id))}" target="_blank" rel="noopener" class="pa-jid">${esc(h.id)}</a>`
+            : 'row ' + (h.i + 2)}</td>
+          <td>${esc(h.site || '\u2014')}</td>
+          <td>${esc(h.zone || '\u2014')}</td>
+          <td>${esc(h.model || '\u2014')}</td>
+          <td><span class="stk-mis-has" title="${escAttr('From the file: ' + (h.tech || '(blank)'))}">${esc(h.loc || '\u2014')}</span></td>
+          <td><span class="stk-mis-want">${esc(h.av.expected || '\u2014')}</span></td>
+        </tr>`).join('')}</tbody></table></div>` : ''}
+    </div>` : ''}
 
     ${stkNoteHits.length ? `<div class="al-vgrp${nOpen ? ' open' : ''}" style="margin-top:16px;">
       <button class="al-vgrp-hd" onclick="stkToggleGroup('fromnotes')" aria-expanded="${nOpen}">
@@ -14920,6 +15057,15 @@ function stkDownload() {
         ? 'Reported notes: \u201c' + (h.note && h.note.phrase || '') + '\u201d'
         : 'Fault code',
       'Hidden By You':       h.hidden ? 'Yes \u2014 ' + (h.hideWhy || '') : '',
+      'Zone':                h.zone || '',
+      'Allocation Check':    !h.av ? '' : ({
+                               match:    'Correct',
+                               mismatch: 'WRONG DEPOT',
+                               nozone:   'Zone not in the allocator',
+                               notech:   'Nobody allocated',
+                               unknown:  'Could not judge the technician'
+                             })[h.av.verdict] || '',
+      'Zone Expects':        h.av && h.av.verdict === 'mismatch' ? (h.av.expected || '') : '',
       'How Located':         h.loc ? (h.read || HOW[h.kind] || '') : '',
       'Stock Link':          ok ? stkUrl(h.loc, term) : '',
       'Not Linked Because':  stkBlockedWhy(h)
@@ -25443,6 +25589,15 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.46.0', type: 'minor', date: '16 Nov 2026', title: 'Stock Checks will not send you to the wrong warehouse', changes: [
+    'Pick the new Zone column and every job is checked the way the Allocation Validator checks it: does the technician on this job belong to the zone the job is in',
+    'This matters more here than it looks. Every stock link on the page is built from the technician\u2019s depot \u2014 so a technician who does not belong to the zone means the link is pointing at their warehouse rather than the one the zone calls for, and the answer you get back is about the wrong building',
+    'Flagged three ways: a Wrong depot tile, a coral mark on the part row naming the depot the zone expects, and the individual job chips so you can tell which of the four on a row it is. The full list sits underneath with both depots side by side',
+    'A zone the allocator has never heard of is reported as unjudged rather than as a mismatch \u2014 there is nothing to mismatch against. The tile says how many of those there were',
+    'The download carries Zone, Allocation Check and Zone Expects, so the working leaves the page with it',
+    'The validator\u2019s verdict logic moved out into one function both pages call. Two pages asking the same question of the same file must not be able to answer it differently. Checked against the old code over 900 combinations: not one verdict changed',
+    'Asking per row would have cost 947ms on a 2,000 row file, on every fault chip and every toggle \u2014 the answer depends only on the technician and the zone, so it is now asked once per distinct pair and costs about 30ms',
+  ]},
   { ver: '4.45.0', type: 'minor', date: '16 Nov 2026', title: 'Ticking a part off tells the Chase List too', changes: [
     'Ticking Done on a stock check now moves the jobs waiting on that part to Chasing, so the one action lands in both places instead of being done twice',
     'The depot button moves its whole card, and Start over puts every one of them back \u2014 a run you abandon should not leave jobs sitting at Chasing with nothing on screen saying why',
