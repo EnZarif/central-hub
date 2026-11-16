@@ -13718,14 +13718,73 @@ function stkLocProgText(done, total) {
   return done === total ? 'all ' + total + ' checked' : done + ' of ' + total;
 }
 
+// Ticking a part off here is also something you did to the jobs waiting on
+// it, so the Chase List should not have to be told separately.
+//
+// It moves them to Chasing, not Resolved, for two reasons. Looking a part up
+// in the warehouse is not the same as the job being finished - the answer may
+// well have been "none in stock" - so Resolved would be a claim the tick never
+// made. And it would not survive anyway: excSync() reopens a resolved job the
+// moment it appears in the export again, which is every re-run today and again
+// tomorrow morning, so the status would quietly revert. Chasing is both the
+// true thing and the one the sync keeps.
+//
+// A job that is Waiting, Known OK or Resolved is left exactly where it is.
+// Those are judgements somebody made on purpose, and a stock lookup does not
+// overrule any of them.
+function stkMarkChase(ixs, on) {
+  let m, n = 0;
+  try { m = excAll(); } catch (e) { return 0; }
+  if (!m) return 0;
+  const today = stkToday();
+  ixs.forEach(i => {
+    const g = stkRowIndex[i];
+    if (!g || !g.term || !g.keys) return;
+    g.keys.forEach(k => {
+      const e = m[k];
+      if (!e) return;
+      if (on) {
+        if (e.status !== 'new') return;
+        e.status = 'chasing';
+        e.auto = false;
+        e.viaStock = today;        // so unticking can undo exactly this
+        n++;
+      } else {
+        // Only put back what this put there, and only if nothing has moved
+        // it on since.
+        if (e.viaStock !== today || e.status !== 'chasing') return;
+        e.status = 'new';
+        delete e.viaStock;
+        n++;
+      }
+    });
+  });
+  if (!n) return 0;
+  excSave(m);
+  if (typeof renderExceptions === 'function') renderExceptions();
+  if (typeof renderMorning === 'function') renderMorning();
+  if (typeof renderInboxAlerts === 'function') renderInboxAlerts();
+  if (typeof renderHomeFeed === 'function') renderHomeFeed();
+  return n;
+}
+function stkChaseToast(n, on) {
+  if (!n) return '';
+  return ' \u2014 ' + n + ' job' + (n !== 1 ? 's' : '')
+    + (on ? ' moved to Chasing' : ' back to New');
+}
+
 function stkToggleDone(i) {
   const g = stkRowIndex[i];
   if (!g || !g.term) return;
   const c = stkGetChecked();
   const k = stkDoneKey(g.loc, g.term);
-  if (c.rows[k]) delete c.rows[k]; else c.rows[k] = Date.now();
+  const on = !c.rows[k];
+  if (on) c.rows[k] = Date.now(); else delete c.rows[k];
   stkSaveChecked();
   stkPaintDone();
+  const n = stkMarkChase([i], on);
+  if (n) showToast('<i class="ti ti-list-check"></i>Chase List'
+    + stkChaseToast(n, on), 2400);
 }
 // The whole depot at once. If every part there is already ticked the button
 // clears them instead, because the mistake you make with a button like this
@@ -13743,16 +13802,23 @@ function stkDoneLoc(lix) {
   });
   stkSaveChecked();
   stkPaintDone();
+  const n = stkMarkChase(L.ixs, !allOn);
   showToast('<i class="ti ti-' + (allOn ? 'rotate' : 'circle-check') + '"></i> '
     + esc(L.name) + (allOn ? ' is back on the list'
-      : ' \u2014 all ' + rows.length + ' part' + (rows.length !== 1 ? 's' : '') + ' checked'), 2600);
+      : ' \u2014 all ' + rows.length + ' part' + (rows.length !== 1 ? 's' : '') + ' checked')
+    + stkChaseToast(n, !allOn), 2900);
 }
 function stkClearDone() {
   const c = stkGetChecked();
   if (!Object.keys(c.rows).length) return;
+  // Put the Chase List back too, or starting the run over would leave every
+  // job sitting at Chasing with nothing on screen saying why.
+  const n = stkMarkChase(stkRowIndex.map((g, i) => i), false);
   c.rows = {};
   stkSaveChecked();
   stkPaintDone();
+  showToast('<i class="ti ti-rotate"></i>The run is back to the start'
+    + stkChaseToast(n, false), 2600);
 }
 
 function stkProgCounts() {
@@ -14610,7 +14676,12 @@ function stkRun() {
     // it is without either string going through an onclick.
     L.partList.forEach(Pt => {
       Pt.ix = stkRowIndex.length;
-      stkRowIndex.push({ models: [...Pt.models], loc: L.name, term: Pt.term });
+      // The Chase List keys for the jobs sitting on this row, built the same
+      // way excSync() built them a moment ago, so ticking the row can find
+      // the items it is about.
+      stkRowIndex.push({ models: [...Pt.models], loc: L.name, term: Pt.term,
+        keys: Pt.jobs.map(h => excKey('stock',
+          { jobId: h.id, site: h.site, model: h.model, tech: h.tech })) });
     });
     L.lix = stkLocIndex.length;
     stkLocIndex.push({ name: L.name, ixs: L.partList.map(Pt => Pt.ix) });
@@ -25372,6 +25443,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.45.0', type: 'minor', date: '16 Nov 2026', title: 'Ticking a part off tells the Chase List too', changes: [
+    'Ticking Done on a stock check now moves the jobs waiting on that part to Chasing, so the one action lands in both places instead of being done twice',
+    'The depot button moves its whole card, and Start over puts every one of them back \u2014 a run you abandon should not leave jobs sitting at Chasing with nothing on screen saying why',
+    'Chasing rather than Resolved, deliberately. Looking a part up in the warehouse is not the same as the job being finished \u2014 the answer may well have been none in stock \u2014 so Resolved would be a claim the tick never made. It would not have held either: the Chase List reopens a resolved job the moment it appears in the export again, which is every re-run today and again tomorrow morning',
+    'A job you have parked as Waiting, judged Known OK or already resolved is left exactly where it is. Those are judgements made on purpose, and a stock lookup does not overrule any of them \u2014 nor does unticking drag them back',
+    'Unticking reverses only what the tick moved, and only while nothing else has moved it on since',
+  ]},
   { ver: '4.44.0', type: 'minor', date: '16 Nov 2026', title: 'Stock Checks: tick off the part you just looked up', changes: [
     'A stock check is forty warehouse pages opened one at a time, and the thing you lose halfway through is not an answer \u2014 it is which rows you have already been through. Every part row now carries a Done tick beside its Check stock link',
     'The depot heading has one for the whole card, and says how far through it you are. Press it on a card already finished and it clears that card instead, because the mistake you make with a button like that is pressing it on the wrong one',
