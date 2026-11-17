@@ -12895,6 +12895,21 @@ function alValOutEl() {
   return document.getElementById(alValHost ? alValHost.out : 'al-val-result');
 }
 function alValSrcRows() { return alValHost ? (alValHost.rows() || []) : alValRows; }
+// ---- What a button inside a rendered block is about ----------------------
+// There are two places this validator draws now, and the globals below hold
+// whichever drew LAST. That is fine for drawing and wrong for acting: the
+// Allocation Validator page can be sitting there showing its own file while
+// Stock Checks has since run over a different one, and its Download button
+// would hand you the other file under the other file's name.
+//
+// So each block keeps a copy of what it was drawn from, and every button
+// inside one resolves back to its own block rather than to whatever ran last.
+const _alValCtx = {};
+function alValCtxOf(el) {
+  const box = (el && el.closest) ? el.closest('#stk-av-result, #al-val-result') : null;
+  const id = box ? box.id : (alValHost ? alValHost.out : 'al-val-result');
+  return _alValCtx[id] || { out: alValOut || [], today: alValToday || [], name: alValSrcName() };
+}
 function alValSrcName() { return alValHost ? (alValHost.name() || '') : alValName; }
 function alValSrcReady() { return alValHost ? !!alValHost.ready() : alValDone; }
 // Used by the validator page's own controls, which must always mean its page.
@@ -13525,14 +13540,14 @@ function alValRun() {
         <span class="al-vsec-n">${flagged.length.toLocaleString()}</span>
         ${mismatch.length ? `<span class="al-vsec-sub">${mismatch.length.toLocaleString()} wrong technician</span>` : ''}
         ${notech.length ? `<span class="al-vsec-sub warn">${notech.length.toLocaleString()} unallocated</span>` : ''}
-        <button class="al-dl-quiet" onclick="alValDownload()"
+        <button class="al-dl-quiet" onclick="alValDownload(this)"
           title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
           <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button>
       </div>
       <div class="al-vlist">${flagged.map(flagRow).join('')}</div>
     </div>` : `<div class="al-vsec"><div class="al-vsec-hd">
-        <button class="al-dl-quiet" style="margin-left:0;" onclick="alValDownload()"
+        <button class="al-dl-quiet" style="margin-left:0;" onclick="alValDownload(this)"
           title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
           <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button></div></div>`}
@@ -13554,7 +13569,7 @@ function alValRun() {
           <button class="generate-btn al-val-dl" onclick="alValCopyToday(this)">
             <i class="ti ti-copy" style="font-size:15px;"></i> Copy all
           </button>
-          <button class="generate-btn al-val-dl" onclick="alValDownloadToday()">
+          <button class="generate-btn al-val-dl" onclick="alValDownloadToday(this)">
             <i class="ti ti-download" style="font-size:15px;"></i> Download
           </button>
         </span>` : ''}
@@ -13596,6 +13611,10 @@ function alValRun() {
     }).join('')}
 
     ${alValTaughtBlock()}`;
+
+  // Kept against this block's id, so its own buttons can find it again after
+  // the other page has drawn over the globals.
+  _alValCtx[out.id] = { out: results, today: alValToday, name: alValSrcName() };
 }
 
 // Everything you have told it, in one place with a way to take it back. An
@@ -13645,9 +13664,9 @@ function alValDepotOf(r) {
   return t || 'No technician';
 }
 
-function alValTodayGroups() {
+function alValTodayGroups(list) {
   const m = new Map();
-  alValToday.forEach(r => {
+  (list || alValToday).forEach(r => {
     const d = alValDepotOf(r);
     const k = alNormAlloc(d) || d.toLowerCase();
     // "Amtek Helpdesk" and a blank are both nobody: a name in the column is
@@ -13731,8 +13750,9 @@ function alValCopyGroups(groups, onDone) {
 }
 
 function alValCopyToday(btn) {
-  if (!alValToday.length) return;
-  alValCopyGroups(alValTodayGroups(), () => {
+  const today = alValCtxOf(btn).today || [];
+  if (!today.length) return;
+  alValCopyGroups(alValTodayGroups(today), () => {
     if (btn) {
       const o = btn.innerHTML;
       btn.innerHTML = '<i class="ti ti-check" style="font-size:15px;"></i> Copied';
@@ -13743,7 +13763,7 @@ function alValCopyToday(btn) {
 }
 
 function alValCopyDepot(i, btn) {
-  const g = alValTodayGroups()[i];
+  const g = alValTodayGroups(alValCtxOf(btn).today || [])[i];
   if (!g) return;
   alValCopyGroups([g], () => {
     if (btn) {
@@ -13755,30 +13775,34 @@ function alValCopyDepot(i, btn) {
   });
 }
 
-function alValDownloadToday() {
-  if (!alValToday.length) return;
+function alValDownloadToday(btn) {
+  const ctx = alValCtxOf(btn);
+  const today = ctx.today || [];
+  if (!today.length) return;
   const d = ymd(new Date());
   const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <title>Jobs scheduled for ${esc(d)}</title>
 <style>body{font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#14161a;margin:34px;max-width:780px}
 a{color:#1a5fb4}p{margin:0 0 16px}</style>
-</head><body>${alValTodayHtml(alValTodayGroups())}</body></html>`;
+</head><body>${alValTodayHtml(alValTodayGroups(today))}</body></html>`;
   const blob = new Blob([doc], { type:'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${alValSrcName() || 'jobs'}_call_list_${d}.html`;
+  a.download = `${ctx.name || 'jobs'}_call_list_${d}.html`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-function alValDownload() {
-  if (!alValOut || !alValOut.length) return;
+function alValDownload(btn) {
+  const ctx = alValCtxOf(btn);
+  const rows = ctx.out;
+  if (!rows || !rows.length) return;
   // Always the whole file, whatever is filtered on screen - a partial export
   // that looks complete is worse than no export.
   const VL = { match:'Correct', mismatch:'MISMATCH', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
-  const data = alValOut.map(r => ({
+  const data = rows.map(r => ({
     ...r.row,
     'Zone Matched':      r.zoneName || '',
     'Zone Type':         r.zoneType || '',
@@ -13790,7 +13814,7 @@ function alValDownload() {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Validation');
-  XLSX.writeFile(wb, `${alValSrcName() || 'allocations'}_validated.xlsx`);
+  XLSX.writeFile(wb, `${ctx.name || 'allocations'}_validated.xlsx`);
 }
 
 // ---- Stock Checks: the jobs waiting on a replacement part -----------------
@@ -23419,8 +23443,15 @@ async function kpiGenerateReport() {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const yyyy = d.getFullYear();
     a.download = `${dayNum}. Helpdesk Daily Metrics ${dayName} ${dd}.${mm}.${yyyy}.xlsx`;
+    // Attached, then revoked on a timer. A detached anchor is not clickable in
+    // every browser, and revoking the blob in the same tick as the click can
+    // pull the file out from under a download that has not started reading it
+    // yet - which a full workbook, being megabytes, is the most likely one to
+    // lose. The two other downloads in this file already do it this way.
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
     statusEl.textContent = 'Report generated. Remember to refresh the pivot table in Excel.';
   } catch (err) {
     console.error(err);
@@ -26583,6 +26614,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.2', type: 'patch', date: '17 Nov 2026', title: 'Two fixes from a bug sweep of the four most-used tools', changes: [
+    '<b>Allocation Validator was handing you the wrong file.</b> Since the validator started drawing inside Stock Checks as well, both pages shared one set of results \u2014 whichever ran last. So the Allocation Validator page could be sitting there showing its own file while its Download button exported the Stock Checks one, under the Stock Checks name. The call list copy and download had it too',
+    'Each rendered block now keeps the file it was drawn from, and every button inside one acts on its own block rather than on whatever ran last. Verified both ways round',
+    '<b>The KPI report download was racing itself.</b> It released the file in the same tick as the click, which can pull a workbook out from under a download that has not finished reading it \u2014 most likely on the big ones. It now releases on a timer and attaches the link first, which is what the two other downloads in the Hub already did',
+  ]},
   { ver: '4.47.1', type: 'patch', date: '17 Nov 2026', title: 'Stock Checks: a traffic light on the response time', changes: [
     'Four colours, counted in days rather than hours: <b>red</b> already past its response time, <b>orange</b> breaching today, <b>yellow</b> breaching tomorrow, <b>green</b> two days out or more',
     'Days, because that is the unit the question gets asked in. A job due at 17:00 is today\u2019s problem at 09:00 and still today\u2019s problem at half four \u2014 the old rolling four-hour window said nothing about it until lunchtime',
