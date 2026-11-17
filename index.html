@@ -5179,6 +5179,9 @@
   .jl-tab-panel .jl-item { padding: 10px 12px 10px 14px; }
   .jl-time-btn { padding: 3px 9px; font-size: 11px; }
   /* ── Calendar shortcut button ── */
+  /* The Select button sits beside Dates and lights up while picking. */
+  .task-cal-btn#bulk-select-btn.active { background: var(--teal-bg); color: var(--teal-text);
+    border-color: color-mix(in srgb, var(--teal-text) 45%, transparent); }
   .task-cal-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 8px; border: 0.5px solid var(--border-md); background: none; color: var(--text-3); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; margin-left: auto; }
   .task-cal-btn:hover { border-color: var(--text-2); color: var(--text); background: var(--surface2); }
   /* ── Sched card: section labels + focus badge + unscheduled time + done name ── */
@@ -6009,6 +6012,8 @@
         <button class="thp thp-ps" data-hub="personal" onclick="setTaskHubFilter('personal')">👤 Personal</button>
       </div>
       <button class="task-cal-btn" onclick="switchTab('date')" title="Upcoming dated tasks"><i class="ti ti-calendar-month"></i> Dates</button>
+      <button class="task-cal-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()"
+        title="Pick several tasks at once, then snooze or delete the lot"><i class="ti ti-checkbox"></i> Select</button>
       <!-- Keep hidden stat/filter elements JS still needs -->
       <div id="task-hub-filter-bar" style="display:none">
         <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"></button>
@@ -9545,8 +9550,8 @@ let _backlogOpen = false;
 function toggleFocusMode() {
   focusMode = !focusMode;
   dbSet('zarif_focus_mode', focusMode);
-  const btn = document.getElementById('focus-mode-btn');
-  if (btn) btn.classList.toggle('active', focusMode);
+  // Nothing else reads focusMode, so this is a stub: the only thing the mode
+  // has ever done is colour a button that is not in the markup.
   renderTasks();
 }
 
@@ -19902,17 +19907,10 @@ function renderNextBestTask(containerId) {
   </div>`;
 }
 
-(function initHeroTilt() {
-  const hero = document.getElementById('task-hero');
-  if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  hero.addEventListener('mousemove', e => {
-    const r = hero.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width - 0.5) * 4;
-    const y = ((e.clientY - r.top) / r.height - 0.5) * -4;
-    hero.style.transform = `perspective(1000px) rotateY(${x}deg) rotateX(${y}deg)`;
-  });
-  hero.addEventListener('mouseleave', () => { hero.style.transform = ''; });
-})();
+// (initHeroTilt lived here: a mouse-tilt on .task-hero, which asked for the
+// element by id, got null, and so had never run once. Looking for it by class
+// finds nothing either - there is no .task-hero in the markup at all. The
+// hero went in a redesign and the script that drove it did not.)
 
 // Hover tilt on launcher/app cards everywhere (Home, Helpdesk, Personal hub grids) —
 // delegated on document since these cards are re-rendered dynamically.
@@ -20443,7 +20441,8 @@ function showPage(p, hub) {
   // Surface the end-of-day wrap toast on arrival if it's already past 4:45pm
   if (p === 'tasks' && typeof checkEodWrap === 'function') checkEodWrap(melbNowMinutes());
   if (p === 'widgets' && typeof renderWeekAtAGlance === 'function') renderWeekAtAGlance();
-  if (p === 'learning' && typeof renderLearning === 'function') renderLearning();
+  // (The Learning page is static markup. A renderLearning() call lived here
+  // behind a typeof guard, for a function that has never existed.)
   if (p === 'alloccheck' && typeof alInit === 'function') alInit();
   if (p === 'stock' && typeof stkInit === 'function') stkInit();
   if ((p === 'stock' || p === 'allocvalidate') && typeof inboxInit === 'function') {
@@ -20854,9 +20853,9 @@ function renderHomeDashboard() {
     const pill = `<span class="home-daymode-pill ${mode === 'working' ? 'hdm-working' : 'hdm-off'}"><i class="ti ${mode === 'working' ? 'ti-briefcase' : 'ti-beach'}"></i>${mode === 'working' ? 'Working day' : 'Day off'}</span>`;
     dateEl.innerHTML = `${dStr} — ${undone.length} due today ${pill}`;
   }
-  const todayTasks = getTodayTasks();
-  const donePct = todayTasks.length ? Math.round(todayTasks.filter(t => isDone(t.id)).length / todayTasks.length * 100) : 0;
-  animateGhostRing(document.getElementById('home-hero-ghost-ring'), document.getElementById('home-hero-ghost-pct'), donePct);
+  // The ghost ring went when .home-hero-ghost-wrap was set to display:none;
+  // the call outlived it and had been handing two nulls to the animator on
+  // every dashboard render since.
   renderHomeBriefing();
   renderHomeWeather();
   renderHighlightsBanner('home-highlights');
@@ -20881,7 +20880,10 @@ function getHomeTimeMode() {
 function applyHomeTimeOrdering() {
   const briefing = document.getElementById('home-briefing');
   const highlights = document.getElementById('home-highlights');
-  const anchor = document.getElementById('home-hub-grid');
+  // The row of big cards, which these two sit above. It was #home-hub-grid
+  // once; nothing has had that id for a long time, so this returned early
+  // every single time and the ordering below never happened.
+  const anchor = document.getElementById('home-mains');
   if (!briefing || !highlights || !anchor || !anchor.parentElement) return;
   const mode = getHomeTimeMode();
   const order = mode === 'evening' ? [briefing, highlights] : [highlights, briefing];
@@ -21338,8 +21340,6 @@ function animateGhostRing(el, pctEl, targetPct) {
 
 function renderTasks() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
-  const fbtn = document.getElementById('focus-mode-btn');
-  if (fbtn) fbtn.classList.toggle('active', focusMode);
   renderTaskTagFilter();
   renderBulkBar();
   const selBtn = document.getElementById('bulk-select-btn');
@@ -23599,6 +23599,17 @@ function findAhtRawMap(wb) {
   return map;
 }
 
+// The day a report is ABOUT, as a sortable key. The readable label beside it
+// is for people; this is what the history is filed under, and the two have to
+// come from the same place or they will drift.
+function kpiOpsDateKey(filename) {
+  const m = String(filename || '').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  if (!m) return '';
+  const d = new Date(+m[3], +m[2] - 1, +m[1]);
+  if (isNaN(d.getTime()) || d.getMonth() !== +m[2] - 1) return '';
+  return `${m[3]}-${String(+m[2]).padStart(2, '0')}-${String(+m[1]).padStart(2, '0')}`;
+}
+
 function parseKpiOpsDateLabel(filename) {
   const m = filename.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
   if (!m) return 'that day';
@@ -23650,7 +23661,8 @@ async function kpiOpsLoadOneFile(file) {
       if (values.slice(2).every(isZeroValue)) continue;
       rows.push(values);
     }
-    kpiOpsFiles.push({ dateLabel, rows, totals, fileName: file.name, count: rows.length });
+    kpiOpsFiles.push({ dateLabel, dateKey: kpiOpsDateKey(file.name),
+                       rows, totals, fileName: file.name, count: rows.length });
     kpiOpsFiles.sort((a, b) => {
       const ts = fn => { const m = fn.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/); return m ? new Date(+m[3], +m[2]-1, +m[1]).getTime() : 0; };
       return ts(a.fileName) - ts(b.fileName);
@@ -23975,16 +23987,28 @@ function kpiOpsUnmarkSent(name) {
 function kpiOpsRecord(ops) {
   if (!ops || !ops.length) return;
   const l = kpiOpsLog();
-  const d = todayInputDate();
   let changed = false;
   const rates = [];
   ops.forEach(([name, entries]) => {
-    const r = kpiOpsRate(entries[0].row);
-    if (r === null) return;
-    rates.push(r);
-    l.hist = l.hist || {};
-    l.hist[name] = l.hist[name] || {};
-    if (l.hist[name][d] !== r) { l.hist[name][d] = r; changed = true; }
+    // Every file, each under its own day. This used to take entries[0] and
+    // stamp it with today, which was wrong twice over: a report is about the
+    // day before you run it, so Monday's figures were filed under Tuesday -
+    // and with more than one file loaded, only the earliest was ever
+    // recorded, the rest dropped on the floor. The trend read as "their last
+    // ten recorded days" while actually being "the last ten times I opened
+    // this page".
+    entries.forEach(e => {
+      const r = kpiOpsRate(e.row);
+      if (r === null) return;
+      // No date in the filename leaves nothing better to go on than today.
+      const d = e.dateKey || todayInputDate();
+      l.hist = l.hist || {};
+      l.hist[name] = l.hist[name] || {};
+      if (l.hist[name][d] !== r) { l.hist[name][d] = r; changed = true; }
+    });
+    // The day's shape is about the most recent file loaded, not the oldest.
+    const r = kpiOpsRate(entries[entries.length - 1].row);
+    if (r !== null) rates.push(r);
   });
   if (changed) kpiOpsLogSave(l);
   if (rates.length) {
@@ -23996,11 +24020,17 @@ function kpiOpsRecord(ops) {
   }
 }
 
-/** This operator's rate today against their own last 10 recorded days. */
-function kpiOpsOwnTrend(name, rate) {
+/**
+ * This operator's rate on a given day against their own last 10 recorded days.
+ * The day being judged is excluded by its own date rather than by "is it
+ * today", which was only ever right because every rate used to be filed under
+ * today - so a figure was being compared against an average that included it.
+ */
+function kpiOpsOwnTrend(name, rate, onDate) {
   if (rate === null) return null;
   const h = (kpiOpsLog().hist || {})[name] || {};
-  const past = Object.keys(h).sort().filter(d => d !== todayInputDate()).slice(-10).map(d => h[d]);
+  const self = onDate || todayInputDate();
+  const past = Object.keys(h).sort().filter(d => d !== self).slice(-10).map(d => h[d]);
   if (past.length < 3) return null;            // too little to call anything unusual
   const avg = past.reduce((a, b) => a + b, 0) / past.length;
   return { avg: Math.round(avg * 10) / 10, delta: Math.round((rate - avg) * 10) / 10, n: past.length };
@@ -24013,7 +24043,7 @@ function _kpiOpsOperatorListAll() {
       const key = (row[0] || '').trim();
       if (!key) continue;
       if (!map.has(key)) map.set(key, []);
-      map.get(key).push({ dateLabel: f.dateLabel, row, totals: f.totals });
+      map.get(key).push({ dateLabel: f.dateLabel, dateKey: f.dateKey, row, totals: f.totals });
     }
   }
   return [...map.entries()];
@@ -24112,9 +24142,11 @@ function renderKpiOpsList() {
     const isSent = !!sent[name];
 
     // Their own recent average, not a target. A figure is only worth
-    // remarking on next to what that person normally does.
-    const rate = kpiOpsRate(entries[0].row);
-    const tr = kpiOpsOwnTrend(name, rate);
+    // remarking on next to what that person normally does - and the figure
+    // worth remarking on is the latest one, not the oldest file in the pile.
+    const latest = entries[entries.length - 1];
+    const rate = kpiOpsRate(latest.row);
+    const tr = kpiOpsOwnTrend(name, rate, latest.dateKey);
     let trendTag = '';
     if (tr && Math.abs(tr.delta) >= 2) {
       const down = tr.delta < 0;
@@ -26671,6 +26703,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.4', type: 'patch', date: '17 Nov 2026', title: 'Operator trends were filed under the wrong day, and five things on screen did nothing', changes: [
+    '<b>The operator trend was recording the wrong date.</b> A report is about the day before you run it, so Monday\u2019s figures were being filed under Tuesday \u2014 and with more than one file loaded, only the earliest was ever recorded and the rest were dropped. &ldquo;Their last ten recorded days&rdquo; was really &ldquo;the last ten times I opened this page&rdquo;',
+    'Each file\u2019s figures now go under the day that file is about, read from its own filename, and every loaded file is recorded rather than just the first. The comparison also leaves out the day being judged, which it previously could not do \u2014 a rate was being measured against an average that included itself',
+    '<b>Select</b> is back on the Tasks page, beside Dates. Picking several tasks and snoozing or deleting the lot has worked all along; the button that turns it on was missing, so there was no way in',
+    'Home\u2019s briefing and highlights swap order between morning and evening again \u2014 the ordering hung off an element that was renamed long ago, so it had been returning early and doing nothing every time',
+    'Three leftovers removed: a mouse-tilt on a hero panel that no longer exists, a progress ring retired from the design but still being animated on every dashboard draw, and a call to a Learning page renderer that has never existed',
+    'Also noted while in there, and left alone: Focus mode saves and reloads a setting that nothing reads, so switching it changes nothing; the Settings toggle for showing the hero panel controls an element that is gone; and the task tag filter only ever draws into a hidden container',
+  ]},
   { ver: '4.47.3', type: 'patch', date: '17 Nov 2026', title: 'Fixed: a window left open overnight still thought it was yesterday', changes: [
     'The Hub starts with Windows and never gets closed, and the date it ran on was worked out once while the page loaded and then never again. So a window left open past midnight went on believing it was yesterday for as long as it stayed open',
     'What that actually did: <b>weekly tasks showed on yesterday\u2019s weekday</b>, yesterday\u2019s ticks were still ticked, and ticking one this morning wrote into yesterday\u2019s bucket. Fortnightly and monthly tasks were judged against yesterday\u2019s date, snoozes carried over, and the KPI operator list counted yesterday\u2019s emails as today\u2019s',
