@@ -3672,6 +3672,139 @@
   .stk-mis-has { color:var(--coral-text); font-weight:600; }
   .stk-mis-want { color:var(--green-text); font-weight:600; }
 
+  /* ---- The clock ----------------------------------------------------------
+     A breach and a wrong depot are both coral, because both are wrong, and
+     they are told apart by weight rather than by hue: the breach chip is
+     filled and reads out of the colour, the allocation chip is tinted and
+     reads into it. A breach has already happened; a wrong depot is about to.
+
+     Amber is the page's "look closer" everywhere else and it means the same
+     here - due soon, not yet late. Nothing is wrong with an amber row. */
+  .stk-due { display:inline-flex; align-items:center; gap:4px; margin-top:3px; font-size:10px;
+    font-weight:700; letter-spacing:.02em; border-radius:5px; padding:2px 6px;
+    width:fit-content; max-width:100%; white-space:nowrap; cursor:help;
+    font-variant-numeric:tabular-nums; }
+  .stk-due .ti { font-size:11px; flex-shrink:0; }
+  .stk-due.brc { color:var(--bg); background:var(--coral-text);
+    border:0.5px solid var(--coral-text); font-weight:800; letter-spacing:.03em; }
+  .stk-due.soon { color:var(--amber-text); background:var(--amber-bg);
+    border:0.5px solid color-mix(in srgb, var(--amber-text) 34%, transparent); }
+  .stk-due.ok { color:var(--text-3); background:var(--surface2);
+    border:0.5px solid var(--border); font-weight:600; }
+  .stk-due.age { color:var(--text-3); background:var(--surface2);
+    border:0.5px solid var(--border); font-weight:600; }
+
+  /* The row itself. An accent down the inside edge rather than a tint across
+     the whole line: the row already dims when it is ticked, and two competing
+     background washes on one row say nothing clearly. */
+  .stk-prow.brc { background:color-mix(in srgb, var(--coral-text) 7%, transparent);
+    box-shadow:inset 3px 0 0 var(--coral-text); }
+  .stk-prow.brc:hover { background:color-mix(in srgb, var(--coral-text) 11%, transparent); }
+  .stk-prow.soon { box-shadow:inset 3px 0 0 color-mix(in srgb, var(--amber-text) 72%, transparent); }
+  .stk-prow.soon:hover { background:color-mix(in srgb, var(--amber-text) 7%, transparent); }
+  /* A breached row that you have already checked still dims like any other -
+     the tick is the more recent fact about it - but it keeps its edge, so a
+     ticked breach is not invisible when you scan the card. */
+  .stk-prow.brc.done { box-shadow:inset 3px 0 0 color-mix(in srgb, var(--coral-text) 55%, transparent); }
+
+  /* The depot card, so the ordering explains itself: the card at the top is
+     at the top because of this. */
+  .stk-card.brc { border-left-color:var(--coral-text); }
+  .stk-card.brc:hover { box-shadow:0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--coral-text); }
+  .stk-card.brc .stk-chd-n { color:var(--coral-text); }
+  .stk-chd-brc { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:800;
+    letter-spacing:.03em; border-radius:5px; padding:3px 7px; cursor:help;
+    color:var(--bg); background:var(--coral-text); font-variant-numeric:tabular-nums; }
+  .stk-chd-brc .ti { font-size:11px; }
+
+  /* The job chip. It can be carrying both warnings at once, so the colour goes
+     to the breach - that one has already happened - and both marks are shown.
+     .stk-site-j i is hidden to kill the dot separators, which would take
+     either icon with it. */
+  .stk-site-j a.brc, .stk-site-j > span.brc {
+    color:var(--coral-text); background:var(--coral-bg); font-weight:700;
+    border-color:color-mix(in srgb, var(--coral-text) 55%, transparent); }
+  .stk-site-j a.brc:hover { background:color-mix(in srgb, var(--coral-text) 24%, var(--surface));
+    border-color:var(--coral-text); }
+  /* Rendered on every dated job and revealed by the class, so the minute timer
+     only has to toggle one class for a job that has just crossed the line. */
+  .stk-site-j a.brc i.stk-jbrc,
+  .stk-site-j > span.brc i.stk-jbrc { display:inline-flex; font-size:10px; margin-right:4px; }
+  /* How far past due, in the breach table. */
+  .stk-over { color:var(--coral-text); font-weight:700; font-variant-numeric:tabular-nums; }
+
+  /* One escalation at a time. A wrong depot is still wrong while a breach is
+     firing, but it stops pulsing and stops taking two columns, because two
+     things demanding the same attention get neither. */
+  .z-tile.escalate.quiet { grid-column:span 1; animation:mcardIn .5s cubic-bezier(.22,.9,.26,1) both;
+    background:var(--surface); box-shadow:none;
+    border-color:color-mix(in srgb, var(--coral-text) 38%, transparent); }
+  .z-tile.escalate.quiet::before { box-shadow:none; width:3px; }
+  .z-tile.escalate.quiet:hover { transform:none;
+    border-color:color-mix(in srgb, var(--coral-text) 60%, transparent);
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--coral-text) 16%, transparent); }
+  .z-tile.escalate.quiet .z-tile-v { font-size:26px; }
+  .z-tile.escalate.quiet .z-esc-k { font-weight:700; color:var(--text-3); }
+  .z-tile.escalate.quiet .z-esc-k .ti { color:var(--coral-text); }
+  .z-tile.escalate.quiet .z-esc-go { display:none; }
+  @media (max-width: 760px) { .z-tile.escalate.quiet { grid-column:1 / -1; } }
+
+  /* What the mapper says about how the dates are being read. The assumption
+     has to be visible: a day-first reading of a month-first file is wrong in a
+     way that looks perfectly reasonable on screen. */
+  .stk-dnote { display:flex; gap:9px; margin-top:12px; padding:10px 13px; border-radius:9px;
+    background:var(--surface2); border:0.5px solid var(--border-md); }
+  .stk-dnote > .ti { font-size:15px; color:var(--amber-text); flex-shrink:0; margin-top:1px; }
+  .stk-dnote span { font-size:11.5px; color:var(--text-2); line-height:1.6; }
+  .stk-dnote b { color:var(--text); font-weight:700; }
+
+  /* ---- A tick that outlived the day it was made -------------------------
+     Green means "done today". Amber means "you did this, and it is still
+     here" - which is not the same claim, and the difference is the only thing
+     stopping carried ticks from reading as this morning's work. */
+  .stk-done.on.carried { color:var(--amber-text); background:var(--amber-bg);
+    border-color:color-mix(in srgb, var(--amber-text) 34%, transparent); }
+  .stk-done.on.carried:hover { color:var(--amber-text);
+    background:color-mix(in srgb, var(--amber-text) 20%, var(--surface));
+    border-color:var(--amber-text); }
+  .stk-prow.carried .stk-model-n { text-decoration-color:color-mix(in srgb, var(--amber-text) 70%, transparent); }
+  .stk-prog-c { display:inline-flex; align-items:center; gap:4px; margin-left:7px;
+    font-size:10.5px; font-weight:700; color:var(--amber-text); background:var(--amber-bg);
+    border-radius:5px; padding:2px 6px; cursor:help; font-variant-numeric:tabular-nums; }
+  .stk-prog-c .ti { font-size:11px; }
+
+  /* ---- The allocation check, hosted on this page ------------------------
+     The same validator, drawn under the stock board. It is a section rather
+     than a page of its own here, so it carries a header that says what it
+     found and folds away when it found nothing - the board above is what you
+     came for, and this is the rest of what the one file can tell you. */
+  .stk-avsec { margin-top:18px; border:0.5px solid var(--border); border-radius:12px;
+    background:var(--surface); overflow:hidden; }
+  .stk-avsec.bad { border-color:color-mix(in srgb, var(--coral-text) 34%, transparent); }
+  .stk-avsec-hd { display:flex; align-items:center; gap:9px; width:100%; padding:13px 15px;
+    background:none; border:none; font-family:inherit; text-align:left; cursor:pointer;
+    flex-wrap:wrap; transition:background .14s; }
+  .stk-avsec-hd:hover { background:rgba(255,255,255,.03); }
+  .stk-avsec-hd:focus-visible { outline:2px solid var(--teal-text); outline-offset:-2px; }
+  .stk-avsec-chev { font-size:14px; color:var(--text-3); flex-shrink:0;
+    transition:transform .18s cubic-bezier(.4,0,.2,1); }
+  .stk-avsec-chev.open { transform:rotate(90deg); }
+  .stk-avsec-ico { font-size:16px; color:var(--text-3); flex-shrink:0; }
+  .stk-avsec.bad .stk-avsec-ico { color:var(--coral-text); }
+  .stk-avsec-l { font-size:13px; font-weight:700; color:var(--text); }
+  .stk-avsec-n { font-size:11px; font-weight:800; border-radius:5px; padding:2px 7px;
+    background:var(--green-bg); color:var(--green-text); font-variant-numeric:tabular-nums; }
+  .stk-avsec-n.bad { background:var(--coral-text); color:var(--bg); }
+  .stk-avsec-note { flex:1 1 240px; min-width:0; font-size:11px; color:var(--text-3); line-height:1.5; }
+  .stk-avsec-body { padding:0 15px 15px; }
+  .stk-avsec:not(.open) .stk-avsec-body { display:none; }
+  /* Inside it the validator's own result block already has its margin. */
+  .stk-avsec-body > div { margin-top:0 !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stk-avsec-chev, .stk-avsec-hd { transition:none !important; }
+  }
+
   /* ---- The wrong-depot tile, when it has something to say -----------------
      Everything else in that row is a number about the morning. This one is
      the only thing on the page that says work is about to be done against
@@ -6553,6 +6686,15 @@
     </div>
 
     <div id="stk-result" style="margin-top:16px;"></div>
+
+    <!-- The Allocation Validator, run over this same file. Not a copy of it:
+         alValRun() itself draws in here, reading the technician and zone
+         columns already picked above. One upload, both checks. -->
+    <section class="stk-avsec" id="stk-avsec" style="display:none;">
+      <button class="stk-avsec-hd" id="stk-avsec-hd" onclick="stkToggleAv()" aria-expanded="false"></button>
+      <div class="stk-avsec-body"><div id="stk-av-result"></div></div>
+    </section>
+
     <div id="stk-rules"></div>
   </div>
 
@@ -12678,6 +12820,30 @@ function alBatchDownload() {
 // with, and anything that can't be resolved is reported as unjudgeable rather
 // than quietly called a mismatch.
 let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
+// ---- Where the validator is reading from, and drawing to -------------------
+// There is one allocation validator, not two. Stock Checks does not reproduce
+// it - it hands its own file and its own column pickers to this same code and
+// says where to draw. Everything inside the rendered block then works from
+// wherever it was pressed, because the host stays set across the re-render the
+// toggles, the teaching controls and the downloads all trigger.
+//
+// Null means the Allocation Validator page's own file and its own controls.
+// Anything that starts a render from that page sets it back to null first, so
+// the two can never end up drawing into each other.
+let alValHost = null;
+const AL_V_CTL = { tech:'al-v-tech', zone:'al-v-zone', id:'al-v-id',
+                   site:'al-v-site', date:'al-v-date' };
+function alValCtl(k) {
+  return document.getElementById((alValHost ? alValHost.ctl : AL_V_CTL)[k] || '')?.value || '';
+}
+function alValOutEl() {
+  return document.getElementById(alValHost ? alValHost.out : 'al-val-result');
+}
+function alValSrcRows() { return alValHost ? (alValHost.rows() || []) : alValRows; }
+function alValSrcName() { return alValHost ? (alValHost.name() || '') : alValName; }
+function alValSrcReady() { return alValHost ? !!alValHost.ready() : alValDone; }
+// Used by the validator page's own controls, which must always mean its page.
+function alValOwn() { alValHost = null; alValRun(); }
 // Which mismatch cards have their working open, and which of the other
 // verdict groups are expanded. Mismatches are never collapsed - they are the
 // reason the file was run.
@@ -12704,8 +12870,8 @@ function alValRenderConfig() {
 }
 
 function alValValidate() {
-  const tech = document.getElementById('al-v-tech')?.value;
-  const zone = document.getElementById('al-v-zone')?.value;
+  const tech = alValCtl('tech');
+  const zone = alValCtl('zone');
   if (!tech || !zone) return;
   alValDone = true;
   alValRenderConfig();
@@ -12713,6 +12879,7 @@ function alValValidate() {
 }
 
 function alValReopen() {
+  alValHost = null;
   alValDone = false;
   alValRenderConfig();
 }
@@ -12853,9 +13020,21 @@ function alForgetTechAlloc(key) {
 // Re-run whatever is on screen. The validator has to re-judge every row,
 // because one answer can move a job out of "can't judge" and into a
 // mismatch; the lookup only has to redraw.
+//
+// Both boards, not just the one you are looking at: an answer you give here
+// is global, so leaving the other page holding the verdict it reached before
+// you gave it would be showing you a judgement the app no longer believes.
+// Stock Checks re-runs in full, because an allocation it now knows can change
+// which depot a part is searched at, not only the wrong-depot count.
 function alValRefreshAfterTeach() {
-  if (typeof alValValidate === 'function' && typeof alValRows !== 'undefined'
-      && alValRows && alValRows.length) alValValidate();
+  const host = alValHost;
+  if (typeof alValRows !== 'undefined' && alValRows && alValRows.length) {
+    alValHost = null;
+    alValValidate();
+  }
+  if (typeof stkRun === 'function' && typeof stkRows !== 'undefined'
+      && stkRows && stkRows.length && stkDone) stkRun();
+  alValHost = host;
   if (typeof alRun === 'function' && document.getElementById('al-result')) alRun();
 }
 
@@ -12967,6 +13146,7 @@ function alVerdict(tech, zone) {
 }
 
 async function alValLoad(file) {
+  alValHost = null;              // this page's uploader means this page
   if (!file) return;
   alValOut = null;
   alValToday = [];
@@ -13005,7 +13185,7 @@ async function alValLoad(file) {
 function alValRenderMapper() {
   const el = document.getElementById('al-val-mapper');
   if (!el) return;
-  const sel = (id, picked) => `<select class="sv-col-select field-input" id="${id}" onchange="alValRun()">
+  const sel = (id, picked) => `<select class="sv-col-select field-input" id="${id}" onchange="alValOwn()">
     <option value="">— none —</option>
     ${alValHeaders.map(h => `<option value="${esc(h)}"${h === picked ? ' selected' : ''}>${esc(h)}</option>`).join('')}
   </select>`;
@@ -13028,25 +13208,26 @@ function alValRenderMapper() {
 }
 
 function alValRun() {
-  const techCol = document.getElementById('al-v-tech')?.value;
-  const zoneCol = document.getElementById('al-v-zone')?.value;
-  const idCol   = document.getElementById('al-v-id')?.value;
-  const siteCol = document.getElementById('al-v-site')?.value;
-  const dateCol = document.getElementById('al-v-date')?.value;
-  const out = document.getElementById('al-val-result');
+  const techCol = alValCtl('tech');
+  const zoneCol = alValCtl('zone');
+  const idCol   = alValCtl('id');
+  const siteCol = alValCtl('site');
+  const dateCol = alValCtl('date');
+  const srcRows = alValSrcRows();
+  const out = alValOutEl();
   if (!out) return;
-  if (!alValRows.length || !techCol || !zoneCol || !alValDone) {
+  if (!srcRows.length || !techCol || !zoneCol || !alValSrcReady()) {
     out.innerHTML = '';
-    if (alValRows.length && !techCol) out.innerHTML =
+    if (srcRows.length && !techCol) out.innerHTML =
       '<div class="pa-note"><i class="ti ti-info-circle"></i> Pick the technician column to validate.</div>';
-    else if (alValRows.length && !zoneCol) out.innerHTML =
+    else if (srcRows.length && !zoneCol) out.innerHTML =
       '<div class="pa-note"><i class="ti ti-info-circle"></i> Pick the zone column to validate.</div>';
     alValOut = null;
     alValToday = [];
     return;
   }
 
-  const results = alValRows.map(row => {
+  const results = srcRows.map(row => {
     const tech = String(row[techCol] || '').trim();
     const zone = String(row[zoneCol] || '').trim();
     const jobId = String(row[idCol] || '').trim();
@@ -13530,7 +13711,7 @@ a{color:#1a5fb4}p{margin:0 0 16px}</style>
   const blob = new Blob([doc], { type:'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${alValName || 'jobs'}_call_list_${d}.html`;
+  a.download = `${alValSrcName() || 'jobs'}_call_list_${d}.html`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -13554,7 +13735,7 @@ function alValDownload() {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Validation');
-  XLSX.writeFile(wb, `${alValName || 'allocations'}_validated.xlsx`);
+  XLSX.writeFile(wb, `${alValSrcName() || 'allocations'}_validated.xlsx`);
 }
 
 // ---- Stock Checks: the jobs waiting on a replacement part -----------------
@@ -13601,6 +13782,19 @@ let stkNoteWords = null;      // phrase -> {phrase, verdict} you taught it
 let stkNoteHits = [];         // rows counted because of their notes, not the code
 let stkNoteMaybe = [];        // rows the notes hint at but do not say outright
 let stkAllocBad = [];         // jobs whose technician does not belong to their zone
+let stkBreached = [];         // jobs already past their SLA response due time
+let stkDueSoon = [];          // jobs not breached yet but next in line to
+let stkDateBad = [];          // rows whose created and due dates do not add up
+let stkDueTick = null;        // the minute timer that keeps "due in 2h" honest
+const STK_CARRY_DAYS = 14;    // how long a tick is remembered while the row stays
+// What "about to breach" means. A four-hour window is a working half-day: long
+// enough to be worth warning about, short enough that the warning is not on
+// everything. If nothing at all falls inside it, the next few still light up,
+// because "which do I do next" has an answer on every list, not only busy ones.
+const STK_SOON_MS = 4 * 3600 * 1000;
+const STK_SOON_MIN = 3;
+const STK_MON = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6,
+                  aug:7, sep:8, oct:9, nov:10, dec:11 };
 
 function stkGetSearchBy() {
   if (stkSearchBy === null) stkSearchBy = dbGet(STK_SEARCH_KEY) === 'code' ? 'code' : 'model';
@@ -13784,13 +13978,293 @@ function stkShowPair(key) {
   stkRenderRules();
 }
 
-// ---- Done: which parts you have already checked today ---------------------
-// Ticking a part off is not a setting and not a verdict about the part - it is
-// a note about this morning, and it is worth keeping only until this morning
-// is over. So the whole list is stamped with the day it belongs to and thrown
-// away on sight if that day has passed. The alternative, keeping ticks until
-// something clears them, means arriving to a board that claims you have
-// already done today's work.
+// ---- The clock: created date and SLA response due ------------------------
+// A stock check is a list of jobs that cannot finish until a part turns up, so
+// the only ordering question worth asking is which of them runs out of time
+// first. That makes the SLA due time the spine of the page and everything else
+// a tie-break.
+//
+// The file is read with raw:false, so a date arrives as whatever string the
+// cell was formatted as - and the exports are not consistent about it. All the
+// shapes below have turned up in one: a real Date, an Excel serial where the
+// fraction is the time of day, "17/11/2026 14:30", "2026-11-17 14:30:00",
+// "17-Nov-2026 2:30 PM". The time half matters as much as the date half: an
+// SLA due at 09:00 and one due at 17:00 are not the same day's work.
+//
+// Dates are read DAY-FIRST, because every export this reads is Australian.
+// The one guard against that being wrong: if day-first produces a month above
+// twelve and the other reading would not, it was month-first and is swapped.
+function stkWhen(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (v instanceof Date) return isNaN(v) ? null : v.getTime();
+  if (typeof v === 'number') {
+    // Excel's epoch, with its deliberate 1900 leap-year bug built in. Bounded
+    // so an ordinary number in a mis-mapped column cannot become a date.
+    if (!(v > 20000 && v < 80000)) return null;
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.round(v * 86400000));
+    return isNaN(d) ? null : new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+      d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).getTime();
+  }
+  const str = String(v).trim();
+  if (!str) return null;
+  if (/^\d+(\.\d+)?$/.test(str)) return stkWhen(parseFloat(str));
+
+  const TIME = /(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap])\.?m?\.?/i;
+  const TIME24 = /(\d{1,2}):(\d{2})(?::(\d{2}))?/;
+  let hh = 0, mi = 0, ss = 0, tm = str.match(TIME);
+  if (tm) {
+    hh = +tm[1]; mi = +tm[2]; ss = tm[3] ? +tm[3] : 0;
+    const pm = tm[4].toLowerCase() === 'p';
+    if (pm && hh < 12) hh += 12;
+    if (!pm && hh === 12) hh = 0;
+  } else if ((tm = str.match(TIME24))) {
+    hh = +tm[1]; mi = +tm[2]; ss = tm[3] ? +tm[3] : 0;
+  }
+  if (hh > 23 || mi > 59 || ss > 59) { hh = mi = ss = 0; tm = null; }
+  // The date half, with the time taken out of it so "11:30" cannot be read as
+  // a day and a month.
+  const ds = (tm ? str.replace(tm[0], ' ') : str).replace(/\s+/g, ' ').trim();
+
+  const yr = y => (y < 100 ? y + (y < 70 ? 2000 : 1900) : y);
+  let y, mo, d, m;
+  if ((m = ds.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) {
+    y = +m[1]; mo = +m[2] - 1; d = +m[3];
+  } else if ((m = ds.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/))) {
+    d = +m[1]; mo = +m[2] - 1; y = yr(+m[3]);
+    if (mo > 11 && d <= 12) { const t = d; d = mo + 1; mo = t - 1; }
+  } else if ((m = ds.match(/^(\d{1,2})[-\s]([a-z]{3})[a-z]*[-\s,]*(\d{2,4})/i))) {
+    d = +m[1]; mo = STK_MON[m[2].toLowerCase()]; y = yr(+m[3]);
+  } else if ((m = ds.match(/^([a-z]{3})[a-z]*[-\s]+(\d{1,2}),?[-\s]+(\d{2,4})/i))) {
+    mo = STK_MON[m[1].toLowerCase()]; d = +m[2]; y = yr(+m[3]);
+  } else {
+    const fb = new Date(str);
+    return isNaN(fb) ? null : fb.getTime();
+  }
+  if (mo === undefined || !(mo >= 0 && mo <= 11) || !(d >= 1 && d <= 31)
+      || !(y >= 1970 && y <= 2200)) return null;
+  const out = new Date(y, mo, d, hh, mi, ss);
+  // A rolled-over date means the day does not exist in that month - 31 Feb and
+  // the like - which is a bad cell, not a date.
+  if (isNaN(out) || out.getDate() !== d || out.getMonth() !== mo) return null;
+  return out.getTime();
+}
+
+// How long, in words you can act on. Under a day it is hours and minutes,
+// because that is the span an SLA is argued in; past that it is days.
+function stkSpan(ms) {
+  const t = Math.max(0, Math.round(ms / 60000));
+  if (t < 60) return t + 'm';
+  const h = Math.floor(t / 60), mn = t % 60;
+  if (h < 24) return h + 'h' + (mn ? ' ' + mn + 'm' : '');
+  const dy = Math.floor(h / 24), hr = h % 24;
+  return dy + 'd' + (hr ? ' ' + hr + 'h' : '');
+}
+// The absolute time, for the tooltip. A relative figure is what you want at a
+// glance and the wrong thing to quote at somebody, so both are always offered.
+function stkClock(ms) {
+  if (ms === null || ms === undefined) return '';
+  const d = new Date(ms), now = new Date();
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+  if (ymd(d) === ymd(now)) return hm + ' today';
+  const tm = new Date(now.getTime() + 86400000);
+  if (ymd(d) === ymd(tm)) return hm + ' tomorrow';
+  const ys = new Date(now.getTime() - 86400000);
+  if (ymd(d) === ymd(ys)) return hm + ' yesterday';
+  return day + ' ' + d.getDate() + ' '
+    + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]
+    + ' ' + hm;
+}
+
+// Earliest due first, and that single rule does all three jobs the board
+// needs: a job past its due time sorts ahead of one that is not, the most
+// overdue sorts ahead of the rest of those, and the next one to breach sorts
+// ahead of everything still comfortable. They are the same question asked at
+// different points on the clock, so they do not need separate comparisons.
+//
+// A row with no due time falls behind every row that has one, ordered oldest
+// first - a job raised nine days ago with no SLA is still more likely to be
+// the next thing that goes wrong than one raised this morning.
+function stkRankKey(h) {
+  if (h.due !== null && h.due !== undefined) return [0, h.due];
+  if (h.made !== null && h.made !== undefined) return [1, h.made];
+  return [2, 0];
+}
+function stkRankCmp(a, b) {
+  const ka = stkRankKey(a), kb = stkRankKey(b);
+  return ka[0] - kb[0] || ka[1] - kb[1];
+}
+// The worst job on a row or a card decides where that row or card sits. A
+// depot with one breach outranks a depot with twenty jobs that are all fine,
+// which is the whole point of sorting by the clock rather than by volume.
+function stkGrpKey(jobs) {
+  let best = [3, 0];
+  jobs.forEach(j => {
+    const k = stkRankKey(j);
+    if (k[0] < best[0] || (k[0] === best[0] && k[1] < best[1])) best = k;
+  });
+  return best;
+}
+function stkGrpCmp(a, b) {
+  return a[0] - b[0] || a[1] - b[1];
+}
+
+// "About to breach" is a question about the list, not about the row: on a busy
+// morning it means the next four hours, and on a quiet one it means the next
+// few jobs, because "what do I do next" has an answer either way.
+//
+// Both are expressed as one number - the cut-off, in milliseconds - rather
+// than as a flag written onto each row. That is what lets the minute timer and
+// the renderer reach the same verdict without either of them being the one
+// that decides: they both call this with the same clock and get the same line.
+function stkSoonCut(dues, now) {
+  const ahead = dues.filter(d => d !== null && d !== undefined && d >= now)
+    .sort((a, b) => a - b);
+  if (!ahead.length) return now;
+  if (ahead[0] - now <= STK_SOON_MS) return now + STK_SOON_MS;
+  return ahead[Math.min(STK_SOON_MIN, ahead.length) - 1];
+}
+function stkUrgOf(due, now, cut) {
+  if (due === null || due === undefined) return 'none';
+  return due < now ? 'breached' : (due <= cut ? 'soon' : 'ok');
+}
+
+// Which state each job is in, in one pass.
+function stkUrgPass(list, now) {
+  const cut = stkSoonCut(list.map(h => h.due), now);
+  list.forEach(h => { h.urg = stkUrgOf(h.due, now, cut); });
+  // Dates that cannot both be true. Not a judgement about the job - a warning
+  // that one of these two cells is wrong, which matters because the second one
+  // is now deciding what order the page is in.
+  list.forEach(h => {
+    h.dbad = '';
+    if (h.made !== null && h.made !== undefined) {
+      if (h.made > now + 86400000) h.dbad = 'created in the future';
+      else if (h.due !== null && h.due !== undefined && h.due < h.made)
+        h.dbad = 'due before it was created';
+    }
+    h.ageDays = (h.made === null || h.made === undefined) ? null
+      : Math.max(0, Math.floor((now - h.made) / 86400000));
+  });
+  return cut;
+}
+
+// What a part row says about the clock. The relative figure goes on the chip
+// because that is the one you act on; the absolute one goes in the tooltip
+// because that is the one you quote at somebody.
+//
+// Driven by a plain list of { due, made } so the renderer and the minute timer
+// can both call it - the timer has only the index to work from, not the file.
+function stkDueChip(clock, now, cut) {
+  if (!clock || !clock.length) return '';
+  const dated = clock.filter(c => c.due !== null && c.due !== undefined);
+  if (!dated.length) {
+    // No response time on any of them, so age is all there is to say. Said
+    // only once it is worth saying: everything is a day old by lunchtime.
+    const aged = clock.filter(c => c.made !== null && c.made !== undefined);
+    if (!aged.length) return '';
+    const oldest = Math.min(...aged.map(c => c.made));
+    const d = Math.floor((now - oldest) / 86400000);
+    if (d < 3) return '';
+    return '<span class="stk-due age" data-stk-due="" title="' + escAttr(
+      'The oldest job on this row was created ' + stkClock(oldest)
+      + '. There is no response time on it, so nothing here can say whether that is late'
+      + ' \u2014 only that it has been waiting.')
+      + '"><i class="ti ti-hourglass"></i>waiting ' + d + ' days</span>';
+  }
+  const soonest = Math.min(...dated.map(c => c.due));
+  const brc = dated.filter(c => c.due < now);
+  const st = stkUrgOf(soonest, now, cut);
+  const tipAll = dated.length === 1 ? ''
+    : ' The ' + dated.length + ' jobs on this row are due '
+      + stkClock(soonest) + ' through ' + stkClock(Math.max(...dated.map(c => c.due))) + '.';
+  if (brc.length) {
+    return '<span class="stk-due brc" data-stk-due="' + soonest + '" title="' + escAttr(
+      (brc.length === dated.length && dated.length === clock.length
+        ? 'Every job on this row is' : brc.length + ' of the ' + clock.length + ' jobs on this row '
+          + (brc.length === 1 ? 'is' : 'are'))
+      + ' past its response time. The oldest was due ' + stkClock(soonest)
+      + ', which is ' + stkSpan(now - soonest) + ' ago.' + tipAll)
+      + '"><i class="ti ti-alarm-filled"></i>'
+      + (brc.length === 1 ? 'breached ' + stkSpan(now - soonest) + ' ago'
+         : brc.length + ' breached \u00b7 worst ' + stkSpan(now - soonest))
+      + '</span>';
+  }
+  const left = soonest - now;
+  return '<span class="stk-due ' + (st === 'soon' ? 'soon' : 'ok')
+    + '" data-stk-due="' + soonest + '" title="' + escAttr(
+      'The next of these is due ' + stkClock(soonest) + ', in ' + stkSpan(left) + '.'
+      + (st === 'soon' ? ' That is the soonest work on this board.' : '') + tipAll)
+    + '"><i class="ti ti-' + (st === 'soon' ? 'clock-exclamation' : 'clock') + '"></i>'
+    + (st === 'soon' ? 'due in ' + stkSpan(left) : 'due ' + stkClock(soonest)) + '</span>';
+}
+
+// A relative figure goes stale, and this page is left open all morning. Rather
+// than leave "due in 10m" on screen twenty minutes after it breached, the rows
+// are repainted from the index every minute against a fresh clock. Nothing is
+// re-read and no card is rebuilt - the same numbers, re-judged.
+function stkPaintDue() {
+  const out = document.getElementById('stk-result');
+  if (!out || !out.querySelector('.stk-prow')) return;
+  const now = Date.now();
+  const all = [];
+  stkRowIndex.forEach(g => { if (g && g.clock) g.clock.forEach(c => all.push(c.due)); });
+  if (!all.some(d => d !== null && d !== undefined)) return;
+  const cut = stkSoonCut(all, now);
+  let brc = 0;
+  out.querySelectorAll('.stk-prow[data-stk-ix]').forEach(el => {
+    const g = stkRowIndex[+el.dataset.stkIx];
+    if (!g || !g.clock) return;
+    const dated = g.clock.filter(c => c.due !== null && c.due !== undefined);
+    const soonest = dated.length ? Math.min(...dated.map(c => c.due)) : null;
+    const st = stkUrgOf(soonest, now, cut);
+    if (st === 'breached') brc++;
+    el.classList.toggle('brc', st === 'breached');
+    el.classList.toggle('soon', st === 'soon');
+    const chip = el.querySelector('.stk-due');
+    if (chip) {
+      const fresh = stkDueChip(g.clock, now, cut);
+      if (fresh) chip.outerHTML = fresh; else chip.remove();
+    }
+    // The individual job numbers on the row, so one that has just crossed the
+    // line is not sitting there unmarked under a row that says it breached.
+    el.querySelectorAll('.stk-jl[data-jdue]').forEach(a => {
+      a.classList.toggle('brc', +a.dataset.jdue < now);
+    });
+  });
+  out.querySelectorAll('.stk-card[data-stk-lix]').forEach(card => {
+    card.classList.toggle('brc', !!card.querySelector('.stk-prow.brc'));
+  });
+  // The escalation's number, kept honest in place. Re-running the whole page
+  // on a timer would fade forty cards back in while you were reading them.
+  const tile = document.getElementById('stk-brc-n');
+  if (tile && tile.textContent !== brc.toLocaleString()) {
+    tile.textContent = brc.toLocaleString();
+    const stale = document.getElementById('stk-brc-stale');
+    if (stale) stale.style.display = '';
+  }
+}
+function stkDueTimer() {
+  if (stkDueTick) return;
+  stkDueTick = setInterval(() => {
+    try { stkPaintDue(); } catch (e) {}
+  }, 60000);
+}
+
+// ---- Done: which parts you have already checked ---------------------------
+// Ticking a part off is a note about work you did, and the thing it is a note
+// about outlives the morning: a part still on tomorrow's list is a part that
+// still has not turned up, and you already rang the warehouse about it. So the
+// ticks are kept, and a row that comes back still comes back ticked.
+//
+// They are not kept silently, though, because that is the one way this could
+// mislead - arriving to a board that claims today's work is done. A tick made
+// today reads "Checked"; a tick carried from a previous day reads "Checked
+// Fri" in amber and says so in the progress line. You did it, it is still
+// here, and the board is not pretending otherwise.
+//
+// Bounded at a fortnight. A row that disappears for three weeks and comes back
+// is a new piece of work, and a tick that old is not evidence of anything.
 //
 // Keyed on the depot and the search term rather than on jobs: the row IS one
 // warehouse page for one part at one place, so that is the unit of work, and
@@ -13800,40 +14274,81 @@ function stkToday() {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
     + '-' + String(d.getDate()).padStart(2, '0');
 }
+// Day-stamped entries now. The old shape stored the tick time as a bare
+// number with one day stamped on the whole list, so that day is the one the
+// migrated entries get - it is the only day they could have been made on.
+function stkNormChecked(saved) {
+  const rows = {};
+  if (!saved || typeof saved !== 'object' || !saved.rows
+      || typeof saved.rows !== 'object') return rows;
+  const cutoff = Date.now() - STK_CARRY_DAYS * 86400000;
+  Object.keys(saved.rows).forEach(k => {
+    const v = saved.rows[k];
+    let t, d;
+    if (typeof v === 'number') { t = v; d = saved.day || ymd(new Date(v)); }
+    else if (v && typeof v === 'object' && typeof v.t === 'number') { t = v.t; d = v.d || ymd(new Date(v.t)); }
+    else return;
+    if (!(t > cutoff)) return;
+    rows[k] = { t, d };
+  });
+  return rows;
+}
 function stkGetChecked() {
-  const today = stkToday();
   if (stkChecked === null) {
-    const saved = dbGet(STK_DONE_KEY);
-    stkChecked = (saved && typeof saved === 'object' && saved.day === today
-      && saved.rows && typeof saved.rows === 'object')
-      ? { day: today, rows: saved.rows } : { day: today, rows: {} };
-  } else if (stkChecked.day !== today) {
+    stkChecked = { day: stkToday(), rows: stkNormChecked(dbGet(STK_DONE_KEY)) };
+  } else if (stkChecked.day !== stkToday()) {
     // The Hub is left open for days at a time, so the rollover has to happen
-    // here rather than only at startup.
-    stkChecked = { day: today, rows: {} };
+    // here rather than only at startup. It no longer empties the list - it
+    // re-dates it, which is what turns today's ticks into carried ones and
+    // drops anything now past the fortnight.
+    stkChecked = { day: stkToday(), rows: stkNormChecked(stkChecked) };
   }
   return stkChecked;
 }
 function stkDoneKey(loc, term) {
   return stkLocKey(loc) + '||' + String(term || '').trim().toLowerCase();
 }
-function stkRowDone(loc, term) {
+function stkRowTick(loc, term) {
   const t = String(term || '').trim();
-  return t ? !!stkGetChecked().rows[stkDoneKey(loc, t)] : false;
+  return t ? (stkGetChecked().rows[stkDoneKey(loc, t)] || null) : null;
+}
+function stkRowDone(loc, term) { return !!stkRowTick(loc, term); }
+function stkRowCarried(loc, term) {
+  const e = stkRowTick(loc, term);
+  return !!e && e.d !== stkToday();
 }
 function stkSaveChecked() { dbSet(STK_DONE_KEY, stkGetChecked()); }
 
-function stkDoneBtnHtml(on) {
-  return '<i class="ti ' + (on ? 'ti-circle-check-filled' : 'ti-circle')
-    + '"></i><span>' + (on ? 'Checked' : 'Done') + '</span>';
+// "Fri 14 Nov", or "yesterday" when that is the clearer thing to say.
+function stkDayWord(day) {
+  const m = String(day || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return 'earlier';
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  const now = new Date();
+  if (ymd(new Date(now.getTime() - 86400000)) === day) return 'yesterday';
+  const days = Math.round((new Date(ymd(now)).getTime() - d.getTime()) / 86400000);
+  const nm = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+  if (days > 0 && days < 7) return nm;
+  return nm + ' ' + d.getDate() + ' '
+    + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
 }
-function stkDoneTitle(on, loc) {
-  return on ? 'Checked \u2014 click to put it back on the list'
-            : 'Mark this part checked at ' + loc;
+function stkDoneBtnHtml(on, carriedDay) {
+  if (!on) return '<i class="ti ti-circle"></i><span>Done</span>';
+  if (carriedDay) return '<i class="ti ti-history"></i><span>'
+    + esc(stkDayWord(carriedDay)) + '</span>';
+  return '<i class="ti ti-circle-check-filled"></i><span>Checked</span>';
 }
-function stkLocProgText(done, total) {
+function stkDoneTitle(on, loc, carriedDay) {
+  if (!on) return 'Mark this part checked at ' + loc;
+  if (carriedDay) return 'You checked this ' + stkDayWord(carriedDay)
+    + ' and it is still on the list, so the part still has not turned up.'
+    + ' Click to put it back on today\u2019s list.';
+  return 'Checked \u2014 click to put it back on the list';
+}
+function stkLocProgText(done, total, carried) {
   if (!done) return '';
-  return done === total ? 'all ' + total + ' checked' : done + ' of ' + total;
+  const base = done === total ? 'all ' + total + ' checked' : done + ' of ' + total;
+  return carried ? base + ' \u00b7 ' + carried + ' carried' : base;
 }
 
 // Ticking a part off here is also something you did to the jobs waiting on
@@ -13869,8 +14384,10 @@ function stkMarkChase(ixs, on) {
         n++;
       } else {
         // Only put back what this put there, and only if nothing has moved
-        // it on since.
-        if (e.viaStock !== today || e.status !== 'chasing') return;
+        // it on since. Any day it was put there counts, not only today: ticks
+        // are carried over now, so the tick being undone may well have been
+        // made last week.
+        if (!e.viaStock || e.status !== 'chasing') return;
         e.status = 'new';
         delete e.viaStock;
         n++;
@@ -13897,7 +14414,7 @@ function stkToggleDone(i) {
   const c = stkGetChecked();
   const k = stkDoneKey(g.loc, g.term);
   const on = !c.rows[k];
-  if (on) c.rows[k] = Date.now(); else delete c.rows[k];
+  if (on) c.rows[k] = { t: Date.now(), d: stkToday() }; else delete c.rows[k];
   stkSaveChecked();
   stkPaintDone();
   const n = stkMarkChase([i], on);
@@ -13914,9 +14431,10 @@ function stkDoneLoc(lix) {
   const rows = L.ixs.map(i => stkRowIndex[i]).filter(g => g && g.term);
   if (!rows.length) return;
   const allOn = rows.every(g => c.rows[stkDoneKey(g.loc, g.term)]);
+  const now = Date.now(), today = stkToday();
   rows.forEach(g => {
     const k = stkDoneKey(g.loc, g.term);
-    if (allOn) delete c.rows[k]; else c.rows[k] = Date.now();
+    if (allOn) delete c.rows[k]; else c.rows[k] = { t: now, d: today };
   });
   stkSaveChecked();
   stkPaintDone();
@@ -13940,32 +14458,44 @@ function stkClearDone() {
 }
 
 function stkProgCounts() {
-  let done = 0, total = 0;
+  let done = 0, total = 0, carried = 0;
   stkRowIndex.forEach(g => {
     if (!g || !g.term) return;
     total++;
-    if (stkRowDone(g.loc, g.term)) done++;
+    const e = stkRowTick(g.loc, g.term);
+    if (!e) return;
+    done++;
+    if (e.d !== stkToday()) carried++;
   });
-  return { done, total };
+  return { done, total, carried };
 }
-function stkProgInner(done, total) {
+// "6 of 14 checked, 4 of those carried from earlier" rather than "6 of 14
+// checked today", which would be a claim about this morning that four of the
+// six do not support.
+function stkProgInner(done, total, carried) {
   const full = total > 0 && done === total;
   const pct = total ? Math.round(done / total * 100) : 0;
+  const note = !carried ? ''
+    : ' <span class="stk-prog-c" title="' + escAttr('These were ticked on an earlier day and are'
+        + ' still on the list, so the parts still have not turned up. The tick is kept for'
+        + ' ' + STK_CARRY_DAYS + ' days while the row keeps coming back.')
+      + '"><i class="ti ti-history"></i>' + carried.toLocaleString()
+      + ' carried from earlier</span>';
   return '<i class="ti ti-' + (full ? 'circle-check' : 'progress') + '"></i>'
     + '<span class="stk-prog-t">' + (full
       ? 'Every part checked \u2014 <b>all ' + total.toLocaleString() + '</b> of them'
       : '<b>' + done.toLocaleString() + '</b> of <b>' + total.toLocaleString()
-        + '</b> part' + (total !== 1 ? 's' : '') + ' checked today')
-    + '</span>'
+        + '</b> part' + (total !== 1 ? 's' : '') + ' checked')
+    + note + '</span>'
     + '<span class="stk-prog-bar"><i style="--pct:' + pct + '%"></i></span>'
     + (done ? '<button class="stk-prog-x" onclick="stkClearDone()"'
-      + ' title="Clear every tick and start the run again">Start over</button>' : '');
+      + ' title="Clear every tick, carried ones included, and start the run again">Start over</button>' : '');
 }
 function stkProgHtml() {
-  const { done, total } = stkProgCounts();
+  const { done, total, carried } = stkProgCounts();
   if (!total) return '';
   return '<div class="stk-prog' + (done === total ? ' full' : '') + '" id="stk-prog">'
-    + stkProgInner(done, total) + '</div>';
+    + stkProgInner(done, total, carried) + '</div>';
 }
 
 // Repaint rather than re-run: stkRun() rebuilds every card from the file, and
@@ -13976,14 +14506,18 @@ function stkPaintDone() {
   out.querySelectorAll('.stk-prow[data-stk-ix]').forEach(el => {
     const g = stkRowIndex[+el.dataset.stkIx];
     if (!g || !g.term) return;
-    const on = stkRowDone(g.loc, g.term);
+    const tick = stkRowTick(g.loc, g.term);
+    const on = !!tick;
+    const cd = on && tick.d !== stkToday() ? tick.d : '';
     el.classList.toggle('done', on);
+    el.classList.toggle('carried', !!cd);
     const b = el.querySelector('.stk-done');
     if (b) {
       b.classList.toggle('on', on);
+      b.classList.toggle('carried', !!cd);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      b.title = stkDoneTitle(on, g.loc);
-      b.innerHTML = stkDoneBtnHtml(on);
+      b.title = stkDoneTitle(on, g.loc, cd);
+      b.innerHTML = stkDoneBtnHtml(on, cd);
     }
   });
   out.querySelectorAll('.stk-card[data-stk-lix]').forEach(card => {
@@ -13991,11 +14525,12 @@ function stkPaintDone() {
     if (!L) return;
     const rows = L.ixs.map(i => stkRowIndex[i]).filter(g => g && g.term);
     const d = rows.filter(g => stkRowDone(g.loc, g.term)).length;
+    const cr = rows.filter(g => stkRowCarried(g.loc, g.term)).length;
     const full = rows.length > 0 && d === rows.length;
     card.classList.toggle('all-done', full);
     const pill = card.querySelector('.stk-chd-prog');
     if (pill) {
-      pill.textContent = stkLocProgText(d, rows.length);
+      pill.textContent = stkLocProgText(d, rows.length, cr);
       pill.classList.toggle('full', full);
     }
     const all = card.querySelector('.stk-chd-all');
@@ -14009,9 +14544,9 @@ function stkPaintDone() {
   });
   const bar = document.getElementById('stk-prog');
   if (bar) {
-    const { done, total } = stkProgCounts();
+    const { done, total, carried } = stkProgCounts();
     bar.classList.toggle('full', total > 0 && done === total);
-    bar.innerHTML = stkProgInner(done, total);
+    bar.innerHTML = stkProgInner(done, total, carried);
   }
 }
 
@@ -14435,9 +14970,11 @@ function stkMoreFaults() { stkShowAllFaults = true; stkRenderFaults(); }
 // and marks it on arrival - landing somewhere mid-page with no idea which of
 // the blocks you were sent to is the thing you pressed for is worse than not
 // being taken anywhere.
-function stkShowAlloc() {
-  if (!stkOpenGroup.has('alloc')) { stkOpenGroup.add('alloc'); stkRun(); }
-  const el = document.getElementById('stk-alloc-grp');
+// Open it, go to it, and mark it on arrival. Both escalations land you in a
+// list further down the page, and landing mid-page with no idea which block
+// you were sent to is worse than not being taken anywhere.
+function stkFlashTo(id) {
+  const el = document.getElementById(id);
   if (!el) return;
   try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   catch (e) { el.scrollIntoView(); }
@@ -14445,6 +14982,14 @@ function stkShowAlloc() {
   void el.offsetWidth;            // restart the animation if it is still on
   el.classList.add('flash');
   setTimeout(() => el.classList.remove('flash'), 1700);
+}
+function stkShowBreach() {
+  if (!stkOpenGroup.has('brc')) { stkOpenGroup.add('brc'); stkRun(); }
+  stkFlashTo('stk-brc-grp');
+}
+function stkShowAlloc() {
+  if (!stkOpenGroup.has('alloc')) { stkOpenGroup.add('alloc'); stkRun(); }
+  stkFlashTo('stk-alloc-grp');
 }
 
 function stkToggleGroup(k) {
@@ -14493,8 +15038,19 @@ function stkRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Job number <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-id', svAutoDetect(stkHeaders, ['Job #','Job Number','Job ID','ID'], ['jobid','job']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-site', svAutoDetect(stkHeaders, ['Location Name','Site','Store'], ['location','site','store']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Contract <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-con', svAutoDetect(stkHeaders, ['Contract','Contract Name','Client','Account'], ['contract','client','account']), 'stkOnChange()')}</div>
-     <div class="sv-col-row"><span class="sv-col-label">Zone <span style="font-weight:400;color:var(--text-3)">(optional \u2014 checks the allocation)</span></span>${sel('stk-c-zone', svAutoDetect(stkHeaders, ['Zone','Geo','Geo Zone','Area','Region'], ['zone','geo','area','region']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Zone <span style="font-weight:400;color:var(--text-3)">(optional \u2014 runs the allocation check)</span></span>${sel('stk-c-zone', svAutoDetect(stkHeaders, ['Zone','Zone Name','Geo','Geo Zone','Geoname','Area','Region'], ['zone','geo','area','region']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Created date <span style="font-weight:400;color:var(--text-3)">(optional \u2014 how long it has waited)</span></span>${sel('stk-c-created', svAutoDetect(stkHeaders, ['Created Date','Created','Date Created','Date Logged','Logged','Call Date','Raised'], ['created','logged','raised','opened']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">SLA response due <span style="font-weight:400;color:var(--text-3)">(optional \u2014 sets the order of the board)</span></span>${sel('stk-c-sla', svAutoDetect(stkHeaders, ['SLA Response Due','Response Due','SLA Due','SLA Response','Target Response','Due Date','Due'], ['responsedue','sladue','slaresponse','targetresponse','duedate','breach']), 'stkOnChange()')}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Scheduled date <span style="font-weight:400;color:var(--text-3)">(optional \u2014 adds the call list)</span></span>${sel('stk-c-sched', svAutoDetect(stkHeaders, ['Scheduled','Scheduled Date','Appointment','Appointment Date','Booked','Booked Date','Visit Date'], ['scheduled','booked','appoint','visit']), 'stkOnChange()')}</div>
      <div class="sv-col-row"><span class="sv-col-label">Reported notes <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('stk-c-note', noteCol, 'stkOnNoteCol()')}</div>
+     </div>
+     <div class="stk-dnote">
+       <i class="ti ti-clock-hour-4"></i>
+       <span>Dates are read <b>day-first</b> \u2014 17/11/2026 is the 17th of November, and the
+         time of day is kept, because an SLA due at 09:00 and one due at 17:00 are not the
+         same morning's work. With a <b>response due</b> column picked, the board stops being
+         sorted by how many jobs a depot has and starts being sorted by the clock: breached
+         first, then whatever breaches next.</span>
      </div>
      <div class="stk-note-sw" id="stk-note-sw"${noteCol ? '' : ' style="display:none;"'}>
        <label class="stk-note-lb">
@@ -14590,18 +15146,36 @@ function stkSiteGroups(jobs) {
     if (!m.has(k)) m.set(k, { site: (j.site || '').trim(), jobs: [] });
     m.get(k).jobs.push(j);
   });
-  return [...m.values()].sort((a, b) => b.jobs.length - a.jobs.length || a.site.localeCompare(b.site));
+  const gs = [...m.values()];
+  gs.forEach(g => g.jobs.sort(stkRankCmp));
+  return gs.sort((a, b) => stkGrpCmp(stkGrpKey(a.jobs), stkGrpKey(b.jobs))
+    || b.jobs.length - a.jobs.length || a.site.localeCompare(b.site));
 }
 
+// A job number can be carrying two warnings at once - past its response time
+// AND allocated to the wrong depot - so it wears both marks and the tooltip
+// says both things. The colour goes to the breach, because that one has
+// already happened.
 function stkJobLinks(jobs) {
   return jobs.map(j => {
     const bad = !!(j.av && j.av.verdict === 'mismatch');
-    const tip = !bad ? '' : ' title="' + escAttr('Allocated to ' + (j.tech || '(blank)')
-      + ' \u2014 zone ' + (j.zone || '(blank)') + ' expects ' + j.av.expected) + '"';
-    const mark = bad ? '<i class="ti ti-alert-triangle stk-jmis"></i>' : '';
+    const brc = j.urg === 'breached';
+    const dated = j.due !== null && j.due !== undefined;
+    const why = [];
+    if (dated) why.push(brc
+      ? 'Was due ' + stkClock(j.due) + ' \u2014 ' + stkSpan(Date.now() - j.due)
+        + ' past its response time'
+      : 'Due ' + stkClock(j.due));
+    if (bad) why.push('Allocated to ' + (j.tech || '(blank)')
+      + ' \u2014 zone ' + (j.zone || '(blank)') + ' expects ' + j.av.expected);
+    const tip = why.length ? ' title="' + escAttr(why.join('. ')) + '"' : '';
+    const mark = (dated ? '<i class="ti ti-alarm-filled stk-jbrc"></i>' : '')
+      + (bad ? '<i class="ti ti-alert-triangle stk-jmis"></i>' : '');
+    const cls = brc ? ' brc' : (bad ? ' mis' : '');
+    const dd = dated ? ` data-jdue="${j.due}"` : '';
     return j.id
-      ? `<a class="stk-jl${bad ? ' mis' : ''}"${tip} href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${mark}${esc(j.id)}</a>`
-      : `<span class="stk-jl${bad ? ' mis' : ''}"${tip}>${mark}row ${j.i + 2}</span>`;
+      ? `<a class="stk-jl${cls}"${dd}${tip} href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${mark}${esc(j.id)}</a>`
+      : `<span class="stk-jl${cls}"${dd}${tip}>${mark}row ${j.i + 2}</span>`;
   }).join('<i>\u00b7</i>');
 }
 
@@ -14691,6 +15265,13 @@ async function stkLoad(file) {
   stkRenderConfig();
   const res = document.getElementById('stk-result');
   if (res) res.innerHTML = '';
+  // A new file has not been judged yet, so the previous file's allocation
+  // verdicts must not sit there looking like they belong to it.
+  stkOpenGroup.delete('av-seen');
+  const avSec = document.getElementById('stk-avsec');
+  if (avSec) avSec.style.display = 'none';
+  const avBox = document.getElementById('stk-av-result');
+  if (avBox) avBox.innerHTML = '';
   try {
     await alEnsureData();
     if (typeof alRows !== 'undefined' && !alRows) alBuild();
@@ -14719,6 +15300,75 @@ async function stkLoad(file) {
   }
 }
 
+// ---- The allocation check, in full, on this page --------------------------
+// Stock Checks used to answer one question about the allocation - is this part
+// about to be searched at the wrong warehouse - and the rest of the file had
+// to be carried to the Allocation Validator to be asked the others. That is
+// the same file twice, and two pages that can disagree about the same morning.
+//
+// So the validator runs here instead, over every row in the file rather than
+// only the ones waiting on a part, and it is the validator itself doing it:
+// alValRun() draws into this page, reading the technician and zone columns
+// already picked above. Nothing is reimplemented, so the two cannot drift.
+//
+// It folds shut when there is nothing to action and opens itself when there
+// is. The stock board stays the thing you came here for; this is the rest of
+// what the same file is able to tell you.
+const STK_AV_HOST = {
+  out: 'stk-av-result',
+  ctl: { tech:'stk-c-tech', zone:'stk-c-zone', id:'stk-c-id',
+         site:'stk-c-site', date:'stk-c-sched' },
+  rows: () => stkRows,
+  name: () => stkName,
+  ready: () => stkDone
+};
+
+function stkToggleAv() {
+  if (stkOpenGroup.has('av')) stkOpenGroup.delete('av'); else stkOpenGroup.add('av');
+  stkAllocFull();
+}
+
+function stkAllocFull() {
+  const sec = document.getElementById('stk-avsec');
+  const hd = document.getElementById('stk-avsec-hd');
+  if (!sec || !hd) return;
+  const zoneCol = document.getElementById('stk-c-zone')?.value;
+  if (!zoneCol || !stkRows.length || !stkDone) {
+    sec.style.display = 'none';
+    const box = document.getElementById('stk-av-result');
+    if (box) box.innerHTML = '';
+    return;
+  }
+  // The render has to happen before the heading can be written, because the
+  // heading counts what the render found.
+  alValHost = STK_AV_HOST;
+  alValRun();
+  const res = alValOut || [];
+  const bad = res.filter(r => r.verdict === 'mismatch' || r.verdict === 'notech').length;
+  const mis = res.filter(r => r.verdict === 'mismatch').length;
+  const nAl = res.filter(r => r.verdict === 'notech').length;
+  const unsure = res.filter(r => r.verdict === 'unknown' || r.verdict === 'nozone').length;
+  // First sight of a file with findings opens it; after that it remembers
+  // whatever you last did to it.
+  if (!stkOpenGroup.has('av') && !stkOpenGroup.has('av-seen') && bad) stkOpenGroup.add('av');
+  stkOpenGroup.add('av-seen');
+  const open = stkOpenGroup.has('av');
+  sec.style.display = '';
+  sec.classList.toggle('open', open);
+  sec.classList.toggle('bad', !!bad);
+  hd.setAttribute('aria-expanded', open ? 'true' : 'false');
+  hd.innerHTML = `<i class="ti ti-chevron-right stk-avsec-chev${open ? ' open' : ''}"></i>
+    <i class="ti ti-shield-${bad ? 'exclamation' : 'check'} stk-avsec-ico"></i>
+    <span class="stk-avsec-l">Allocation check</span>
+    <span class="stk-avsec-n${bad ? ' bad' : ''}">${bad.toLocaleString()}</span>
+    <span class="stk-avsec-note">${bad
+      ? [mis ? mis.toLocaleString() + ' with the wrong technician for the zone' : '',
+         nAl ? nAl.toLocaleString() + ' with nobody allocated' : ''].filter(Boolean).join(' \u00b7 ')
+        + ' \u2014 across all ' + res.length.toLocaleString() + ' rows in this file, not just the ones waiting on a part'
+      : 'every one of the ' + res.length.toLocaleString() + ' rows in this file has the technician its zone calls for'}${
+      unsure ? ' \u00b7 ' + unsure.toLocaleString() + ' could not be judged' : ''}</span>`;
+}
+
 function stkRun() {
   const modelCol = document.getElementById('stk-c-model')?.value;
   const faultCol = document.getElementById('stk-c-fault')?.value;
@@ -14728,6 +15378,8 @@ function stkRun() {
   const conCol   = document.getElementById('stk-c-con')?.value;
   const noteCol  = document.getElementById('stk-c-note')?.value;
   const zoneCol  = document.getElementById('stk-c-zone')?.value;
+  const madeCol  = document.getElementById('stk-c-created')?.value;
+  const dueCol   = document.getElementById('stk-c-sla')?.value;
   const out = document.getElementById('stk-result');
   if (!out) return;
   if (!stkRows.length || !stkDone || !modelCol || !faultCol || !techCol) {
@@ -14751,6 +15403,30 @@ function stkRun() {
   };
   const hits = [];
   stkNoteMaybe = [];
+  const now = Date.now();
+  // One clock for the whole render, so two rows cannot disagree about what
+  // "now" was, and the same memo trick as the allocator: a date column repeats
+  // itself far less than a technician does, but parsing is the one thing in
+  // this loop that touches a regular expression.
+  let nUnread = 0, nDateCells = 0;
+  const whenMemo = new Map();
+  const whenFor = v => {
+    const k = typeof v === 'object' ? NaN : v;
+    if (k !== k) return stkWhen(v);           // a Date cannot be a map key here
+    if (whenMemo.has(k)) return whenMemo.get(k);
+    const t = stkWhen(v);
+    whenMemo.set(k, t);
+    return t;
+  };
+  const readWhen = (row, col) => {
+    if (!col) return null;
+    const raw = row[col];
+    if (raw === null || raw === undefined || String(raw).trim() === '') return null;
+    nDateCells++;
+    const t = whenFor(raw);
+    if (t === null) nUnread++;
+    return t;
+  };
   stkRows.forEach((row, i) => {
     const byFault = picked.has(stkFaultKey(row[faultCol]));
     const note = useNotes ? stkReadNote(row[noteCol], row[faultCol]) : null;
@@ -14779,6 +15455,7 @@ function stkRun() {
     const hidPair = stkIsHidden(con, model);
     const hidLoc = !hidPair && stkLocHidden(w.loc);
     hits.push({ row, i, model, tech, con, zone, av,
+      made: readWhen(row, madeCol), due: readWhen(row, dueCol),
       id: idCol ? String(row[idCol] || '').trim() : '',
       site: siteCol ? String(row[siteCol] || '').trim() : '',
       loc: w.loc, kind: w.kind, read: w.read || '', why: w.why || '',
@@ -14812,8 +15489,19 @@ function stkRun() {
     shown: shown.length,
     hidden: nHidden,
     viaNotes: shown.filter(h => h.via === 'notes').length,
-    maybe: stkNoteMaybe.length
+    maybe: stkNoteMaybe.length,
+    breached: shown.filter(h => h.due !== null && h.due !== undefined && h.due < now).length
   });
+  // The clock, judged over what is on screen rather than over the file: the
+  // jobs you have hidden are not the next thing you are going to do.
+  const soonCut = stkUrgPass(shown, now);
+  stkBreached = shown.filter(h => h.urg === 'breached').sort(stkRankCmp);
+  stkDueSoon = shown.filter(h => h.urg === 'soon').sort(stkRankCmp);
+  stkDateBad = shown.filter(h => h.dbad);
+  const byClock = !!(dueCol || madeCol);
+  const nextDue = shown.filter(h => h.due !== null && h.due !== undefined && h.due >= now)
+    .reduce((a, h) => (a === null || h.due < a ? h.due : a), null);
+
   const linkable = shown.filter(h => h.loc && h.model);
   const stuck = shown.filter(h => !h.loc || !h.model);
   // Only the mismatches are a finding here. A job with nobody on it, or a
@@ -14832,7 +15520,9 @@ function stkRun() {
     const term = stkTerm(h.model);
     const lk = alNormAlloc(h.loc) || h.loc.toLowerCase();
     let L = locs.get(lk);
-    if (!L) { L = { name: h.loc, kind: h.kind, read: h.read, techs: new Set(), parts: new Map(), n: 0 }; locs.set(lk, L); }
+    if (!L) { L = { name: h.loc, kind: h.kind, read: h.read, techs: new Set(),
+                    parts: new Map(), jobs: [], n: 0 }; locs.set(lk, L); }
+    L.jobs.push(h);
     // A location any row names outright is named outright; a reading only
     // stands in where nothing stated it.
     if (h.kind === 'named') { L.kind = 'named'; L.read = ''; }
@@ -14851,12 +15541,28 @@ function stkRun() {
     Pt.cons.get(ck).push(h);
     Pt.jobs.push(h);
   });
-  const locList = [...locs.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  // With a clock to go on, the board is ordered by it and not by volume: the
+  // depot holding the job that runs out of time first leads, and a depot with
+  // one breach outranks a depot with twenty jobs that are all comfortable.
+  // That is the whole point of reading the due column - a list sorted by how
+  // many jobs a depot has tells you where the work is, not what is on fire.
+  //
+  // Without one, nothing moves: the order is exactly what it was before.
+  const locList = [...locs.values()].sort((a, b) =>
+    (byClock ? stkGrpCmp(stkGrpKey(a.jobs), stkGrpKey(b.jobs)) : 0)
+    || b.n - a.n || a.name.localeCompare(b.name));
   stkRowIndex = [];
   stkLocIndex = [];
   locList.forEach(L => {
     L.partList = [...L.parts.values()]
-      .sort((a, b) => b.jobs.length - a.jobs.length || a.term.localeCompare(b.term));
+      .sort((a, b) => (byClock ? stkGrpCmp(stkGrpKey(a.jobs), stkGrpKey(b.jobs)) : 0)
+        || b.jobs.length - a.jobs.length || a.term.localeCompare(b.term));
+    // ...and the jobs inside a row, so the breached one is the first job
+    // number you read rather than the fourth.
+    if (byClock) L.partList.forEach(Pt => {
+      Pt.jobs.sort(stkRankCmp);
+      Pt.cons.forEach(js => js.sort(stkRankCmp));
+    });
     // Each part row gets a slot, so its pencil can name the models behind it -
     // and its depot and search term, so the tick beside it can say which row
     // it is without either string going through an onclick.
@@ -14866,6 +15572,9 @@ function stkRun() {
       // way excSync() built them a moment ago, so ticking the row can find
       // the items it is about.
       stkRowIndex.push({ models: [...Pt.models], loc: L.name, term: Pt.term,
+        // The clock for this row, so the minute timer can re-judge it from
+        // the index without the file.
+        clock: Pt.jobs.map(h => ({ due: h.due, made: h.made })),
         keys: Pt.jobs.map(h => excKey('stock',
           { jobId: h.id, site: h.site, model: h.model, tech: h.tech })) });
     });
@@ -14884,6 +15593,8 @@ function stkRun() {
   const nOpen = stkOpenGroup.has('fromnotes');
   const aOpen = stkOpenGroup.has('alloc');
   const mOpen = stkOpenGroup.has('maybenotes');
+  const bOpen = stkOpenGroup.has('brc');
+  const dOpen = stkOpenGroup.has('dates');
 
   // Tiles rather than five numbers in one sentence. "From the notes" keeps
   // amber wherever it appears, and a zero still gets its tile so the row
@@ -14894,8 +15605,46 @@ function stkRun() {
   // The row does reshuffle when it fires - on purpose. That is the point of
   // an escalation, and it is the one thing here that cannot wait for you to
   // read left to right.
-  const allocTile = !zoneCol ? '' : (stkAllocBad.length
+  // ---- The clock's two tiles ---------------------------------------------
+  // A breach is the only thing on this page that has already gone wrong, so it
+  // takes the escalation and the wrong-depot tile steps down to an ordinary
+  // one while it is firing. Two things pulsing at once is two things ignored,
+  // and of the two it is the live SLA failure you are answering for.
+  const brcTile = !dueCol ? '' : (stkBreached.length
     ? `<button type="button" class="z-tile escalate" style="--ac:var(--coral-text)"
+         onclick="stkShowBreach()"
+         title="${escAttr('Show the ' + stkBreached.length + ' job'
+           + (stkBreached.length !== 1 ? 's' : '') + ' already past their SLA response time')}">
+        <span class="z-esc-k"><i class="ti ti-alarm-filled"></i>Breached</span>
+        <div class="z-tile-v" id="stk-brc-n">${stkBreached.length.toLocaleString()}</div>
+        <div class="z-tile-s">${stkBreached.length === 1 ? 'job is' : 'jobs are'} past their response
+          time \u2014 worst by ${esc(stkSpan(now - stkBreached[0].due))}</div>
+        <span class="z-esc-go" id="stk-brc-stale" style="display:none;">The clock has moved \u2014 re-run to re-sort</span>
+        <span class="z-esc-go">Show me which <i class="ti ti-arrow-down"></i></span>
+      </button>`
+    : `<div class="z-tile zero" style="--ac:var(--green-text)">
+        <div class="z-tile-k">Breached</div>
+        <div class="z-tile-v" id="stk-brc-n">0</div>
+        <div class="z-tile-s">every job is still inside its response time</div>
+      </div>`);
+
+  // Not an escalation - the opposite. This is the one tile on the page that
+  // says what to do next rather than what has gone wrong.
+  const dueTile = !dueCol ? '' : (nextDue === null
+    ? `<div class="z-tile zero" style="--ac:var(--text-3)">
+        <div class="z-tile-k">Due next</div>
+        <div class="z-tile-v">\u2014</div>
+        <div class="z-tile-s">nothing left with a response time ahead of it</div>
+      </div>`
+    : `<div class="z-tile" style="--ac:var(--amber-text)">
+        <div class="z-tile-k">Due next</div>
+        <div class="z-tile-v">${esc(stkSpan(nextDue - now))}</div>
+        <div class="z-tile-s">${esc(stkClock(nextDue))}${stkDueSoon.length > 1
+          ? ' \u00b7 ' + stkDueSoon.length.toLocaleString() + ' in the same window' : ''}</div>
+      </div>`);
+
+  const allocTile = !zoneCol ? '' : (stkAllocBad.length
+    ? `<button type="button" class="z-tile escalate${stkBreached.length ? ' quiet' : ''}" style="--ac:var(--coral-text)"
          onclick="stkShowAlloc()"
          title="${escAttr('Show the ' + stkAllocBad.length + ' job'
            + (stkAllocBad.length !== 1 ? 's' : '') + ' whose technician does not belong to the job\u2019s zone')}">
@@ -14914,7 +15663,9 @@ function stkRun() {
       </div>`);
 
   const stkTiles = !shown.length ? '' : `<div class="z-tiles">
+    ${stkBreached.length ? brcTile : ''}
     ${stkAllocBad.length ? allocTile : ''}
+    ${dueTile}
     <div class="z-tile" style="--ac:var(--green-text)">
       <div class="z-tile-k">Waiting on a part</div>
       <div class="z-tile-v">${shown.length.toLocaleString()}</div>
@@ -14938,6 +15689,7 @@ function stkRun() {
       <div class="z-tile-s">hinted at, not counted</div>
     </div>
     ${stkAllocBad.length ? '' : allocTile}
+    ${stkBreached.length ? '' : brcTile}
     ${nHidden ? `<div class="z-tile" style="--ac:var(--coral-text)">
       <div class="z-tile-k">Hidden by you</div>
       <div class="z-tile-v">${nHidden.toLocaleString()}</div>
@@ -14982,13 +15734,19 @@ function stkRun() {
     ${locList.length ? `<div class="stk-grid">${locList.map((L, i) => {
       const cls = L.kind === 'asis' ? ' asis' : (alOwner(L.name).key === 'partner' ? ' partner' : '');
       const lDone = L.partList.filter(Pt => stkRowDone(L.name, Pt.term)).length;
+      const lCar = L.partList.filter(Pt => stkRowCarried(L.name, Pt.term)).length;
       const lFull = L.partList.length > 0 && lDone === L.partList.length;
-      return `<section class="stk-card${cls}${lFull ? ' all-done' : ''}" data-stk-lix="${L.lix}"
+      const lBrc = L.jobs.filter(h => h.urg === 'breached').length;
+      return `<section class="stk-card${cls}${lFull ? ' all-done' : ''}${lBrc ? ' brc' : ''}" data-stk-lix="${L.lix}"
         style="animation-delay:${Math.min(i, 12) * 0.03}s">
         <header class="stk-chd">
           <span class="stk-chd-n${L.read ? ' read' : ''}"${L.read ? ` title="${escAttr(L.read)}"` : ''}>${esc(L.name)}</span>
           <span class="stk-chd-pill">${L.n.toLocaleString()} job${L.n !== 1 ? 's' : ''}</span>
-          <span class="stk-chd-prog${lFull ? ' full' : ''}">${stkLocProgText(lDone, L.partList.length)}</span>
+          ${lBrc ? `<span class="stk-chd-brc" title="${escAttr(lBrc + ' of the ' + L.n
+            + ' job' + (L.n !== 1 ? 's' : '') + ' at this depot ' + (lBrc === 1 ? 'is' : 'are')
+            + ' already past its SLA response time, which is why this card is at the top')}"
+            ><i class="ti ti-alarm-filled"></i>${lBrc.toLocaleString()} breached</span>` : ''}
+          <span class="stk-chd-prog${lFull ? ' full' : ''}">${stkLocProgText(lDone, L.partList.length, lCar)}</span>
           <span class="stk-chd-from">${L.techs.size === 1
             ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
           <button class="stk-chd-all" onclick="stkDoneLoc(${L.lix})"
@@ -15003,13 +15761,20 @@ function stkRun() {
         </header>
         ${L.partList.map(Pt => {
           const buckets = [...Pt.cons].sort((a, b) =>
-            b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0])));
+            stkGrpCmp(stkGrpKey(a[1]), stkGrpKey(b[1]))
+            || b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0])));
           // One site wanting several of a part is what the big number is
           // there to warn about, so it is read off the sites, not the total.
           const piled = Pt.jobs.length > 1 && stkSiteGroups(Pt.jobs).some(g => g.jobs.length > 1);
           const sites = stkSiteGroups(Pt.jobs).length;
-          const pDone = stkRowDone(L.name, Pt.term);
-          return `<div class="stk-prow${pDone ? ' done' : ''}" data-stk-ix="${Pt.ix}">
+          const pTick = stkRowTick(L.name, Pt.term);
+          const pDone = !!pTick;
+          const pCar = pDone && pTick.d !== stkToday() ? pTick.d : '';
+          const pUrg = byClock ? stkUrgOf(
+            Pt.jobs.reduce((a, j) => (j.due === null || j.due === undefined) ? a
+              : (a === null || j.due < a ? j.due : a), null), now, soonCut) : 'none';
+          return `<div class="stk-prow${pDone ? ' done' : ''}${pCar ? ' carried' : ''}${
+            pUrg === 'breached' ? ' brc' : (pUrg === 'soon' ? ' soon' : '')}" data-stk-ix="${Pt.ix}">
           <div class="stk-prow-main">
             <span class="stk-qty-big${piled ? ' many' : ''}" title="${escAttr(
               `${Pt.jobs.length} needed at ${esc(L.name)}` +
@@ -15020,20 +15785,76 @@ function stkRun() {
             <span class="stk-model">
               ${stkModelLabel(Pt, Pt.ix)}
               ${stkSubLabel(Pt)}
+              ${stkDueChip(Pt.jobs, now, soonCut)}
               ${stkMisLabel(Pt)}
             </span>
             <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
               Check stock <i class="ti ti-arrow-up-right"></i>
             </a>
-            <button class="stk-done${pDone ? ' on' : ''}" onclick="stkToggleDone(${Pt.ix})"
+            <button class="stk-done${pDone ? ' on' : ''}${pCar ? ' carried' : ''}" onclick="stkToggleDone(${Pt.ix})"
               aria-pressed="${pDone ? 'true' : 'false'}"
-              title="${escAttr(stkDoneTitle(pDone, L.name))}">${stkDoneBtnHtml(pDone)}</button>
+              title="${escAttr(stkDoneTitle(pDone, L.name, pCar))}">${stkDoneBtnHtml(pDone, pCar)}</button>
           </div>
           <div class="stk-prow-con${conCol ? '' : ' nocon'}">${buckets.map(([c, js]) =>
             (conCol ? stkConChip(c, js.length, Pt.ix) : '') + stkSiteLines(js)).join('')}</div>
         </div>`; }).join('')}
       </section>`;
     }).join('')}</div>` : ''}
+
+    ${stkBreached.length ? `<div class="al-vgrp${bOpen ? ' open' : ''}" id="stk-brc-grp" style="margin-top:16px;">
+      <button class="al-vgrp-hd" onclick="stkToggleGroup('brc')" aria-expanded="${bOpen}">
+        <i class="ti ti-chevron-right al-vgrp-chev${bOpen ? ' open' : ''}"></i>
+        <i class="ti ti-alarm-filled al-vgrp-ico bad"></i>
+        <span class="al-vgrp-l">Past their response time</span>
+        <span class="al-vgrp-n">${stkBreached.length.toLocaleString()}</span>
+        <span class="al-vgrp-note">worst first \u2014 each of these is a job the clock has already run out on, and it is waiting on a part</span>
+      </button>
+      ${bOpen ? `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Part</th><th>Was due</th><th>Over by</th>${madeCol ? '<th>Waiting</th>' : ''}<th>Looked up at</th></tr></thead>
+        <tbody>${stkBreached.map(h => `<tr>
+          <td class="pc">${h.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(h.id))}" target="_blank" rel="noopener" class="pa-jid">${esc(h.id)}</a>`
+            : 'row ' + (h.i + 2)}</td>
+          <td>${esc(h.site || '\u2014')}</td>
+          <td>${esc(h.model || '\u2014')}</td>
+          <td>${esc(stkClock(h.due))}</td>
+          <td><span class="stk-over">${esc(stkSpan(now - h.due))}</span></td>
+          ${madeCol ? `<td>${h.ageDays === null ? '\u2014'
+            : esc(h.ageDays + ' day' + (h.ageDays !== 1 ? 's' : ''))}</td>` : ''}
+          <td>${esc(h.loc || '\u2014')}${h.av && h.av.verdict === 'mismatch'
+            ? ` <span class="stk-mis-want" title="${escAttr('Zone ' + (h.zone || '(blank)')
+                + ' expects ' + h.av.expected)}">\u2014 zone expects ${esc(h.av.expected)}</span>` : ''}</td>
+        </tr>`).join('')}</tbody></table></div>` : ''}
+    </div>` : ''}
+
+    ${stkDateBad.length || nUnread ? `<div class="al-vgrp${dOpen ? ' open' : ''}" style="margin-top:16px;">
+      <button class="al-vgrp-hd" onclick="stkToggleGroup('dates')" aria-expanded="${dOpen}">
+        <i class="ti ti-chevron-right al-vgrp-chev${dOpen ? ' open' : ''}"></i>
+        <i class="ti ti-calendar-question al-vgrp-ico warn"></i>
+        <span class="al-vgrp-l">Dates that need a look</span>
+        <span class="al-vgrp-n">${(stkDateBad.length + nUnread).toLocaleString()}</span>
+        <span class="al-vgrp-note">${[
+          nUnread ? nUnread.toLocaleString() + ' of the ' + nDateCells.toLocaleString()
+            + ' date cells could not be read' : '',
+          stkDateBad.length ? stkDateBad.length.toLocaleString() + ' cannot both be true' : ''
+        ].filter(Boolean).join(' \u00b7 ')} \u2014 these are the rows the ordering above cannot speak for</span>
+      </button>
+      ${dOpen ? `${nUnread ? `<div class="al-vgrp-note" style="padding:0 16px 10px;display:block;">
+        A cell that could not be read is treated as having no date at all, so those rows sit at the
+        bottom of the board rather than being guessed at. Dates are read day-first; if this file is
+        month-first, that is what to check.</div>` : ''}
+      ${stkDateBad.length ? `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
+        <thead><tr><th>Job</th><th>Site</th><th>Created</th><th>Response due</th><th>Why</th></tr></thead>
+        <tbody>${stkDateBad.map(h => `<tr>
+          <td class="pc">${h.id
+            ? `<a href="${escAttr(buildHelpdeskUrl(h.id))}" target="_blank" rel="noopener" class="pa-jid">${esc(h.id)}</a>`
+            : 'row ' + (h.i + 2)}</td>
+          <td>${esc(h.site || '\u2014')}</td>
+          <td>${esc(h.made === null ? '\u2014' : stkClock(h.made))}</td>
+          <td>${esc(h.due === null ? '\u2014' : stkClock(h.due))}</td>
+          <td class="al-vgrp-why">${esc(h.dbad)}</td>
+        </tr>`).join('')}</tbody></table></div>` : ''}` : ''}
+    </div>` : ''}
 
     ${stkAllocBad.length ? `<div class="al-vgrp${aOpen ? ' open' : ''}" id="stk-alloc-grp" style="margin-top:16px;">
       <button class="al-vgrp-hd" onclick="stkToggleGroup('alloc')" aria-expanded="${aOpen}">
@@ -15126,8 +15947,11 @@ function stkRun() {
         </tr>`).join('')}</tbody></table></div>` : ''}
     </div>` : ''}`;
 
-  // The ticks from earlier this morning, back onto a freshly built board.
+  // The ticks you already made, back onto a freshly built board.
   stkPaintDone();
+  if (byClock) stkDueTimer();
+  // ...and the same file's whole allocation picture underneath it.
+  stkAllocFull();
 }
 
 // ---- Inbox: the files that arrive by email ---------------------------------
@@ -25642,6 +26466,20 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.0', type: 'minor', date: '17 Nov 2026', title: 'Stock Checks runs on the clock, and the whole allocation check moved in', changes: [
+    'Two new optional columns: <b>Created date</b> and <b>SLA response due</b>. Pick the response due one and the board stops being sorted by how many jobs a depot has and starts being sorted by the clock \u2014 which tells you where the work is, not what is on fire',
+    'One rule does the whole ordering: earliest due first. A job past its response time sorts ahead of one that is not, the most overdue ahead of the rest of those, and the next one to breach ahead of everything comfortable. They are the same question asked at different points on the clock',
+    '<b>Breached</b> takes the escalation \u2014 it is the only thing on the page that has already gone wrong. Wrong depot steps down to an ordinary tile while it is firing, because two things pulsing at once is two things ignored',
+    'A <b>Due next</b> tile that says what to do rather than what went wrong, and a breach chip on every row and every job number it applies to. A job can be carrying both warnings at once and wears both marks',
+    'The relative figures are repainted every minute against a fresh clock, so a page left open all morning never sits there saying &ldquo;due in 10m&rdquo; twenty minutes after it breached',
+    'Dates are read day-first and the time of day is kept \u2014 an SLA due at 09:00 and one due at 17:00 are not the same morning\u2019s work. A cell that cannot be read is treated as having no date rather than guessed at, and says so in <b>Dates that need a look</b>, along with any row where the created and due dates cannot both be true',
+    'Without a date column picked, nothing moves: the board is exactly the order it was before',
+    '<b>Ticks are remembered now.</b> A part still on tomorrow\u2019s list is a part that still has not turned up, and you already rang the warehouse about it \u2014 so the row comes back ticked instead of blank',
+    'Not silently, though. A tick made today reads &ldquo;Checked&rdquo; in green; one carried from a previous day reads &ldquo;yesterday&rdquo; or &ldquo;Fri&rdquo; in amber and is counted separately in the progress line. You did it, it is still here, and the board does not pretend otherwise. Kept for a fortnight',
+    '<b>The Allocation Validator is built into this page.</b> Not a copy of it \u2014 the validator itself now draws here, reading the technician and zone columns you already picked, over every row in the file rather than only the ones waiting on a part. One upload, both checks, and two pages that cannot drift apart',
+    'That brings the lot with it: the verdict tiles, the flagged list, the teaching controls for unknown zones and technicians, and the day\u2019s call list if you point it at a scheduled date column. It folds shut when there is nothing to action and opens itself when there is',
+    'Teaching it an answer from either page now re-runs both, since an answer you give it is global and the other board would otherwise sit there showing a judgement the app no longer believes',
+  ]},
   { ver: '4.46.2', type: 'patch', date: '16 Nov 2026', title: 'Stock Checks says it once', changes: [
     'The green banner said &ldquo;14 jobs are waiting on a replacement part, the other 62 rows were not&rdquo; directly above a tile saying &ldquo;14 \u2014 jobs of 76 in the file&rdquo;. The same sentence twice, and the tile is the one that shows its working',
     'The Download all button is gone with it, and so is the spreadsheet behind it \u2014 it handed back the file you had just uploaded with the page\u2019s own columns bolted on, which is not a thing anyone was going to open',
