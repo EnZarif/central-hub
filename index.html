@@ -62,6 +62,8 @@
     --teal: var(--accent); --teal-bg: var(--acc-dim); --teal-text: var(--accent);
     --blue-bg: var(--acc-dim); --blue-text: var(--accent);
     --amber-bg: rgba(242,180,92,0.13); --amber-text: #F2B45C;
+    --orange-bg: rgba(255,138,61,0.13); --orange-text: #FF8A3D;
+    --yellow-bg: rgba(239,217,74,0.13); --yellow-text: #EFD94A;
     --coral-bg: rgba(242,112,106,0.13); --coral-text: #F2706A;
     --green-bg: rgba(111,207,127,0.13); --green-text: #6FCF7F;
     --purple-bg: rgba(155,140,240,0.13); --purple-text: #9B8CF0;
@@ -3672,14 +3674,25 @@
   .stk-mis-has { color:var(--coral-text); font-weight:600; }
   .stk-mis-want { color:var(--green-text); font-weight:600; }
 
-  /* ---- The clock ----------------------------------------------------------
-     A breach and a wrong depot are both coral, because both are wrong, and
-     they are told apart by weight rather than by hue: the breach chip is
-     filled and reads out of the colour, the allocation chip is tinted and
-     reads into it. A breach has already happened; a wrong depot is about to.
+  /* ---- The clock: a traffic light counted in days ------------------------
+       red     already past its response time
+       orange  breaching today
+       yellow  breaching tomorrow
+       green   two days out or more
 
-     Amber is the page's "look closer" everywhere else and it means the same
-     here - due soon, not yet late. Nothing is wrong with an amber row. */
+     Days rather than hours, because that is the unit the question gets asked
+     in. Green is the board's resting state, so it earns a chip but no row
+     bar - a coloured edge on every comfortable row would only make the three
+     that want something harder to pick out.
+
+     Amber is kept out of this entirely. It sits between orange and yellow on
+     the wheel, and on this page it already means two other things: the notes
+     found it, and you ticked it on an earlier day.
+
+     A breach and a wrong depot are both coral, because both are wrong, and
+     they are told apart by weight rather than hue: the breach chip is filled
+     and reads out of the colour, the allocation chip is tinted and reads into
+     it. A breach has already happened; a wrong depot is about to. */
   .stk-due { display:inline-flex; align-items:center; gap:4px; margin-top:3px; font-size:10px;
     font-weight:700; letter-spacing:.02em; border-radius:5px; padding:2px 6px;
     width:fit-content; max-width:100%; white-space:nowrap; cursor:help;
@@ -3687,10 +3700,12 @@
   .stk-due .ti { font-size:11px; flex-shrink:0; }
   .stk-due.brc { color:var(--bg); background:var(--coral-text);
     border:0.5px solid var(--coral-text); font-weight:800; letter-spacing:.03em; }
-  .stk-due.soon { color:var(--amber-text); background:var(--amber-bg);
-    border:0.5px solid color-mix(in srgb, var(--amber-text) 34%, transparent); }
-  .stk-due.ok { color:var(--text-3); background:var(--surface2);
-    border:0.5px solid var(--border); font-weight:600; }
+  .stk-due.today { color:var(--orange-text); background:var(--orange-bg);
+    border:0.5px solid color-mix(in srgb, var(--orange-text) 44%, transparent); }
+  .stk-due.tmrw { color:var(--yellow-text); background:var(--yellow-bg);
+    border:0.5px solid color-mix(in srgb, var(--yellow-text) 34%, transparent); }
+  .stk-due.later { color:var(--green-text); background:var(--green-bg);
+    border:0.5px solid color-mix(in srgb, var(--green-text) 30%, transparent); font-weight:600; }
   .stk-due.age { color:var(--text-3); background:var(--surface2);
     border:0.5px solid var(--border); font-weight:600; }
 
@@ -3700,25 +3715,39 @@
   .stk-prow.brc { background:color-mix(in srgb, var(--coral-text) 7%, transparent);
     box-shadow:inset 3px 0 0 var(--coral-text); }
   .stk-prow.brc:hover { background:color-mix(in srgb, var(--coral-text) 11%, transparent); }
-  .stk-prow.soon { box-shadow:inset 3px 0 0 color-mix(in srgb, var(--amber-text) 72%, transparent); }
-  .stk-prow.soon:hover { background:color-mix(in srgb, var(--amber-text) 7%, transparent); }
-  /* A breached row that you have already checked still dims like any other -
-     the tick is the more recent fact about it - but it keeps its edge, so a
-     ticked breach is not invisible when you scan the card. */
+  .stk-prow.today { background:color-mix(in srgb, var(--orange-text) 5%, transparent);
+    box-shadow:inset 3px 0 0 var(--orange-text); }
+  .stk-prow.today:hover { background:color-mix(in srgb, var(--orange-text) 9%, transparent); }
+  .stk-prow.tmrw { box-shadow:inset 3px 0 0 color-mix(in srgb, var(--yellow-text) 78%, transparent); }
+  .stk-prow.tmrw:hover { background:color-mix(in srgb, var(--yellow-text) 6%, transparent); }
+  /* A row that has been checked still dims like any other - the tick is the
+     more recent fact about it - but it keeps its edge, so a breach you have
+     already rung about is not invisible when you scan the card. */
   .stk-prow.brc.done { box-shadow:inset 3px 0 0 color-mix(in srgb, var(--coral-text) 55%, transparent); }
+  .stk-prow.today.done { box-shadow:inset 3px 0 0 color-mix(in srgb, var(--orange-text) 55%, transparent); }
 
   /* The depot card, so the ordering explains itself: the card at the top is
-     at the top because of this. */
+     at the top because of this. Its resting border is already green, which is
+     the fourth light, so only three have to be stated. */
   .stk-card.brc { border-left-color:var(--coral-text); }
   .stk-card.brc:hover { box-shadow:0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--coral-text); }
   .stk-card.brc .stk-chd-n { color:var(--coral-text); }
-  .stk-chd-brc { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:800;
-    letter-spacing:.03em; border-radius:5px; padding:3px 7px; cursor:help;
-    color:var(--bg); background:var(--coral-text); font-variant-numeric:tabular-nums; }
-  .stk-chd-brc .ti { font-size:11px; }
+  .stk-card.today { border-left-color:var(--orange-text); }
+  .stk-card.today:hover { box-shadow:0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--orange-text); }
+  .stk-card.today .stk-chd-n { color:var(--orange-text); }
+  .stk-card.tmrw { border-left-color:var(--yellow-text); }
+  .stk-card.tmrw:hover { box-shadow:0 18px 34px -22px rgba(0,0,0,0.9), -3px 0 18px -6px var(--yellow-text); }
+  .stk-chd-brc, .stk-chd-today { display:inline-flex; align-items:center; gap:4px;
+    font-size:10px; font-weight:800; letter-spacing:.03em; border-radius:5px; padding:3px 7px;
+    cursor:help; color:var(--bg); font-variant-numeric:tabular-nums; }
+  .stk-chd-brc { background:var(--coral-text); }
+  .stk-chd-today { background:var(--orange-text); }
+  .stk-chd-brc .ti, .stk-chd-today .ti { font-size:11px; }
 
-  /* The job chip. It can be carrying both warnings at once, so the colour goes
-     to the breach - that one has already happened - and both marks are shown.
+  /* The job chip. It can be carrying two warnings at once, so the colour goes
+     to the clock - that is the one with a deadline on it - and both marks are
+     shown. Two days out keeps the ordinary link colour: green there would be
+     competing with whichever accent the theme is set to.
      .stk-site-j i is hidden to kill the dot separators, which would take
      either icon with it. */
   .stk-site-j a.brc, .stk-site-j > span.brc {
@@ -3726,10 +3755,36 @@
     border-color:color-mix(in srgb, var(--coral-text) 55%, transparent); }
   .stk-site-j a.brc:hover { background:color-mix(in srgb, var(--coral-text) 24%, var(--surface));
     border-color:var(--coral-text); }
+  .stk-site-j a.today, .stk-site-j > span.today {
+    color:var(--orange-text); background:var(--orange-bg); font-weight:700;
+    border-color:color-mix(in srgb, var(--orange-text) 50%, transparent); }
+  .stk-site-j a.today:hover { background:color-mix(in srgb, var(--orange-text) 22%, var(--surface));
+    border-color:var(--orange-text); }
+  .stk-site-j a.tmrw, .stk-site-j > span.tmrw {
+    color:var(--yellow-text); background:var(--yellow-bg); font-weight:700;
+    border-color:color-mix(in srgb, var(--yellow-text) 40%, transparent); }
+  .stk-site-j a.tmrw:hover { background:color-mix(in srgb, var(--yellow-text) 20%, var(--surface));
+    border-color:var(--yellow-text); }
   /* Rendered on every dated job and revealed by the class, so the minute timer
-     only has to toggle one class for a job that has just crossed the line. */
-  .stk-site-j a.brc i.stk-jbrc,
-  .stk-site-j > span.brc i.stk-jbrc { display:inline-flex; font-size:10px; margin-right:4px; }
+     only has to toggle one class for a job that has just crossed a line. */
+  .stk-site-j a.brc i.stk-jbrc, .stk-site-j > span.brc i.stk-jbrc,
+  .stk-site-j a.today i.stk-jbrc, .stk-site-j > span.today i.stk-jbrc {
+    display:inline-flex; font-size:10px; margin-right:4px; }
+
+  /* The key, under the tiles: four words, so the colours do not have to be
+     guessed at on the first morning. */
+  .stk-light { display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+    margin-top:10px; font-size:10.5px; color:var(--text-3); }
+  .stk-light-l { font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    font-size:9.5px; }
+  .stk-light-k { display:inline-flex; align-items:center; gap:5px; font-weight:700;
+    border-radius:5px; padding:2px 7px; background:var(--surface2);
+    border:0.5px solid var(--border); }
+  .stk-light-k i { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .stk-light-k.brc i { background:var(--coral-text); }
+  .stk-light-k.today i { background:var(--orange-text); }
+  .stk-light-k.tmrw i { background:var(--yellow-text); }
+  .stk-light-k.later i { background:var(--green-text); }
   /* How far past due, in the breach table. */
   .stk-over { color:var(--coral-text); font-weight:700; font-variant-numeric:tabular-nums; }
 
@@ -13783,16 +13838,13 @@ let stkNoteHits = [];         // rows counted because of their notes, not the co
 let stkNoteMaybe = [];        // rows the notes hint at but do not say outright
 let stkAllocBad = [];         // jobs whose technician does not belong to their zone
 let stkBreached = [];         // jobs already past their SLA response due time
-let stkDueSoon = [];          // jobs not breached yet but next in line to
+let stkDueToday = [];         // jobs whose response time runs out before tonight
 let stkDateBad = [];          // rows whose created and due dates do not add up
 let stkDueTick = null;        // the minute timer that keeps "due in 2h" honest
 const STK_CARRY_DAYS = 14;    // how long a tick is remembered while the row stays
-// What "about to breach" means. A four-hour window is a working half-day: long
-// enough to be worth warning about, short enough that the warning is not on
-// everything. If nothing at all falls inside it, the next few still light up,
-// because "which do I do next" has an answer on every list, not only busy ones.
-const STK_SOON_MS = 4 * 3600 * 1000;
-const STK_SOON_MIN = 3;
+// How long before an hours-and-minutes countdown is more use than a clock
+// time. Inside it a job is "due in 40m"; past it the time of day says more.
+const STK_COUNTDOWN_MS = 60 * 60 * 1000;
 const STK_MON = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6,
                   aug:7, sep:8, oct:9, nov:10, dec:11 };
 
@@ -14109,30 +14161,42 @@ function stkGrpCmp(a, b) {
   return a[0] - b[0] || a[1] - b[1];
 }
 
-// "About to breach" is a question about the list, not about the row: on a busy
-// morning it means the next four hours, and on a quiet one it means the next
-// few jobs, because "what do I do next" has an answer either way.
+// A traffic light, counted in days rather than in hours:
 //
-// Both are expressed as one number - the cut-off, in milliseconds - rather
-// than as a flag written onto each row. That is what lets the minute timer and
-// the renderer reach the same verdict without either of them being the one
-// that decides: they both call this with the same clock and get the same line.
-function stkSoonCut(dues, now) {
-  const ahead = dues.filter(d => d !== null && d !== undefined && d >= now)
-    .sort((a, b) => a - b);
-  if (!ahead.length) return now;
-  if (ahead[0] - now <= STK_SOON_MS) return now + STK_SOON_MS;
-  return ahead[Math.min(STK_SOON_MIN, ahead.length) - 1];
-}
-function stkUrgOf(due, now, cut) {
+//   red     already past its response time
+//   orange  breaching today
+//   yellow  breaching tomorrow
+//   green   two days out or more
+//
+// Days, because that is the unit the question is actually asked in. A job due
+// at 17:00 is today's problem at 09:00 and still today's problem at 16:30, and
+// a rolling four-hour window said nothing about it until half past one.
+//
+// It also needs no knowledge of the rest of the list, which is what lets the
+// minute timer and the renderer reach the same verdict independently: same
+// clock in, same colour out.
+//
+// Compared at local midnight rather than by dividing the gap by a day, so the
+// hour that daylight saving adds or removes cannot push a job into the wrong
+// colour on the two mornings a year it changes.
+function stkDayBucket(due, now) {
   if (due === null || due === undefined) return 'none';
-  return due < now ? 'breached' : (due <= cut ? 'soon' : 'ok');
+  if (due < now) return 'breached';
+  const a = new Date(now), b = new Date(due);
+  a.setHours(0, 0, 0, 0);
+  b.setHours(0, 0, 0, 0);
+  const days = Math.round((b.getTime() - a.getTime()) / 86400000);
+  return days <= 0 ? 'today' : (days === 1 ? 'tomorrow' : 'later');
 }
+// The class the colour hangs off. "tomorrow" is shortened because it is also
+// a CSS class name and a data attribute, and "later" carries no class at all
+// on a row - green is the board's resting state, so a green bar on every
+// comfortable row would only make the other three harder to pick out.
+const STK_URG_CLS = { breached: 'brc', today: 'today', tomorrow: 'tmrw', later: 'later' };
 
 // Which state each job is in, in one pass.
 function stkUrgPass(list, now) {
-  const cut = stkSoonCut(list.map(h => h.due), now);
-  list.forEach(h => { h.urg = stkUrgOf(h.due, now, cut); });
+  list.forEach(h => { h.urg = stkDayBucket(h.due, now); });
   // Dates that cannot both be true. Not a judgement about the job - a warning
   // that one of these two cells is wrong, which matters because the second one
   // is now deciding what order the page is in.
@@ -14146,7 +14210,6 @@ function stkUrgPass(list, now) {
     h.ageDays = (h.made === null || h.made === undefined) ? null
       : Math.max(0, Math.floor((now - h.made) / 86400000));
   });
-  return cut;
 }
 
 // What a part row says about the clock. The relative figure goes on the chip
@@ -14155,7 +14218,7 @@ function stkUrgPass(list, now) {
 //
 // Driven by a plain list of { due, made } so the renderer and the minute timer
 // can both call it - the timer has only the index to work from, not the file.
-function stkDueChip(clock, now, cut) {
+function stkDueChip(clock, now) {
   if (!clock || !clock.length) return '';
   const dated = clock.filter(c => c.due !== null && c.due !== undefined);
   if (!dated.length) {
@@ -14174,7 +14237,7 @@ function stkDueChip(clock, now, cut) {
   }
   const soonest = Math.min(...dated.map(c => c.due));
   const brc = dated.filter(c => c.due < now);
-  const st = stkUrgOf(soonest, now, cut);
+  const st = stkDayBucket(soonest, now);
   const tipAll = dated.length === 1 ? ''
     : ' The ' + dated.length + ' jobs on this row are due '
       + stkClock(soonest) + ' through ' + stkClock(Math.max(...dated.map(c => c.due))) + '.';
@@ -14191,12 +14254,17 @@ function stkDueChip(clock, now, cut) {
       + '</span>';
   }
   const left = soonest - now;
-  return '<span class="stk-due ' + (st === 'soon' ? 'soon' : 'ok')
+  const WORD = { today: 'today', tomorrow: 'tomorrow', later: 'in two days or more' };
+  // Under the hour the countdown says more than the clock time does; past it
+  // the clock time is what you would quote at somebody anyway.
+  const label = left <= STK_COUNTDOWN_MS
+    ? 'due in ' + stkSpan(left) : 'due ' + stkClock(soonest);
+  return '<span class="stk-due ' + STK_URG_CLS[st]
     + '" data-stk-due="' + soonest + '" title="' + escAttr(
-      'The next of these is due ' + stkClock(soonest) + ', in ' + stkSpan(left) + '.'
-      + (st === 'soon' ? ' That is the soonest work on this board.' : '') + tipAll)
-    + '"><i class="ti ti-' + (st === 'soon' ? 'clock-exclamation' : 'clock') + '"></i>'
-    + (st === 'soon' ? 'due in ' + stkSpan(left) : 'due ' + stkClock(soonest)) + '</span>';
+      'The next of these is due ' + stkClock(soonest) + ', in ' + stkSpan(left)
+      + ' \u2014 so it breaches ' + WORD[st] + '.' + tipAll)
+    + '"><i class="ti ti-' + (st === 'today' ? 'clock-exclamation' : 'clock') + '"></i>'
+    + label + '</span>';
 }
 
 // A relative figure goes stale, and this page is left open all morning. Rather
@@ -14207,33 +14275,39 @@ function stkPaintDue() {
   const out = document.getElementById('stk-result');
   if (!out || !out.querySelector('.stk-prow')) return;
   const now = Date.now();
-  const all = [];
-  stkRowIndex.forEach(g => { if (g && g.clock) g.clock.forEach(c => all.push(c.due)); });
-  if (!all.some(d => d !== null && d !== undefined)) return;
-  const cut = stkSoonCut(all, now);
+  if (!stkRowIndex.some(g => g && g.clock
+      && g.clock.some(c => c.due !== null && c.due !== undefined))) return;
   let brc = 0;
   out.querySelectorAll('.stk-prow[data-stk-ix]').forEach(el => {
     const g = stkRowIndex[+el.dataset.stkIx];
     if (!g || !g.clock) return;
     const dated = g.clock.filter(c => c.due !== null && c.due !== undefined);
     const soonest = dated.length ? Math.min(...dated.map(c => c.due)) : null;
-    const st = stkUrgOf(soonest, now, cut);
+    const st = stkDayBucket(soonest, now);
     if (st === 'breached') brc++;
-    el.classList.toggle('brc', st === 'breached');
-    el.classList.toggle('soon', st === 'soon');
+    ['brc', 'today', 'tmrw', 'later'].forEach(c =>
+      el.classList.toggle(c, STK_URG_CLS[st] === c));
     const chip = el.querySelector('.stk-due');
     if (chip) {
-      const fresh = stkDueChip(g.clock, now, cut);
+      const fresh = stkDueChip(g.clock, now);
       if (fresh) chip.outerHTML = fresh; else chip.remove();
     }
-    // The individual job numbers on the row, so one that has just crossed the
-    // line is not sitting there unmarked under a row that says it breached.
+    // The individual job numbers on the row, so one that has just crossed a
+    // line is not sitting there the old colour under a row that has moved.
     el.querySelectorAll('.stk-jl[data-jdue]').forEach(a => {
-      a.classList.toggle('brc', +a.dataset.jdue < now);
+      const jb = stkDayBucket(+a.dataset.jdue, now);
+      a.classList.toggle('brc', jb === 'breached');
+      a.classList.toggle('today', jb === 'today');
+      a.classList.toggle('tmrw', jb === 'tomorrow');
     });
   });
+  // The card wears its worst row, so the colour of the board's left edge is
+  // the same question answered at depot level.
   out.querySelectorAll('.stk-card[data-stk-lix]').forEach(card => {
-    card.classList.toggle('brc', !!card.querySelector('.stk-prow.brc'));
+    const worst = card.querySelector('.stk-prow.brc') ? 'brc'
+      : card.querySelector('.stk-prow.today') ? 'today'
+      : card.querySelector('.stk-prow.tmrw') ? 'tmrw' : '';
+    ['brc', 'today', 'tmrw'].forEach(c => card.classList.toggle(c, worst === c));
   });
   // The escalation's number, kept honest in place. Re-running the whole page
   // on a timer would fade forty cards back in while you were reading them.
@@ -15171,7 +15245,12 @@ function stkJobLinks(jobs) {
     const tip = why.length ? ' title="' + escAttr(why.join('. ')) + '"' : '';
     const mark = (dated ? '<i class="ti ti-alarm-filled stk-jbrc"></i>' : '')
       + (bad ? '<i class="ti ti-alert-triangle stk-jmis"></i>' : '');
-    const cls = brc ? ' brc' : (bad ? ' mis' : '');
+    // Only the three that want something from you. A job two days out stays
+    // the ordinary link colour, because green here would be competing with
+    // whichever accent the theme is set to.
+    const jb = j.urg || 'none';
+    const cls = jb === 'breached' ? ' brc' : jb === 'today' ? ' today'
+      : jb === 'tomorrow' ? ' tmrw' : (bad ? ' mis' : '');
     const dd = dated ? ` data-jdue="${j.due}"` : '';
     return j.id
       ? `<a class="stk-jl${cls}"${dd}${tip} href="${escAttr(buildHelpdeskUrl(j.id))}" target="_blank" rel="noopener">${mark}${esc(j.id)}</a>`
@@ -15494,9 +15573,9 @@ function stkRun() {
   });
   // The clock, judged over what is on screen rather than over the file: the
   // jobs you have hidden are not the next thing you are going to do.
-  const soonCut = stkUrgPass(shown, now);
+  stkUrgPass(shown, now);
   stkBreached = shown.filter(h => h.urg === 'breached').sort(stkRankCmp);
-  stkDueSoon = shown.filter(h => h.urg === 'soon').sort(stkRankCmp);
+  stkDueToday = shown.filter(h => h.urg === 'today').sort(stkRankCmp);
   stkDateBad = shown.filter(h => h.dbad);
   const byClock = !!(dueCol || madeCol);
   const nextDue = shown.filter(h => h.due !== null && h.due !== undefined && h.due >= now)
@@ -15630,17 +15709,24 @@ function stkRun() {
 
   // Not an escalation - the opposite. This is the one tile on the page that
   // says what to do next rather than what has gone wrong.
+  // The tile takes the colour of the day the next one falls on, so the row of
+  // figures reads the same light as the board under it.
+  const nextBucket = stkDayBucket(nextDue, now);
+  const NEXT_AC = { today: 'var(--orange-text)', tomorrow: 'var(--yellow-text)',
+                    later: 'var(--green-text)' };
   const dueTile = !dueCol ? '' : (nextDue === null
     ? `<div class="z-tile zero" style="--ac:var(--text-3)">
         <div class="z-tile-k">Due next</div>
         <div class="z-tile-v">\u2014</div>
         <div class="z-tile-s">nothing left with a response time ahead of it</div>
       </div>`
-    : `<div class="z-tile" style="--ac:var(--amber-text)">
+    : `<div class="z-tile" style="--ac:${NEXT_AC[nextBucket] || 'var(--green-text)'}">
         <div class="z-tile-k">Due next</div>
         <div class="z-tile-v">${esc(stkSpan(nextDue - now))}</div>
-        <div class="z-tile-s">${esc(stkClock(nextDue))}${stkDueSoon.length > 1
-          ? ' \u00b7 ' + stkDueSoon.length.toLocaleString() + ' in the same window' : ''}</div>
+        <div class="z-tile-s">${esc(stkClock(nextDue))}${stkDueToday.length
+          ? ' \u00b7 ' + stkDueToday.length.toLocaleString() + ' breach'
+            + (stkDueToday.length === 1 ? 'es' : '') + ' today'
+          : ' \u00b7 nothing else breaches today'}</div>
       </div>`);
 
   const allocTile = !zoneCol ? '' : (stkAllocBad.length
@@ -15661,6 +15747,26 @@ function stkRun() {
         <div class="z-tile-s">every allocation agrees with its zone${allocUnsure
           ? ' \u00b7 ' + allocUnsure.toLocaleString() + ' could not be judged' : ''}</div>
       </div>`);
+
+  const lightKey = (!dueCol || !shown.length) ? '' : (() => {
+    const n = k => shown.filter(h => h.urg === k).length;
+    const KEY = [
+      ['brc', 'breached', 'Breached', 'already past its response time'],
+      ['today', 'today', 'Today', 'breaches before tonight'],
+      ['tmrw', 'tomorrow', 'Tomorrow', 'breaches tomorrow'],
+      ['later', 'later', 'Two days or more', 'nothing due on it yet']
+    ];
+    const undated = n('none');
+    return `<div class="stk-light">
+      <span class="stk-light-l">Response time</span>
+      ${KEY.map(([cls, key, label, why]) => `<span class="stk-light-k ${cls}"
+        title="${escAttr(label + ' \u2014 ' + why)}"><i></i>${label} ${n(key).toLocaleString()}</span>`).join('')}
+      ${undated ? `<span class="stk-light-k" title="${escAttr(
+        'No response time on these, so the light cannot say anything about them \u2014 they sit at the'
+        + ' bottom of the board, oldest first')}"><i style="background:var(--text-3)"></i>No due time ${
+        undated.toLocaleString()}</span>` : ''}
+    </div>`;
+  })();
 
   const stkTiles = !shown.length ? '' : `<div class="z-tiles">
     ${stkBreached.length ? brcTile : ''}
@@ -15715,6 +15821,8 @@ function stkRun() {
 
     ${stkTiles}
 
+    ${lightKey}
+
     ${stkProgHtml()}
 
     ${shown.length ? `<div class="stk-seg-row">
@@ -15737,7 +15845,12 @@ function stkRun() {
       const lCar = L.partList.filter(Pt => stkRowCarried(L.name, Pt.term)).length;
       const lFull = L.partList.length > 0 && lDone === L.partList.length;
       const lBrc = L.jobs.filter(h => h.urg === 'breached').length;
-      return `<section class="stk-card${cls}${lFull ? ' all-done' : ''}${lBrc ? ' brc' : ''}" data-stk-lix="${L.lix}"
+      const lToday = L.jobs.filter(h => h.urg === 'today').length;
+      // Green is the card's resting colour already, so the light only has to
+      // say the three things that are not "fine".
+      const lLight = lBrc ? ' brc' : lToday ? ' today'
+        : L.jobs.some(h => h.urg === 'tomorrow') ? ' tmrw' : '';
+      return `<section class="stk-card${cls}${lFull ? ' all-done' : ''}${lLight}" data-stk-lix="${L.lix}"
         style="animation-delay:${Math.min(i, 12) * 0.03}s">
         <header class="stk-chd">
           <span class="stk-chd-n${L.read ? ' read' : ''}"${L.read ? ` title="${escAttr(L.read)}"` : ''}>${esc(L.name)}</span>
@@ -15746,6 +15859,10 @@ function stkRun() {
             + ' job' + (L.n !== 1 ? 's' : '') + ' at this depot ' + (lBrc === 1 ? 'is' : 'are')
             + ' already past its SLA response time, which is why this card is at the top')}"
             ><i class="ti ti-alarm-filled"></i>${lBrc.toLocaleString()} breached</span>` : ''}
+          ${lToday ? `<span class="stk-chd-today" title="${escAttr(lToday + ' of the ' + L.n
+            + ' job' + (L.n !== 1 ? 's' : '') + ' at this depot ' + (lToday === 1 ? 'runs' : 'run')
+            + ' out of response time before tonight')}"
+            ><i class="ti ti-clock-exclamation"></i>${lToday.toLocaleString()} due today</span>` : ''}
           <span class="stk-chd-prog${lFull ? ' full' : ''}">${stkLocProgText(lDone, L.partList.length, lCar)}</span>
           <span class="stk-chd-from">${L.techs.size === 1
             ? esc([...L.techs][0]) : `from ${L.techs.size} technicians`}</span>
@@ -15770,11 +15887,11 @@ function stkRun() {
           const pTick = stkRowTick(L.name, Pt.term);
           const pDone = !!pTick;
           const pCar = pDone && pTick.d !== stkToday() ? pTick.d : '';
-          const pUrg = byClock ? stkUrgOf(
+          const pUrg = byClock ? stkDayBucket(
             Pt.jobs.reduce((a, j) => (j.due === null || j.due === undefined) ? a
-              : (a === null || j.due < a ? j.due : a), null), now, soonCut) : 'none';
+              : (a === null || j.due < a ? j.due : a), null), now) : 'none';
           return `<div class="stk-prow${pDone ? ' done' : ''}${pCar ? ' carried' : ''}${
-            pUrg === 'breached' ? ' brc' : (pUrg === 'soon' ? ' soon' : '')}" data-stk-ix="${Pt.ix}">
+            STK_URG_CLS[pUrg] ? ' ' + STK_URG_CLS[pUrg] : ''}" data-stk-ix="${Pt.ix}">
           <div class="stk-prow-main">
             <span class="stk-qty-big${piled ? ' many' : ''}" title="${escAttr(
               `${Pt.jobs.length} needed at ${esc(L.name)}` +
@@ -15785,7 +15902,7 @@ function stkRun() {
             <span class="stk-model">
               ${stkModelLabel(Pt, Pt.ix)}
               ${stkSubLabel(Pt)}
-              ${stkDueChip(Pt.jobs, now, soonCut)}
+              ${stkDueChip(Pt.jobs, now)}
               ${stkMisLabel(Pt)}
             </span>
             <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
@@ -26466,6 +26583,15 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.1', type: 'patch', date: '17 Nov 2026', title: 'Stock Checks: a traffic light on the response time', changes: [
+    'Four colours, counted in days rather than hours: <b>red</b> already past its response time, <b>orange</b> breaching today, <b>yellow</b> breaching tomorrow, <b>green</b> two days out or more',
+    'Days, because that is the unit the question gets asked in. A job due at 17:00 is today\u2019s problem at 09:00 and still today\u2019s problem at half four \u2014 the old rolling four-hour window said nothing about it until lunchtime',
+    'The light is on the part row, the job numbers under it, the depot card\u2019s left edge and the Due next tile, so the same question is answered at every level you look at. Green earns a chip but no row bar: a coloured edge on every comfortable row would only make the three that want something harder to pick out',
+    'A key under the tiles names all four and counts what is in each, so the colours do not have to be guessed at on the first morning. Rows with no response time on them are counted there too, since the light cannot speak for those',
+    'Under an hour the chip counts down \u2014 &ldquo;due in 40m&rdquo;. Past that it gives the time of day, because that is what you would quote at somebody anyway',
+    'Amber is kept out of the light entirely. It sits between orange and yellow on the wheel, and on this page it already means two other things: the notes found it, and you ticked it on an earlier day',
+    'The day is compared at local midnight rather than by dividing the gap by twenty-four hours, so the hour daylight saving adds or removes cannot push a job into the wrong colour on the two mornings a year it changes',
+  ]},
   { ver: '4.47.0', type: 'minor', date: '17 Nov 2026', title: 'Stock Checks runs on the clock, and the whole allocation check moved in', changes: [
     'Two new optional columns: <b>Created date</b> and <b>SLA response due</b>. Pick the response due one and the board stops being sorted by how many jobs a depot has and starts being sorted by the clock \u2014 which tells you where the work is, not what is on fire',
     'One rule does the whole ordering: earliest due first. A job past its response time sorts ahead of one that is not, the most overdue ahead of the rest of those, and the next one to breach ahead of everything comfortable. They are the same question asked at different points on the clock',
