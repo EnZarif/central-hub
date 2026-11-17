@@ -1733,6 +1733,9 @@
   .check-tomorrow-btn.active { background: var(--purple-text); color: #000; }
   .focus-mode-banner { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--purple-text); background: var(--purple-bg); border: 0.5px solid var(--purple-text); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; animation: fadeIn 0.15s ease; }
   .focus-mode-banner i { font-size: 15px; flex-shrink: 0; }
+  .focus-mode-banner b { color: var(--text); font-weight: 700; }
+  .task-cal-btn#focus-mode-btn.active { background: var(--purple-bg); color: var(--purple-text);
+    border-color: color-mix(in srgb, var(--purple-text) 50%, transparent); }
   .focus-mode-banner button { margin-left: auto; flex-shrink: 0; font-size: 11.5px; font-weight: 600; padding: 4px 11px; border-radius: 16px; border: 1px solid var(--purple-text); background: transparent; color: var(--purple-text); cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s; }
   .focus-mode-banner button:hover { background: var(--purple-text); color: #000; }
 
@@ -5032,6 +5035,13 @@
   .task-hub-pills { display: flex; gap: 5px; flex-wrap: wrap; }
   .thp { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border-md); cursor: pointer; background: none; font-family: inherit; color: var(--text-3); transition: all .12s; display: flex; align-items: center; gap: 4px; }
   .thp.active { background: var(--surface); color: var(--text); border-color: var(--border-md); }
+  /* The tag dropdown sits in the same row, so it is shaped like the pills. */
+  .task-tag-v:empty { display: none; }
+  .task-tag-v select.hub-pill { font-size: 11px; font-weight: 600; padding: 4px 9px;
+    border-radius: 20px; border: 0.5px solid var(--border-md); background: none;
+    font-family: inherit; color: var(--text-3); cursor: pointer; transition: all .12s; }
+  .task-tag-v select.hub-pill:hover { color: var(--text); border-color: var(--text-2); }
+  .task-tag-v select.hub-pill option { background: var(--surface); color: var(--text); }
   .thp.thp-hd.active { background: var(--teal-bg); color: var(--teal-text); border-color: rgba(74,158,232,0.3); }
   .thp.thp-pj.active { background: var(--amber-bg); color: var(--amber-text); border-color: rgba(232,168,74,0.3); }
   .thp.thp-ps.active { background: var(--purple-bg); color: var(--purple-text); border-color: rgba(127,119,221,0.3); }
@@ -5993,6 +6003,7 @@
           <span id="s-streak-l" style="display:none">day streak</span>
           <div id="smart-sched-hint" style="display:none"><span id="smart-sched-chips"></span></div>
           <div id="day-mode-banner" class="day-mode-banner" style="display:none;"></div>
+          <div id="focus-banner" style="display:none;"></div>
         </div>
 
       </div>
@@ -6010,10 +6021,16 @@
         <button class="thp thp-hd" data-hub="helpdesk" onclick="setTaskHubFilter('helpdesk')">📞 Helpdesk</button>
         <button class="thp thp-pj" data-hub="projects" onclick="setTaskHubFilter('projects')">📁 Projects</button>
         <button class="thp thp-ps" data-hub="personal" onclick="setTaskHubFilter('personal')">👤 Personal</button>
+        <!-- The tag dropdown. It was only ever drawn into the hidden legacy
+             bar further down, so the tags you put on tasks could not be
+             filtered by. Draws nothing at all until something is tagged. -->
+        <div id="task-tag-filter-holder-visible" class="task-tag-v"></div>
       </div>
       <button class="task-cal-btn" onclick="switchTab('date')" title="Upcoming dated tasks"><i class="ti ti-calendar-month"></i> Dates</button>
       <button class="task-cal-btn" id="bulk-select-btn" onclick="toggleBulkSelectMode()"
         title="Pick several tasks at once, then snooze or delete the lot"><i class="ti ti-checkbox"></i> Select</button>
+      <button class="task-cal-btn" id="focus-mode-btn" onclick="toggleFocusMode()"
+        title="Narrow today's board to what is still left to do"><i class="ti ti-target"></i> Focus</button>
       <!-- Keep hidden stat/filter elements JS still needs -->
       <div id="task-hub-filter-bar" style="display:none">
         <button class="hub-pill hp-all active" data-hub="all" onclick="setTaskHubFilter('all')"></button>
@@ -7034,18 +7051,9 @@
             </label>
           </div>
         </div>
-        <div class="settings-row">
-          <div class="settings-row-info">
-            <div class="settings-row-label">Show task hero section</div>
-            <div class="settings-row-desc">The summary banner with progress bar at the top of Tasks</div>
-          </div>
-          <div class="settings-row-ctrl">
-            <label class="toggle-switch">
-              <input type="checkbox" id="settings-show-hero" checked onchange="applySettings()">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
+        <!-- "Show task hero section" was here. The panel it showed and hid
+             went in a redesign; the switch outlived it and had nothing on the
+             other end, so it is gone with the rest of its plumbing. -->
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">Compact task cards</div>
@@ -9547,11 +9555,42 @@ let taskHubFilter = 'all';
 const FOCUS_MODE_COUNT = 2;
 let focusMode = false;
 let _backlogOpen = false;
+// ---- Focus mode ---------------------------------------------------------
+// It used to save and reload a setting that nothing read, so switching it on
+// changed nothing: the only thing it ever did was colour a button that was
+// not in the markup. The banner it was meant to show had been sitting in the
+// stylesheet, unused, the whole time.
+//
+// What it does: narrows today's board to what is actually left to do -
+// anything already ticked goes, and so does anything you marked LOW. The
+// figures above the board are deliberately NOT narrowed. They are what tells
+// you the hidden ones are still there, and a mode that quietly changed your
+// counts would be worse than one that did nothing.
+//
+// Today only. The other tabs are lists you go to on purpose.
+function focusKeeps(t) {
+  return !isDone(t.id) && t.priority !== 'LOW';
+}
+function renderFocusBanner(shown, total) {
+  const el = document.getElementById('focus-banner');
+  if (!el) return;
+  if (!focusMode) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const hidden = total - shown;
+  el.style.display = '';
+  el.className = 'focus-mode-banner';
+  el.innerHTML = `<i class="ti ti-target"></i>
+    <span>${hidden
+      ? `Focus mode \u2014 showing the <b>${shown}</b> still to do. <b>${hidden}</b>
+         ${hidden === 1 ? 'is' : 'are'} hidden: done, or marked low.`
+      : 'Focus mode \u2014 nothing hidden, everything on this board still needs doing.'}</span>
+    <button onclick="toggleFocusMode()">Turn off</button>`;
+}
 function toggleFocusMode() {
   focusMode = !focusMode;
   dbSet('zarif_focus_mode', focusMode);
-  // Nothing else reads focusMode, so this is a stub: the only thing the mode
-  // has ever done is colour a button that is not in the markup.
+  if (focusMode && typeof showToast === 'function') {
+    showToast('<i class="ti ti-target"></i>Focus mode \u2014 done and low-priority tasks hidden', 2600);
+  }
   renderTasks();
 }
 
@@ -21340,6 +21379,8 @@ function animateGhostRing(el, pctEl, targetPct) {
 
 function renderTasks() {
   if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
+  const fbtn = document.getElementById('focus-mode-btn');
+  if (fbtn) fbtn.classList.toggle('active', focusMode);
   renderTaskTagFilter();
   renderBulkBar();
   const selBtn = document.getElementById('bulk-select-btn');
@@ -21384,11 +21425,19 @@ function renderTasks() {
 
   if (currentTab === 'today') {
     if (listEl) listEl.style.display = 'none';
-    renderSchedCardM(todayTasks);
-    renderHubTaskGridM(todayTasks);
+    // Focus mode narrows the board, not the figures above it. Those stay on
+    // the full list on purpose: they are what tells you the hidden ones are
+    // still there, and a mode that quietly changed your counts would be
+    // worse than one that did nothing.
+    const board = focusMode ? todayTasks.filter(focusKeeps) : todayTasks;
+    renderFocusBanner(board.length, todayTasks.length);
+    renderSchedCardM(board);
+    renderHubTaskGridM(board);
     renderBacklogM();
     return;
   }
+  // Off the Today tab there is nothing for it to narrow, so it says nothing.
+  renderFocusBanner(0, 0);
 
   // Non-today tabs: hide new containers, show flat list
   if (schedEl) schedEl.style.display = 'none';
@@ -26703,6 +26752,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.5', type: 'patch', date: '17 Nov 2026', title: 'Focus mode does something now, and your tags are filterable', changes: [
+    '<b>Focus mode works.</b> It used to save and reload a setting nothing read, so switching it on changed nothing at all \u2014 and the banner it was meant to show had been sitting in the stylesheet, unused, the whole time',
+    'What it does: narrows today\u2019s board to what is actually left \u2014 anything already ticked goes, and so does anything marked low. The figures above the board stay on the full list on purpose, because they are what tells you the hidden ones are still there. A banner says how many went and gives you a way out',
+    'Today only. The other tabs are lists you go to on purpose, so it leaves them alone',
+    '<b>Your task tags are filterable again.</b> The dropdown has always been built, and only ever drawn into a container that is display:none, so the tags you were putting on tasks could not be used for anything. It sits with the hub pills now, and stays out of the way until something is actually tagged',
+    'Removed the last of the task hero: the Settings switch for showing it controlled a panel taken out in a redesign, so it was a toggle with nothing on the other end. The switch, the setting and the four pieces of script behind it are gone',
+  ]},
   { ver: '4.47.4', type: 'patch', date: '17 Nov 2026', title: 'Operator trends were filed under the wrong day, and five things on screen did nothing', changes: [
     '<b>The operator trend was recording the wrong date.</b> A report is about the day before you run it, so Monday\u2019s figures were being filed under Tuesday \u2014 and with more than one file loaded, only the earliest was ever recorded and the rest were dropped. &ldquo;Their last ten recorded days&rdquo; was really &ldquo;the last ten times I opened this page&rdquo;',
     'Each file\u2019s figures now go under the day that file is about, read from its own filename, and every loaded file is recorded rather than just the first. The comparison also leaves out the day being judged, which it previously could not do \u2014 a rate was being measured against an average that included itself',
@@ -27838,9 +27894,6 @@ function loadSettings() {
   const sidebarEl = document.getElementById('settings-show-sidebar');
   if (sidebarEl) sidebarEl.checked = s.showSidebar !== false;
 
-  const heroEl = document.getElementById('settings-show-hero');
-  if (heroEl) heroEl.checked = s.showHero !== false;
-
   const compactEl = document.getElementById('settings-compact');
   if (compactEl) compactEl.checked = !!s.compact;
 
@@ -27862,8 +27915,6 @@ function applySettings(s) {
     s = dbGet('zarif_settings') || {};
     const sidebarEl = document.getElementById('settings-show-sidebar');
     if (sidebarEl) s.showSidebar = sidebarEl.checked;
-    const heroEl = document.getElementById('settings-show-hero');
-    if (heroEl) s.showHero = heroEl.checked;
     const compactEl = document.getElementById('settings-compact');
     if (compactEl) s.compact = compactEl.checked;
     const nameEl = document.getElementById('settings-display-name');
@@ -27873,18 +27924,15 @@ function applySettings(s) {
   }
 
   // Display name — the name itself picks up the custom accent colour (or theme default)
-  const greetEl = document.querySelector('.task-hero-greeting');
-  if (greetEl) greetEl.innerHTML = `Hey, <span style="color:var(--teal-text)">${esc(s.displayName || 'Zarif')}</span>`;
-
   // Sidebar visibility
   const sidebar = document.querySelector('.tasks-sidebar');
   if (sidebar) sidebar.style.display = s.showSidebar !== false ? '' : 'none';
   const layout = document.querySelector('.tasks-layout');
   if (layout) layout.style.gridTemplateColumns = s.showSidebar !== false ? '' : '1fr';
 
-  // Hero section
-  const hero = document.querySelector('.task-hero');
-  if (hero) hero.style.display = s.showHero !== false ? '' : 'none';
+  // (A "show hero panel" setting lived here, with a checkbox that was never
+  // in the markup and a panel that was taken out in a redesign. All three
+  // pieces of it are gone now.)
 
   // Compact
   document.body.classList.toggle('compact-mode', !!s.compact);
@@ -27961,8 +28009,6 @@ function saveAppSettings() {
   s.displayName = (nameEl ? nameEl.value.trim() : '') || 'Zarif';
   const sidebarEl = document.getElementById('settings-show-sidebar');
   s.showSidebar = sidebarEl ? sidebarEl.checked : true;
-  const heroEl = document.getElementById('settings-show-hero');
-  s.showHero = heroEl ? heroEl.checked : true;
   const compactEl = document.getElementById('settings-compact');
   s.compact = compactEl ? compactEl.checked : false;
   const soundEl = document.getElementById('settings-sound-enabled');
