@@ -690,7 +690,7 @@
   #page-allocvalidate .header, #page-stock .header, #page-alloccheck .header,
   #page-exceptions .header, #page-morning .header,
   #page-kpi .header, #page-suburbcheck .header, #page-message .header,
-  #page-templates .header, #page-meetings .header {
+  #page-templates .header, #page-meetings .header, #page-escalations .header {
     align-items: center; gap: 14px; margin-bottom: 1.4rem;
     padding: 15px 18px; border-radius: 16px;
     background: linear-gradient(170deg, color-mix(in srgb, var(--surface) 86%, transparent), color-mix(in srgb, var(--bg) 70%, transparent));
@@ -702,7 +702,8 @@
   #page-morning .header::after,
   #page-alloccheck .header::after, #page-kpi .header::after,
   #page-suburbcheck .header::after, #page-message .header::after,
-  #page-templates .header::after, #page-meetings .header::after {
+  #page-templates .header::after, #page-meetings .header::after,
+  #page-escalations .header::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
     transform-origin: left;
     background: linear-gradient(90deg, var(--th, var(--teal-text)), color-mix(in srgb, var(--well-1) 70%, transparent) 55%, transparent);
@@ -726,7 +727,8 @@
   #page-allocvalidate .header h1, #page-stock .header h1, #page-alloccheck .header h1,
   #page-exceptions .header h1, #page-morning .header h1,
   #page-kpi .header h1, #page-suburbcheck .header h1, #page-message .header h1,
-  #page-templates .header h1, #page-meetings .header h1 {
+  #page-templates .header h1, #page-meetings .header h1,
+  #page-escalations .header h1 {
     font-family: 'Archivo', 'Inter', system-ui, sans-serif;
     font-size: 19px; font-weight: 700; letter-spacing: -0.02em; gap: 12px;
   }
@@ -734,7 +736,8 @@
   #page-allocvalidate .header h1 i, #page-stock .header h1 i, #page-alloccheck .header h1 i,
   #page-exceptions .header h1 i, #page-morning .header h1 i,
   #page-kpi .header h1 i, #page-suburbcheck .header h1 i, #page-message .header h1 i,
-  #page-templates .header h1 i, #page-meetings .header h1 i {
+  #page-templates .header h1 i, #page-meetings .header h1 i,
+  #page-escalations .header h1 i {
     width: 34px; height: 34px; border-radius: 10px; font-size: 17px;
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     color: var(--th, var(--teal-text));
@@ -750,6 +753,7 @@
   #page-notes       { --th: var(--pink-text); }
   #page-allocvalidate { --th: var(--coral-text); }
   #page-stock         { --th: var(--green-text); }
+  #page-escalations   { --th: var(--purple-text); }
   #page-alloccheck    { --th: var(--teal-text); }
   #page-kpi           { --th: var(--amber-text); }
   #page-suburbcheck   { --th: var(--amber-text); }
@@ -3792,6 +3796,143 @@
   .z-tile.escalate.quiet .z-esc-go { display:none; }
   @media (max-width: 760px) { .z-tile.escalate.quiet { grid-column:1 / -1; } }
 
+  /* ---- ESCALATION REVIEW ----------------------------------------------
+     The page has one job - hand over a list of job numbers - so the number
+     and the button that copies it are the largest things on it, and the
+     numbers themselves are printed underneath where they can be read before
+     they are pasted. Everything below that exists to justify the list. */
+  .esr-cfg { overflow:hidden; max-height:1400px; opacity:1; margin-bottom:0;
+    transition:max-height .42s cubic-bezier(.22,.9,.26,1), opacity .3s, margin-bottom .42s; }
+  .esr-cfg.shut { max-height:0; opacity:0; margin-bottom:-16px; }
+  .esr-bar { overflow:hidden; max-height:0; opacity:0;
+    transition:max-height .42s cubic-bezier(.22,.9,.26,1), opacity .3s; }
+  .esr-bar.open { max-height:80px; opacity:1; }
+  .esr-bar-btn { display:flex; align-items:center; gap:11px; width:100%; font-family:inherit; text-align:left;
+    padding:12px 15px; border-radius:12px; background:var(--surface); border:0.5px solid var(--border);
+    color:var(--text); cursor:pointer; transition:border-color .18s; }
+  .esr-bar-btn:hover { border-color:var(--purple-text); }
+  .esr-bar-tick { font-size:15px; color:var(--purple-text); }
+  .esr-bar-n { font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .esr-bar-cols { font-size:12px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .esr-bar-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; font-size:11.5px;
+    color:var(--text-3); white-space:nowrap; }
+  @media (prefers-reduced-motion: reduce) { .esr-cfg, .esr-bar { transition:none !important; } }
+
+  /* The headline. Accent rail in the tool's colour, and the count carries the
+     weight because it is the answer to the only question being asked. */
+  .esr-top { display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    padding:18px 20px; border-radius:16px; margin-bottom:14px;
+    background:linear-gradient(170deg, color-mix(in srgb, var(--surface) 92%, transparent), color-mix(in srgb, var(--bg) 72%, transparent));
+    border:0.5px solid var(--border); border-left:3px solid var(--purple-text);
+    box-shadow:0 18px 40px -30px rgba(0,0,0,0.75); }
+  .esr-top.none { border-left-color:var(--green-text); }
+  .esr-top-l { display:flex; align-items:center; gap:15px; min-width:0; }
+  .esr-top-n { font-family:'Archivo','Inter',system-ui,sans-serif; font-size:38px; font-weight:800;
+    letter-spacing:-0.035em; line-height:1; font-variant-numeric:tabular-nums; color:var(--purple-text); }
+  .esr-top.none .esr-top-n { color:var(--green-text); }
+  .esr-top-w b { display:block; font-size:14.5px; font-weight:650; color:var(--text); letter-spacing:-0.01em; }
+  .esr-top-w span { display:block; font-size:11.5px; color:var(--text-3); margin-top:3px; }
+  .esr-copy-all { margin-left:auto; display:inline-flex; align-items:center; gap:8px; flex-shrink:0;
+    font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+    padding:12px 20px; border-radius:11px; color:#fff;
+    background:color-mix(in srgb, var(--purple-text) 86%, #000);
+    border:0.5px solid color-mix(in srgb, var(--purple-text) 70%, transparent);
+    transition:transform .16s cubic-bezier(.22,.9,.26,1), box-shadow .16s, filter .16s; }
+  .esr-copy-all:hover { transform:translateY(-2px); filter:brightness(1.08);
+    box-shadow:0 14px 28px -16px color-mix(in srgb, var(--purple-text) 80%, transparent); }
+  .esr-copy-all.copied { background:color-mix(in srgb, var(--green-text) 86%, #000);
+    border-color:color-mix(in srgb, var(--green-text) 70%, transparent); }
+  .esr-copy-all i { font-size:16px; }
+  @media (max-width:760px) { .esr-copy-all { margin-left:0; width:100%; justify-content:center; } }
+
+  /* The numbers, in full, before you copy them. */
+  .esr-nums { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:12px; line-height:1.9;
+    color:var(--text-2); word-spacing:.35em; word-break:break-word; user-select:all;
+    padding:13px 16px; border-radius:11px; margin-bottom:18px;
+    background:var(--surface2); border:0.5px solid var(--border-md); }
+
+  /* One section per reason, because the reason is what the email says. */
+  .esr-grp { margin-bottom:16px; border-radius:14px; overflow:hidden;
+    background:var(--surface); border:0.5px solid var(--border); }
+  .esr-grp-hd { display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    font-family:inherit; padding:13px 16px; background:none; border:0;
+    color:var(--text); border-bottom:0.5px solid var(--border); }
+  .esr-grp-hd.as-btn { cursor:pointer; transition:background .16s; }
+  .esr-grp-hd.as-btn:hover { background:var(--surface2); }
+  .esr-grp-t { min-width:0; }
+  .esr-grp-t b { display:block; font-family:'Archivo','Inter',system-ui,sans-serif; font-size:14px;
+    font-weight:700; letter-spacing:-0.015em; color:var(--text); }
+  .esr-grp-t span { display:block; font-size:11px; color:var(--text-3); margin-top:2px; }
+  .esr-grp-act { margin-left:auto; display:flex; gap:7px; flex-shrink:0; }
+  .esr-grp-ch { margin-left:auto; font-size:15px; color:var(--text-3); flex-shrink:0; }
+  .esr-grp-foot { padding:0 16px 14px; }
+  .esr-mini { display:inline-flex; align-items:center; gap:6px; font-family:inherit;
+    font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap;
+    padding:7px 12px; border-radius:8px; color:var(--text-2);
+    background:var(--surface2); border:0.5px solid var(--border-md);
+    transition:border-color .16s, color .16s, background .16s; }
+  .esr-mini:hover { border-color:var(--purple-text); color:var(--purple-text); }
+  .esr-mini.copied { color:var(--green-text); border-color:var(--green-text); }
+  .esr-mini i { font-size:13px; }
+
+  /* The line you would actually put in the email. */
+  .esr-ask { display:flex; gap:9px; align-items:flex-start; padding:11px 16px;
+    background:color-mix(in srgb, var(--purple-bg) 60%, transparent);
+    border-bottom:0.5px solid var(--border); font-size:12.5px; color:var(--text-2); line-height:1.5; }
+  .esr-ask > i { font-size:15px; color:var(--purple-text); flex-shrink:0; margin-top:1px; }
+  .esr-ask.thin { background:var(--surface2); }
+  .esr-ask.thin > i { color:var(--amber-text); }
+
+  .esr-cards { display:flex; flex-direction:column; gap:1px; background:var(--border); }
+
+  /* A job. Accent rail, and it lifts on hover like every other card that is a
+     thing you can act on. */
+  .esr-card { padding:13px 16px; background:var(--surface);
+    border-left:3px solid color-mix(in srgb, var(--purple-text) 55%, transparent);
+    transition:background .16s, border-left-color .16s, border-left-width .16s; }
+  .esr-card:hover { background:var(--surface2); border-left-width:5px;
+    border-left-color:var(--purple-text); }
+  .esr-card.maybe { border-left-color:color-mix(in srgb, var(--amber-text) 55%, transparent); }
+  .esr-card.maybe:hover { border-left-color:var(--amber-text); }
+  .esr-card.skip { border-left-color:var(--border-md); opacity:.72; }
+  .esr-card.skip:hover { opacity:1; border-left-color:var(--text-3); }
+
+  .esr-card-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .esr-jnum { display:inline-flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:13.5px; font-weight:600; letter-spacing:.02em; cursor:pointer;
+    padding:4px 9px; border-radius:7px; color:var(--text);
+    background:var(--surface2); border:0.5px solid var(--border-md);
+    transition:border-color .16s, color .16s; }
+  .esr-jnum:hover { border-color:var(--purple-text); color:var(--purple-text); }
+  .esr-jnum.copied { color:var(--green-text); border-color:var(--green-text); }
+  .esr-jnum i { font-size:12px; opacity:.5; }
+  .esr-jnum:hover i { opacity:1; }
+  .esr-chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .esr-chip { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    padding:3px 8px; border-radius:20px; color:var(--text-3);
+    background:var(--surface2); border:0.5px solid var(--border-md); }
+  .esr-chip.esr-pri { color:var(--text-2); }
+  .esr-chip.esr-odd { color:var(--amber-text); border-color:color-mix(in srgb, var(--amber-text) 35%, transparent); }
+  .esr-chip.esr-ref { font-family:'IBM Plex Mono',ui-monospace,monospace; text-transform:none;
+    letter-spacing:0; color:var(--teal-text); border-color:color-mix(in srgb, var(--teal-text) 32%, transparent); }
+  .esr-age { margin-left:auto; font-size:11px; font-weight:600; color:var(--text-3);
+    font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .esr-age.old { color:var(--coral-text); }
+  .esr-site { font-size:12.5px; font-weight:600; color:var(--text); margin-top:7px; }
+  .esr-meta { font-size:11px; color:var(--text-3); margin-top:3px; }
+  .esr-note { font-size:12px; color:var(--text-2); line-height:1.55; margin-top:7px; }
+  .esr-note-none { color:var(--text-3); font-style:italic; }
+  .esr-more { font-family:inherit; font-size:11px; font-weight:600; cursor:pointer;
+    color:var(--purple-text); background:none; border:0; padding:0 2px; text-decoration:underline; }
+  .esr-why { display:flex; gap:7px; align-items:flex-start; margin-top:8px; padding-top:8px;
+    border-top:0.5px dashed var(--border-md); font-size:11px; color:var(--text-3); line-height:1.5; }
+  .esr-why > i { font-size:13px; flex-shrink:0; margin-top:1px; }
+  .esr-grp-check .esr-why > i { color:var(--amber-text); }
+  @media (max-width:760px) {
+    .esr-top-n { font-size:30px; }
+    .esr-age { margin-left:0; width:100%; }
+  }
+
   /* What the mapper says about how the dates are being read. The assumption
      has to be visible: a day-first reading of a month-first file is wrong in a
      way that looks perfectly reasonable on screen. */
@@ -6758,6 +6899,41 @@
     <div id="stk-rules"></div>
   </div>
 
+  <!-- ESCALATION REVIEW PAGE -->
+  <div class="page" id="page-escalations">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-mail-forward"></i> Escalation Review</h1>
+        <p>Which escalated jobs still need an email, once the desk's own updates and the ones already sent are taken out</p>
+      </div>
+    </div>
+
+    <div class="esr-cfg" id="esr-config">
+      <div class="card" style="margin-bottom:0;">
+        <div class="kpi-template-row" style="margin-bottom:0;">
+          <div class="kpi-template-info">
+            <div class="kpi-tpl-name">Excel or CSV of escalated jobs, with the last updated by and notes columns</div>
+            <div class="kpi-tpl-status" id="esr-status">No file loaded</div>
+          </div>
+          <input type="file" id="esr-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="esrLoad(this.files[0])">
+          <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('esr-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+        </div>
+        <div id="esr-mapper" style="display:none;margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <div class="esr-bar" id="esr-bar">
+      <button class="esr-bar-btn" onclick="esrReopen()">
+        <i class="ti ti-check esr-bar-tick"></i>
+        <span class="esr-bar-n" id="esr-bar-n"></span>
+        <span class="esr-bar-cols" id="esr-bar-cols"></span>
+        <span class="esr-bar-go">Change setup <i class="ti ti-chevron-down"></i></span>
+      </button>
+    </div>
+
+    <div id="esr-result" style="margin-top:16px;"></div>
+  </div>
+
   <!-- MORNING RUN PAGE -->
   <div class="page" id="page-morning">
     <div class="header">
@@ -9156,6 +9332,7 @@ const QL_ALL = [
   { id: 'dispatch',     label: 'Dispatch',             icon: 'ti-route',      ac: 'var(--amber-text)' },
   { id: 'allocvalidate',label: 'Allocation Validator', icon: 'ti-shield-check', ac: 'var(--coral-text)' },
   { id: 'stock',        label: 'Stock Checks',         icon: 'ti-package',    ac: 'var(--green-text)' },
+  { id: 'escalations',  label: 'Escalation Review',    icon: 'ti-mail-forward', ac: 'var(--purple-text)' },
   { id: 'alloccheck',   label: 'Allocation Lookup',    icon: 'ti-map-search', ac: 'var(--teal-text)' },
   { id: 'kpi',          label: 'KPI Report',           icon: 'ti-report-analytics', ac: 'var(--amber-text)' },
   { id: 'projects',     label: 'Projects',             icon: 'ti-folders',    ac: 'var(--teal-text)' },
@@ -16917,6 +17094,574 @@ function alDeleteCustom(cid) {
   alRun();
 }
 
+// ===== ESCALATION REVIEW =====
+// The escalated-jobs export lists every job sitting in an Escalated state, and
+// most of them are already somebody's problem: the desk updated them last, or
+// an email has already gone to ANZ. What is left - a technician asked for an
+// escalation and nobody has sent one - is the only part that needs doing, and
+// it is the one thing the file does not mark.
+//
+// So the file gets sorted into three, and the reasons are shown either way:
+//   go     nothing says this has been escalated. Copy the numbers, send them.
+//   check  something hints it might have been. Listed, not hidden - "Raised
+//          issue with ANZWL" is not proof, and the call belongs to you.
+//   skip   the desk updated it last, or an email is on the record.
+//
+// The notes are free text written by whoever was on site, so every rule here
+// is stated as a pattern with the words that triggered it kept and shown. A
+// rule you cannot see the working of is one you cannot trust at 8am.
+let esrRows = [], esrHeaders = [], esrName = '', esrDone = false;
+let esrOut = null;                 // { go:[], check:[], skip:[] } once run
+let esrOpen = new Set();           // which notes are expanded, plus 'skip'
+
+// A desk username. "Adriana Rocca HD", "A.Rocca-SDC" - the team tag sits at the
+// end of the name, so the test is anchored there. A bare "contains" would also
+// catch a surname with those three letters inside it.
+const ESR_DESK = /(?:^|[\s._\-\/])(HD|SDC)\s*$/i;
+function esrIsDesk(by) { return ESR_DESK.test(String(by || '').trim()); }
+function esrDeskTag(by) {
+  const m = String(by || '').trim().match(ESR_DESK);
+  return m ? m[1].toUpperCase() : '';
+}
+
+// Someone has already sent it. Every one of these is a record of a thing done,
+// not a request for it.
+const ESR_SENT = [
+  { re: /\*\*[^*]{0,90}(?:escalat|email)[^*]{0,90}\*\*/i,           why: 'an escalation banner in the note' },
+  { re: /\bemail(?:ed)?\s+(?:sent|escalat|to\s+anz)/i,              why: 'the note says "email escalated"' },
+  { re: /\b(?:sent|sending)\s+(?:an?\s+)?e-?mail/i,                 why: 'the note says an email was sent' },
+  { re: /\be-?mail\s+(?:sent|has\s+been\s+sent|was\s+sent)/i,       why: 'the note says an email was sent' },
+  { re: /\bescalat(?:ed|ion)\s+(?:via|by|through|over)\s+e-?mail/i, why: 'the note says escalated via email' },
+  { re: /\bescalation\s+e-?mail\s+(?:sent|raised)/i,                why: 'the note says an escalation email went' },
+  { re: /\bawaiting\s+(?:a\s+)?(?:response|reply)\s+from\s+anz/i,   why: 'already waiting on ANZ’s reply' },
+  { re: /\bsent\s+to\s+anz\b/i,                                     why: 'the note says it was sent to ANZ' },
+  { re: /\bescalat(?:ed|ion)\s+(?:to|with)\s+anz\b/i,               why: 'the note says escalated to ANZ' },
+];
+
+// The same words when a technician is ASKING for it. "Need to escalate to ANZ"
+// matches "escalated to anz" on the letters alone and means the exact
+// opposite - it is the reason the job belongs on the list.
+const ESR_ASK = [
+  /\b(?:need|needs|needed|needing|require[sd]?|requiring|want[sd]?|wanting|please|advise[sd]?|advising|ask(?:ed|ing)?|told|request(?:ed|ing)?|unable|cannot|can'?t|could|can|will|would|should|must|has\s+to|have\s+to|had\s+to|going\s+to|happy\s+to|ok(?:ay)?\s+to|wants?\s+me|hoping|tried\s+to|trying\s+to)\b/i,
+  /\bto\s+be\s+escalat/i,
+  /\bescalate\b/i,
+];
+
+// Not proof, but not nothing: something is open with ANZ and a second email
+// would be a duplicate. These earn their own group rather than being hidden.
+const ESR_SOFT = [
+  { re: /\braised\s+(?:the\s+|this\s+|an?\s+)?(?:issue|ticket|case|job|query)?\s*with\s+anz/i, why: 'the note says it was raised with ANZ' },
+  { re: /\bdue\s+to\s+inactivity/i,                                        why: 'ANZ have written back about inactivity' },
+  { re: /\blogged\s+(?:a\s+)?(?:call|ticket|case)?\s*with\s+anz/i,         why: 'the note says it was logged with ANZ' },
+  { re: /\banz\s+(?:are|is|have|has)\s+(?:look|investigat|review|check)/i, why: 'ANZ are said to be looking at it' },
+  { re: /\bwith\s+anz\s+(?:for|to)\s+(?:review|investigat)/i,              why: 'sitting with ANZ for review' },
+  { re: /\bawait(?:ing)?\s+(?:anz|further|their)/i,                        why: 'already waiting on ANZ' },
+];
+
+// A "sent" match with a request word beside it is a request, not a record.
+// Sixty characters is about one clause either side of the match.
+function esrSentHit(note) {
+  const s = String(note || '');
+  for (const m of ESR_SENT) {
+    const hit = s.match(m.re);
+    if (!hit) continue;
+    const from = Math.max(0, hit.index - 60);
+    const around = s.slice(from, hit.index + hit[0].length + 20);
+    if (ESR_ASK.some(a => a.test(around))) continue;      // a tech asking for it
+    return { why: m.why, quote: hit[0].trim() };
+  }
+  return null;
+}
+function esrSoftHit(note) {
+  const s = String(note || '');
+  for (const m of ESR_SOFT) {
+    const hit = s.match(m.re);
+    if (hit) return { why: m.why, quote: hit[0].trim() };
+  }
+  return null;
+}
+
+// Your own escalation log, on the Helpdesk sidebar, is the one source here
+// that is not guesswork: it is the record you kept of emails you actually
+// sent. A job number in it beats anything the notes say.
+function esrLogged() {
+  const open = new Set(), closed = new Set();
+  const items = (typeof escItems !== 'undefined' && Array.isArray(escItems)) ? escItems : [];
+  items.forEach(i => {
+    // One entry can carry several job numbers - the form takes a list, and the
+    // old URL form was migrated into a comma-separated one. A raw "%20" join
+    // only gets migrated when the value started as a URL, so it is decoded
+    // here too: splitting it as-is would glue the 20 onto the next number.
+    String(i.jobId || '').replace(/%20/g, ' ').split(/[^0-9]+/).forEach(n => {
+      if (n.length < 5) return;
+      (i.done ? closed : open).add(n);
+    });
+  });
+  return { open, closed };
+}
+
+// ---- The reason to put in the email ----------------------------------------
+// The note's own "Delayed Reason:" prefix is the best answer when it is there,
+// because it is the field the technician picked rather than prose. When it is
+// not, the reason is inferred from the words used - and when nothing matches,
+// it says so instead of inventing a category.
+const ESR_CATS = [
+  { k:'pos',    name:'POS integration',       re:/\bpos\b|integrat|restoplus|point of sale/i,
+    ask:'POS integration is unresolved — asking ANZ to engage the merchant’s POS provider.' },
+  { k:'noterm', name:'Terminal not on site',  re:/not on ?site|does ?n.t know where|cannot locate|can'?t locate|no terminal (?:on|at)|may be lost|already returned/i,
+    ask:'Terminal is not on site — asking ANZ to confirm where it is or authorise closure.' },
+  { k:'notrec', name:'Terminal not received', re:/not received|awaiting (?:stock|delivery|terminal)|has ?n.t arrived|no stock/i,
+    ask:'The replacement never arrived — asking ANZ to confirm despatch before we rebook.' },
+  { k:'access', name:'Site access or IT',     re:/admin|privileg|\bit team\b|ethernet|network|firewall|\bport\b|password|group polic/i,
+    ask:'Blocked by site IT — asking ANZ to arrange admin access with the merchant.' },
+  { k:'closed', name:'Site closed or busy',   re:/closed|not trading|too busy|after hours|no ?one (?:there|on site)|unattended/i,
+    ask:'The site was not available on attendance — asking ANZ for a confirmed window.' },
+  { k:'wrong',  name:'Wrong serial or model', re:/incorrect serial|wrong (?:serial|model|terminal|device)|serial mismatch|did ?n.t match|not matching|diff(?:erent)? tid|model received/i,
+    ask:'Device details do not match the work order — asking ANZ to confirm the correct unit.' },
+  { k:'faulty', name:'Faulty on arrival',     re:/\bdoa\b|dead on arrival|faulty|not power|won'?t power|no power|damaged/i,
+    ask:'The unit was faulty out of the box — asking ANZ to authorise a replacement.' },
+  { k:'pair',   name:'Pairing or install',    re:/pairing|halo id|could not be installed|unable to install|not install/i,
+    ask:'The device will not pair or install — asking ANZ to check the build against the TID.' },
+  { k:'refuse', name:'Merchant declined',     re:/refus|declin|not required|does ?n.t want|cancel/i,
+    ask:'The merchant does not want the work — asking ANZ to confirm cancellation.' },
+  { k:'extra',  name:'Surplus equipment',     re:/additional terminal|spare terminal|left ?over|without jobs|extra terminal|surplus|too many terminal/i,
+    ask:'Equipment on site with no job against it — asking ANZ how to return or use it.' },
+  { k:'os',     name:'Operating system',      re:/windows|operating system|not compatible|\bos\b version/i,
+    ask:'The merchant’s hardware is not compatible — asking ANZ how to proceed.' },
+  { k:'cable',  name:'Parts or cabling',      re:/cable|power supply|\bpsu\b|bracket|stand|sim card/i,
+    ask:'Extra hardware is needed — asking ANZ to supply or approve it.' },
+];
+const ESR_DR = /^\s*Delayed\s+Reason\s*:\s*([\s\S]*?)\s*(?:Notes\s*:|$)/i;
+// A bare "see call 2004058" is another job number, not an ANZ reference, so
+// the word ref or reference has to actually be present.
+const ESR_REF = /\bref(?:erence)?\s*(?:number|no|num)?\s*[:#]?\s*(\d{6,10})\b/i;
+
+function esrSplitNote(note) {
+  const s = String(note || '');
+  const m = s.match(ESR_DR);
+  if (!m) return { reason: '', body: s.trim() };
+  const after = s.slice(m[0].length).trim();
+  return { reason: m[1].trim(), body: after || s.trim() };
+}
+function esrReason(note) {
+  const { reason, body } = esrSplitNote(note);
+  const cat = ESR_CATS.find(c => c.re.test(reason + ' ' + body)) || null;
+  return {
+    stated: reason,
+    name: reason || (cat ? cat.name : 'Not categorised'),
+    key: cat ? cat.k : 'other',
+    ask: cat ? cat.ask
+             : 'The note does not say enough to suggest a reason — worth a line of your own.',
+    ref: (body.match(ESR_REF) || [, ''])[1] || '',
+    body: body,
+  };
+}
+
+// ---- Loading ---------------------------------------------------------------
+function esrStatus(msg, type) {
+  const el = document.getElementById('esr-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' sv-status-' + type : ''); }
+}
+
+async function esrLoad(file) {
+  if (!file) return;
+  esrOut = null; esrDone = false; esrOpen = new Set();
+  esrRenderConfig();
+  const res = document.getElementById('esr-result');
+  if (res) res.innerHTML = '';
+  try {
+    const buf = await file.arrayBuffer();
+    // XLSX reads the CSV too, which matters here: these notes carry commas and
+    // doubled quotes, and a line-at-a-time split gets them wrong.
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    let hdrIdx = 0;
+    for (let i = 0; i < Math.min(raw.length, 25); i++) {
+      const cells = raw[i].map(c => String(c).toLowerCase());
+      if (cells.some(c => c.includes('job')) && cells.some(c => c.includes('updated') || c.includes('note'))) { hdrIdx = i; break; }
+    }
+    const headers = raw[hdrIdx].map(c => String(c));
+    esrHeaders = headers.filter(h => h.trim() !== '');
+    esrRows = raw.slice(hdrIdx + 1).map(row => {
+      const o = {}; headers.forEach((h, i) => { o[h] = row[i] !== undefined ? row[i] : ''; }); return o;
+    }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
+    esrName = file.name.replace(/\.[^.]+$/, '');
+    if (!esrRows.length) { esrStatus('No data rows found', 'error'); return; }
+    esrStatus(esrRows.length.toLocaleString() + ' rows loaded', 'ok');
+    esrRenderMapper();
+    esrRenderConfig();
+  } catch (e) {
+    esrStatus('Could not read file: ' + e.message, 'error');
+  }
+}
+
+function esrRenderMapper() {
+  const el = document.getElementById('esr-mapper');
+  if (!el) return;
+  const sel = (id, picked) => '<select class="sv-col-select field-input" id="' + id + '" onchange="esrOnChange()">' +
+    '<option value="">— none —</option>' +
+    esrHeaders.map(h => '<option value="' + esc(h) + '"' + (h === picked ? ' selected' : '') + '>' + esc(h) + '</option>').join('') +
+    '</select>';
+  const opt = ' <span style="font-weight:400;color:var(--text-3)">(optional)</span>';
+  el.innerHTML =
+    '<div class="sv-cols">' +
+    '<div class="sv-col-row"><span class="sv-col-label">Job number</span>' +
+      sel('esr-c-job', svAutoDetect(esrHeaders, ['Job #','Job Number','Job ID','Job No'], ['jobid','jobnumber','job'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Last updated by</span>' +
+      sel('esr-c-by', svAutoDetect(esrHeaders, ['Last Updated By','Updated By','Last Update By'], ['updatedby','lastupdatedby','updater'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Last updated notes</span>' +
+      sel('esr-c-note', svAutoDetect(esrHeaders, ['Last Updated Notes','Updated Notes','Notes','Last Note'], ['updatednotes','lastnote','note','comment'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Created date' + opt + '</span>' +
+      sel('esr-c-created', svAutoDetect(esrHeaders, ['Created At','Created Date','Created','Date Logged'], ['createdat','created','logged','raised'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Last updated at' + opt + '</span>' +
+      sel('esr-c-when', svAutoDetect(esrHeaders, ['Last Updated At','Updated At','Last Update'], ['updatedat','lastupdated'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Site' + opt + '</span>' +
+      sel('esr-c-site', svAutoDetect(esrHeaders, ['Location Name','Site','Store'], ['locationname','location','site','store'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Technician' + opt + '</span>' +
+      sel('esr-c-tech', svAutoDetect(esrHeaders, ['Technician','Allocated Tech','Tech'], ['technician','tech'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Priority' + opt + '</span>' +
+      sel('esr-c-pri', svAutoDetect(esrHeaders, ['Priority Short Name','Priority'], ['priority','sla'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Job type' + opt + '</span>' +
+      sel('esr-c-type', svAutoDetect(esrHeaders, ['Job Type','Type','Job Category Short Name'], ['jobtype','category','type'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Status' + opt + '</span>' +
+      sel('esr-c-status', svAutoDetect(esrHeaders, ['Status','Job Status'], ['status'])) + '</div>' +
+    '</div>' +
+    '<div class="stk-dnote"><i class="ti ti-eye-check"></i><span>Every job it sets aside is listed with the ' +
+      'words it went on, so you can see the rule that moved it. The two it uses: a username ending ' +
+      '<b>HD</b> or <b>SDC</b> is the desk, and a note that records an <b>email already sent</b> is ' +
+      'somebody else’s escalation. A technician <i>asking</i> to escalate is not either of those.</span></div>' +
+    '<div class="al-vcfg-go">' +
+      '<button class="generate-btn" onclick="esrRun()"><i class="ti ti-mail-forward" style="font-size:16px;"></i> Find what needs escalating</button>' +
+      '<span>Nothing leaves this page — the file is read in the browser.</span>' +
+    '</div>';
+  el.style.display = '';
+}
+
+function esrOnChange() { if (esrDone) esrRun(); }
+
+function esrRenderConfig() {
+  const cfg = document.getElementById('esr-config');
+  const bar = document.getElementById('esr-bar');
+  if (!cfg || !bar) return;
+  const ready = esrDone && esrRows.length;
+  cfg.classList.toggle('shut', !!ready);
+  bar.classList.toggle('open', !!ready);
+  if (ready) {
+    const nEl = document.getElementById('esr-bar-n');
+    const cEl = document.getElementById('esr-bar-cols');
+    const pick = id => (document.getElementById(id) || {}).value || '';
+    if (nEl) nEl.textContent = esrRows.length.toLocaleString() + ' rows';
+    if (cEl) cEl.textContent = [pick('esr-c-job'), pick('esr-c-by'), pick('esr-c-note')]
+      .filter(Boolean).join('  ·  ');
+  }
+}
+function esrReopen() {
+  esrDone = false;
+  esrRenderConfig();
+  const res = document.getElementById('esr-result');
+  if (res) res.innerHTML = '';
+}
+
+// ---- The sort --------------------------------------------------------------
+function esrClassify(j, log) {
+  if (log.open.has(j.job))  return { bucket:'skip',  why:'you have this in your escalation log, still open', src:'log' };
+  if (log.closed.has(j.job)) return { bucket:'check', why:'you escalated this before and marked it done', src:'log' };
+  if (j.by && esrIsDesk(j.by)) return { bucket:'skip', why:'the desk updated it last (' + esrDeskTag(j.by) + ')', src:'desk' };
+  const sent = esrSentHit(j.note);
+  if (sent)  return { bucket:'skip',  why:sent.why, quote:sent.quote, src:'email' };
+  const note = String(j.note || '').trim();
+  if (note.length < 12) return { bucket:'check', why:note ? 'barely any note to go on' : 'no note at all', src:'thin' };
+  const soft = esrSoftHit(note);
+  if (soft)  return { bucket:'check', why:soft.why, quote:soft.quote, src:'maybe' };
+  return { bucket:'go', why:'', src:'' };
+}
+
+function esrAgeDays(v) {
+  const t = (typeof stkWhen === 'function') ? stkWhen(v) : null;
+  if (t === null || t === undefined) return null;
+  return Math.floor((Date.now() - t) / 86400000);
+}
+function esrAgeWord(d) {
+  if (d === null) return '';
+  if (d <= 0) return 'today';
+  if (d === 1) return '1 day old';
+  if (d < 60) return d + ' days old';
+  const m = Math.round(d / 30.4);
+  return m + ' months old';
+}
+
+function esrRun() {
+  const pick = id => (document.getElementById(id) || {}).value || '';
+  const cJob = pick('esr-c-job'), cBy = pick('esr-c-by'), cNote = pick('esr-c-note');
+  const out = document.getElementById('esr-result');
+  if (!out) return;
+  if (!cJob) {
+    out.innerHTML = '<div class="card"><div class="empty-state"><i class="ti ti-help-circle"></i>' +
+      '<p>Pick the job number column to carry on.</p></div></div>';
+    return;
+  }
+  const cCreated = pick('esr-c-created'), cWhen = pick('esr-c-when'), cSite = pick('esr-c-site');
+  const cTech = pick('esr-c-tech'), cPri = pick('esr-c-pri'), cType = pick('esr-c-type'), cStatus = pick('esr-c-status');
+  const log = esrLogged();
+  const seen = new Set();
+  const jobs = [];
+  esrRows.forEach(r => {
+    const job = String(r[cJob] || '').trim();
+    if (!job) return;
+    if (seen.has(job)) return;                 // one row per job, first wins
+    seen.add(job);
+    const j = {
+      job: job,
+      by: cBy ? String(r[cBy] || '').trim() : '',
+      note: cNote ? String(r[cNote] || '') : '',
+      site: cSite ? String(r[cSite] || '').trim() : '',
+      tech: cTech ? String(r[cTech] || '').trim() : '',
+      pri: cPri ? String(r[cPri] || '').trim() : '',
+      type: cType ? String(r[cType] || '').trim() : '',
+      status: cStatus ? String(r[cStatus] || '').trim() : '',
+      age: cCreated ? esrAgeDays(r[cCreated]) : null,
+      when: cWhen ? String(r[cWhen] || '').trim() : '',
+    };
+    const c = esrClassify(j, log);
+    j.bucket = c.bucket; j.why = c.why; j.quote = c.quote || ''; j.src = c.src;
+    j.reason = esrReason(j.note);
+    jobs.push(j);
+  });
+  const by = b => jobs.filter(j => j.bucket === b);
+  esrOut = { go: by('go'), check: by('check'), skip: by('skip'), all: jobs,
+             cols: { note: !!cNote, by: !!cBy, created: !!cCreated } };
+  esrDone = true;
+  esrRenderConfig();
+  esrRender();
+  // The "when it last ran" stamp and the header figures are set by the
+  // TOOL_RAN_BY wrapper at the end of the file, the same way the other three
+  // tools get theirs - doing it here as well would be two places to keep.
+}
+
+// Oldest first inside a group: the job that has been waiting longest is the
+// one the reason applies to most.
+function esrByAge(a, b) {
+  const av = a.age === null ? -1 : a.age, bv = b.age === null ? -1 : b.age;
+  return bv - av || String(a.job).localeCompare(String(b.job));
+}
+function esrGroups(list) {
+  const map = new Map();
+  list.forEach(j => {
+    const k = j.reason.name;
+    if (!map.has(k)) map.set(k, { name: k, key: j.reason.key, ask: j.reason.ask, jobs: [] });
+    map.get(k).jobs.push(j);
+  });
+  const out = [...map.values()];
+  out.forEach(g => g.jobs.sort(esrByAge));
+  // Biggest group first, but anything uncategorised goes last whatever its
+  // size - it is the group with the least to say.
+  out.sort((a, b) => (a.key === 'other') - (b.key === 'other') ||
+                     b.jobs.length - a.jobs.length || a.name.localeCompare(b.name));
+  return out;
+}
+
+// ---- Copying ---------------------------------------------------------------
+// The one thing this page exists to hand over: the numbers, space separated,
+// in the order they are on screen.
+function esrNums(list) { return list.map(j => j.job).join(' '); }
+
+function esrFlash(btn, label) {
+  if (!btn) return;
+  const o = btn.innerHTML;
+  btn.classList.add('copied');
+  btn.innerHTML = '<i class="ti ti-check"></i> ' + (label || 'Copied');
+  setTimeout(() => { btn.innerHTML = o; btn.classList.remove('copied'); }, 1900);
+}
+function esrCopy(text, btn, toast, label) {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    esrFlash(btn, label);
+    if (toast) showToast('<i class="ti ti-check"></i> ' + toast, 2600);
+  });
+}
+function esrCopyAll(btn) {
+  if (!esrOut) return;
+  const n = esrOut.go.length;
+  esrCopy(esrNums(esrOut.go), btn,
+    n + ' job number' + (n === 1 ? '' : 's') + ' copied, space separated', 'Copied');
+}
+function esrCopyCheck(btn) {
+  if (!esrOut) return;
+  esrCopy(esrNums(esrOut.check), btn, esrOut.check.length + ' to check copied', 'Copied');
+}
+function esrCopyGroup(i, btn) {
+  if (!esrOut) return;
+  const g = esrGroups(esrOut.go)[i];
+  if (!g) return;
+  esrCopy(esrNums(g.jobs), btn, esc(g.name) + ' — ' + g.jobs.length + ' copied');
+}
+function esrCopyJob(job, btn) { esrCopy(String(job), btn, '', ''); }
+
+// A reason group, written out the way it would go in the email. The numbers
+// are on their own line so they survive being pasted anywhere.
+function esrDraft(g) {
+  const lines = [];
+  lines.push('Hi Team,');
+  lines.push('');
+  lines.push('Please see the jobs below for escalation. ' + g.ask.replace(/—/g, '-'));
+  lines.push('');
+  lines.push('Jobs: ' + esrNums(g.jobs));
+  lines.push('');
+  g.jobs.forEach(j => {
+    const bits = [j.job];
+    if (j.site) bits.push(j.site);
+    if (j.pri) bits.push(j.pri);
+    if (j.age !== null) bits.push(esrAgeWord(j.age));
+    if (j.reason.ref) bits.push('ANZ ref ' + j.reason.ref);
+    lines.push('- ' + bits.join(' | '));
+    const b = String(j.reason.body || '').replace(/\s+/g, ' ').trim();
+    if (b) lines.push('    ' + (b.length > 300 ? b.slice(0, 300) + '...' : b));
+  });
+  lines.push('');
+  lines.push('Thanks');
+  return lines.join('\n');
+}
+function esrCopyDraft(i, btn) {
+  if (!esrOut) return;
+  const g = esrGroups(esrOut.go)[i];
+  if (!g) return;
+  esrCopy(esrDraft(g), btn, 'Draft for ' + esc(g.name) + ' copied', 'Draft copied');
+}
+
+function esrToggle(key) {
+  if (esrOpen.has(key)) esrOpen.delete(key); else esrOpen.add(key);
+  esrRender();
+}
+
+// ---- Drawing ---------------------------------------------------------------
+const ESR_SRC_ICO = { log:'ti-mail-check', desk:'ti-headset', email:'ti-mail-forward',
+                      maybe:'ti-help-circle', thin:'ti-note-off' };
+
+function esrNoteHtml(j) {
+  const body = String(j.reason.body || j.note || '').replace(/\s+/g, ' ').trim();
+  if (!body) return '<div class="esr-note esr-note-none">No note on this job</div>';
+  const key = 'n' + j.job;
+  const long = body.length > 190;
+  const open = esrOpen.has(key);
+  const shown = (long && !open) ? body.slice(0, 190).replace(/\s\S*$/, '') + '…' : body;
+  return '<div class="esr-note">' + esc(shown) +
+    (long ? ' <button class="esr-more" onclick="esrToggle(\'' + key + '\')">' +
+      (open ? 'less' : 'more') + '</button>' : '') + '</div>';
+}
+
+function esrCard(j, tone) {
+  const chips = [];
+  if (j.pri) chips.push('<span class="esr-chip esr-pri">' + esc(j.pri) + '</span>');
+  if (j.type) chips.push('<span class="esr-chip">' + esc(j.type) + '</span>');
+  if (j.status && !/^escalated$/i.test(j.status)) chips.push('<span class="esr-chip esr-odd">' + esc(j.status) + '</span>');
+  if (j.reason.ref) chips.push('<span class="esr-chip esr-ref">ANZ ref ' + esc(j.reason.ref) + '</span>');
+  const meta = [];
+  if (j.by) meta.push(esc(j.by));
+  if (j.when) meta.push(esc(j.when));
+  return '<div class="esr-card' + (tone ? ' ' + tone : '') + '">' +
+    '<div class="esr-card-top">' +
+      '<button class="esr-jnum" onclick="esrCopyJob(\'' + esc(j.job) + '\', this)" title="Copy this job number">' +
+        '<span>' + esc(j.job) + '</span><i class="ti ti-copy"></i></button>' +
+      '<div class="esr-chips">' + chips.join('') + '</div>' +
+      (j.age !== null ? '<span class="esr-age' + (j.age >= 30 ? ' old' : '') + '">' + esc(esrAgeWord(j.age)) + '</span>' : '') +
+    '</div>' +
+    (j.site ? '<div class="esr-site">' + esc(j.site) + '</div>' : '') +
+    (meta.length ? '<div class="esr-meta">' + meta.join(' · ') + '</div>' : '') +
+    esrNoteHtml(j) +
+    (j.why ? '<div class="esr-why"><i class="ti ' + (ESR_SRC_ICO[j.src] || 'ti-info-circle') + '"></i>' +
+      '<span>' + esc(j.why) + (j.quote ? ' — &ldquo;' + esc(j.quote) + '&rdquo;' : '') + '</span></div>' : '') +
+    '</div>';
+}
+
+function esrRender() {
+  const out = document.getElementById('esr-result');
+  if (!out || !esrOut) return;
+  const o = esrOut;
+  const n = o.go.length;
+
+  if (!o.cols.note && !o.cols.by) {
+    out.innerHTML = '<div class="card"><div class="empty-state"><i class="ti ti-columns-off"></i>' +
+      '<p>Without the <b>last updated by</b> or <b>last updated notes</b> column there is nothing to ' +
+      'judge on, so every job would come back as needing an escalation. Pick one of them above.</p></div></div>';
+    return;
+  }
+
+  // The headline: what to copy, and how the rest of the file was accounted for.
+  let html = '<div class="esr-top' + (n ? '' : ' none') + '">' +
+    '<div class="esr-top-l">' +
+      '<div class="esr-top-n">' + n + '</div>' +
+      '<div class="esr-top-w"><b>' + (n ? 'need an escalation email' : 'nothing needs escalating') + '</b>' +
+        '<span>out of ' + o.all.length.toLocaleString() + ' job' + (o.all.length === 1 ? '' : 's') + ' in the file' +
+        (o.check.length ? ' · ' + o.check.length + ' worth a look first' : '') +
+        (o.skip.length ? ' · ' + o.skip.length + ' already handled' : '') + '</span></div>' +
+    '</div>' +
+    (n ? '<button class="esr-copy-all" onclick="esrCopyAll(this)">' +
+      '<i class="ti ti-copy"></i> Copy ' + n + ' job number' + (n === 1 ? '' : 's') + '</button>' : '') +
+    '</div>';
+
+  if (n) {
+    // The numbers themselves, visible. A copy button you cannot check is one
+    // you have to paste somewhere else to find out what it did.
+    html += '<div class="esr-nums" id="esr-nums">' + esc(esrNums(o.go)) + '</div>';
+    const groups = esrGroups(o.go);
+    html += groups.map((g, i) =>
+      '<section class="esr-grp">' +
+        '<div class="esr-grp-hd">' +
+          '<div class="esr-grp-t"><b>' + esc(g.name) + '</b>' +
+            '<span>' + g.jobs.length + ' job' + (g.jobs.length === 1 ? '' : 's') + '</span></div>' +
+          '<div class="esr-grp-act">' +
+            '<button class="esr-mini" onclick="esrCopyGroup(' + i + ', this)" title="Copy these job numbers">' +
+              '<i class="ti ti-copy"></i> Numbers</button>' +
+            '<button class="esr-mini" onclick="esrCopyDraft(' + i + ', this)" title="Copy a ready-to-send draft">' +
+              '<i class="ti ti-mail"></i> Draft</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="esr-ask' + (g.key === 'other' ? ' thin' : '') + '">' +
+          '<i class="ti ti-' + (g.key === 'other' ? 'pencil-question' : 'message-report') + '"></i>' +
+          '<span>' + esc(g.ask) + '</span></div>' +
+        '<div class="esr-cards">' + g.jobs.map(j => esrCard(j, '')).join('') + '</div>' +
+      '</section>').join('');
+  }
+
+  if (o.check.length) {
+    const open = esrOpen.has('check');
+    html += '<section class="esr-grp esr-grp-check">' +
+      '<button class="esr-grp-hd as-btn" onclick="esrToggle(\'check\')" aria-expanded="' + open + '">' +
+        '<div class="esr-grp-t"><b>Worth a look first</b>' +
+          '<span>' + o.check.length + ' job' + (o.check.length === 1 ? '' : 's') +
+          ' where something hints it may already be with ANZ</span></div>' +
+        '<i class="ti ti-chevron-' + (open ? 'up' : 'down') + ' esr-grp-ch"></i>' +
+      '</button>' +
+      (open ? '<div class="esr-cards">' + o.check.map(j => esrCard(j, 'maybe')).join('') + '</div>' +
+        '<div class="esr-grp-foot"><button class="esr-mini" onclick="esrCopyCheck(this)">' +
+        '<i class="ti ti-copy"></i> Copy these ' + o.check.length + '</button></div>' : '') +
+      '</section>';
+  }
+
+  if (o.skip.length) {
+    // Every job it set aside, with the rule that moved it. This is the part
+    // that makes the other two trustworthy.
+    const open = esrOpen.has('skip');
+    const byRule = {};
+    o.skip.forEach(j => { (byRule[j.src] = byRule[j.src] || []).push(j); });
+    const label = { log:'already in your escalation log', desk:'the desk updated it last',
+                    email:'an email is already on the record' };
+    html += '<section class="esr-grp esr-grp-skip">' +
+      '<button class="esr-grp-hd as-btn" onclick="esrToggle(\'skip\')" aria-expanded="' + open + '">' +
+        '<div class="esr-grp-t"><b>Set aside</b><span>' + o.skip.length + ' job' +
+          (o.skip.length === 1 ? '' : 's') + ' · ' +
+          Object.keys(byRule).map(k => byRule[k].length + ' ' + (label[k] || k)).join(' · ') +
+          '</span></div>' +
+        '<i class="ti ti-chevron-' + (open ? 'up' : 'down') + ' esr-grp-ch"></i>' +
+      '</button>' +
+      (open ? '<div class="esr-cards">' + o.skip.map(j => esrCard(j, 'skip')).join('') + '</div>' : '') +
+      '</section>';
+  }
+
+  out.innerHTML = html;
+}
+
 // ===== EMAIL ESCALATION JOBS =====
 let escItems = [];
 let escNextId = 1;
@@ -20156,6 +20901,7 @@ const PAGES = {
   projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
   allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
   stock:          { title:'Stock Checks',      icon:'ti-package',          color:'c-green',  desc:'Replacement jobs from a file, each with the warehouse stock link for that part at that technician.' },
+  escalations:    { title:'Escalation Review', icon:'ti-mail-forward',     color:'c-purple', desc:'Which escalated jobs still need an email, once the desk\u2019s updates and the ones already sent are taken out.' },
   morning:        { title:'Morning Run',       icon:'ti-sunrise',          color:'c-amber',  desc:'The same five steps every morning, each one knowing whether you have already done it today.' },
   exceptions:     { title:'Chase List',        icon:'ti-list-check',       color:'c-coral',  desc:'Everything the validator and stock check flagged, carrying what you already decided about each one.' },
 };
@@ -20172,7 +20918,7 @@ const HUB_META = {
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','message','meetings','templates','suburbcheck'],
+  helpdesk: ['kpi','message','meetings','templates','suburbcheck','escalations'],
   dispatch: ['morning','exceptions','allocvalidate','stock','alloccheck'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
@@ -20238,22 +20984,30 @@ const HUB_SEEDS = [
   { id: 'learning',     hub: 'personal', page: 'learning' },
   { id: 'suburbcheck',  hub: 'helpdesk', page: 'suburbcheck' },
   { id: 'projanalysis', hub: 'projects', page: 'projanalysis', first: true },
-  { id: 'morning',      hub: 'dispatch', page: 'morning', first: true }
+  { id: 'morning',      hub: 'dispatch', page: 'morning', first: true },
+  { id: 'escalations',  hub: 'helpdesk', page: 'escalations' }
 ];
 
 function applyHubSeeds(layout) {
   const done = dbGet(HUB_MIG_KEY) || {};
-  let changed = false;
+  let changed = false, placed = false;
   HUB_SEEDS.forEach(m => {
     if (done[m.id]) return;
     const anywhere = HUBS.some(h => (layout[h] || []).includes(m.page));
     if (!anywhere && Array.isArray(layout[m.hub])) {
       if (m.first) layout[m.hub].unshift(m.page); else layout[m.hub].push(m.page);
+      placed = true;
     }
     done[m.id] = true;                        // asked and answered, either way
     changed = true;
   });
   if (changed) dbSet(HUB_MIG_KEY, done);
+  // A seed that put a page somewhere has to outlive the load that did it. The
+  // flag above says "asked and answered", so on the next load the seed is
+  // skipped - and if the layout it changed was never saved, the page it placed
+  // is simply gone again. Saved here rather than through saveHubLayout()
+  // because the global hubLayout is still being built and is not this object.
+  if (placed) dbSet('zarif_hub_layout', layout);
 }
 function saveHubLayout() { dbSet('zarif_hub_layout', hubLayout); }
 
@@ -20299,6 +21053,14 @@ function hubBoardState(p) {
       const parts = new Set(shown.filter(h => h.loc && h.model).map(h => stkTerm(h.model).toLowerCase())).size;
       return { status: `${shown.length} waiting`, sc: 'var(--amber-text)',
         figures: [F(shown.length, 'jobs'), F(parts, 'parts'), F(notes, 'notes', 'var(--amber-text)')] };
+    }
+    if (p === 'escalations' && typeof esrOut !== 'undefined' && esrOut) {
+      const n = esrOut.go.length;
+      return { status: n ? n + ' to send' : 'nothing to send',
+        sc: n ? 'var(--purple-text)' : 'var(--green-text)',
+        figures: [F(n, 'to send', n ? 'var(--purple-text)' : 'var(--green-text)'),
+                  F(esrOut.check.length, 'to check', esrOut.check.length ? 'var(--amber-text)' : undefined),
+                  F(esrOut.skip.length, 'handled')] };
     }
     if (p === 'morning' && typeof morningSteps === 'function') {
       const st = morningSteps();
@@ -26735,6 +27497,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.48.0', type: 'feature', date: '17 Nov 2026', title: 'Escalation Review \u2014 which escalated jobs still need an email', changes: [
+    '<b>A new tool on Dispatch.</b> Drop the escalated-jobs export in and it tells you the only thing that export does not: which of those jobs nobody has actually escalated yet. On today\u2019s file that is 100 of 282 \u2014 the other 182 are already somebody\u2019s problem',
+    'Two rules take jobs out. A job last updated by a username ending <b>HD</b> or <b>SDC</b> is the desk\u2019s, and a note that <i>records an email having been sent</i> is already escalated. The second rule is the careful one: &ldquo;Need to escalate to ANZ&rdquo; and &ldquo;escalated to ANZ&rdquo; are nearly the same words and the opposite fact, so a request sitting next to the match cancels it. A technician asking for an escalation stays on the list, which is the whole point of the list',
+    'It also checks your own escalation log on the Helpdesk sidebar \u2014 the record of emails you actually sent. That beats anything the notes say, and a job you escalated and closed off comes back as worth a second look rather than silently vanishing',
+    '<b>The copy button is the page.</b> One press takes every job number, space separated, ready to paste. The numbers are printed above it as well, because a copy button you cannot check is one you have to paste somewhere else to find out what it did. Each job, and each reason group, can be copied on its own',
+    'Jobs are grouped by the reason they are stuck, taken from the file\u2019s own &ldquo;Delayed Reason&rdquo; where it has one and read out of the technician\u2019s words where it does not \u2014 POS integration, terminal not on site, site IT access, wrong serial, and nine more. Each group suggests the line to put in the email and will write you the whole draft. Where the note says nothing useful it says so rather than inventing a category',
+    'Nothing is hidden without saying why. Every job it set aside is listed underneath with the rule that moved it and the words it went on, and the nine it was not sure about get their own group instead of a guess',
+  ]},
   { ver: '4.47.6', type: 'patch', date: '17 Nov 2026', title: 'The task hero\u2019s last twenty rules', changes: [
     'The hero panel at the top of Tasks went in a redesign a while back. Its script and its Settings switch went yesterday; this is the stylesheet catching up \u2014 the panel, its blurred orbs, its greeting, its chips and the mobile and compact tweaks for all of them. Twenty rules dressing nothing',
     'Checked before cutting rather than after: the --hero-bg colour stays, because the progress ring still uses it, and the dash grid and upcoming list keep their own rules \u2014 only the &ldquo;inside the hero&rdquo; versions of those selectors went',
@@ -29545,8 +30315,9 @@ document.addEventListener('pointerup', e => {
 // The three tools replace their entire output when they re-run, which takes
 // the entrance animations with it. Wrapping them is less invasive than
 // threading a call through every return path inside each one.
-const TOOL_RAN_BY = { alRun: 'alloccheck', alValRun: 'allocvalidate', stkRun: 'stock' };
-['alRun', 'alValRun', 'stkRun'].forEach(fn => {
+const TOOL_RAN_BY = { alRun: 'alloccheck', alValRun: 'allocvalidate', stkRun: 'stock',
+                      esrRun: 'escalations' };
+['alRun', 'alValRun', 'stkRun', 'esrRun'].forEach(fn => {
   const orig = window[fn];
   if (typeof orig !== 'function') return;
   window[fn] = function () {
