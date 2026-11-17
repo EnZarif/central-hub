@@ -9426,18 +9426,37 @@ const PO = {HIGH:0, MEDIUM:1, LOW:2};
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MON_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const now = new Date();
-const todayDow = now.getDay();
-const todayKey  = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-const monthKey  = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-// Week key: ISO week so weekly tasks stay done Mon→Sun and reset next Monday
-const weekKey = (() => {
-  const d = new Date(now); d.setHours(0,0,0,0);
+// ---- What day the app thinks it is --------------------------------------
+// These were const, worked out once while the page was loading. The Hub
+// starts with Windows and never gets closed, so a window left open past
+// midnight went on believing it was yesterday for as long as it stayed open:
+// weekly tasks showed on yesterday's weekday, yesterday's ticks were still
+// ticked, and ticking one this morning wrote into yesterday's bucket. The
+// same stale date decided which KPI operators counted as emailed today.
+//
+// They are let now, and one function works out the lot. Every reader keeps
+// the name it already used, so nothing else had to change - the values simply
+// stop being wrong once the date moves on. checkDayRolled() further down is
+// what notices that it has.
+let now, todayDow, todayKey, monthKey, weekKey;
+
+// ISO week, so a weekly task stays done Mon->Sun and comes back on Monday.
+function isoWeekKey(from) {
+  const d = new Date(from); d.setHours(0,0,0,0);
   d.setDate(d.getDate() + 4 - (d.getDay() || 7));
   const y = d.getFullYear();
   const w = Math.ceil(((d - new Date(y, 0, 1)) / 86400000 + 1) / 7);
   return `${y}-W${String(w).padStart(2,'0')}`;
-})();
+}
+function refreshDayModel() {
+  now      = new Date();
+  todayDow = now.getDay();
+  todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  weekKey  = isoWeekKey(now);
+  return todayKey;
+}
+refreshDayModel();
 
 let currentTab = 'today';
 let statFilter = 'all';
@@ -10861,6 +10880,44 @@ function daysOverdue(dateStr) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((today - due) / 86400000);
 }
+// The day having moved on while the window sat open. Everything below reads
+// the day model, so all they need is to be drawn again - and the escalation
+// pass re-run, because a task that was due yesterday is overdue this morning.
+// It only ever escalates a task it has not escalated before, so running it
+// twice in a day costs nothing.
+let _dayWatch = null;
+function checkDayRolled() {
+  const was = _dayWatch;
+  const nowKey = refreshDayModel();
+  if (was === null || nowKey === was) { _dayWatch = nowKey; return false; }
+  _dayWatch = nowKey;
+  try { autoEscalateOverdueTasks(); } catch (e) {}
+  // Each one guarded on its own: a page that fails to draw must not stop the
+  // rest of the Hub from catching up with the date.
+  ['renderTasks', 'renderMorning', 'renderExceptions', 'renderHomeFeed',
+   'renderHomeBriefing', 'renderWeekAtAGlance', 'renderKpiOpsList',
+   'renderInboxAlerts', 'renderDayModeBanner'].forEach(fn => {
+    try { if (typeof window[fn] === 'function') window[fn](); } catch (e) {}
+  });
+  if (typeof showToast === 'function') {
+    showToast('<i class="ti ti-sunrise"></i>Good morning \u2014 the board has rolled over to today', 4200);
+  }
+  return true;
+}
+
+// Midnight does not announce itself to a page that is already open, so it gets
+// checked for: once a minute, and again the moment the window is looked at
+// after being away. The second one is the one that matters, because the day
+// turns while nobody is watching and the first thing that happens in the
+// morning is this window coming back to the front.
+//
+// Started here rather than in initApp(), which only gets that far once the
+// database has loaded. A slow or failed load is no reason for a window left
+// open all night to go on believing it is yesterday.
+_dayWatch = todayKey;
+setInterval(checkDayRolled, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDayRolled(); });
+
 function autoEscalateOverdueTasks() {
   let changed = false;
   customTasks.forEach(t => {
@@ -26614,6 +26671,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.3', type: 'patch', date: '17 Nov 2026', title: 'Fixed: a window left open overnight still thought it was yesterday', changes: [
+    'The Hub starts with Windows and never gets closed, and the date it ran on was worked out once while the page loaded and then never again. So a window left open past midnight went on believing it was yesterday for as long as it stayed open',
+    'What that actually did: <b>weekly tasks showed on yesterday\u2019s weekday</b>, yesterday\u2019s ticks were still ticked, and ticking one this morning wrote into yesterday\u2019s bucket. Fortnightly and monthly tasks were judged against yesterday\u2019s date, snoozes carried over, and the KPI operator list counted yesterday\u2019s emails as today\u2019s',
+    'The date is now worked out again whenever it has moved on \u2014 checked once a minute, and again the moment you look at the window after being away, which is the one that matters because the day turns while nobody is watching',
+    'It re-draws rather than reloading. A reload would have been two lines and would have thrown away whatever you had loaded \u2014 a morning\u2019s stock file, a half-written note \u2014 to fix something that only needed the figures worked out again',
+    'Overdue tasks get their escalation pass re-run at the same time, since a task that was due yesterday is overdue this morning',
+    'You will see a short &ldquo;the board has rolled over to today&rdquo; note the first time you come back to a window that has been sitting open all night',
+  ]},
   { ver: '4.47.2', type: 'patch', date: '17 Nov 2026', title: 'Two fixes from a bug sweep of the four most-used tools', changes: [
     '<b>Allocation Validator was handing you the wrong file.</b> Since the validator started drawing inside Stock Checks as well, both pages shared one set of results \u2014 whichever ran last. So the Allocation Validator page could be sitting there showing its own file while its Download button exported the Stock Checks one, under the Stock Checks name. The call list copy and download had it too',
     'Each rendered block now keeps the file it was drawn from, and every button inside one acts on its own block rather than on whatever ran last. Verified both ways round',
