@@ -3933,6 +3933,103 @@
     .esr-age { margin-left:0; width:100%; }
   }
 
+  /* ---- The escalation email, per job -----------------------------------
+     Sits inside a job card. The button carries the verdict before it is
+     pressed, so a job with nothing to write on looks different from one
+     that is ready to go. */
+  .sv-cols-hd { display:flex; align-items:center; gap:7px; margin:14px 0 9px; }
+  .sv-cols-hd i { font-size:14px; color:var(--purple-text); }
+  .sv-cols-hd span { font-size:10.5px; font-weight:700; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-3); }
+
+  .egn-wrap { margin-top:9px; padding-top:9px; border-top:0.5px dashed var(--border-md); }
+  .egn-go { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:11.5px;
+    font-weight:600; padding:6px 11px; border-radius:8px; cursor:pointer;
+    background:var(--surface2); border:0.5px solid var(--border-md); color:var(--text);
+    transition:border-color .16s, background .16s, color .16s; }
+  .egn-go i { font-size:14px; }
+  .egn-go:hover { background:var(--surface); border-color:var(--purple-text); color:var(--purple-text); }
+  .egn-go.on { background:var(--purple-bg); border-color:var(--purple-text); color:var(--purple-text); }
+  .egn-go.egn-review i { color:var(--amber-text); }
+  .egn-go.egn-error i { color:var(--coral-text); }
+  .egn-go.egn-review:hover { border-color:var(--amber-text); color:var(--amber-text); }
+  .egn-go.egn-error:hover { border-color:var(--coral-text); color:var(--coral-text); }
+
+  .egn-panel { margin-top:11px; display:flex; flex-direction:column; gap:10px; }
+
+  /* Why there is no email, where there is no email. */
+  .egn-verdict { display:flex; gap:9px; padding:11px 13px; border-radius:10px;
+    background:var(--surface2); border:0.5px solid var(--border-md); }
+  .egn-verdict > i { font-size:16px; flex-shrink:0; margin-top:1px; }
+  .egn-verdict.warn > i { color:var(--amber-text); }
+  .egn-verdict.bad > i { color:var(--coral-text); }
+  .egn-verdict div { display:flex; flex-direction:column; gap:3px; }
+  .egn-verdict b { font-size:12px; font-weight:700; color:var(--text); }
+  .egn-verdict span { font-size:11.5px; color:var(--text-2); line-height:1.55; }
+
+  .egn-raw { padding:10px 13px; border-radius:10px; background:var(--surface2);
+    border:0.5px solid var(--border); }
+  .egn-raw span { display:block; font-size:10px; font-weight:700; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-3); margin-bottom:5px; }
+  .egn-raw p { margin:0; font-size:12px; color:var(--text-2); line-height:1.6; }
+
+  /* The site's other jobs. One site, one MID, one address, a TID each - so
+     several jobs usually belong in one email, and the picker says which. */
+  .egn-mates { padding:10px 13px; border-radius:10px; background:var(--surface2);
+    border:0.5px solid var(--border); }
+  .egn-mates-hd { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+  .egn-mates-hd i { font-size:14px; color:var(--purple-text); flex-shrink:0; }
+  .egn-mates-hd span { font-size:11px; color:var(--text-2); }
+  .egn-mates-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .egn-mate { display:inline-flex; align-items:center; gap:6px; font-family:inherit; cursor:pointer;
+    padding:5px 9px; border-radius:7px; background:var(--surface); color:var(--text);
+    border:0.5px solid var(--border-md); transition:border-color .16s, background .16s; }
+  .egn-mate i { font-size:13px; color:var(--text-3); }
+  .egn-mate b { font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:11.5px; font-weight:600; }
+  .egn-mate span { font-size:10px; color:var(--text-3); }
+  .egn-mate:hover { border-color:var(--purple-text); }
+  .egn-mate.on { border-color:var(--purple-text); background:var(--purple-bg); }
+  .egn-mate.on i { color:var(--purple-text); }
+  .egn-mate.done b { text-decoration:line-through; text-decoration-thickness:1px; }
+
+  .egn-warns { display:flex; flex-direction:column; gap:6px; }
+  .egn-warn { display:flex; gap:8px; padding:9px 12px; border-radius:9px;
+    background:var(--amber-bg); border:0.5px solid color-mix(in srgb, var(--amber-text) 28%, transparent); }
+  .egn-warn i { font-size:14px; color:var(--amber-text); flex-shrink:0; margin-top:1px; }
+  .egn-warn span { font-size:11.5px; color:var(--text-2); line-height:1.55; }
+
+  .egn-prehd { display:flex; align-items:center; gap:7px; }
+  .egn-prehd i { font-size:14px; color:var(--purple-text); }
+  .egn-prehd span { font-size:11px; font-weight:600; color:var(--text-2); }
+
+  /* The draft itself. Monospace and selectable, because it is going to be
+     read closely and then pasted somewhere else. */
+  .egn-pre { margin:0; padding:14px 16px; border-radius:11px; background:var(--surface2);
+    border:0.5px solid var(--border-md); font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:11.5px; line-height:1.72; color:var(--text); white-space:pre-wrap;
+    word-break:break-word; overflow-x:auto; user-select:text; }
+
+  .egn-acts { display:flex; align-items:center; gap:11px; flex-wrap:wrap; }
+  /* Dark text on the bright fill, which is what .generate-btn does and what
+     the contrast needs: white on this purple measures 2.8 to 1, the dark 7.2. */
+  .egn-copy { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:12px;
+    font-weight:600; padding:9px 15px; border-radius:9px; cursor:pointer;
+    background:var(--purple-text); border:0; color:var(--bg); transition:opacity .16s; }
+  .egn-copy:hover { opacity:.88; }
+  .egn-copy.copied { background:var(--green-text); }
+  .egn-copy i { font-size:14px; }
+  .egn-acts > span { font-size:11px; color:var(--text-3); }
+
+  .egn-foot { display:flex; gap:8px; padding:9px 12px; border-radius:9px; background:var(--surface2);
+    border:0.5px solid var(--border); }
+  .egn-foot i { font-size:14px; color:var(--text-3); flex-shrink:0; margin-top:1px; }
+  .egn-foot span { font-size:11px; color:var(--text-3); line-height:1.6; }
+
+  @media (max-width:760px) {
+    .egn-mate span { display:none; }
+    .egn-pre { font-size:11px; padding:12px 13px; }
+  }
+
   /* What the mapper says about how the dates are being read. The assumption
      has to be visible: a day-first reading of a month-first file is wrong in a
      way that looks perfectly reasonable on screen. */
@@ -17266,6 +17363,7 @@ function esrStatus(msg, type) {
 async function esrLoad(file) {
   if (!file) return;
   esrOut = null; esrDone = false; esrOpen = new Set();
+  egnPanel = null; egnSel = new Set();
   esrRenderConfig();
   const res = document.getElementById('esr-result');
   if (res) res.innerHTML = '';
@@ -17326,6 +17424,30 @@ function esrRenderMapper() {
       sel('esr-c-type', svAutoDetect(esrHeaders, ['Job Type','Type','Job Category Short Name'], ['jobtype','category','type'])) + '</div>' +
     '<div class="sv-col-row"><span class="sv-col-label">Status' + opt + '</span>' +
       sel('esr-c-status', svAutoDetect(esrHeaders, ['Status','Job Status'], ['status'])) + '</div>' +
+    '</div>' +
+    // Everything the escalation email has to name. The older export stops at
+    // Location Name, so these stay empty on it and the email button does not
+    // appear rather than offering to write something full of holes.
+    '<div class="sv-cols-hd"><i class="ti ti-mail-forward"></i><span>For the escalation email</span></div>' +
+    '<div class="sv-cols">' +
+    '<div class="sv-col-row"><span class="sv-col-label">TID' + opt + '</span>' +
+      sel('esr-c-tid', svAutoDetect(esrHeaders, ['Sublocation Name','TID','Terminal ID'], ['sublocation','tid','terminalid'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">MID' + opt + '</span>' +
+      sel('esr-c-mid', svAutoDetect(esrHeaders, ['Customer Location ID','MID','Merchant ID'], ['customerlocationid','mid','merchantid'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Address' + opt + '</span>' +
+      sel('esr-c-addr', svAutoDetect(esrHeaders, ['Location Address Line 1','Address Line 1','Address'], ['addressline','address','street'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Suburb' + opt + '</span>' +
+      sel('esr-c-suburb', svAutoDetect(esrHeaders, ['Location Suburb','Suburb','City'], ['suburb','city','town'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">State' + opt + '</span>' +
+      sel('esr-c-state', svAutoDetect(esrHeaders, ['Location State','State'], ['locationstate','state'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Postcode' + opt + '</span>' +
+      sel('esr-c-post', svAutoDetect(esrHeaders, ['Location Postcode','Postcode','Post Code'], ['postcode','postal','zip'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Contact name' + opt + '</span>' +
+      sel('esr-c-contact', svAutoDetect(esrHeaders, ['Contact Person','Contact Name','Contact'], ['contactperson','contactname','contact'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Phone' + opt + '</span>' +
+      sel('esr-c-ph1', svAutoDetect(esrHeaders, ['Phone','Phone 1','Contact Number'], ['phone','mobile','contactnumber'])) + '</div>' +
+    '<div class="sv-col-row"><span class="sv-col-label">Second phone' + opt + '</span>' +
+      sel('esr-c-ph2', svAutoDetect(esrHeaders, ['Phone #2','Phone 2','Alternate Phone'], ['phone2','phonetwo','altphone'])) + '</div>' +
     '</div>' +
     '<div class="stk-dnote"><i class="ti ti-eye-check"></i><span>Every job it sets aside is listed with the ' +
       'words it went on, so you can see the rule that moved it. The two it uses: a username ending ' +
@@ -17403,6 +17525,11 @@ function esrRun() {
   }
   const cCreated = pick('esr-c-created'), cWhen = pick('esr-c-when'), cSite = pick('esr-c-site');
   const cTech = pick('esr-c-tech'), cPri = pick('esr-c-pri'), cType = pick('esr-c-type'), cStatus = pick('esr-c-status');
+  const cTid = pick('esr-c-tid'), cMid = pick('esr-c-mid'), cAddr = pick('esr-c-addr');
+  const cSuburb = pick('esr-c-suburb'), cState = pick('esr-c-state'), cPost = pick('esr-c-post');
+  const cContact = pick('esr-c-contact'), cPh1 = pick('esr-c-ph1'), cPh2 = pick('esr-c-ph2');
+  // A panel left open over a re-run would be pointing at the old job list.
+  egnPanel = null; egnSel = new Set();
   const log = esrLogged();
   const seen = new Set();
   const jobs = [];
@@ -17422,6 +17549,15 @@ function esrRun() {
       status: cStatus ? String(r[cStatus] || '').trim() : '',
       age: cCreated ? esrAgeDays(r[cCreated]) : null,
       when: cWhen ? String(r[cWhen] || '').trim() : '',
+      tid: cTid ? String(r[cTid] || '').trim() : '',
+      mid: cMid ? String(r[cMid] || '').trim() : '',
+      addr1: cAddr ? String(r[cAddr] || '').trim() : '',
+      suburb: cSuburb ? String(r[cSuburb] || '').trim() : '',
+      state: cState ? String(r[cState] || '').trim() : '',
+      post: cPost ? String(r[cPost] || '').trim() : '',
+      contact: cContact ? String(r[cContact] || '').trim() : '',
+      ph1: cPh1 ? String(r[cPh1] || '').trim() : '',
+      ph2: cPh2 ? String(r[cPh2] || '').trim() : '',
     };
     const c = esrClassify(j, log);
     j.bucket = c.bucket; j.why = c.why; j.quote = c.quote || ''; j.src = c.src;
@@ -17430,7 +17566,8 @@ function esrRun() {
   });
   const by = b => jobs.filter(j => j.bucket === b);
   esrOut = { go: by('go'), check: by('check'), skip: by('skip'), all: jobs,
-             cols: { note: !!cNote, by: !!cBy, created: !!cCreated } };
+             cols: { note: !!cNote, by: !!cBy, created: !!cCreated,
+                     tid: !!cTid, mid: !!cMid } };
   esrDone = true;
   esrRenderConfig();
   esrRender();
@@ -17571,6 +17708,7 @@ function esrCard(j, tone) {
     esrNoteHtml(j) +
     (j.why ? '<div class="esr-why"><i class="ti ' + (ESR_SRC_ICO[j.src] || 'ti-info-circle') + '"></i>' +
       '<span>' + esc(j.why) + (j.quote ? ' — &ldquo;' + esc(j.quote) + '&rdquo;' : '') + '</span></div>' : '') +
+    (tone === 'skip' ? '' : egnCardBits(j)) +
     '</div>';
 }
 
@@ -17660,6 +17798,573 @@ function esrRender() {
   }
 
   out.innerHTML = html;
+}
+
+// ===== ESCALATION EMAIL GENERATOR =====
+// Writes the ANZ escalation email for a job, or refuses to. It is deliberately
+// incapable of inventing anything: every sentence it produces is either a fixed
+// phrase, a reading of a closed-vocabulary field from the export, or the
+// technician's own words in quotes. If the note does not carry enough to say
+// what happened, it says so instead of writing something plausible.
+
+// Placeholders the export uses where a value is missing. "SERIAL NUMBER" turns
+// up in both the TID and MID columns on rows where nobody filled them in, and
+// printing it into an email would read as a real identifier.
+const EGN_JUNK = /^(?:n\/?a|na|nil|none|null|nan|-+|\.+|unknown|tbc|tba|serial\s*number|no\s*(?:tid|mid|phone|contact))$/i;
+function egnHas(v) {
+  const s = String(v == null ? '' : v).trim();
+  return s !== '' && !EGN_JUNK.test(s);
+}
+function egnVal(v) { return egnHas(v) ? String(v).trim() : ''; }
+
+// The four job types in the export, and how the desk writes each one.
+const EGN_TYPE = {
+  'install commission':    { noun: 'install job',             label: 'Install',
+    did: ['attended site to complete an install',  'attended site to complete the installs'] },
+  'device upgrade':        { noun: 'upgrade job',             label: 'Upgrade',
+    did: ['attended site to carry out an upgrade', 'attended site to carry out the upgrades'] },
+  'decommission location': { noun: 'decommission job',        label: 'Decommission',
+    did: ['attended site to collect the terminal', 'attended site to collect the terminals'] },
+  'general maintenance':   { noun: 'general maintenance job', label: 'General Maintenance',
+    did: ['attended site for a service call',      'attended site for a service call'] },
+};
+function egnType(raw) {
+  const k = String(raw || '').trim().toLowerCase();
+  if (EGN_TYPE[k]) return EGN_TYPE[k];
+  const t = String(raw || '').trim();
+  return { noun: t ? t.toLowerCase() + ' job' : 'job', did: ['attended site', 'attended site'], label: t || 'Job' };
+}
+
+// Delayed Reason is a closed list of ten values in the export. Each clause here
+// says only what its category literally says - the detail comes from the quote.
+const EGN_DELAY = {
+  'terminal not onsite':                     ['the terminal was not on site', 'the terminals were not on site'],
+  'terminal not received':                   ['the terminal was not received', 'the terminals were not received'],
+  'pos software':                            ['the job was held up by the POS software at site', 'the jobs were held up by the POS software at site'],
+  'incorrect serial or model received':      ['the serial or model received did not match the job', 'the serials or models received did not match the jobs'],
+  'pc administrative privileges required':   ['administrative privileges were needed on the PC at site', 'administrative privileges were needed on the PC at site'],
+  'store closed':                            ['the store was closed', 'the store was closed'],
+  'terminal not required':                   ['the terminal was not required', 'the terminals were not required'],
+  'store too busy to complete upgrade':      ['the store was too busy for the work to be completed', 'the store was too busy for the work to be completed'],
+  'additional terminals received':           ['additional terminals were received', 'additional terminals were received'],
+  'windows operating system not compatible': ['the Windows operating system at site was not compatible', 'the Windows operating system at site was not compatible'],
+};
+function egnDelayClause(reason, many) {
+  const k = String(reason || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (EGN_DELAY[k]) return EGN_DELAY[k][many ? 1 : 0];
+  const r = String(reason || '').trim();
+  // An unrecognised category still gets named, just not paraphrased.
+  if (!r) return '';
+  return (many ? 'the jobs were delayed, with the reason recorded on them as “'
+               : 'the job was delayed, with the reason recorded on it as “') + r + '”';
+}
+
+// The note points at writing that is not in this file. The user cannot check it
+// and neither can ANZ, so these are handed back for review rather than guessed.
+const EGN_REFER = [
+  { re: /\b(?:see|refer\s+to|check|read|as\s+per)\s+(?:the\s+)?(?:previous|prior|earlier|last)\b/i,  why: 'it points at earlier notes' },
+  { re: /\b(?:see|refer\s+to|check|read)\s+(?:the\s+)?(?:tech(?:nician)?s?’?\'?\s*)?notes?\b/i, why: 'it points at other notes' },
+  { re: /\b(?:read|see|refer\s+to|check)\s+(?:the\s+)?(?:notes?\s+)?(?:above|below)\b/i,             why: 'it points at other writing on the job' },
+  { re: /\bnotes?\s+(?:below|above)\b/i,                                                             why: 'it points at other writing on the job' },
+  { re: /\b(?:see|refer\s+to|as\s+per|duplicate\s+of)\s+(?:call|job|ticket|wo)\s*#?\s*\d{5,}/i,      why: 'it points at another job' },
+  { re: /\bprevious\s+notes?\b/i,                                                                    why: 'it points at previous notes' },
+];
+
+// "Ignore previous notes, for another job. Different serial but merchant states
+// the device is the only one left..." is the opposite of a pointer - it tells
+// you to disregard the other notes and then says everything itself. Matching on
+// the words alone would flag the one note that went out of its way to be clear.
+const EGN_REFER_CANCEL = /\b(?:ignore|ignoring|disregard|disregarding|not?\s+relevant|irrelevant)\s*$/i;
+
+function egnReferHit(body) {
+  const s = String(body || '');
+  for (const p of EGN_REFER) {
+    const m = s.match(p.re);
+    if (!m) continue;
+    const before = s.slice(Math.max(0, m.index - 24), m.index);
+    if (EGN_REFER_CANCEL.test(before.replace(/[\s,;:(—-]+$/, ' ').replace(/\s+$/, ''))) continue;
+    return { why: p.why, quote: m[0].trim() };
+  }
+  return null;
+}
+
+// Positive evidence that the note describes something blocking the job. Without
+// either this or a Delayed Reason there is no problem to escalate - the note is
+// a status update, a timestamp or an automated message.
+// A note earns an email if it says something went wrong, or if it asks for
+// something to be done. "Please closed this Amtek job" is deliberately not in
+// the request list: ANZ asking us to close a job is not an escalation to ANZ.
+const EGN_PROBLEM = new RegExp([
+  // something went wrong
+  '\\b(?:not|no|cannot|can\u2019?\'?t|couldn\u2019?\'?t|could\\s+not|unable|won\u2019?\'?t|will\\s+not',
+  '|doesn\u2019?\'?t|didn\u2019?\'?t|fail(?:ed|s|ing)?|issue|issues|problem|error|stuck|declined',
+  '|unsupported|incompatible|missing|incorrect|wrong|mismatch|bricked|lost|delayed|without',
+  '|escalat\\w*|awaiting|await|hold|held|blocked|refus\\w*|require[sd]?|requesting',
+  '|troubleshoot\\w*|reattend|re-?attend|rts|resend|re-?dispatch)\\b',
+  // or asks for something to be done about it
+  '|\\bneeds?\\s+(?:to|a|an|another|further|bank|anz|linkly|new|different|check)\\b',
+  '|\\bno\\s+luck\\b|\\breturn(?:ed)?\\s+to\\s+sender\\b',
+  '|\\bplease\\s+(?:confirm|advise|check|arrange|resend|re-?dispatch|re-?schedule|re-?allocate',
+  '|reschedule|reallocate|organise|organize|provide|assist|escalate|look)\\b',
+].join(''), 'i');
+
+// Automated or integration-written rows: there is no technician account at all.
+const EGN_ROBOT = /^(?:integration\b|starshipit\b|system\b|automation\b)/i;
+
+// "Our technician attended site" is the natural opening and it is true of most
+// of these jobs, but nothing in the export states it. Job 1863699 is ANZ
+// writing to US about closing tickets for inactivity; 1998228 is a return
+// satchel that came back, with nobody going anywhere. So the email leads with
+// the delayed reason, which the file does state, and only says a technician
+// attended where the note puts them there beyond argument. Past tense and
+// locatives: "Will attend once ANZ fixes their TMS" is a plan, not a visit.
+const EGN_ATTENDED = /\b(?:attended|arrived|went\s+to\s+site|came\s+on\s*site|(?:whilst|while)\s+on\s*site|on\s*site\s+(?:at|from|\d)|peaked?\s+through|when\s+i\s+picked|technician\s+(?:attended|went))\b/i;
+
+// The note is a message somebody addressed to us rather than a field note - ANZ
+// writing back, or a contractor relaying them. Quoting "we will be closing off
+// the tickets on our system" as our own technician's words would mislead.
+const EGN_INBOUND = /^\s*(?:\w{1,4}\s*:\s*)?hi\s+(?:team|all|guys|there)\b|\bon\s+our\s+(?:end|system)\b/i;
+
+// The note says ANZ or their helpdesk got involved. The verb decides the voice:
+// "Called ANZ WL HD" is the technician doing it and is written as such, while
+// "Raised issue with ANZWL" says only that it happened. Amtek's own helpdesk is
+// excluded - "Missed call from Amtek HD" is not contact with ANZ.
+const EGN_ANZ_ACTIVE = /^(?:call|contact|spoke|speaking|rang|phoned|troubleshoot|discussed)/i;
+const EGN_ANZ = /\b(call(?:ed|ing)?|contact(?:ed|ing)?|spoke|speaking|rang|phoned|troubleshoot(?:ed|ing)?|discussed|raised|logged|informed)\b([^.!?]{0,60}?)\b(anz\s*wl|anzwl|anz|help\s*desk|helpdesk|hd)\b/i;
+
+function egnAnzHit(body) {
+  const m = String(body || '').match(EGN_ANZ);
+  if (!m) return null;
+  const between = m[2] || '', target = m[3] || '';
+  // "from Amtek HD" - our own desk, not theirs.
+  if (/\bamtek\b/i.test(between) && /^(?:help\s*desk|helpdesk|hd)$/i.test(target)) return null;
+  return {
+    active: EGN_ANZ_ACTIVE.test(m[1]),
+    hd: /\b(?:help\s*desk|helpdesk|hd)\b/i.test(target) ||
+        /\b(?:anz|anzwl)\s*(?:wl\s*)?(?:help\s*desk|helpdesk|hd)\b/i.test(String(body)),
+  };
+}
+
+// The note is asking for the job to be closed off rather than progressed.
+const EGN_CLOSE = /\b(?:please\s+clos\w+|can\s+(?:we|you)\s+close|closing\s+(?:the|this)\s+(?:call|job)|about\s+closing|to\s+be\s+closed)\b/i;
+
+// ---- the verdict -----------------------------------------------------------
+// 'ready'  - an email is written
+// 'review' - the note points somewhere this file cannot follow; a human looks
+// 'error'  - the file cannot support an email at all, and says which part
+
+function egnVerdict(j) {
+  const warns = [];
+  const split = esrSplitNote(j.note);
+  const body = String(split.body || '').replace(/\s+/g, ' ').trim();
+  const reason = String(split.reason || '').trim();
+
+  // An email nobody can act on is worse than no email, so identity first.
+  const missing = [];
+  if (!egnHas(j.tid)) missing.push('TID');
+  if (!egnHas(j.mid)) missing.push('MID');
+  if (missing.length) {
+    return { state: 'error', why: 'the export has no ' + missing.join(' or ') + ' for this job, so there is nothing for ANZ to look up', warns: warns };
+  }
+
+  if (EGN_ROBOT.test(String(j.by || '').trim())) {
+    return { state: 'error', why: 'the last update was written by an integration, not a technician, so there is no account of what happened', warns: warns };
+  }
+
+  const refer = egnReferHit(body);
+  if (refer) {
+    return { state: 'review', why: refer.why + ' (“' + refer.quote + '”), which are not in this export', warns: warns };
+  }
+
+  // Words that carry meaning, as opposed to serial numbers and timestamps.
+  const words = body.split(/\s+/).filter(w => /^[A-Za-z][A-Za-z’'-]{1,}$/.test(w));
+  if (!reason && words.length < 4) {
+    return { state: 'error', why: body ? 'the note is too short to say what happened — “' + body + '”' : 'there is no note on the job', warns: warns };
+  }
+  if (!reason && !EGN_PROBLEM.test(body)) {
+    return { state: 'error', why: 'the note does not describe anything blocking the job — it reads as a status update, so there is nothing to put to ANZ', warns: warns };
+  }
+  if (reason && words.length < 4) {
+    warns.push('The note itself says almost nothing — this leans entirely on the delayed reason recorded on the job.');
+  }
+
+  if (!egnHas(j.contact)) warns.push('No contact name in the export — the line is left blank.');
+  if (!egnHas(egnPhone(j))) warns.push('No contact number in the export — the line is left blank.');
+  if (!egnHas(j.addr1) || !egnHas(j.suburb)) warns.push('The site address is incomplete in the export.');
+
+  return { state: 'ready', why: '', warns: warns };
+}
+
+// Excel reads a phone column as a number and eats the leading zero, so 57 of
+// the 329 numbers in a single export come through nine digits long. A zero goes
+// back only where that is the one possible reading: nine digits beginning 2, 3,
+// 4, 7 or 8 is an Australian landline or mobile missing its zero. Anything else
+// - including a nine-digit number that already starts with 0, which is simply
+// short - is printed exactly as the file has it rather than being guessed at.
+function egnFixPhone(v) {
+  const s = String(v || '').trim();
+  if (/^[23478]\d{8}$/.test(s)) return '0' + s;
+  return s;
+}
+function egnPhone(j) {
+  const v = egnHas(j.ph1) ? egnVal(j.ph1) : (egnHas(j.ph2) ? egnVal(j.ph2) : '');
+  return egnFixPhone(v);
+}
+// Did a leading zero have to be put back? Worth saying once on screen.
+function egnPhoneFixed(j) {
+  const v = egnHas(j.ph1) ? egnVal(j.ph1) : (egnHas(j.ph2) ? egnVal(j.ph2) : '');
+  return v !== '' && egnFixPhone(v) !== v;
+}
+function egnAddress(j) {
+  // Some address lines in the export already end in a comma - "Building C
+  // Suite 2.03 33-35 Sanders Street," - and joining those on ", " gives
+  // "Sanders Street,, Pyrmont". Each part loses its own trailing punctuation
+  // before the parts are put together.
+  const tidy = v => egnVal(v).replace(/[\s,;]+$/, '');
+  const a = tidy(j.addr1);
+  const tail = [tidy(j.suburb), tidy(j.state), tidy(j.post)].filter(Boolean).join(' ');
+  return [a, tail].filter(Boolean).join(', ');
+}
+
+// ---- bundling --------------------------------------------------------------
+// Jobs at one site go in one email, which is what the desk already does: the
+// site has one MID and one address, and each job its own TID. But a site can
+// hold two unrelated stories - Tugun Market has eight jobs, four of them a
+// Linkly fault and four saying only "Read below." - so the note has to match
+// too, or the email would recount one job's problem under another's number.
+
+function egnSiteKey(j) {
+  const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const mid = egnHas(j.mid) ? norm(j.mid) : '';
+  const addr = norm(j.addr1) + '|' + norm(j.suburb) + '|' + norm(j.post);
+  // A junk MID must not pull unrelated sites together, so it falls back to the
+  // address, which the export fills on every row.
+  return (mid ? 'm:' + mid : 's:' + norm(j.site)) + '|' + addr;
+}
+function egnStoryKey(j) {
+  return String(j.note || '').toLowerCase().replace(/\s+/g, ' ').replace(/[^a-z0-9 ]/g, '').trim();
+}
+
+// Four jobs at Brisbane Racing Club carry the same sentence, except that one
+// technician typed "at a prior date" where the others typed "on a prior date".
+// Keyed on the exact text that one job falls out of its own bundle, so stories
+// are compared on the words they use: near-identical ones are the same story.
+function egnStoryWords(j) {
+  return new Set(egnStoryKey(j).split(' ').filter(Boolean));
+}
+function egnSimilar(a, b) {
+  const A = egnStoryWords(a), B = egnStoryWords(b);
+  if (!A.size && !B.size) return 1;
+  if (!A.size || !B.size) return 0;
+  let shared = 0;
+  A.forEach(w => { if (B.has(w)) shared++; });
+  return (2 * shared) / (A.size + B.size);          // Dice coefficient
+}
+const EGN_SAME_STORY = 0.9;
+
+// One job's natural bundle: the same site, and a note telling the same story.
+// A short note needs to match exactly - at four or five words, dropping one
+// changes the meaning, and "Not received" against "Not onsite" would score far
+// too well on the words they share.
+function egnStoryMates(j, all) {
+  const site = egnSiteKey(j);
+  const exact = egnStoryKey(j);
+  const short = egnStoryWords(j).size < 8;
+  return all.filter(o => {
+    if (egnSiteKey(o) !== site) return false;
+    if (String(o.job) === String(j.job)) return true;
+    if (egnStoryKey(o) === exact) return true;
+    if (short) return false;
+    return egnSimilar(j, o) >= EGN_SAME_STORY;
+  });
+}
+
+function egnBundleKey(j) { return egnSiteKey(j) + '||' + egnStoryKey(j); }
+
+// Every job that is up for an email, bundled. Jobs are kept in job-number order
+// so the Amtek Job and TID lines pair up positionally, the way the desk writes
+// them, and so the same file always produces the same email.
+function egnJobSort(a, b) {
+  return String(a.job).localeCompare(String(b.job), undefined, { numeric: true });
+}
+function egnBundles(jobs) {
+  const bundles = [];
+  jobs.forEach(j => {
+    // Joins the first bundle at this site whose story matches. Comparing
+    // against the bundle's first job rather than any of them keeps a chain of
+    // slightly-different notes from dragging two real stories together.
+    const hit = bundles.find(b => egnSiteKey(b[0]) === egnSiteKey(j) &&
+      (egnStoryKey(b[0]) === egnStoryKey(j) ||
+       (egnStoryWords(j).size >= 8 && egnStoryWords(b[0]).size >= 8 && egnSimilar(b[0], j) >= EGN_SAME_STORY)));
+    if (hit) hit.push(j); else bundles.push([j]);
+  });
+  const out = new Map();
+  bundles.forEach(list => {
+    list.sort(egnJobSort);
+    out.set(egnBundleKey(list[0]), list);
+  });
+  return out;
+}
+
+// ---- the email -------------------------------------------------------------
+
+// The quotable form of a note: the technician's words, whitespace tidied, with
+// one full stop at the end however they punctuated it.
+function egnQuote(note) {
+  const body = String(esrSplitNote(note).body || '').replace(/\s+/g, ' ').trim();
+  return body ? body.replace(/[.\s]*$/, '') + '.' : '';
+}
+
+// The distinct stories across a set of jobs, each with the jobs that tell it.
+// One story is the normal case; more than one happens when the user folds a
+// site's other jobs in by hand, and then each account is quoted under its own
+// job numbers rather than one standing in for the others.
+function egnStories(bundle) {
+  const out = [];
+  bundle.forEach(j => {
+    const hit = out.find(s => egnStoryKey(s.jobs[0]) === egnStoryKey(j) ||
+      (egnStoryWords(j).size >= 8 && egnStoryWords(s.jobs[0]).size >= 8 && egnSimilar(s.jobs[0], j) >= EGN_SAME_STORY));
+    if (hit) hit.jobs.push(j); else out.push({ jobs: [j] });
+  });
+  out.forEach(s => { s.jobs.sort(egnJobSort); s.quote = egnQuote(s.jobs[0].note); });
+  return out;
+}
+
+function egnEmail(jobs) {
+  // Sorted here as well as in egnBundles, so a selection the user assembled by
+  // hand still pairs the Amtek Job and TID lines up in the same order.
+  const bundle = jobs.slice().sort(egnJobSort);
+  const first = bundle[0];
+  const many = bundle.length > 1;
+  const split = esrSplitNote(first.note);
+  const body = String(split.body || '').replace(/\s+/g, ' ').trim();
+  // The delayed reason is only asserted over the whole email if every job in it
+  // carries the same one. Folding another of the site's jobs in can bring a
+  // different reason with it, and one job's cause is not the others'.
+  const reasons = [];
+  bundle.forEach(j => {
+    const r = String(esrSplitNote(j.note).reason || '').trim().toLowerCase();
+    if (!reasons.includes(r)) reasons.push(r);
+  });
+  const delay = reasons.length === 1 ? egnDelayClause(split.reason, many) : '';
+  const stories = egnStories(bundle);
+  // Attendance is claimed only if some note in the email evidences a visit.
+  const went = bundle.some(j => EGN_ATTENDED.test(String(esrSplitNote(j.note).body || '')));
+
+  const types = [];
+  bundle.forEach(j => { const t = egnType(j.type); if (!types.includes(t.label)) types.push(t.label); });
+  const t = egnType(first.type);
+  const noun = types.length > 1 ? (many ? 'jobs' : 'job') : t.noun + (many ? 's' : '');
+
+  // Paragraph one: what they went for, what stopped it, their own words.
+  let said = false;                 // has the opener already said "outstanding"
+  let p = 'Regarding ' + (many ? 'these ' : 'this ') + noun + ', Amtek # ' +
+          bundle.map(j => j.job).join(', ') + ', please be advised that ';
+  if (went) {
+    p += 'our technician ' + (types.length > 1 ? 'attended site' : t.did[many ? 1 : 0]);
+    if (delay) p += ', however ' + delay;
+  } else if (delay) {
+    p += delay;
+  } else {
+    p += many ? 'these jobs remain outstanding' : 'this job remains outstanding';
+    said = true;
+  }
+  p += '.';
+
+  // Attribution follows who wrote the note, not whether they went to site: on
+  // these rows the author is the allocated technician or their company, the
+  // desk's own rows having been filtered out before this point.
+  const inbound = bundle.every(j => /\banz\b/i.test(String(j.by || '')) ||
+                                    EGN_INBOUND.test(String(esrSplitNote(j.note).body || '')));
+  const attrib = inbound ? 'the notes on the job' : 'the technician’s notes';
+  if (stories.length === 1) {
+    if (stories[0].quote) p += ' As per ' + attrib + ': “' + stories[0].quote + '”';
+  } else {
+    // Several accounts in one email: each is quoted under the jobs it belongs
+    // to, so no job is described by another job's note.
+    // Each quote already ends in a full stop, so the list does not take another.
+    p += ' As per ' + attrib + ': ' + stories.map(s =>
+      'on ' + s.jobs.map(j => j.job).join(', ') + ', “' + (s.quote || 'no note was left') + '”'
+    ).join('; ');
+  }
+
+  const anz = egnAnzHit(body);
+  if (anz) {
+    // The note's own verb says whether a person did this, so the sentence
+    // follows it rather than guessing from whether they went to site.
+    p += ' ' + (anz.active
+                ? 'Our technician ' + (anz.hd ? 'contacted the ANZ helpdesk' : 'raised this with ANZ')
+                : 'This has been ' + (anz.hd ? 'taken up with the ANZ helpdesk' : 'raised with ANZ')) +
+         ' for further assistance' +
+         // Saying "remain outstanding" twice in three sentences reads like a
+         // mail merge, so the second one goes when the opener already said it.
+         (said ? '.' : ', however the ' + (many ? 'jobs remain' : 'job remains') + ' outstanding.');
+  }
+  // The reference is often already inside the quoted note. Saying it twice in
+  // three sentences reads like a mail merge, so it is only added when the
+  // technician's own words did not already carry it.
+  const ref = (first.reason && first.reason.ref) || '';
+  if (ref && body.indexOf(ref) < 0) p += ' There is an existing ANZ reference number ' + ref + '.';
+
+  p += EGN_CLOSE.test(body)
+    ? ' Could you please confirm how you would like us to proceed with ' + (many ? 'these jobs' : 'this job') + '?'
+    : ' Could you please advise us on how to proceed with ' + (many ? 'the jobs' : 'the job') + '?';
+
+  // The detail block, in the desk's own field order. Several jobs at one site
+  // share the MID, name and address; the job numbers and TIDs run in step.
+  const tids = bundle.map(j => egnVal(j.tid)).filter(Boolean);
+  const lines = [
+    ['Amtek Job', bundle.map(j => j.job).join(' / ')],
+    ['TID', tids.join(' / ')],
+    ['MID', egnVal(first.mid)],
+    ['Name', egnVal(first.site)],
+    ['Address', egnAddress(first)],
+    ['Contact name', egnVal(first.contact)],
+    ['Contact number', egnPhone(first)],
+    ['Job Type', types.join(' / ')],
+  // A field the export does not have keeps its label and stays empty, the way
+  // the desk sends it, rather than leaving a trailing space behind the colon.
+  ].map(([k, v]) => v ? k + ': ' + v : k + ':');
+
+  return 'Hi team,\n\n' + p + '\n\n' + lines.join('\n') + '\n\nKind regards,';
+}
+
+// ---- the panel -------------------------------------------------------------
+// One panel open at a time, hung under the card whose button opened it. Nothing
+// here sends anything: it writes a draft, shows it, and copies it on request.
+
+let egnPanel = null;              // job number whose panel is open, or null
+let egnSel = new Set();           // job numbers the open email covers
+
+// The export has to carry the terminal and merchant identifiers before any of
+// this can run. The older export stops at Location Name.
+function egnUsable() {
+  return !!(esrOut && esrOut.cols && esrOut.cols.tid && esrOut.cols.mid);
+}
+
+function egnAll() { return (esrOut && esrOut.all) || []; }
+function egnFind(job) { return egnAll().find(j => String(j.job) === String(job)) || null; }
+function egnSelJobs() {
+  return egnAll().filter(j => egnSel.has(String(j.job))).sort(egnJobSort);
+}
+
+function egnOpen(job) {
+  if (egnPanel === String(job)) { egnPanel = null; egnSel = new Set(); esrRender(); return; }
+  egnPanel = String(job);
+  const j = egnFind(job);
+  // Starts on the jobs that belong together anyway: same site, same account of
+  // what happened. A sibling somebody has already emailed about is left out -
+  // it is offered in the picker, but adding it is a decision, not a default.
+  const pool = egnAll().filter(x => x.bucket !== 'skip');
+  egnSel = new Set(j ? egnStoryMates(j, pool).map(x => String(x.job)) : [String(job)]);
+  egnSel.add(String(job));
+  esrRender();
+}
+
+function egnTick(job) {
+  const k = String(job);
+  if (egnSel.has(k)) { if (egnSel.size > 1) egnSel.delete(k); } else egnSel.add(k);
+  esrRender();
+}
+
+function egnCopyEmail(btn) {
+  const j = egnFind(egnPanel);
+  if (!j) return;
+  const sel = egnSelJobs();
+  if (!sel.length) return;
+  esrCopy(egnEmail(sel), btn,
+    'Escalation email for ' + sel.length + ' job' + (sel.length === 1 ? '' : 's') + ' copied',
+    'Copied');
+}
+
+const EGN_ICO = { ready: 'ti-mail-plus', review: 'ti-mail-question', error: 'ti-mail-off' };
+const EGN_TIP = {
+  ready: 'Write the ANZ escalation email for this job',
+  review: 'This one needs a look before an email can be written',
+  error: 'There is not enough on this job to write an email',
+};
+
+// The button on a card, plus the panel when this is the open one.
+function egnCardBits(j) {
+  if (!egnUsable()) return '';
+  const v = egnVerdict(j);
+  const open = egnPanel === String(j.job);
+  return '<div class="egn-wrap">' +
+    '<button class="egn-go' + (open ? ' on' : '') + ' egn-' + v.state + '" ' +
+      'onclick="egnOpen(\'' + esc(j.job) + '\')" title="' + esc(EGN_TIP[v.state]) + '">' +
+      '<i class="ti ' + EGN_ICO[v.state] + '"></i><span>' +
+      (open ? 'Hide email' : 'Escalation email') + '</span></button>' +
+    (open ? egnPanelHtml(j, v) : '') +
+    '</div>';
+}
+
+function egnPanelHtml(j, v) {
+  if (v.state !== 'ready') {
+    const note = String(esrSplitNote(j.note).body || j.note || '').replace(/\s+/g, ' ').trim();
+    return '<div class="egn-panel">' +
+      '<div class="egn-verdict ' + (v.state === 'review' ? 'warn' : 'bad') + '">' +
+        '<i class="ti ' + (v.state === 'review' ? 'ti-eye-exclamation' : 'ti-alert-triangle') + '"></i>' +
+        '<div><b>' + (v.state === 'review' ? 'Needs a look first' : 'Cannot write this one') + '</b>' +
+        '<span>' + esc(v.why) + '.</span></div></div>' +
+      (note ? '<div class="egn-raw"><span>The note, in full</span><p>' + esc(note) + '</p></div>' : '') +
+      '<div class="egn-foot"><i class="ti ti-info-circle"></i><span>' +
+        (v.state === 'review'
+          ? 'Open the job in CMS and read the notes it points at. If they say enough, the email is a short edit of the one this page writes for similar jobs.'
+          : 'Nothing is made up to fill the gap — an email built on a note this thin would put words in the technician’s mouth.') +
+      '</span></div></div>';
+  }
+
+  const sel = egnSelJobs();
+  const site = egnSiteKey(j);
+  const mates = egnAll().filter(o => egnSiteKey(o) === site).sort(egnJobSort);
+  const blocked = sel.filter(o => String(o.job) !== String(j.job) && egnVerdict(o).state !== 'ready');
+
+  let html = '<div class="egn-panel">';
+
+  // Only worth a row if the site has more than this one job to say something
+  // about. Each chip carries why a job is or is not in the email.
+  if (mates.length > 1) {
+    html += '<div class="egn-mates"><div class="egn-mates-hd">' +
+      '<i class="ti ti-building-store"></i><span>' + mates.length + ' jobs at ' + esc(j.site || 'this site') +
+      ' — tap to put one in or take it out</span></div><div class="egn-mates-row">';
+    mates.forEach(o => {
+      const on = egnSel.has(String(o.job));
+      const ov = egnVerdict(o);
+      const tag = String(o.job) === String(j.job) ? 'this job'
+        : o.bucket === 'skip' ? 'already escalated'
+        : ov.state !== 'ready' ? (ov.state === 'review' ? 'needs a look' : 'too thin')
+        : egnStoryKey(o) === egnStoryKey(j) ? 'same note'
+        : egnStoryWords(o).size >= 8 && egnStoryWords(j).size >= 8 && egnSimilar(o, j) >= EGN_SAME_STORY ? 'same note'
+        : 'different note';
+      html += '<button class="egn-mate' + (on ? ' on' : '') + (o.bucket === 'skip' ? ' done' : '') + '" ' +
+        'onclick="egnTick(\'' + esc(o.job) + '\')"><i class="ti ' +
+        (on ? 'ti-checkbox' : 'ti-square') + '"></i><b>' + esc(o.job) + '</b><span>' + tag + '</span></button>';
+    });
+    html += '</div></div>';
+  }
+
+  const warns = v.warns.slice();
+  if (blocked.length) {
+    warns.push('You have added ' + blocked.map(o => o.job).join(', ') +
+      ', which this page would not write on ' + (blocked.length === 1 ? 'its' : 'their') +
+      ' own — ' + (blocked.length === 1 ? 'its' : 'each') + ' note is quoted as it stands.');
+  }
+  if (sel.some(o => egnPhoneFixed(o))) {
+    warns.push('A contact number came through nine digits long, which is Excel dropping a leading zero. It has been put back.');
+  }
+  if (warns.length) {
+    html += '<div class="egn-warns">' + warns.map(w =>
+      '<div class="egn-warn"><i class="ti ti-alert-circle"></i><span>' + esc(w) + '</span></div>').join('') + '</div>';
+  }
+
+  html += '<div class="egn-prehd"><i class="ti ti-mail"></i><span>Covers ' + sel.length + ' job' +
+    (sel.length === 1 ? '' : 's') + ' — read it before it goes anywhere</span></div>';
+  html += '<pre class="egn-pre">' + esc(egnEmail(sel)) + '</pre>';
+  html += '<div class="egn-acts">' +
+    '<button class="egn-copy" onclick="egnCopyEmail(this)"><i class="ti ti-copy"></i> Copy email</button>' +
+    '<span>Nothing is sent from here. It goes to the client, so it is yours to read and send.</span>' +
+    '</div>';
+  return html + '</div>';
 }
 
 // ===== EMAIL ESCALATION JOBS =====
@@ -27497,6 +28202,14 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.49.0', type: 'feature', date: '18 Nov 2026', title: 'Escalation Review writes the ANZ email', changes: [
+    '<b>An escalation email per job, in the house format.</b> Every job on the list gets a button that fills the template out of the export — Amtek job, TID, MID, name, address, contact name, contact number, job type — and writes the paragraph above it. You get a preview and a copy button; nothing is sent, because it goes to the client',
+    '<b>Jobs at one site go in one email.</b> A site has one MID and one address with a TID on each job, which is how the desk already sends them: job numbers and TIDs on one line each, in step. It groups on the site <i>and</i> on the account the notes give, so one job’s problem is never written under another job’s number — Tugun Market has eight jobs and two unrelated stories. The picker lets you fold any of the site’s other jobs in or take them out, and if what you pick disagrees about the delayed reason it stops claiming one',
+    '<b>It will not write what the note does not say.</b> No TID or MID, a note too short to carry a story, a note that is only a timestamp or a shipment update, or an update written by an integration rather than a person — each gets a plain reason instead of an email. Of 119 jobs on the latest file it writes 98 and declines 21',
+    '<b>A note pointing at notes you cannot see is flagged, not guessed.</b> &ldquo;See notes below&rdquo;, &ldquo;Read below&rdquo;, &ldquo;see call 2004058&rdquo; — eleven jobs on this file say some version of that, and each is handed back for review. &ldquo;<i>Ignore</i> previous notes&rdquo; is the opposite instruction and is read as such',
+    'The prose claims only what the file supports. It leads with the delayed reason, which the export states, and says a technician attended site only where the note puts them there — job 1863699 is ANZ writing to <i>us</i> about closing tickets, and nobody went anywhere. The technician’s own words are quoted rather than paraphrased, and &ldquo;Missed call from <i>Amtek</i> HD&rdquo; is not contact with ANZ',
+    'Excel reads a phone column as a number and eats the leading zero — 57 of 329 numbers in one export come through nine digits long. A zero goes back only where that is the one possible reading, and the panel says it did',
+  ]},
   { ver: '4.48.0', type: 'feature', date: '17 Nov 2026', title: 'Escalation Review \u2014 which escalated jobs still need an email', changes: [
     '<b>A new tool on Dispatch.</b> Drop the escalated-jobs export in and it tells you the only thing that export does not: which of those jobs nobody has actually escalated yet. On today\u2019s file that is 100 of 282 \u2014 the other 182 are already somebody\u2019s problem',
     'Two rules take jobs out. A job last updated by a username ending <b>HD</b> or <b>SDC</b> is the desk\u2019s, and a note that <i>records an email having been sent</i> is already escalated. The second rule is the careful one: &ldquo;Need to escalate to ANZ&rdquo; and &ldquo;escalated to ANZ&rdquo; are nearly the same words and the opposite fact, so a request sitting next to the match cancels it. A technician asking for an escalation stays on the list, which is the whole point of the list',
