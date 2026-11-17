@@ -1104,7 +1104,6 @@
   .nav-clock .clock-card-ico { width: 28px; height: 28px; font-size: 15px; }
   /* "Theme" gets an actual illustrated colour-wheel swatch instead of a flat grey icon, since it literally picks the app's colour theme */
   body.compact-mode .task { padding: 7px 10px; }
-  body.compact-mode .task-hero { padding: 14px; }
 
   /* AUTH GATE */
   #auth-gate { position: fixed; inset: 0; z-index: 10000; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -1254,23 +1253,9 @@
   .section-header.sh-low .sec-dot { background: #27500A; }
   .section-header::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
 
-  /* TASKS HERO */
-  .task-hero { position: relative; overflow: hidden; background: var(--hero-bg); border: 0.5px solid var(--border); border-radius: 22px; padding: 22px; margin-bottom: 18px; box-shadow: 0 30px 60px -35px rgba(0,0,0,0.55); transition: transform 0.2s cubic-bezier(.2,.8,.2,1); will-change: transform; }
-  .task-hero-orb { position: absolute; border-radius: 50%; filter: blur(42px); opacity: 0.25; pointer-events: none; z-index: 0; }
-  .task-hero-orb.o1 { width: 220px; height: 220px; background: #4a9ee8; top: -90px; right: -60px; }
-  .task-hero-orb.o2 { width: 170px; height: 170px; background: #2a6fb0; bottom: -90px; left: 28%; }
-  .task-hero-top, .task-hero .dash-grid, .task-hero #dash-upcoming { position: relative; z-index: 1; }
-  @media (prefers-reduced-motion: reduce) { .task-hero { transition: none; } }
-  .task-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-  .task-hero-greeting { font-size: 18px; font-weight: 500; color: var(--text); }
-  .task-hero-sub { font-size: 12px; color: var(--text-3); margin-top: 4px; }
-  .task-hero-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-  .hero-chip { display: flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 20px; font-size: 12px; border: 0.5px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.05); color: var(--text-2); }
-  .hero-chip i { font-size: 13px; }
-  .hero-chip.c-teal { background: var(--teal-bg); border-color: rgba(55,138,221,0.22); color: var(--teal-text); }
-  .hero-chip.c-coral { background: var(--coral-bg); border-color: rgba(210,85,40,0.25); color: var(--coral-text); }
-  .hero-chip.c-green { background: var(--green-bg); border-color: rgba(99,153,34,0.25); color: var(--green-text); }
-  .hero-chip-val { font-size: 14px; font-weight: 500; color: var(--text); }
+  /* (TASKS HERO lived here: the panel, its blurred orbs, its greeting and its
+     chips. The panel went in a redesign; seventeen rules dressing nothing
+     went with it. --hero-bg stays - .ring-hole still uses it.) */
 
   /* GLOBAL BACK BUTTON */
   .page-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 0.9rem; flex-wrap: wrap; }
@@ -4735,8 +4720,6 @@
   @media (max-width: 760px) {
     .header { margin-bottom: 1.2rem; }
     .header h1 { font-size: 18px; }
-    .task-hero { padding: 16px; }
-    .task-hero-greeting { font-size: 16px; }
     .dash-grid { flex-direction: column; align-items: stretch; gap: 12px; }
     .dash-ring { flex-direction: row; justify-content: center; gap: 12px; }
     .dash-stats { grid-template-columns: 1fr 1fr; }
@@ -26752,6 +26735,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.47.6', type: 'patch', date: '17 Nov 2026', title: 'The task hero\u2019s last twenty rules', changes: [
+    'The hero panel at the top of Tasks went in a redesign a while back. Its script and its Settings switch went yesterday; this is the stylesheet catching up \u2014 the panel, its blurred orbs, its greeting, its chips and the mobile and compact tweaks for all of them. Twenty rules dressing nothing',
+    'Checked before cutting rather than after: the --hero-bg colour stays, because the progress ring still uses it, and the dash grid and upcoming list keep their own rules \u2014 only the &ldquo;inside the hero&rdquo; versions of those selectors went',
+    'Nothing on screen changes. The stylesheet parses to exactly the same number of rules it has braces, which is how you know none of the survivors were damaged on the way out',
+  ]},
   { ver: '4.47.5', type: 'patch', date: '17 Nov 2026', title: 'Focus mode does something now, and your tags are filterable', changes: [
     '<b>Focus mode works.</b> It used to save and reload a setting nothing read, so switching it on changed nothing at all \u2014 and the banner it was meant to show had been sitting in the stylesheet, unused, the whole time',
     'What it does: narrows today\u2019s board to what is actually left \u2014 anything already ticked goes, and so does anything marked low. The figures above the board stay on the full list on purpose, because they are what tells you the hidden ones are still there. A banner says how many went and gives you a way out',
