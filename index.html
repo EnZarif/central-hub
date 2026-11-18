@@ -3898,15 +3898,25 @@
   .esr-card.skip:hover { opacity:1; border-left-color:var(--text-3); }
 
   .esr-card-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  .esr-jnum { display:inline-flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',ui-monospace,monospace;
-    font-size:13.5px; font-weight:600; letter-spacing:.02em; cursor:pointer;
-    padding:4px 9px; border-radius:7px; color:var(--text);
+  /* One pill, two targets: the number opens the job, the icon copies it. */
+  .esr-jnum { display:inline-flex; align-items:stretch; font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:13.5px; font-weight:600; letter-spacing:.02em;
+    border-radius:7px; overflow:hidden;
     background:var(--surface2); border:0.5px solid var(--border-md);
-    transition:border-color .16s, color .16s; }
-  .esr-jnum:hover { border-color:var(--purple-text); color:var(--purple-text); }
-  .esr-jnum.copied { color:var(--green-text); border-color:var(--green-text); }
-  .esr-jnum i { font-size:12px; opacity:.5; }
-  .esr-jnum:hover i { opacity:1; }
+    transition:border-color .16s; }
+  .esr-jnum:hover { border-color:var(--purple-text); }
+  .esr-jlink { display:inline-flex; align-items:center; padding:4px 5px 4px 9px;
+    font:inherit; letter-spacing:inherit; color:var(--text); text-decoration:none;
+    transition:color .16s; }
+  .esr-jlink:hover { color:var(--purple-text); text-decoration:underline; }
+  .esr-jlink:focus-visible { outline:2px solid var(--purple-text); outline-offset:-2px; }
+  .esr-jcopy { display:inline-flex; align-items:center; padding:4px 8px 4px 5px;
+    font-family:inherit; background:none; border:0; cursor:pointer;
+    color:var(--text-3); transition:color .16s; }
+  .esr-jcopy i { font-size:12px; }
+  .esr-jcopy:hover { color:var(--purple-text); }
+  .esr-jcopy.copied { color:var(--green-text); }
+  .esr-jcopy:focus-visible { outline:2px solid var(--purple-text); outline-offset:-2px; }
   .esr-chips { display:flex; gap:6px; flex-wrap:wrap; }
   .esr-chip { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
     padding:3px 8px; border-radius:20px; color:var(--text-3);
@@ -17633,7 +17643,17 @@ function esrCopyGroup(i, btn) {
   if (!g) return;
   esrCopy(esrNums(g.jobs), btn, esc(g.name) + ' — ' + g.jobs.length + ' copied');
 }
-function esrCopyJob(job, btn) { esrCopy(String(job), btn, '', ''); }
+function esrCopyJob(job, btn) {
+  navigator.clipboard.writeText(String(job)).then(() => {
+    const i = btn && btn.querySelector('i');
+    if (!i) return;
+    // The icon turns into a tick and back. esrFlash would write "Copied" into
+    // a button the width of one glyph and shove the number along with it.
+    btn.classList.add('copied');
+    i.className = 'ti ti-check';
+    setTimeout(() => { i.className = 'ti ti-copy'; btn.classList.remove('copied'); }, 1600);
+  });
+}
 
 // A reason group, written out the way it would go in the email. The numbers
 // are on their own line so they survive being pasted anywhere.
@@ -17698,8 +17718,12 @@ function esrCard(j, tone) {
   if (j.when) meta.push(esc(j.when));
   return '<div class="esr-card' + (tone ? ' ' + tone : '') + '">' +
     '<div class="esr-card-top">' +
-      '<button class="esr-jnum" onclick="esrCopyJob(\'' + esc(j.job) + '\', this)" title="Copy this job number">' +
-        '<span>' + esc(j.job) + '</span><i class="ti ti-copy"></i></button>' +
+      '<span class="esr-jnum">' +
+        '<a class="esr-jlink" href="' + escAttr(buildHelpdeskUrl(j.job)) + '" target="_blank" rel="noopener" ' +
+          'title="Open job ' + escAttr(j.job) + ' in Helpdesk">' + esc(j.job) + '</a>' +
+        '<button class="esr-jcopy" onclick="esrCopyJob(\'' + esc(j.job) + '\', this)" ' +
+          'title="Copy this job number"><i class="ti ti-copy"></i></button>' +
+      '</span>' +
       '<div class="esr-chips">' + chips.join('') + '</div>' +
       (j.age !== null ? '<span class="esr-age' + (j.age >= 30 ? ' old' : '') + '">' + esc(esrAgeWord(j.age)) + '</span>' : '') +
     '</div>' +
@@ -28202,6 +28226,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.49.1', type: 'patch', date: '18 Nov 2026', title: 'Job numbers on Escalation Review open the job', changes: [
+    'The job number on every card is now a link straight into Helpdesk, the same <code>jobs/&lt;id&gt;</code> link the Chase List, Stock Checks and the escalation log already use. It opens in a new tab, so the list you are working through stays where it is',
+    'Copying still works and is now its own target: the number opens the job, the icon beside it copies the number. The icon turns into a tick in place rather than writing the word &ldquo;Copied&rdquo; into a space one glyph wide and shoving the number along with it',
+  ]},
   { ver: '4.49.0', type: 'feature', date: '18 Nov 2026', title: 'Escalation Review writes the ANZ email', changes: [
     '<b>An escalation email per job, in the house format.</b> Every job on the list gets a button that fills the template out of the export — Amtek job, TID, MID, name, address, contact name, contact number, job type — and writes the paragraph above it. You get a preview and a copy button; nothing is sent, because it goes to the client',
     '<b>Jobs at one site go in one email.</b> A site has one MID and one address with a TID on each job, which is how the desk already sends them: job numbers and TIDs on one line each, in step. It groups on the site <i>and</i> on the account the notes give, so one job’s problem is never written under another job’s number — Tugun Market has eight jobs and two unrelated stories. The picker lets you fold any of the site’s other jobs in or take them out, and if what you pick disagrees about the delayed reason it stops claiming one',
