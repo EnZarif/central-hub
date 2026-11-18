@@ -3561,6 +3561,85 @@
   .al-vrow-want { color:var(--green-text); background:var(--green-bg); }
   @media (prefers-reduced-motion: reduce) { .al-vrow { animation:none !important; } }
 
+  /* ---- Stock to check -----------------------------------------------------
+     A third kind of finding needs a third colour. Red already means the wrong
+     depot and amber means nobody at all, so purple - which nothing else in
+     this block uses - says there is a device on this job somebody has to find
+     a unit for. It is not a worse version of either: the allocation can be
+     perfect and the stock still missing. */
+  .al-vrow-sub { min-width:0; display:flex; align-items:center; gap:6px; }
+  .al-vrow-stk { flex-shrink:0; display:inline-flex; align-items:center; gap:3px;
+    font-size:9.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--purple-text); background:var(--purple-bg); border-radius:4px;
+    padding:1.5px 5px; cursor:help; }
+  .al-vrow-stk i { font-size:10px; }
+
+  .al-vbanner.stk { background:var(--purple-bg);
+    border-color:color-mix(in srgb, var(--purple-text) 30%, transparent); }
+  .al-vbanner.stk > .ti, .al-vbanner.stk .al-vbanner-t strong { color:var(--purple-text); }
+  .al-vbanner.stk::after { display:none; }
+  .al-vbanner.stk .al-vbanner-n { color:var(--purple-text);
+    background:color-mix(in srgb, var(--purple-text) 18%, transparent); }
+
+  .al-vsec-hd.stk, .al-vsec-hd.stk > .ti { color:var(--purple-text); }
+  .al-vsec-n.stk { color:var(--purple-text); background:var(--purple-bg); }
+  .al-vsec-sub.stk { color:var(--purple-text); }
+  /* One block per device, because that is the unit the warehouse counts in. */
+  .al-stk-wrap { border:0.5px solid color-mix(in srgb, var(--purple-text) 26%, transparent);
+    border-radius:11px; overflow:hidden; }
+  .al-stk-mod + .al-stk-mod { border-top:0.5px solid color-mix(in srgb, var(--purple-text) 22%, transparent); }
+  .al-stk-hd { display:flex; align-items:center; gap:9px; padding:9px 13px;
+    background:color-mix(in srgb, var(--purple-text) 10%, transparent); }
+  .al-stk-hd > .ti { flex-shrink:0; font-size:14px; color:var(--purple-text); }
+  .al-stk-n2 { font-size:12.5px; font-weight:700; color:var(--purple-text); }
+  .al-stk-c { flex-shrink:0; font-size:10px; font-weight:700; color:var(--purple-text);
+    background:color-mix(in srgb, var(--purple-text) 17%, transparent);
+    border-radius:6px; padding:2px 7px; }
+  .al-stk-as { min-width:0; margin-left:auto; font-size:10.5px; color:var(--text-3);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* The flagged list's columns, so the two lists on this page line up and
+     read as one. Same widths up to the date; the technician then takes the
+     room the "has -> wants" pair needed, and the flag takes the arrow's. */
+  .al-stk-row { display:grid; gap:0 13px; align-items:center;
+    grid-template-columns:70px minmax(130px,1.25fr) 48px 80px minmax(110px,1.5fr)
+                          minmax(135px,1.15fr) minmax(96px,0.8fr);
+    padding:7px 13px; font-size:11.5px;
+    border-top:0.5px solid color-mix(in srgb, var(--purple-text) 12%, transparent);
+    transition:background .14s; }
+  .al-stk-row:hover { background:color-mix(in srgb, var(--purple-text) 8%, transparent); }
+  .al-stk-row .j { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .al-stk-row .j a { color:var(--teal-text); text-decoration:none; }
+  .al-stk-row .j a:hover { text-decoration:underline; }
+  /* Not .al-vrow-has: that one is coral because it names the wrong person.
+     Here the technician is simply who has the job. */
+  .al-stk-row .t { min-width:0; font-size:11px; font-weight:600; color:var(--text-2);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* The job is on the list above as well. Said quietly, because it is the
+     same job - not a second problem. */
+  .al-stk-row .f { display:inline-flex; align-items:center; gap:3px; justify-self:start;
+    font-size:9.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--coral-text); white-space:nowrap; }
+  .al-stk-row .f i { font-size:10px; }
+  .al-stk-foot { padding:9px 13px; font-size:11px; line-height:1.55; color:var(--text-3);
+    border-top:0.5px solid color-mix(in srgb, var(--purple-text) 22%, transparent);
+    background:color-mix(in srgb, var(--purple-text) 5%, transparent); }
+  /* On a phone the job keeps its column and everything else stacks beside
+     it, the same way the flagged list collapses. */
+  @media (max-width: 760px) {
+    .al-stk-row { grid-template-columns:66px minmax(0,1fr) auto; gap:3px 10px;
+      align-items:center; padding:9px 13px; }
+    .al-stk-row .j            { grid-area:1 / 1 / 2 / 2; align-self:start; padding-top:1px; }
+    .al-stk-row .al-vrow-who  { grid-area:1 / 2 / 2 / 4; }
+    .al-stk-row .al-vrow-st   { grid-area:2 / 2 / 3 / 3; }
+    .al-stk-row .al-vrow-rt   { grid-area:2 / 3 / 3 / 4; justify-self:end; }
+    .al-stk-row .al-vrow-when { grid-area:3 / 2 / 4 / 4; }
+    .al-stk-row .t            { grid-area:4 / 2 / 5 / 3; }
+    .al-stk-row .f            { grid-area:4 / 3 / 5 / 4; justify-self:end; }
+    .al-stk-hd { flex-wrap:wrap; }
+    .al-stk-as { margin-left:0; flex:1 1 100%; white-space:normal; }
+  }
+
+
   .al-vgrp { margin-top:10px; border:0.5px solid var(--border); border-radius:11px; overflow:hidden; }
   .al-vgrp-hd { display:flex; align-items:center; gap:10px; width:100%; padding:12px 15px; font-family:inherit;
     text-align:left; background:var(--surface2); border:none; color:var(--text); cursor:pointer; transition:background .14s; }
@@ -13255,7 +13334,7 @@ let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
 // the two can never end up drawing into each other.
 let alValHost = null;
 const AL_V_CTL = { tech:'al-v-tech', zone:'al-v-zone', id:'al-v-id',
-                   site:'al-v-site', date:'al-v-date' };
+                   site:'al-v-site', date:'al-v-date', model:'al-v-model' };
 function alValCtl(k) {
   return document.getElementById((alValHost ? alValHost.ctl : AL_V_CTL)[k] || '')?.value || '';
 }
@@ -13620,6 +13699,36 @@ async function alValLoad(file) {
   }
 }
 
+// ---- Models that mean stock may be required -------------------------------
+// Six devices that are not fitted out of the back of a van. A job carrying
+// one of them is flagged whatever its allocation says, because the question
+// it raises is a different question: is there a unit to take.
+//
+// Matched on the model name as the file writes it, case and punctuation
+// aside, and nothing looser. The same exports carry "ANZ MOVE 5000 INT" on
+// 175 jobs, "WL Move5000 EP2 STD" on 24 and "Pax A920 Pro RoamSim w/ Black
+// Case" on 74 - different models under a different contract's naming. A
+// substring match on "Move 5000" or "A920" would flag every one of them and
+// the flag would stop meaning anything, so it does not.
+const AL_STOCK_MODELS = [
+  'Move 5000 Integrated',
+  'Move 5000 Standalone',
+  'CLOVER KIOSK',
+  'PAX A920 Standalone',
+  'CLOVER KDS 14 INCH',
+  'CLOVER KDS 24 INCH',
+];
+function alStockNorm(v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
+const AL_STOCK_BY_NORM = (() => {
+  const m = {};
+  AL_STOCK_MODELS.forEach(nm => { m[alStockNorm(nm)] = nm; });
+  return m;
+})();
+// The watch list's own spelling of the model, or '' for anything not on it.
+// The list's spelling rather than the file's, so the same device counts as
+// one device however the file happened to type it.
+function alStockModel(v) { return AL_STOCK_BY_NORM[alStockNorm(v)] || ''; }
+
 function alValRenderMapper() {
   const el = document.getElementById('al-val-mapper');
   if (!el) return;
@@ -13635,12 +13744,13 @@ function alValRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Job ID <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-id', svAutoDetect(alValHeaders, ['Job #','Job ID','JobID','ID'], ['jobid','job']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Scheduled date <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-date', svAutoDetect(alValHeaders, ['Scheduled','Scheduled Date','Date','Due Date'], ['scheduled','date','due']))}</div>
+     <div class="sv-col-row"><span class="sv-col-label">Model <span style="font-weight:400;color:var(--text-3)">(optional \u2014 for stock)</span></span>${sel('al-v-model', svAutoDetect(alValHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']))}</div>
      </div>
      <div class="al-vcfg-go">
        <button class="generate-btn" onclick="alValValidate()">
          <i class="ti ti-shield-check" style="font-size:17px;"></i> Validate ${nRows} rows
        </button>
-       <span>Check the four columns above are right, then press this.</span>
+       <span>Check the columns above are right, then press this.</span>
      </div>`;
   el.style.display = '';
 }
@@ -13651,6 +13761,7 @@ function alValRun() {
   const idCol   = alValCtl('id');
   const siteCol = alValCtl('site');
   const dateCol = alValCtl('date');
+  const modelCol = alValCtl('model');
   const srcRows = alValSrcRows();
   const out = alValOutEl();
   if (!out) return;
@@ -13673,13 +13784,17 @@ function alValRun() {
     // paDate takes the shapes the helpdesk exports use - "2026-06-30 05:00 PM",
     // dd/mm/yyyy and plain ISO - and gives back a sortable YYYY-MM-DD.
     const sched = dateCol ? paDate(row[dateCol]) : '';
+    // Independent of the verdict below: a correctly allocated job can still
+    // be one nobody has a unit for.
+    const model = modelCol ? String(row[modelCol] || '').trim() : '';
+    const stock = alStockModel(model);
     // One shared judge, so this page and Stock Checks can never disagree
     // about the same job. A job nobody is going to keeps its own verdict
     // from a job with the wrong name on it - one needs allocating at all,
     // the other needs reassigning.
     const { verdict, why, zi, ti } = alVerdict(tech, zone);
 
-    return { row, jobId, site, tech, zone, sched, verdict, why,
+    return { row, jobId, site, tech, zone, sched, model, stock, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
              zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
              resolved: ti.alloc, how: ti.how, code: ti.code || '', person: ti.person || '' };
@@ -13696,18 +13811,49 @@ function alValRun() {
   // it was never going to be done by the right technician either.
   const flagged = [...mismatch, ...notech];
   const judged = n('match') + flagged.length;
+  // Deliberately NOT folded into flagged: that number and the rate kept
+  // beside it are a thirty-day record of whether the allocations are
+  // drifting, and a run of Clover Kiosks is not allocation drift.
+  const needStock = results.filter(r => r.stock);
+  // Per device, because that is the unit a stock check is counted in - how
+  // many kiosks do we need, not how many jobs are flagged. Commonest first,
+  // ties broken by the watch list's own order so two runs of the same file
+  // can never draw it differently.
+  const stockModels = (() => {
+    const by = new Map();
+    needStock.forEach(r => {
+      if (!by.has(r.stock)) by.set(r.stock, []);
+      by.get(r.stock).push(r);
+    });
+    return [...by.entries()].sort((a, b) =>
+      b[1].length - a[1].length ||
+      AL_STOCK_MODELS.indexOf(a[0]) - AL_STOCK_MODELS.indexOf(b[0]));
+  })();
 
   // Everything flagged becomes something to chase, carrying whatever you
   // already decided about it yesterday.
-  excSync('validator', flagged.map(r => ({
-    jobId: r.jobId, site: r.site, tech: r.tech,
-    sum: (r.verdict === 'notech' ? 'Nobody allocated' : 'Wrong technician')
+  //
+  // One job, one thing to chase. A job can be both with the wrong depot and
+  // carrying a model that needs stock, and excKey() keys on the job number -
+  // so the two go as one item that says both, rather than as two that would
+  // overwrite each other on every render.
+  const chase = flagged.concat(needStock.filter(r => flagged.indexOf(r) < 0));
+  excSync('validator', chase.map(r => {
+    const bad = r.verdict === 'mismatch' || r.verdict === 'notech';
+    const head = r.verdict === 'notech' ? 'Nobody allocated'
+               : r.verdict === 'mismatch' ? 'Wrong technician'
+               : 'Stock may be required';
+    return {
+    jobId: r.jobId, site: r.site, tech: r.tech, model: r.model,
+    sum: head
+       + (bad && r.stock ? ', stock may be required' : '')
        + (r.site ? ' — ' + r.site : ''),
-    detail: [r.tech ? 'Has: ' + r.tech : 'Nobody allocated',
+    detail: [r.stock ? 'Stock: ' + r.stock : '',
+             r.tech ? 'Has: ' + r.tech : 'Nobody allocated',
              r.expected ? 'Zone expects: ' + r.expected : '',
              r.zone ? 'Zone ' + r.zone : ''].filter(Boolean).join(' · '),
     page: 'allocvalidate'
-  })));
+  }; }));
 
   if (snapRecord._lastValidator !== todayInputDate()) {
     snapRecord._lastValidator = todayInputDate();
@@ -13725,6 +13871,7 @@ function alValRun() {
     unknown: n('unknown'),
     nozone: n('nozone'),
     flagged: flagged.length,
+    stock: needStock.length,
     rate: judged ? Math.round(flagged.length / judged * 1000) / 10 : 0
   });
 
@@ -13771,7 +13918,11 @@ function alValRun() {
         : '\u2014'}</span>
       <span class="al-vrow-who">
         <span class="al-vrow-site">${esc(r.site || r.zone || '\u2014')}</span>
-        <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
+        <span class="al-vrow-sub">
+          <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
+          ${r.stock ? `<span class="al-vrow-stk"
+            title="${escAttr(r.model + ' \u2014 stock may be required')}"><i class="ti ti-package"></i>stock</span>` : ''}
+        </span>
       </span>
       <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
       <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
@@ -13781,6 +13932,29 @@ function alValRun() {
         >${esc(r.tech || 'Unallocated')}</span>
       <i class="ti ti-arrow-right"></i>
       <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
+    </div>`;
+  };
+
+  // The same five facts the flagged list leads with, minus the verdict
+  // columns - this list is not about the allocation. The job it shares with
+  // the list above says so, so the same job never reads as two problems.
+  const stockRow = r => {
+    const d = schedText(r);
+    const bad = r.verdict === 'mismatch' || r.verdict === 'notech';
+    return `<div class="al-stk-row">
+      <span class="j">${r.jobId
+        ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener">${esc(r.jobId)}</a>`
+        : '\u2014'}</span>
+      <span class="al-vrow-who">
+        <span class="al-vrow-site">${esc(r.site || r.zone || '\u2014')}</span>
+        <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
+      </span>
+      <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
+      <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
+      <span class="al-vrow-when${d.dim ? ' dim' : ''}${d.past ? ' past' : ''}">${esc(d.t)}</span>
+      <span class="t" title="${escAttr(r.tech || '')}">${esc(r.tech || 'Unallocated')}</span>
+      <span class="f">${bad
+        ? `<i class="ti ti-alert-triangle"></i> flagged` : ''}</span>
     </div>`;
   };
 
@@ -13888,9 +14062,20 @@ function alValRun() {
         <span>${[
           mismatch.length ? `${mismatch.length.toLocaleString()} ${mismatch.length !== 1 ? 'are' : 'is'} with a technician the zone does not call for` : '',
           notech.length ? `${notech.length.toLocaleString()} ${notech.length !== 1 ? 'have' : 'has'} nobody allocated` : ''
-        ].filter(Boolean).join(' \u00b7 ')}. Every one is listed below.</span>
+        ].filter(Boolean).join(' \u00b7 ')}. Every one is listed below.${needStock.length
+          ? ` ${needStock.length.toLocaleString()} job${needStock.length !== 1 ? 's' : ''} in this file
+             carr${needStock.length !== 1 ? 'y' : 'ies'} a model that may need stock.` : ''}</span>
       </span>
       <span class="al-vbanner-n">${judged ? Math.round(n('match') / judged * 100) : 0}% of judged rows correct</span>
+    </div>` : needStock.length ? `<div class="al-vbanner stk">
+      <i class="ti ti-package"></i>
+      <span class="al-vbanner-t">
+        <strong>Allocations agree \u2014 ${needStock.length.toLocaleString()} to check for stock</strong>
+        <span>Every row that could be judged has the technician its zone calls for, but
+          ${needStock.length.toLocaleString()} ${needStock.length !== 1 ? 'carry' : 'carries'} a model
+          off the stock watch list. Listed below.</span>
+      </span>
+      <span class="al-vbanner-n">${results.length.toLocaleString()} rows checked</span>
     </div>` : `<div class="al-vbanner ok">
       <i class="ti ti-circle-check"></i>
       <span class="al-vbanner-t">
@@ -13919,6 +14104,38 @@ function alValRun() {
           title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
           <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button></div></div>`}
+
+    ${needStock.length ? `<div class="al-vsec">
+      <div class="al-vsec-hd stk">
+        <i class="ti ti-package"></i> Stock may be required
+        <span class="al-vsec-n stk">${needStock.length.toLocaleString()}</span>
+        <span class="al-vsec-sub stk">${stockModels.length} of the ${AL_STOCK_MODELS.length}
+          watched model${stockModels.length !== 1 ? 's are' : ' is'} in this file</span>
+      </div>
+      <div class="al-stk-wrap">
+        ${stockModels.map(([name, list]) => {
+          // Every spelling of this model the file used, where it differs from
+          // the watch list's - so a row counted here can always be traced
+          // back to the value that was actually in the column.
+          const spel = [...new Set(list.map(r => r.model).filter(v => v && v !== name))];
+          return `<div class="al-stk-mod">
+          <div class="al-stk-hd">
+            <i class="ti ti-package"></i>
+            <span class="al-stk-n2">${esc(name)}</span>
+            <span class="al-stk-c">${list.length.toLocaleString()} job${list.length !== 1 ? 's' : ''}</span>
+            ${spel.length ? `<span class="al-stk-as"
+              title="${escAttr('In this file: ' + spel.join(' \u00b7 '))}">written
+              as ${esc(spel.join(' \u00b7 '))}</span>` : ''}
+          </div>
+          ${list.map(stockRow).join('')}
+        </div>`; }).join('')}
+        <div class="al-stk-foot">
+          Flagged on the model alone, matched against the watch list \u2014 ${esc(AL_STOCK_MODELS.join(', '))}.
+          None of this says a unit is missing: it says one of these is on the job and somebody has to
+          check there is one to take.
+        </div>
+      </div>
+    </div>` : ''}
 
     ${dateCol ? (() => {
       const tOpen = alValOpenGroup.has('today');
@@ -14177,7 +14394,8 @@ function alValDownload(btn) {
     'Zone Expects':      r.expected || '',
     'Technician Read As': (r.how === 'city' || r.how === 'named') ? r.resolved : '',
     'Verdict':           VL[r.verdict] || '',
-    'Reason':            r.why || ''
+    'Reason':            r.why || '',
+    'Stock Required':    r.stock ? 'YES \u2014 ' + r.stock : ''
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -15788,7 +16006,7 @@ async function stkLoad(file) {
 const STK_AV_HOST = {
   out: 'stk-av-result',
   ctl: { tech:'stk-c-tech', zone:'stk-c-zone', id:'stk-c-id',
-         site:'stk-c-site', date:'stk-c-sched' },
+         site:'stk-c-site', date:'stk-c-sched', model:'stk-c-model' },
   rows: () => stkRows,
   name: () => stkName,
   ready: () => stkDone
@@ -15819,6 +16037,7 @@ function stkAllocFull() {
   const mis = res.filter(r => r.verdict === 'mismatch').length;
   const nAl = res.filter(r => r.verdict === 'notech').length;
   const unsure = res.filter(r => r.verdict === 'unknown' || r.verdict === 'nozone').length;
+  const stk = res.filter(r => r.stock).length;
   // First sight of a file with findings opens it; after that it remembers
   // whatever you last did to it.
   if (!stkOpenGroup.has('av') && !stkOpenGroup.has('av-seen') && bad) stkOpenGroup.add('av');
@@ -15837,7 +16056,8 @@ function stkAllocFull() {
          nAl ? nAl.toLocaleString() + ' with nobody allocated' : ''].filter(Boolean).join(' \u00b7 ')
         + ' \u2014 across all ' + res.length.toLocaleString() + ' rows in this file, not just the ones waiting on a part'
       : 'every one of the ' + res.length.toLocaleString() + ' rows in this file has the technician its zone calls for'}${
-      unsure ? ' \u00b7 ' + unsure.toLocaleString() + ' could not be judged' : ''}</span>`;
+      unsure ? ' \u00b7 ' + unsure.toLocaleString() + ' could not be judged' : ''}${
+      stk ? ' \u00b7 ' + stk.toLocaleString() + ' may need stock' : ''}</span>`;
 }
 
 function stkRun() {
@@ -28226,6 +28446,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.50.0', type: 'feature', date: '18 Nov 2026', title: 'The validator flags jobs that may need stock', changes: [
+    '<b>Six devices are watched for.</b> Move 5000 Integrated, Move 5000 Standalone, CLOVER KIOSK, PAX A920 Standalone, CLOVER KDS 14 INCH and CLOVER KDS 24 INCH. A job carrying one of them is flagged whatever its allocation says, because it asks a different question — not <i>who</i> is going, but <i>is there a unit to take</i>',
+    '<b>It is a separate finding, not a worse verdict.</b> On the latest file 13 jobs carry a watched model and 11 of them are allocated perfectly correctly — under the old page every one of those was invisible. They get their own list, grouped per device with a count, because that is the unit a stock check is counted in',
+    'Matched on the model name as written, case and punctuation aside, and nothing looser. The same exports carry <code>ANZ MOVE 5000 INT</code> on 175 jobs and <code>Pax A920 Pro RoamSim w/ Black Case</code> on 74 — different models under a different contract’s naming. A substring match on “Move 5000” or “A920” would flag all of them and the flag would stop meaning anything',
+    'A job that is both with the wrong depot and carrying a watched model goes to the Chase List as <i>one</i> item saying both, rather than two that would overwrite each other. The flagged list marks it, and the stock list says it is already flagged above — one job, never two problems',
+    'Reading the Model column is optional and it is picked up on its own. Stock Checks hands over the model column it already has, so the same list appears there with nothing extra to set; a file without a model column behaves exactly as it did before',
+  ]},
   { ver: '4.49.1', type: 'patch', date: '18 Nov 2026', title: 'Job numbers on Escalation Review open the job', changes: [
     'The job number on every card is now a link straight into Helpdesk, the same <code>jobs/&lt;id&gt;</code> link the Chase List, Stock Checks and the escalation log already use. It opens in a new tab, so the list you are working through stays where it is',
     'Copying still works and is now its own target: the number opens the job, the icon beside it copies the number. The icon turns into a tick in place rather than writing the word &ldquo;Copied&rdquo; into a space one glyph wide and shoving the number along with it',
