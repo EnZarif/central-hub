@@ -3384,7 +3384,21 @@
   .al-vsec { margin-top:16px; }
   .al-vsec-hd { display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700; letter-spacing:.07em;
     text-transform:uppercase; color:var(--text-3); margin-bottom:10px; }
-  .al-vsec-hd.bad, .al-vsec-hd.bad > .ti { color:var(--coral-text); }
+  .al-vsec-hd.bad, .al-vsec-hd.bad .ti { color:var(--coral-text); }
+  /* The label folds the list away. It is its own button with the download
+     left outside it, because a button cannot hold another button - the same
+     split the call list's header already uses. The negative margin keeps the
+     label exactly where it sat before it became something you could press. */
+  .al-vsec-toggle { display:flex; align-items:center; gap:8px; min-width:0;
+    margin:-7px 0 -7px -9px; padding:7px 9px; border-radius:8px;
+    font:inherit; letter-spacing:inherit; text-transform:inherit; text-align:left;
+    color:inherit; background:none; border:none; cursor:pointer;
+    transition:background .14s; }
+  .al-vsec-toggle:hover { background:rgba(255,255,255,.07); }
+  .al-vsec-toggle:focus-visible { outline:2px solid currentColor; outline-offset:1px; }
+  .al-vsec-chev { font-size:10px; opacity:.75; transition:transform .3s cubic-bezier(.4,0,.2,1); }
+  .al-vsec-chev.open { transform:rotate(90deg); }
+  @media (prefers-reduced-motion: reduce) { .al-vsec-chev { transition:none; } }
   .al-vsec-n { font-size:10px; font-weight:700; letter-spacing:0; background:var(--coral-bg);
     color:var(--coral-text); border-radius:8px; padding:2px 8px; }
   .al-vsec-sub { font-size:10px; font-weight:600; letter-spacing:0; text-transform:none;
@@ -3581,7 +3595,7 @@
   .al-vbanner.stk .al-vbanner-n { color:var(--purple-text);
     background:color-mix(in srgb, var(--purple-text) 18%, transparent); }
 
-  .al-vsec-hd.stk, .al-vsec-hd.stk > .ti { color:var(--purple-text); }
+  .al-vsec-hd.stk, .al-vsec-hd.stk .ti { color:var(--purple-text); }
   .al-vsec-n.stk { color:var(--purple-text); background:var(--purple-bg); }
   .al-vsec-sub.stk { color:var(--purple-text); }
   /* One block per device, because that is the unit the warehouse counts in. */
@@ -13362,9 +13376,13 @@ function alValSrcReady() { return alValHost ? !!alValHost.ready() : alValDone; }
 // Used by the validator page's own controls, which must always mean its page.
 function alValOwn() { alValHost = null; alValRun(); }
 // Which mismatch cards have their working open, and which of the other
-// verdict groups are expanded. Mismatches are never collapsed - they are the
-// reason the file was run.
+// verdict groups are expanded.
 let alValOpenGroup = new Set();
+// The two findings sections fold too, but they start open, so this holds
+// what you have SHUT - the opposite of the set above. Seeding that one on
+// every render instead would leave it unable to tell a section you closed
+// from one you have not opened yet.
+let alValShutSec = new Set();
 // Nothing is checked until the columns are confirmed, and once they are the
 // setup folds into one line so the findings get the screen.
 let alValDone = false;
@@ -13442,6 +13460,11 @@ function alValAllocOptions() {
 
 function alValToggleGroup(k) {
   if (alValOpenGroup.has(k)) alValOpenGroup.delete(k); else alValOpenGroup.add(k);
+  alValRun();
+}
+
+function alValToggleSec(k) {
+  if (alValShutSec.has(k)) alValShutSec.delete(k); else alValShutSec.add(k);
   alValRun();
 }
 
@@ -13668,6 +13691,7 @@ async function alValLoad(file) {
   alValOut = null;
   alValToday = [];
   alValOpenGroup = new Set();
+  alValShutSec = new Set();
   alValDone = false;
   alValRenderConfig();
   document.getElementById('al-val-result').innerHTML = '';
@@ -14087,32 +14111,46 @@ function alValRun() {
 
     ${tiles}
 
-    ${flagged.length ? `<div class="al-vsec">
+    ${flagged.length ? (() => {
+      // Folded away, the heading still carries the count and the breakdown -
+      // what you lose is the list, which is the point, and never the number.
+      const open = !alValShutSec.has('flagged');
+      return `<div class="al-vsec">
       <div class="al-vsec-hd bad">
-        <i class="ti ti-alert-triangle"></i> Needs attention
-        <span class="al-vsec-n">${flagged.length.toLocaleString()}</span>
-        ${mismatch.length ? `<span class="al-vsec-sub">${mismatch.length.toLocaleString()} wrong technician</span>` : ''}
-        ${notech.length ? `<span class="al-vsec-sub warn">${notech.length.toLocaleString()} unallocated</span>` : ''}
+        <button class="al-vsec-toggle" onclick="alValToggleSec('flagged')" aria-expanded="${open}"
+          title="${open ? 'Fold this list away' : 'Show the ' + flagged.length.toLocaleString() + ' jobs'}">
+          <i class="ti ti-chevron-right al-vsec-chev${open ? ' open' : ''}"></i>
+          <i class="ti ti-alert-triangle"></i> Needs attention
+          <span class="al-vsec-n">${flagged.length.toLocaleString()}</span>
+          ${mismatch.length ? `<span class="al-vsec-sub">${mismatch.length.toLocaleString()} wrong technician</span>` : ''}
+          ${notech.length ? `<span class="al-vsec-sub warn">${notech.length.toLocaleString()} unallocated</span>` : ''}
+        </button>
         <button class="al-dl-quiet" onclick="alValDownload(this)"
           title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
           <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button>
       </div>
-      <div class="al-vlist">${flagged.map(flagRow).join('')}</div>
-    </div>` : `<div class="al-vsec"><div class="al-vsec-hd">
+      ${open ? `<div class="al-vlist">${flagged.map(flagRow).join('')}</div>` : ''}
+    </div>`; })() : `<div class="al-vsec"><div class="al-vsec-hd">
         <button class="al-dl-quiet" style="margin-left:0;" onclick="alValDownload(this)"
           title="Download all ${results.length.toLocaleString()} rows as a spreadsheet">
           <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button></div></div>`}
 
-    ${needStock.length ? `<div class="al-vsec">
+    ${needStock.length ? (() => {
+      const open = !alValShutSec.has('stock');
+      return `<div class="al-vsec">
       <div class="al-vsec-hd stk">
-        <i class="ti ti-package"></i> Stock may be required
-        <span class="al-vsec-n stk">${needStock.length.toLocaleString()}</span>
-        <span class="al-vsec-sub stk">${stockModels.length} of the ${AL_STOCK_MODELS.length}
-          watched model${stockModels.length !== 1 ? 's are' : ' is'} in this file</span>
+        <button class="al-vsec-toggle" onclick="alValToggleSec('stock')" aria-expanded="${open}"
+          title="${open ? 'Fold this list away' : 'Show the ' + needStock.length.toLocaleString() + ' jobs'}">
+          <i class="ti ti-chevron-right al-vsec-chev${open ? ' open' : ''}"></i>
+          <i class="ti ti-package"></i> Stock may be required
+          <span class="al-vsec-n stk">${needStock.length.toLocaleString()}</span>
+          <span class="al-vsec-sub stk">${stockModels.length} of the ${AL_STOCK_MODELS.length}
+            watched model${stockModels.length !== 1 ? 's are' : ' is'} in this file</span>
+        </button>
       </div>
-      <div class="al-stk-wrap">
+      ${!open ? '' : `<div class="al-stk-wrap">
         ${stockModels.map(([name, list]) => {
           // Every spelling of this model the file used, where it differs from
           // the watch list's - so a row counted here can always be traced
@@ -14134,8 +14172,8 @@ function alValRun() {
           None of this says a unit is missing: it says one of these is on the job and somebody has to
           check there is one to take.
         </div>
-      </div>
-    </div>` : ''}
+      </div>`}
+    </div>`; })() : ''}
 
     ${dateCol ? (() => {
       const tOpen = alValOpenGroup.has('today');
@@ -28446,6 +28484,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.50.1', type: 'patch', date: '18 Nov 2026', title: 'Needs attention and Stock may be required fold away', changes: [
+    'Both findings sections now fold, the way the verdict groups under them already did — so a file you have worked through can be put away and the whole page fits on one screen',
+    'They start open, because they are the reason the file was run, and folding one leaves its heading behind with the count and the breakdown on it. The whole-file download stays in the corner whether the list is open or shut',
+  ]},
   { ver: '4.50.0', type: 'feature', date: '18 Nov 2026', title: 'The validator flags jobs that may need stock', changes: [
     '<b>Six devices are watched for.</b> Move 5000 Integrated, Move 5000 Standalone, CLOVER KIOSK, PAX A920 Standalone, CLOVER KDS 14 INCH and CLOVER KDS 24 INCH. A job carrying one of them is flagged whatever its allocation says, because it asks a different question — not <i>who</i> is going, but <i>is there a unit to take</i>',
     '<b>It is a separate finding, not a worse verdict.</b> On the latest file 13 jobs carry a watched model and 11 of them are allocated perfectly correctly — under the old page every one of those was invisible. They get their own list, grouped per device with a count, because that is the unit a stock check is counted in',
