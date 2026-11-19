@@ -3538,7 +3538,7 @@
     border-radius:11px; overflow:hidden; }
   @keyframes alvRowIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
   .al-vrow { display:grid; gap:0 13px; align-items:center;
-    grid-template-columns:70px minmax(130px,1.25fr) 48px 80px minmax(110px,1.5fr) minmax(135px,1.15fr) 20px minmax(135px,1.15fr);
+    grid-template-columns:70px minmax(130px,1.25fr) 48px 80px minmax(104px,1.3fr) minmax(125px,1.1fr) 20px minmax(135px,1.2fr) 62px;
     padding:8px 13px; background:color-mix(in srgb, var(--coral-text) 5%, transparent);
     border-bottom:0.5px solid color-mix(in srgb, var(--coral-text) 15%, transparent);
     animation:alvRowIn .3s cubic-bezier(.4,0,.2,1) backwards; transition:background .14s; }
@@ -3573,6 +3573,32 @@
   .al-vrow-has { color:var(--coral-text); background:color-mix(in srgb, var(--coral-text) 15%, transparent); }
   .al-vrow.none .al-vrow-has { color:var(--amber-text); background:rgba(var(--amber-rgb,220,152,40),.15); }
   .al-vrow-want { color:var(--green-text); background:var(--green-bg); }
+  /* What the zone calls for, and who there is already out today. The names
+     are the suggestion: nothing here can reallocate a job, so the useful
+     thing a click does is hand you the name. */
+  .al-vrow-fix { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+  .al-vrow-fix > .al-vrow-want { max-width:100%; }
+  .al-vrow-sug { min-width:0; max-width:100%; display:flex; flex-wrap:wrap; gap:3px; }
+  .al-sug-t { max-width:100%; font-family:inherit; font-size:9.5px; font-weight:600;
+    letter-spacing:.01em; color:var(--text-3); background:var(--surface2);
+    border:0.5px solid var(--border); border-radius:4px; padding:1.5px 5px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    cursor:pointer; transition:all .13s; }
+  .al-sug-t:hover { color:var(--green-text); border-color:var(--green-text); }
+  .al-sug-t.copied { color:var(--green-text); background:var(--green-bg); border-color:var(--green-text); }
+  .al-sug-t:focus-visible { outline:2px solid var(--green-text); outline-offset:1px; }
+  .al-vrow-act { justify-self:end; }
+  /* Quiet until you reach for it. Accepting a depot for a zone is a
+     standing decision, not a tick on one job, so it should not look like
+     the obvious next click. */
+  .al-ok-btn { display:inline-flex; align-items:center; gap:3px; font-family:inherit;
+    font-size:10px; font-weight:700; letter-spacing:.02em; white-space:nowrap;
+    color:var(--text-3); background:none; border:0.5px solid var(--border-md);
+    border-radius:6px; padding:4px 8px; cursor:pointer; transition:all .13s; }
+  .al-ok-btn i { font-size:11px; }
+  .al-ok-btn:hover { color:var(--green-text); border-color:var(--green-text);
+    background:var(--green-bg); }
+  .al-ok-btn:focus-visible { outline:2px solid var(--green-text); outline-offset:1px; }
   @media (prefers-reduced-motion: reduce) { .al-vrow { animation:none !important; } }
 
   /* ---- Stock to check -----------------------------------------------------
@@ -3692,6 +3718,22 @@
        and neither is what a stock check needs. */
     .al-stk-row .al-vrow-st, .al-stk-head > span:nth-child(4),
     .al-stk-row .f, .al-stk-head > span:nth-child(8) { display:none; }
+  }
+  @media (max-width: 1100px) {
+    .al-vrow { grid-template-columns:66px minmax(110px,1.2fr) 44px 72px minmax(92px,1fr)
+                                     minmax(104px,1fr) 16px minmax(116px,1.1fr) 56px; gap:0 9px; }
+  }
+  @media (max-width: 860px) {
+    .al-vrow { grid-template-columns:62px minmax(0,1fr) auto; gap:4px 10px; padding:10px 13px;
+      align-items:start; }
+    .al-vrow > .ti, .al-vrow-st { display:none; }
+    .al-vrow-job  { grid-area:1 / 1 / 2 / 2; padding-top:1px; }
+    .al-vrow-who  { grid-area:1 / 2 / 2 / 4; }
+    .al-vrow-rt   { grid-area:2 / 3 / 3 / 4; justify-self:end; }
+    .al-vrow-when { grid-area:2 / 2 / 3 / 3; }
+    .al-vrow-has  { grid-area:3 / 2 / 4 / 4; justify-self:start; max-width:100%; }
+    .al-vrow-fix  { grid-area:4 / 2 / 5 / 4; }
+    .al-vrow-act  { grid-area:5 / 2 / 6 / 4; justify-self:start; padding-top:2px; }
   }
   @media (max-width: 760px) {
     .al-stk-head { display:none; }
@@ -4501,6 +4543,21 @@
   .srl-hd > i { font-size:14px; }
   .srl-c { font-size:10px; font-weight:700; letter-spacing:.02em; text-transform:none;
     color:var(--purple-text); background:var(--purple-bg); border-radius:5px; padding:2px 7px; }
+  /* A gate standing open is not a setting in force, so it does not get the
+     colour of one. */
+  .srl-c.all { color:var(--text-3); background:var(--surface2); }
+  /* The contract codes the loaded file carries. One click puts one on the
+     list - a code typed from memory is a code spelt wrong. */
+  .srl-seen { margin-top:9px; display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+    font-size:11px; color:var(--text-3); }
+  .srl-seen-b { font-family:inherit; font-size:10px; font-weight:700; letter-spacing:.02em;
+    color:var(--text-2); background:var(--surface2); border:0.5px solid var(--border);
+    border-radius:5px; padding:3px 8px; cursor:pointer; transition:all .13s; }
+  .srl-seen-b:hover { color:var(--purple-text); border-color:var(--purple-text); }
+  .srl-seen-b.on { color:var(--purple-text); background:var(--purple-bg);
+    border-color:color-mix(in srgb, var(--purple-text) 30%, transparent); cursor:default; }
+  .srl-seen-b.on:hover { border-color:color-mix(in srgb, var(--purple-text) 30%, transparent); }
+  .srl-seen-b:focus-visible { outline:2px solid var(--purple-text); outline-offset:1px; }
   .srl-why { margin-top:7px; max-width:92ch; font-size:11.5px; line-height:1.6; color:var(--text-3); }
   .srl-why b { font-weight:600; color:var(--text-2); }
   .srl-list { margin-top:11px; border:0.5px solid var(--border); border-radius:9px; overflow:hidden; }
@@ -13572,6 +13629,22 @@ function alValReopen() {
 // zone expects, so somebody who keeps turning up in Melbourne zones is
 // probably Melbourne's - and that is evidence from this very file rather
 // than a guess about the name.
+// A suggested name, onto the clipboard. There is nothing here that can
+// reallocate a job - that happens in the helpdesk - so the useful thing a
+// click can do is hand you the name to paste.
+function alCopyTech(name, btn) {
+  navigator.clipboard.writeText(String(name)).then(() => {
+    if (!btn) return;
+    const was = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = 'copied';
+    setTimeout(() => { btn.textContent = was; btn.classList.remove('copied'); }, 1500);
+  }).catch(() => {
+    if (typeof showToast === 'function')
+      showToast('<i class="ti ti-alert-circle"></i> Could not reach the clipboard', 2600);
+  });
+}
+
 function alValTechSuggest(tech) {
   const mine = (alValOut || []).filter(r => r.tech === tech);
   if (!mine.length) return [];
@@ -13653,8 +13726,16 @@ function alNormAlloc(v) {
 // Lookup, Stock Checks and the day's call list all improve together.
 const AL_ZONES_KEY = 'zarif_al_zone_allocs';
 const AL_TECHS_KEY = 'zarif_al_tech_allocs';
+// Depots you have looked at and said are acceptable in a zone. A third kind
+// of answer from the two above, and deliberately not either of them: it does
+// NOT change which depot the zone calls for - NSW Wollongong still calls for
+// Advanced Works Wollongong - it says that this other one is fine there too.
+// Overwriting the zone's depot instead would have been one line less and
+// would have quietly made the next real mismatch look correct.
+const AL_ZONE_OK_KEY = 'zarif_al_zone_ok';
 let alZoneAdds = null;
 let alTechAdds = null;
+let alZoneOk = null;
 
 function alGetZoneAdds() {
   if (alZoneAdds === null) {
@@ -13669,6 +13750,38 @@ function alGetTechAdds() {
     alTechAdds = (saved && typeof saved === 'object') ? saved : {};
   }
   return alTechAdds;
+}
+
+function alGetZoneOk() {
+  if (alZoneOk === null) {
+    const saved = dbGet(AL_ZONE_OK_KEY);
+    alZoneOk = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return alZoneOk;
+}
+// Keyed on the pair, by the same normalisation every zone and depot
+// comparison in the app already uses, so two spellings of either are one.
+function alZoneOkKey(zone, alloc) { return alNormAlloc(zone) + '|' + alNormAlloc(alloc); }
+function alZoneOkHas(zone, alloc) {
+  const z = alNormAlloc(zone), a = alNormAlloc(alloc);
+  if (!z || !a) return false;
+  return !!alGetZoneOk()[z + '|' + a];
+}
+function alApproveZone(zone, alloc) {
+  const z = String(zone || '').trim(), a = String(alloc || '').trim();
+  if (!z || !a) return;
+  const all = alGetZoneOk();
+  all[alZoneOkKey(z, a)] = { zone: z, alloc: a };
+  dbSet(AL_ZONE_OK_KEY, all);
+  showToast('<i class="ti ti-check"></i> ' + esc(a) + ' is fine for ' + esc(z)
+    + ' \u2014 every job in that zone with one of their technicians now reads as correct', 4200);
+  alValRefreshAfterTeach();
+}
+function alForgetZoneOk(key) {
+  const all = alGetZoneOk();
+  delete all[key];
+  dbSet(AL_ZONE_OK_KEY, all);
+  alValRefreshAfterTeach();
 }
 
 function alSaveZoneAlloc(zone, alloc) {
@@ -13832,6 +13945,14 @@ function alVerdict(tech, zone) {
   if (ti.how === 'unknown')      return out('unknown', 'Could not tell which allocation "' + tech + '" belongs to');
   if (ti.unknownAlloc)           return out('unknown', ti.alloc + ' is not an allocation in the sheet');
   if (alNormAlloc(ti.alloc) === alNormAlloc(zi.a1)) return out('match', '');
+  // A depot you accepted for this zone. Checked here rather than at the call
+  // sites, so the validator, Stock Checks, the lookup and the call list all
+  // stop reporting it together.
+  if (alZoneOkHas(zi.zone || z, ti.alloc)) {
+    const o = out('match', 'You accepted ' + ti.alloc + ' for ' + (zi.zone || z));
+    o.okd = true;
+    return o;
+  }
   return out('mismatch', 'Zone expects ' + zi.a1);
 }
 
@@ -13906,6 +14027,16 @@ const AL_STOCK_BUILTIN = [
 ];
 function alStockNorm(v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
 
+// The contracts a stock check is worth doing for. Not a fourth thing that
+// flags a job - a gate in front of the other three, because whose stock it
+// is depends on the contract before it depends on anything else.
+//
+// An empty list means every contract, which is what the app did before this
+// existed. Three ship with it, each switchable off the same way the parts
+// are, and the panel says in words which of the two states it is in - a
+// filter you cannot see the state of is worse than no filter.
+const AL_STOCK_CONTRACTS = ['TSH-KMART', 'ALD', 'TSH-TRG'];
+
 // One record for all three rules, because they are one decision - when does
 // this job need a stock check - and splitting them across four keys would
 // let them get out of step with each other.
@@ -13922,6 +14053,8 @@ function alStockGetRules() {
   if (!alStockRules.models || typeof alStockRules.models !== 'object') alStockRules.models = {};
   if (!alStockRules.off    || typeof alStockRules.off    !== 'object') alStockRules.off    = {};
   if (!alStockRules.depots || typeof alStockRules.depots !== 'object') alStockRules.depots = {};
+  if (!alStockRules.cons   || typeof alStockRules.cons   !== 'object') alStockRules.cons   = {};
+  if (!alStockRules.conOff || typeof alStockRules.conOff !== 'object') alStockRules.conOff = {};
   alStockRules.subs = !!alStockRules.subs;
   return alStockRules;
 }
@@ -13931,6 +14064,7 @@ function alStockSaveRules() {
   dbSet(AL_STOCK_RULES_KEY, alStockGetRules());
   _alStockMdl = null;
   _alStockDep = null;
+  _alStockCon = null;
 }
 
 // The parts list in force: the shipped six less the ones you switched off,
@@ -13982,6 +14116,38 @@ function alStockDepotList() {
   return Object.keys(m).map(k => m[k]).sort((a, b) => a.localeCompare(b));
 }
 
+// The contracts in force: the three shipped less the ones you switched off,
+// then yours. Empty means the gate is open and every contract counts.
+let _alStockCon = null;
+function alStockConMap() {
+  if (_alStockCon) return _alStockCon;
+  const R = alStockGetRules(), m = {};
+  AL_STOCK_CONTRACTS.forEach(c => {
+    const k = alStockNorm(c);
+    if (!R.conOff[k]) m[k] = { name: c, own: false };
+  });
+  Object.keys(R.cons).forEach(k => {
+    const nm = R.cons[k] && R.cons[k].name;
+    if (nm && !m[k]) m[k] = { name: nm, own: true };
+  });
+  return (_alStockCon = m);
+}
+function alStockConList() {
+  const m = alStockConMap();
+  const mine = Object.keys(m).filter(k => m[k].own).sort((a, b) => m[a].name.localeCompare(m[b].name));
+  return AL_STOCK_CONTRACTS.filter(c => m[alStockNorm(c)]).concat(mine.map(k => m[k].name));
+}
+// Whether this job is on a contract worth checking stock for. An empty list
+// lets everything through; so does a file with no contract column, because
+// there is nothing to judge and flagging nothing at all would look like the
+// rules had stopped working.
+function alStockConOk(con, known) {
+  const m = alStockConMap();
+  if (!Object.keys(m).length) return true;
+  if (!known) return true;
+  return !!m[alStockNorm(con)];
+}
+
 // Ours or somebody else's. Our depots have a shelf to take a unit off; a
 // subcontractor has to be sent one, which is the whole reason the rule
 // exists. Read off the name because that is what the allocator sheet gives
@@ -14011,6 +14177,8 @@ function alSubbieDepots() {
 // trips. Takes a row that already knows its depot, so the depot is resolved
 // once by the allocation check rather than twice by two different readings.
 function alStockWhy(o) {
+  // The contract decides whether the question is even asked.
+  if (!alStockConOk(o.con, o.conKnown)) return [];
   const out = [];
   const mdl = alStockModel(o.model);
   if (mdl) out.push({ kind: 'model', label: mdl, why: 'On the parts list' });
@@ -14137,13 +14305,14 @@ function alValRun() {
     // about the same job. A job nobody is going to keeps its own verdict
     // from a job with the wrong name on it - one needs allocating at all,
     // the other needs reassigning.
-    const { verdict, why, zi, ti } = alVerdict(tech, zone);
+    const { verdict, why, zi, ti, okd } = alVerdict(tech, zone);
 
     const con = conCol ? String(row[conCol] || '').trim() : '';
-    const o = { row, jobId, site, tech, zone, sched, model, con, verdict, why,
+    const o = { row, jobId, site, tech, zone, sched, model, con, conKnown: !!conCol, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
              zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
-             resolved: ti.alloc, how: ti.how, code: ti.code || '', person: ti.person || '' };
+             resolved: ti.alloc, how: ti.how, code: ti.code || '', person: ti.person || '',
+             okd: !!okd };
     // Asked after the verdict, not instead of it: a correctly allocated job
     // can still be one nobody has a unit for, and the depot rules need the
     // depot the verdict just worked out.
@@ -14243,6 +14412,30 @@ function alValRun() {
 
   const VL = { match:'Correct', mismatch:'Mismatch', unknown:"Can't judge", notech:'No technician', nozone:'Zone unknown' };
 
+  // Who in this file already works out of each depot. The suggestion for a
+  // job in the wrong hands is a name from the right depot, and the only
+  // source for that worth trusting is the file's own correctly allocated
+  // jobs - a name invented from the allocation sheet might not be working
+  // today, and this one demonstrably is.
+  const techByDepot = (() => {
+    const m = new Map();
+    results.forEach(r => {
+      if (!r.resolved || !r.tech || r.verdict !== 'match') return;
+      const k = alNormAlloc(r.resolved);
+      if (!m.has(k)) m.set(k, new Map());
+      const t = m.get(k);
+      t.set(r.tech, (t.get(r.tech) || 0) + 1);
+    });
+    return m;
+  })();
+  const suggestTechs = depot => {
+    const t = techByDepot.get(alNormAlloc(depot || ''));
+    if (!t) return [];
+    return [...t.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 3);
+  };
+
   // A mismatch is the finding; everything else is context. So the mismatches
   // get cards that state the delta and show the working behind the verdict,
   // and the other verdicts sit underneath as folded groups - reachable, with
@@ -14297,7 +14490,28 @@ function alValRun() {
         ${read ? `title="${escAttr(read)}"` : ''}
         >${esc(r.tech || 'Unallocated')}</span>
       <i class="ti ti-arrow-right"></i>
-      <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
+      <span class="al-vrow-fix">
+        <span class="al-vrow-want">${esc(r.expected || '\u2014')}</span>
+        ${(() => {
+          // Who at that depot is already out in this file. On a job with
+          // nobody on it this is the whole answer; on one with the wrong
+          // name it is who to move it to.
+          const sug = suggestTechs(r.expected);
+          if (!sug.length) return '';
+          return `<span class="al-vrow-sug">${sug.map(([t, c]) =>
+            `<button class="al-sug-t" onclick="alCopyTech(${escAttr(JSON.stringify(t))}, this)"
+              title="${escAttr(t + ' \u2014 ' + c + ' job' + (c !== 1 ? 's' : '')
+                + ' in this file, all correctly allocated. Click to copy the name.')}"
+              >${esc(t)}</button>`).join('')}</span>`;
+        })()}
+      </span>
+      <span class="al-vrow-act">${r.verdict === 'mismatch' && r.resolved && (r.zoneName || r.zone)
+        ? `<button class="al-ok-btn" onclick="alApproveZone(${escAttr(JSON.stringify(r.zoneName || r.zone))}, ${escAttr(JSON.stringify(r.resolved))})"
+            title="${escAttr('Accept ' + r.resolved + ' for ' + (r.zoneName || r.zone)
+              + '. Every job in that zone with one of their technicians will read as correct from now on, '
+              + 'here and everywhere else that asks. Undo it under \u201cAnswers you gave it\u201d.')}"
+            ><i class="ti ti-check"></i>Fine</button>`
+        : ''}</span>
     </div>`;
   };
 
@@ -14377,11 +14591,19 @@ function alValRun() {
         const R = alStockGetRules();
         const parts = alStockModelList();
         const deps = alStockDepotList();
+        const cons = alStockConList();
+        // Said first, because it is the gate: whatever follows was only
+        // asked of the jobs this line let through.
+        const gate = !cons.length ? 'Every contract.'
+          : !conCol ? 'Contracts: ' + esc(cons.join(', '))
+            + ' \u2014 but no contract column is picked on this file, so nothing was filtered out.'
+          : 'Only ' + esc(cons.join(', ')) + '.';
         return [
-          'Parts: ' + (parts.length ? esc(parts.join(', ')) : 'none'),
-          deps.length ? 'Depots: ' + esc(deps.join(', ')) : '',
-          R.subs ? 'Every depot that is not Amtek' : ''
-        ].filter(Boolean).join('. ') + '.';
+          gate,
+          'Parts: ' + (parts.length ? esc(parts.join(', ')) : 'none') + '.',
+          deps.length ? 'Depots: ' + esc(deps.join(', ')) + '.' : '',
+          R.subs ? 'Every depot that is not Amtek.' : ''
+        ].filter(Boolean).join(' ');
       })()}
       Set these on the Stock Checks page. None of it says a unit is missing: it says this job
       trips a rule you wrote and somebody has to check there is one to take.
@@ -14630,12 +14852,14 @@ function alValRun() {
 // answer that cannot be seen or undone is worse than no answer: it would go
 // on quietly deciding allocations with nothing on screen to say why.
 function alValTaughtBlock() {
-  const zs = alGetZoneAdds(), ts = alGetTechAdds();
+  const zs = alGetZoneAdds(), ts = alGetTechAdds(), ok = alGetZoneOk();
   const zk = Object.keys(zs).sort((a, b) => String(zs[a].zone || a).localeCompare(String(zs[b].zone || b)));
   const tk = Object.keys(ts).sort((a, b) => String(ts[a].tech || a).localeCompare(String(ts[b].tech || b)));
-  if (!zk.length && !tk.length) return '';
+  const ak = Object.keys(ok).sort((a, b) => String(ok[a].zone || a).localeCompare(String(ok[b].zone || b))
+    || String(ok[a].alloc || '').localeCompare(String(ok[b].alloc || '')));
+  if (!zk.length && !tk.length && !ak.length) return '';
   const open = alValOpenGroup.has('taught');
-  const n = zk.length + tk.length;
+  const n = zk.length + tk.length + ak.length;
   return `<div class="al-vgrp${open ? ' open' : ''}" style="margin-top:16px;">
     <button class="al-vgrp-hd" onclick="alValToggleGroup('taught')" aria-expanded="${open}">
       <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
@@ -14656,6 +14880,12 @@ function alValTaughtBlock() {
         <i class="ti ti-arrow-right"></i>
         <span class="al-taught-v">${esc(ts[k].alloc || '')}</span>
         <button class="al-fix-go ghost" onclick="alForgetTechAlloc(${escAttr(JSON.stringify(k))})">Forget</button>
+      </div>`).join('')}
+      ${ak.map(k => `<div class="al-fix-row taught">
+        <span class="al-taught-k"><i class="ti ti-map-pin-check"></i> ${esc(ok[k].zone || k)}</span>
+        <i class="ti ti-check" style="color:var(--green-text)"></i>
+        <span class="al-taught-v">${esc(ok[k].alloc || '')} is fine here too</span>
+        <button class="al-fix-go ghost" onclick="alForgetZoneOk(${escAttr(JSON.stringify(k))})">Forget</button>
       </div>`).join('')}
     </div>` : ''}
   </div>`;
@@ -15755,7 +15985,8 @@ function alStockRuleCount() {
 function alStockRuleOwnCount() {
   const R = alStockGetRules();
   return Object.keys(R.models).length + Object.keys(R.off).length
-       + Object.keys(R.depots).length + (R.subs ? 1 : 0);
+       + Object.keys(R.depots).length + (R.subs ? 1 : 0)
+       + Object.keys(R.cons).length + Object.keys(R.conOff).length;
 }
 function alStockRulesShown() {
   if (alStockRulesOpen === null) alStockRulesOpen = alStockRuleOwnCount() === 0;
@@ -15840,6 +16071,45 @@ function alStockTogglePart(k) {
   else { R.off[k] = 1; alStockAfter(esc(nm) + ' will no longer flag a job on its own'); }
 }
 
+function alStockAddCon() {
+  const inp = document.getElementById('srl-con');
+  const nm = String(inp ? inp.value : '').trim();
+  if (!nm) { if (inp) inp.focus(); return; }
+  const k = alStockNorm(nm);
+  if (!k) { showToast('<i class="ti ti-alert-circle"></i> That is not a contract code', 2600); return; }
+  const R = alStockGetRules();
+  const built = AL_STOCK_CONTRACTS.find(c => alStockNorm(c) === k);
+  if (built) {
+    const wasOff = !!R.conOff[k];
+    delete R.conOff[k];
+    if (inp) inp.value = '';
+    alStockAfter(wasOff ? esc(built) + ' is back on the contract list'
+                        : esc(built) + ' is already on the contract list');
+    return;
+  }
+  if (R.cons[k]) {
+    showToast('<i class="ti ti-info-circle"></i> ' + esc(R.cons[k].name)
+      + ' is already on the contract list', 2800);
+    if (inp) inp.value = '';
+    return;
+  }
+  R.cons[k] = { name: nm };
+  if (inp) inp.value = '';
+  alStockAfter('Stock checked on ' + esc(nm) + ' jobs');
+}
+function alStockDropCon(k) {
+  const R = alStockGetRules();
+  const nm = (R.cons[k] && R.cons[k].name) || '';
+  delete R.cons[k];
+  alStockAfter((nm ? esc(nm) : 'That contract') + ' is off the contract list');
+}
+function alStockToggleCon(k) {
+  const R = alStockGetRules();
+  const nm = AL_STOCK_CONTRACTS.find(c => alStockNorm(c) === k) || k;
+  if (R.conOff[k]) { delete R.conOff[k]; alStockAfter(esc(nm) + ' is back on the contract list'); }
+  else { R.conOff[k] = 1; alStockAfter(esc(nm) + ' jobs will no longer be checked for stock'); }
+}
+
 function alStockAddDepot() {
   const sel = document.getElementById('srl-depot');
   const nm = String(sel ? sel.value : '').trim();
@@ -15871,6 +16141,14 @@ function alStockSetSubs(on) {
 function alStockRulesRender() {
   const el = document.getElementById('stk-stockrules');
   if (!el) return;
+  const typed = {};
+  let focused = null;
+  ['srl-part', 'srl-con', 'srl-depot'].forEach(id => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    typed[id] = e.value;
+    if (document.activeElement === e) focused = id;
+  });
   const R = alStockGetRules();
   const map = alStockModelMap();
   // The shipped six in their own order, on or off, then yours alphabetically.
@@ -15888,6 +16166,18 @@ function alStockRulesRender() {
   const subs = alSubbieDepots();
   const n = alStockRuleCount();
   const open = alStockRulesShown();
+  // The three shipped in their own order, on or off, then yours.
+  const cons = AL_STOCK_CONTRACTS.map(c => ({
+      name: c, k: alStockNorm(c), own: false, on: !R.conOff[alStockNorm(c)] }))
+    .concat(Object.keys(R.cons)
+      .filter(k => alStockConMap()[k] && alStockConMap()[k].own)
+      .sort((a, b) => R.cons[a].name.localeCompare(R.cons[b].name))
+      .map(k => ({ name: R.cons[k].name, k, own: true, on: true })));
+  const conOn = alStockConList();
+  // The contract codes the file on screen actually carries, so a code can be
+  // picked rather than typed from memory and misremembered.
+  const seen = [...new Set(((typeof alValOut !== 'undefined' && alValOut) || [])
+    .map(r => r.con).filter(Boolean))].sort();
 
   const row = (label, tag, tagCls, btn) => `<div class="srl-row">
     <span class="srl-n" title="${escAttr(label)}">${esc(label)}</span>
@@ -15905,6 +16195,42 @@ function alStockRulesRender() {
         allocation check above and by the Allocation Validator</span>
     </button>
     ${!open ? '' : `<div class="srl-body">
+
+      <div class="srl-sec">
+        <div class="srl-hd"><i class="ti ti-file-description"></i> Contracts
+          <span class="srl-c${conOn.length ? '' : ' all'}">${conOn.length
+            ? conOn.length.toLocaleString() + ' only' : 'every contract'}</span></div>
+        <div class="srl-why">${conOn.length
+          ? `A gate in front of everything below: a job is only ever checked for stock if it is on
+             one of these. Everything on any other contract is left alone, whatever part is on it
+             and wherever it is going. <b>Take them all off and every contract counts again.</b>`
+          : `Nothing here, so <b>every contract</b> is checked \u2014 the rules below decide on their
+             own. Name one and only that contract will be considered.`}
+          A file with no contract column picked is not filtered at all, and the list says so when
+          that happens.</div>
+        <div class="srl-list">
+          ${cons.map(c => row(c.name,
+            c.own ? 'yours' : (c.on ? 'built in' : 'switched off'),
+            c.own ? 'own' : (c.on ? '' : 'off'),
+            c.own
+              ? `<button class="stk-rule-x" onclick="alStockDropCon(${escAttr(JSON.stringify(c.k))})">Forget</button>`
+              : `<button class="stk-rule-x" onclick="alStockToggleCon(${escAttr(JSON.stringify(c.k))})">${
+                  c.on ? 'Switch off' : 'Switch on'}</button>`)).join('')}
+        </div>
+        <div class="srl-add">
+          <input class="field-input srl-in" id="srl-con" type="text" autocomplete="off"
+            list="srl-con-seen" placeholder="Contract code, as the file writes it"
+            aria-label="Contract code to check stock for"
+            onkeydown="if (event.key === 'Enter') { event.preventDefault(); alStockAddCon(); }">
+          <datalist id="srl-con-seen">${seen.map(c => `<option value="${esc(c)}"></option>`).join('')}</datalist>
+          <button class="al-fix-go" onclick="alStockAddCon()">Add contract</button>
+        </div>
+        ${seen.length ? `<div class="srl-seen">In the file on screen:
+          ${seen.map(c => `<button class="srl-seen-b${alStockConMap()[alStockNorm(c)] ? ' on' : ''}"
+            onclick="document.getElementById('srl-con').value = ${escAttr(JSON.stringify(c))}; alStockAddCon();"
+            title="${escAttr(alStockConMap()[alStockNorm(c)]
+              ? c + ' is already on the list' : 'Add ' + c)}">${esc(c)}</button>`).join('')}</div>` : ''}
+      </div>
 
       <div class="srl-sec">
         <div class="srl-hd"><i class="ti ti-package"></i> Parts
@@ -15981,6 +16307,19 @@ function alStockRulesRender() {
 
     </div>`}
   </div>`;
+
+  Object.keys(typed).forEach(id => {
+    const e = document.getElementById(id);
+    if (!e || !typed[id]) return;
+    // A select only takes a value it still has an option for - a depot you
+    // just added is gone from the picker, and that is the right answer.
+    if (e.tagName === 'SELECT' && ![...e.options].some(o => o.value === typed[id])) return;
+    e.value = typed[id];
+  });
+  if (focused) {
+    const e = document.getElementById(focused);
+    if (e) { try { e.focus(); e.setSelectionRange(e.value.length, e.value.length); } catch (err) { e.focus(); } }
+  }
 }
 
 function stkRenderRules() {
@@ -16723,6 +17062,9 @@ function stkDrawStock(n, kinds, body) {
     <span class="stk-avsec-note">${stkKindWords(kinds)} \u2014 each one with the part, the
       contract and a link straight to that part at that depot</span>`;
   box.innerHTML = open ? body() : '';
+  // The rules panel lists the contract codes this file carries, which it
+  // could not know until now.
+  if (typeof alStockRulesRender === 'function') alStockRulesRender();
 }
 
 function stkToggleAv() {
@@ -29186,6 +29528,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.53.0', type: 'feature', date: '19 Nov 2026', title: 'Stock by contract, and a way to settle an allocation', changes: [
+    'Stock is now only checked on <b>TSH-KMART</b>, <b>ALD</b> and <b>TSH-TRG</b>. A <b>Contracts</b> block at the top of Always check stock holds them \u2014 add your own, switch one of the three off, or take them all off and every contract counts again, which is what the list says when you do',
+    'The contract codes the file on screen carries sit under that box as one-click chips, so a code is picked rather than typed from memory. A file with no contract column picked is not filtered at all, and the footnote under the list says so',
+    'Needs attention now <b>suggests a technician</b>: whoever is already out of the depot the zone calls for, taken from this file\u2019s own correctly allocated jobs. Click a name to copy it',
+    'And a <b>Fine</b> button on each one, to accept that depot for that zone. It does not change which depot the zone calls for \u2014 it says this one is fine there too, so those jobs stop being findings here, in Stock Checks, in the lookup and on the call list. Listed under \u201cAnswers you gave it\u201d with a way to take it back',
+  ]},
   { ver: '4.52.0', type: 'feature', date: '19 Nov 2026', title: 'The two checks move up, and the stock list gets the part', changes: [
     'On Stock Checks the <b>allocation check</b> now sits straight under the board, above <b>Past their response time</b> \u2014 it is something to act on, not an appendix',
     '<b>Stock may be required</b> is a section of its own underneath it rather than a fold inside the allocation check, with its own heading and its own count',
