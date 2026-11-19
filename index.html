@@ -4635,6 +4635,19 @@
   .stk-rule-x { background:none; border:none; color:var(--text-3); font-family:inherit; font-size:11.5px;
     cursor:pointer; padding:4px 8px; border-radius:5px; transition:all .13s; }
   .stk-rule-x:hover { color:var(--coral-text); background:var(--coral-bg); }
+  /* The box that writes a row, sitting under the rows it writes. The arrow
+     between the two halves is the one from the rows above it, so the pair
+     reads as the thing it is about to become. */
+  .stk-rule-add { padding:12px 15px 14px; border-top:0.5px solid var(--border);
+    background:color-mix(in srgb, var(--text-3) 5%, transparent); }
+  .stk-rule-add .srl-add { margin-top:0; }
+  .stk-rule-add .srl-in { flex:1 1 240px; max-width:340px; }
+  .stk-rule-add > .srl-add > .ti { font-size:12px; color:var(--text-3); }
+  .stk-rule-hint { margin-top:9px; max-width:92ch; font-size:11.5px; line-height:1.6; color:var(--text-3); }
+  @media (max-width: 760px) {
+    .stk-rule-add > .srl-add > .ti { display:none; }
+    .stk-rule-add .srl-in { max-width:none; }
+  }
   .stk-term-model { font-size:13px; font-weight:600; line-height:1.6; }
   .stk-term-hint { margin-top:8px; font-size:11.5px; color:var(--text-3); line-height:1.6; }
   .stk-term-sug { background:var(--surface2); border:0.5px solid var(--border-md); border-radius:5px;
@@ -14237,11 +14250,14 @@ function stkCheckLink(r) {
     : 'No model on this job, so there is nothing to search for')}">\u2014</span>`;
   // One job to a row here, so "both" is exactly two tabs.
   const job = (stkGetBoth() && r.jobId) ? buildHelpdeskUrl(r.jobId) : '';
+  const loc = stkLocTerm(depot);
   return `<a class="al-stk-go" href="${escAttr(stkUrl(depot, term))}" target="_blank" rel="noopener"
     ${job ? `onclick="return stkOpenJobWith(${escAttr(JSON.stringify(job))})"` : ''}
     title="${escAttr((job ? 'Two tabs: job ' + r.jobId + ', and ' + depot + ' searched for \u201c'
         : 'Search ' + depot + ' for \u201c') + term + '\u201d'
       + (term !== r.model ? ' \u2014 the name you saved for ' + r.model : '')
+      + (loc !== depot ? ' \u2014 searched as \u201c' + loc + '\u201d, the warehouse name you saved for '
+          + depot : '')
       + (r.resolved ? '' : ' \u2014 nobody is allocated, so this is the depot the zone calls for'))
     }">${job ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i></a>`;
 }
@@ -15094,6 +15110,7 @@ let stkOpenGroup = new Set();
 let stkSearchBy = null;       // 'model' | 'code' - read from storage on first use
 let stkBothOn = null;         // open the job alongside the warehouse page
 let stkRules = null;          // model name -> the warehouse name to search for it
+let stkLocs = null;           // depot name -> the warehouse's own name for that depot
 let stkCons = null;           // contract code -> the badge number it was given
 let stkHidden = null;         // "contract|model" pairs you never want to see
 let stkHiddenLocs = null;     // whole depots kept off every check
@@ -15104,6 +15121,7 @@ let stkEditing = [];          // the model name(s) the open modal is editing
 const STK_SEARCH_KEY = 'zarif_stk_search_by';
 const STK_BOTH_KEY = 'zarif_stk_open_both';
 const STK_RULES_KEY = 'zarif_stk_model_terms';
+const STK_LOCS_KEY = 'zarif_stk_depot_names';
 const STK_CONS_KEY = 'zarif_stk_contract_badges';
 const STK_HIDE_KEY = 'zarif_stk_hidden_pairs';
 const STK_HIDE_LOC_KEY = 'zarif_stk_hidden_depots';
@@ -15195,8 +15213,26 @@ function stkStatus(msg, type) {
 // URLSearchParams, which writes "+" for a space where this wants "%20".
 function stkUrl(location, term) {
   return 'https://warehouse.servicesupport.com.au/parts?search_mode=advanced&condition=1'
-    + '&location_name=' + encodeURIComponent(location)
+    + '&location_name=' + encodeURIComponent(stkLocTerm(location))
     + '&part_type_search=' + encodeURIComponent(term);
+}
+
+// Depots are compared the way every other depot on this page is compared, so
+// "Advanced Works  Wollongong" and "advanced-works wollongong" are the one
+// depot and you never have to save the same name twice.
+function stkLocKey(v) { return alNormAlloc(v); }
+function stkGetLocs() {
+  if (stkLocs === null) {
+    const saved = dbGet(STK_LOCS_KEY);
+    stkLocs = (saved && typeof saved === 'object') ? saved : {};
+  }
+  return stkLocs;
+}
+function stkSaveLocs() { dbSet(STK_LOCS_KEY, stkGetLocs()); }
+function stkLocTerm(name) {
+  const k = stkLocKey(name);
+  const r = k ? stkGetLocs()[k] : null;
+  return (r && r.term) ? r.term : String(name || '').trim();
 }
 
 // The model column is descriptive - "Scanner DS9808 (Barcode)" - but the
@@ -16024,6 +16060,74 @@ function stkEditRule(key) {
   stkEditTerm(stkRowIndex.length - 1);
 }
 
+// Both lists could only be written from a row of an open file until now - a
+// pencil on a part that happened to be waiting today. A name you already
+// know is wrong should not have to wait for the job that proves it, so both
+// take a pair of boxes as well.
+function stkNamePair(a, b) {
+  const f = document.getElementById(a);
+  const t = document.getElementById(b);
+  const from = (f && f.value || '').trim();
+  const to = (t && t.value || '').trim();
+  if (!from || !to) {
+    showToast('<b>Both boxes</b><br>The name as the file writes it on the left, and the name '
+      + 'the warehouse knows it by on the right.');
+    const el = from ? t : f;
+    if (el) el.focus();
+    return null;
+  }
+  return { f, t, from, to };
+}
+
+function stkAddPartName() {
+  const p = stkNamePair('stk-np-from', 'stk-np-to');
+  if (!p) return;
+  const k = stkModelKey(p.from);
+  if (!k) return;
+  const had = !!stkGetRules()[k];
+  stkGetRules()[k] = { model: p.from, term: p.to };
+  stkSaveRules();
+  p.f.value = ''; p.t.value = '';
+  stkOpenGroup.add('rules');
+  stkRun();
+  stkRenderRules();
+  const n = stkRowIndex.filter(r => (r.models || []).some(m => stkModelKey(m) === k)).length;
+  showToast('<b>' + (had ? 'Changed' : 'Saved') + '</b><br>' + esc(p.from) + ' is searched for as '
+    + '\u201c' + esc(p.to) + '\u201d from now on' + (n ? ' \u2014 ' + n + ' part row'
+      + (n !== 1 ? 's' : '') + ' on screen ' + (n === 1 ? 'uses' : 'use') + ' it' : '') + '.');
+  const el = document.getElementById('stk-np-from');
+  if (el) el.focus();
+}
+
+function stkAddDepotName() {
+  const p = stkNamePair('stk-nd-from', 'stk-nd-to');
+  if (!p) return;
+  const k = stkLocKey(p.from);
+  if (!k) return;
+  const had = !!stkGetLocs()[k];
+  stkGetLocs()[k] = { name: p.from, term: p.to };
+  stkSaveLocs();
+  p.f.value = ''; p.t.value = '';
+  stkOpenGroup.add('locnames');
+  stkRun();
+  stkRenderRules();
+  const n = stkLocIndex.filter(L => stkLocKey(L.name) === k).length;
+  showToast('<b>' + (had ? 'Changed' : 'Saved') + '</b><br>The warehouse is searched in '
+    + '\u201c' + esc(p.to) + '\u201d wherever the file says ' + esc(p.from)
+    + (n ? ' \u2014 including the card on screen' : '') + '. The depot keeps its own name here.');
+  const el = document.getElementById('stk-nd-from');
+  if (el) el.focus();
+}
+
+function stkForgetLoc(key) {
+  const locs = stkGetLocs();
+  if (!locs[key]) return;
+  delete locs[key];
+  stkSaveLocs();
+  stkRun();
+  stkRenderRules();
+}
+
 // Shown whether or not a file is open: a name saved for good is worth being
 // able to check without hunting up the export it was saved from.
 // ---- Always check stock: the rules themselves -----------------------------
@@ -16401,7 +16505,34 @@ function stkRenderRules() {
   const words = stkGetNoteWords();
   const nkeys = Object.keys(words).sort((a, b) =>
     String(words[a].verdict || '').localeCompare(String(words[b].verdict || '')) || a.localeCompare(b));
-  if (!keys.length && !hkeys.length && !nkeys.length && !lkeys.length) { el.innerHTML = ''; return; }
+  const locs = stkGetLocs();
+  const mkeys = Object.keys(locs).sort((a, b) =>
+    String(locs[a].name || a).localeCompare(String(locs[b].name || b)));
+  // The names this file happens to carry, offered rather than typed: a name
+  // typed from memory is a name spelt wrong, and this list is only ever
+  // consulted by exact match.
+  const seenParts = [...new Set(stkRowIndex.flatMap(r => r.models || []))]
+    .filter(Boolean).sort((a, b) => a.localeCompare(b));
+  const seenLocs = [...new Set(stkLocIndex.map(L => L.name))]
+    .filter(Boolean).sort((a, b) => a.localeCompare(b));
+  const nameAdd = (id, listId, seen, ph, go, label) => `<div class="stk-rule-add">
+    <div class="srl-add">
+      <input class="field-input srl-in" id="${id}-from" type="text" autocomplete="off"
+        list="${listId}" placeholder="${escAttr(ph)}" aria-label="${escAttr(ph)}"
+        onkeydown="if (event.key === 'Enter') { event.preventDefault(); ${go}(); }">
+      <datalist id="${listId}">${seen.map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+      <i class="ti ti-arrow-right"></i>
+      <input class="field-input srl-in" id="${id}-to" type="text" autocomplete="off"
+        placeholder="What the warehouse calls it" aria-label="What the warehouse calls it"
+        onkeydown="if (event.key === 'Enter') { event.preventDefault(); ${go}(); }">
+      <button class="al-fix-go" onclick="${go}()">${label}</button>
+    </div>
+    <div class="stk-rule-hint">${seen.length
+      ? 'The first box offers the ' + seen.length.toLocaleString() + ' name' + (seen.length !== 1 ? 's' : '') + ' in the file on screen.'
+      : 'Load a file and the first box will offer the names in it.'}
+      Saved for every future stock check, and only the warehouse search changes \u2014
+      everything on this page goes on calling it what the file calls it.</div>
+  </div>`;
   const lopen = stkOpenGroup.has('hidelocs');
   const locBlock = lkeys.length ? `<div class="al-vgrp stk-rules${lopen ? ' open' : ''}">
     <button class="al-vgrp-hd" onclick="stkToggleGroup('hidelocs')" aria-expanded="${lopen}">
@@ -16454,7 +16585,7 @@ function stkRenderRules() {
       <span><button class="stk-rule-x" onclick="stkForgetNote(${escAttr(JSON.stringify(k))})">Forget</button></span>
     </div>`).join('') : ''}
   </div>` : '';
-  const rulesBlock = !keys.length ? '' : (() => {
+  const rulesBlock = (() => {
   const open = stkOpenGroup.has('rules');
   return `<div class="al-vgrp stk-rules${open ? ' open' : ''}">
     <button class="al-vgrp-hd" onclick="stkToggleGroup('rules')" aria-expanded="${open}">
@@ -16472,10 +16603,33 @@ function stkRenderRules() {
         <button class="stk-rule-x" onclick="stkEditRule(${escAttr(JSON.stringify(k))})">Change</button>
         <button class="stk-rule-x" onclick="stkForgetRule(${escAttr(JSON.stringify(k))})">Forget</button>
       </span>
-    </div>`).join('') : ''}
+    </div>`).join('') + nameAdd('stk-np', 'stk-np-seen', seenParts,
+        'Part name, as the job file writes it', 'stkAddPartName', 'Add part name') : ''}
   </div>`;
   })();
-  el.innerHTML = locBlock + hiddenBlock + noteBlock + rulesBlock;
+  // The same thing for the depot. location_name is matched in the warehouse,
+  // not guessed at, so a depot it files under another name costs the whole
+  // search rather than part of it.
+  const nameBlock = (() => {
+  const nopen2 = stkOpenGroup.has('locnames');
+  return `<div class="al-vgrp stk-rules${nopen2 ? ' open' : ''}">
+    <button class="al-vgrp-hd" onclick="stkToggleGroup('locnames')" aria-expanded="${nopen2}">
+      <i class="ti ti-chevron-right al-vgrp-chev${nopen2 ? ' open' : ''}"></i>
+      <i class="ti ti-building-warehouse al-vgrp-ico match"></i>
+      <span class="al-vgrp-l">Saved depot names</span>
+      <span class="al-vgrp-n match">${mkeys.length.toLocaleString()}</span>
+      <span class="al-vgrp-note">which warehouse is looked in, whatever the file calls the depot</span>
+    </button>
+    ${nopen2 ? mkeys.map(k => `<div class="stk-rule">
+      <span class="stk-rule-from">${esc(locs[k].name || k)}</span>
+      <i class="ti ti-arrow-right"></i>
+      <span class="stk-rule-to">${esc(locs[k].term || '')}</span>
+      <span><button class="stk-rule-x" onclick="stkForgetLoc(${escAttr(JSON.stringify(k))})">Forget</button></span>
+    </div>`).join('') + nameAdd('stk-nd', 'stk-nd-seen', seenLocs,
+        'Depot name, as the job file writes it', 'stkAddDepotName', 'Add depot name') : ''}
+  </div>`;
+  })();
+  el.innerHTML = locBlock + hiddenBlock + noteBlock + rulesBlock + nameBlock;
 }
 
 // Which warehouse to look in, and whether that was stated or worked out.
@@ -16754,7 +16908,7 @@ function stkShowAlloc() {
 
 function stkToggleGroup(k) {
   if (stkOpenGroup.has(k)) stkOpenGroup.delete(k); else stkOpenGroup.add(k);
-  if (k === 'rules' || k === 'hidden') stkRenderRules(); else stkRun();
+  if (k === 'rules' || k === 'hidden' || k === 'locnames') stkRenderRules(); else stkRun();
 }
 
 function stkRenderFaults() {
@@ -17663,11 +17817,14 @@ function stkRun() {
             </span>
             <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener"
               ${rowJobs ? `onclick="return stkOpenJobWith(${escAttr(JSON.stringify(rowJobs))})"` : ''}
-              title="${escAttr(rowJobs
+              title="${escAttr((rowJobs
                 ? 'Two tabs: ' + L.name + ' searched for \u201c' + Pt.term + '\u201d, and '
                   + (rowIds.length === 1 ? 'job ' + rowIds[0]
                      : 'the ' + rowIds.length + ' jobs on this row')
-                : 'Search ' + L.name + ' for \u201c' + Pt.term + '\u201d')}">
+                : 'Search ' + L.name + ' for \u201c' + Pt.term + '\u201d')
+                + (stkLocTerm(L.name) !== L.name
+                   ? ' \u2014 looked for in \u201c' + stkLocTerm(L.name)
+                     + '\u201d, the warehouse name you saved for this depot' : ''))}">
               ${rowJobs ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i>
             </a>
             <button class="stk-done${pDone ? ' on' : ''}${pCar ? ' carried' : ''}" onclick="stkToggleDone(${Pt.ix})"
@@ -29607,6 +29764,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.55.0', type: 'feature', date: '20 Nov 2026', title: 'Names you can change by hand', changes: [
+    '<b>Saved part names</b> can now be written straight into the list. Until now a name could only be changed from the pencil on a part that happened to be waiting today, so a name you already knew was wrong had to wait for the job that proved it',
+    'And a new <b>Saved depot names</b> list beside it, for when the warehouse files a depot under a name the job file does not use. That one costs the whole search rather than part of it, because the warehouse matches the location name instead of guessing at it',
+    'Both boxes offer the names in the file on screen, so a name is picked rather than typed from memory',
+    'Only the warehouse link changes. The depot and the part keep the file\u2019s own name everywhere on the page, in the rules and in the allocation check \u2014 and the link\u2019s tooltip says which name it went and searched for',
+  ]},
   { ver: '4.54.0', type: 'feature', date: '19 Nov 2026', title: 'One click, both tabs', changes: [
     'Every <b>Check stock</b> link on this page now opens the job beside the warehouse search. It reads <b>Check both</b> when it will, and the tooltip names what the two tabs are going to be',
     'On the board a part row can be several jobs, so they arrive as <b>one helpdesk tab holding all of them</b> rather than one tab each. In Stock may be required a row is a single job, so it is exactly the two',
