@@ -3582,6 +3582,25 @@
      a unit for. It is not a worse version of either: the allocation can be
      perfect and the stock still missing. */
   .al-vrow-sub { min-width:0; display:flex; align-items:center; gap:6px; }
+  /* The rules a row tripped besides the one it is listed under. Quiet, and
+     ellipsed rather than wrapped: it is a reminder, and the whole of it is in
+     the tooltip. */
+  .al-stk-also { flex-shrink:1; min-width:0; display:inline-flex; align-items:center; gap:3px;
+    max-width:24ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:9.5px; font-weight:600; letter-spacing:.02em;
+    color:var(--text-3); background:var(--surface2); border-radius:4px;
+    padding:1.5px 5px; cursor:help; }
+  .al-stk-also i { font-size:10px; flex-shrink:0; }
+  .al-stk-also.sub, .al-stk-also.depot { color:var(--purple-text);
+    background:color-mix(in srgb, var(--purple-text) 11%, transparent); }
+  /* Which of the three rules this block is. Said in words rather than left to
+     the icon, because "a depot you always check" and "not an Amtek depot" are
+     different answers and the difference is the whole point. */
+  .al-stk-k { flex-shrink:0; font-size:9.5px; font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; color:var(--text-3); background:var(--surface2);
+    border-radius:4px; padding:2px 6px; }
+  .al-stk-k.depot, .al-stk-k.sub { color:var(--purple-text);
+    background:color-mix(in srgb, var(--purple-text) 13%, transparent); }
   .al-vrow-stk { flex-shrink:0; display:inline-flex; align-items:center; gap:3px;
     font-size:9.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
     color:var(--purple-text); background:var(--purple-bg); border-radius:4px;
@@ -3669,12 +3688,14 @@
      is the pile nothing was counted from. */
   .al-vgrp-ico.warn { color:var(--text-3); }
   .al-vgrp-ico.match { color:var(--green-text); }
+  .al-vgrp-ico.stk { color:var(--purple-text); }
   .al-vgrp-ico.bad { color:var(--coral-text); }
   .al-vgrp-l { font-size:12.5px; font-weight:600; }
   .al-vgrp-n { font-size:11px; font-weight:700; border-radius:8px; padding:2px 8px;
     background:var(--surface2); color:var(--text-2); }
   .al-vgrp-n.unknown, .al-vgrp-n.nozone { background:rgba(var(--amber-rgb,220,152,40),.14); color:var(--amber-text); }
   .al-vgrp-n.match { background:var(--green-bg); color:var(--green-text); }
+  .al-vgrp-n.stk { background:var(--purple-bg); color:var(--purple-text); }
   .al-vgrp-note { margin-left:auto; font-size:11.5px; color:var(--text-3); }
   .al-vgrp .al-val-wrap { margin:0; border-top:0.5px solid var(--border); }
   .al-vgrp .al-rows th { padding:5px 9px; font-size:9px; }
@@ -4419,6 +4440,67 @@
     transition:opacity .13s, color .13s, background .13s; }
   .stk-prow:hover .stk-edit, .stk-edit:focus-visible { opacity:1; }
   .stk-edit:hover { color:var(--teal-text); background:var(--teal-bg); }
+
+  /* ---- Always check stock -------------------------------------------------
+     Three rules, one panel, and each of the three gets its own block with the
+     reason it exists written under its heading. The reason is not decoration:
+     a rule you cannot remember the point of is one you stop trusting, and
+     these outlive by months the file they were written over. */
+  .srl { margin-top:18px; }
+  .srl-body { border-top:0.5px solid var(--border); animation: zDrop .3s cubic-bezier(.22,.9,.26,1); }
+  .srl-sec { padding:15px 16px; }
+  .srl-sec + .srl-sec { border-top:0.5px solid var(--border); }
+  .srl-hd { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--purple-text); }
+  .srl-hd > i { font-size:14px; }
+  .srl-c { font-size:10px; font-weight:700; letter-spacing:.02em; text-transform:none;
+    color:var(--purple-text); background:var(--purple-bg); border-radius:5px; padding:2px 7px; }
+  .srl-why { margin-top:7px; max-width:92ch; font-size:11.5px; line-height:1.6; color:var(--text-3); }
+  .srl-why b { font-weight:600; color:var(--text-2); }
+  .srl-list { margin-top:11px; border:0.5px solid var(--border); border-radius:9px; overflow:hidden; }
+  .srl-row { display:grid; grid-template-columns:minmax(0,300px) 112px auto;
+    justify-content:start; gap:12px;
+    align-items:center; padding:8px 12px; font-size:12px; transition:background .14s; }
+  .srl-row + .srl-row { border-top:0.5px solid var(--border); }
+  .srl-row:hover { background:rgba(255,255,255,.035); }
+  .srl-n { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-2); }
+  .srl-tag { justify-self:start; font-size:9.5px; font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; color:var(--text-3); background:var(--surface2);
+    border-radius:4px; padding:2px 6px; white-space:nowrap; }
+  .srl-tag.own { color:var(--purple-text); background:var(--purple-bg); }
+  /* A switched-off rule stays on the list, greyed. Taking it off the list
+     would leave nothing on screen to say it had ever been there, and no way
+     back to it. */
+  .srl-row:has(> .srl-tag.off) .srl-n { color:var(--text-3); text-decoration:line-through;
+    text-decoration-color:var(--text-3); }
+  .srl-none { padding:11px 12px; font-size:11.5px; color:var(--text-3); }
+  .srl-add { margin-top:11px; display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .srl-in { flex:1 1 300px; min-width:0; max-width:460px; font-size:12px; padding:8px 11px; }
+  .srl-sw { margin-top:11px; display:flex; align-items:flex-start; gap:11px; padding:12px 13px;
+    border:0.5px solid var(--border); border-left:2.5px solid var(--text-3); border-radius:9px;
+    background:var(--surface2); cursor:pointer; transition:border-color .15s; }
+  .srl-sw.on { border-left-color:var(--purple-text); }
+  .srl-sw:hover { border-color:var(--border-md); }
+  .srl-sw input { width:15px; height:15px; margin:1px 0 0; accent-color:var(--purple-text);
+    cursor:pointer; flex-shrink:0; }
+  .srl-sw-t { display:flex; flex-direction:column; gap:5px; min-width:0; }
+  .srl-sw-t b { font-size:12.5px; font-weight:600; color:var(--text-1); }
+  .srl-sw-t > span { max-width:92ch; font-size:11.5px; line-height:1.6; color:var(--text-3); }
+  .srl-sw-t > span b { font-weight:700; color:var(--text-2); }
+  @media (max-width: 760px) {
+    .srl-sec { padding:13px 13px; }
+    .srl-hd { flex-wrap:wrap; }
+    /* The name takes the row and the tag and button drop under it, rather
+       than the name being squeezed to an ellipsis to make room for a label
+       that only says where the rule came from. */
+    .srl-row { grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding:9px 12px; }
+    .srl-n { grid-area:1 / 1 / 2 / 3; }
+    .srl-row > span:nth-child(2) { grid-area:2 / 1 / 3 / 2; }
+    .srl-row > span:nth-child(3) { grid-area:2 / 2 / 3 / 3; justify-self:end; }
+    .srl-in { flex:1 1 100%; max-width:none; }
+    .srl-add .al-fix-go { width:100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .srl-body { animation:none !important; } }
 
   /* The saved names, listed in full. A setting that outlives the file it was
      made in has to be reviewable without reopening that file. */
@@ -7095,6 +7177,11 @@
       <button class="stk-avsec-hd" id="stk-avsec-hd" onclick="stkToggleAv()" aria-expanded="false"></button>
       <div class="stk-avsec-body"><div id="stk-av-result"></div></div>
     </section>
+
+    <!-- When stock has to be checked: parts, depots and subcontractors.
+         Written here, read by the allocation check above and by the
+         Allocation Validator on its own page. -->
+    <div id="stk-stockrules"></div>
 
     <div id="stk-rules"></div>
   </div>
@@ -13723,18 +13810,30 @@ async function alValLoad(file) {
   }
 }
 
-// ---- Models that mean stock may be required -------------------------------
-// Six devices that are not fitted out of the back of a van. A job carrying
-// one of them is flagged whatever its allocation says, because the question
-// it raises is a different question: is there a unit to take.
+// ---- When stock has to be checked ----------------------------------------
+// Three rules, all of them yours to change on the Stock Checks page, and all
+// three asking the same question of a job: is there a unit to take.
+//
+//   the part    - a device nobody fits out of the back of a van
+//   the depot   - a named depot you want checked whatever is on the job
+//   the subbie  - any depot that is not ours, because ours have shelves
+//
+// A job can trip more than one. It is listed under the first, and carries the
+// rest with it, because the thing being counted is jobs to check and a job
+// counted twice is a number that cannot be acted on.
+
+// The six the app ships with. Not the list - the default list: each one can
+// be switched off below, and switching one off is recorded rather than the
+// whole list being copied into the database, so a seventh added here later
+// arrives for you too.
 //
 // Matched on the model name as the file writes it, case and punctuation
 // aside, and nothing looser. The same exports carry "ANZ MOVE 5000 INT" on
-// 175 jobs, "WL Move5000 EP2 STD" on 24 and "Pax A920 Pro RoamSim w/ Black
-// Case" on 74 - different models under a different contract's naming. A
+// 213 jobs, "WL Move5000 EP2 STD" on 26 and "Pax A920 Pro RoamSim w/ Black
+// Case" on 79 - different models under a different contract's naming. A
 // substring match on "Move 5000" or "A920" would flag every one of them and
 // the flag would stop meaning anything, so it does not.
-const AL_STOCK_MODELS = [
+const AL_STOCK_BUILTIN = [
   'Move 5000 Integrated',
   'Move 5000 Standalone',
   'CLOVER KIOSK',
@@ -13743,15 +13842,147 @@ const AL_STOCK_MODELS = [
   'CLOVER KDS 24 INCH',
 ];
 function alStockNorm(v) { return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
-const AL_STOCK_BY_NORM = (() => {
-  const m = {};
-  AL_STOCK_MODELS.forEach(nm => { m[alStockNorm(nm)] = nm; });
-  return m;
-})();
-// The watch list's own spelling of the model, or '' for anything not on it.
-// The list's spelling rather than the file's, so the same device counts as
-// one device however the file happened to type it.
-function alStockModel(v) { return AL_STOCK_BY_NORM[alStockNorm(v)] || ''; }
+
+// One record for all three rules, because they are one decision - when does
+// this job need a stock check - and splitting them across four keys would
+// let them get out of step with each other.
+const AL_STOCK_RULES_KEY = 'zarif_stock_rules';
+let alStockRules = null;
+function alStockGetRules() {
+  if (alStockRules === null) {
+    const saved = dbGet(AL_STOCK_RULES_KEY);
+    alStockRules = (saved && typeof saved === 'object') ? saved : {};
+  }
+  // Shaped on the way out rather than on the way in, so a record written by
+  // an older version - or a half-written one - still reads as empty rules
+  // instead of throwing on the first job.
+  if (!alStockRules.models || typeof alStockRules.models !== 'object') alStockRules.models = {};
+  if (!alStockRules.off    || typeof alStockRules.off    !== 'object') alStockRules.off    = {};
+  if (!alStockRules.depots || typeof alStockRules.depots !== 'object') alStockRules.depots = {};
+  alStockRules.subs = !!alStockRules.subs;
+  return alStockRules;
+}
+// Every path that changes a rule comes through here, so nothing can change a
+// rule and leave the lookups below answering from the old one.
+function alStockSaveRules() {
+  dbSet(AL_STOCK_RULES_KEY, alStockGetRules());
+  _alStockMdl = null;
+  _alStockDep = null;
+}
+
+// The parts list in force: the shipped six less the ones you switched off,
+// then yours. Built once and kept, because it is consulted per row and a
+// five-thousand-row file would otherwise rebuild it five thousand times.
+let _alStockMdl = null;
+function alStockModelMap() {
+  if (_alStockMdl) return _alStockMdl;
+  const R = alStockGetRules(), m = {};
+  AL_STOCK_BUILTIN.forEach(nm => {
+    const k = alStockNorm(nm);
+    if (!R.off[k]) m[k] = { name: nm, own: false };
+  });
+  Object.keys(R.models).forEach(k => {
+    const nm = R.models[k] && R.models[k].name;
+    if (nm && !m[k]) m[k] = { name: nm, own: true };
+  });
+  return (_alStockMdl = m);
+}
+// The parts list as names, in the shipped order first and then yours - so the
+// footnote and the picker read the same way round every time.
+function alStockModelList() {
+  const m = alStockModelMap();
+  const mine = Object.keys(m).filter(k => m[k].own).sort((a, b) => m[a].name.localeCompare(m[b].name));
+  return AL_STOCK_BUILTIN.filter(nm => m[alStockNorm(nm)]).concat(mine.map(k => m[k].name));
+}
+// The list's own spelling of the model, or '' for anything not on it. The
+// list's spelling rather than the file's, so the same device counts as one
+// device however the file happened to type it.
+function alStockModel(v) {
+  const hit = alStockModelMap()[alStockNorm(v)];
+  return hit ? hit.name : '';
+}
+
+// The named depots, keyed the way every other depot comparison in the app is
+// keyed, so "Viridian IT - Hobart" and "Viridian IT Hobart" are one depot.
+let _alStockDep = null;
+function alStockDepotMap() {
+  if (_alStockDep) return _alStockDep;
+  const R = alStockGetRules(), m = {};
+  Object.keys(R.depots).forEach(k => {
+    const nm = R.depots[k] && R.depots[k].name;
+    if (nm) m[alNormAlloc(nm)] = nm;
+  });
+  return (_alStockDep = m);
+}
+function alStockDepotList() {
+  const m = alStockDepotMap();
+  return Object.keys(m).map(k => m[k]).sort((a, b) => a.localeCompare(b));
+}
+
+// Ours or somebody else's. Our depots have a shelf to take a unit off; a
+// subcontractor has to be sent one, which is the whole reason the rule
+// exists. Read off the name because that is what the allocator sheet gives
+// us - there is no "is this us" column - and every one of ours is written
+// "Amtek <city>", "Amtek Melbourne?" and its stray question mark included.
+//
+// The first word only, and not through alNormAlloc: that flattens
+// punctuation to spaces, which is right for comparing two depots and wrong
+// here, because it would turn a firm called "Amtek-ish Services" into
+// "amtek ish services" and hand it our shelf. A name hyphenated straight on
+// to the city - "Amtek-Perth" - reads as somebody else's by the same rule,
+// and that is the error worth having: an unnecessary stock check costs a
+// look, a missed one costs the visit.
+function alIsAmtekDepot(d) {
+  const first = String(d || '').trim().split(/\s+/)[0] || '';
+  return first.replace(/[^a-z0-9]/gi, '').toLowerCase() === 'amtek';
+}
+
+// Which subcontractor depots the allocator sheet knows about, for the line
+// that says how wide the switch reaches before you throw it.
+function alSubbieDepots() {
+  return (typeof alAllocNames !== 'undefined' ? alAllocNames : [])
+    .filter(a => a && a !== '?' && !alIsAmtekDepot(a));
+}
+
+// Why stock might be wanted on this job: nothing, or one reason per rule it
+// trips. Takes a row that already knows its depot, so the depot is resolved
+// once by the allocation check rather than twice by two different readings.
+function alStockWhy(o) {
+  const out = [];
+  const mdl = alStockModel(o.model);
+  if (mdl) out.push({ kind: 'model', label: mdl, why: 'On the parts list' });
+  // Whoever is actually going to attend. The technician's own depot first,
+  // because that is the shelf the unit would come off; with nobody allocated
+  // yet, the depot the zone calls for, said as such so a guess is never
+  // mistaken for the fact.
+  const dep = String(o.resolved || '').trim() || String(o.expected || '').trim();
+  if (dep) {
+    const from = String(o.resolved || '').trim() ? 'tech' : 'zone';
+    const named = alStockDepotMap()[alNormAlloc(dep)];
+    // A named depot wins over the subcontractor switch: you picked that one
+    // out by hand, and saying "subcontractor" back at you would be the vaguer
+    // of the two true answers.
+    if (named) out.push({ kind: 'depot', label: named, why: 'Depot always checked', from });
+    else if (alStockGetRules().subs && !alIsAmtekDepot(dep))
+      out.push({ kind: 'sub', label: dep, why: 'Subcontractor depot', from });
+  }
+  return out;
+}
+
+const AL_STOCK_KIND = {
+  model: { ico: 'ti-package',            word: 'part',          note: 'on the parts list' },
+  depot: { ico: 'ti-building-warehouse', word: 'depot',         note: 'a depot you always check' },
+  sub:   { ico: 'ti-truck-delivery',     word: 'subcontractor', note: 'not an Amtek depot' }
+};
+
+// The reasons as one line of prose, for a tooltip, the spreadsheet and the
+// Chase List - all three of which get the whole answer rather than the first
+// part of it.
+function alStockWhyText(r) {
+  return (r.stockWhy || []).map(w => w.kind === 'model' ? w.label
+    : w.label + (w.kind === 'sub' ? ' (subcontractor)' : ' (depot)')
+      + (w.from === 'zone' ? ', the depot the zone calls for' : '')).join(' \u00b7 ');
+}
 
 function alValRenderMapper() {
   const el = document.getElementById('al-val-mapper');
@@ -13808,20 +14039,25 @@ function alValRun() {
     // paDate takes the shapes the helpdesk exports use - "2026-06-30 05:00 PM",
     // dd/mm/yyyy and plain ISO - and gives back a sortable YYYY-MM-DD.
     const sched = dateCol ? paDate(row[dateCol]) : '';
-    // Independent of the verdict below: a correctly allocated job can still
-    // be one nobody has a unit for.
     const model = modelCol ? String(row[modelCol] || '').trim() : '';
-    const stock = alStockModel(model);
     // One shared judge, so this page and Stock Checks can never disagree
     // about the same job. A job nobody is going to keeps its own verdict
     // from a job with the wrong name on it - one needs allocating at all,
     // the other needs reassigning.
     const { verdict, why, zi, ti } = alVerdict(tech, zone);
 
-    return { row, jobId, site, tech, zone, sched, model, stock, verdict, why,
+    const o = { row, jobId, site, tech, zone, sched, model, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
              zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
              resolved: ti.alloc, how: ti.how, code: ti.code || '', person: ti.person || '' };
+    // Asked after the verdict, not instead of it: a correctly allocated job
+    // can still be one nobody has a unit for, and the depot rules need the
+    // depot the verdict just worked out.
+    o.stockWhy = alStockWhy(o);
+    // The reason it is listed under. Still a string, still truthy, so every
+    // place that only wanted to know whether to show the chip is unchanged.
+    o.stock = o.stockWhy.length ? o.stockWhy[0].label : '';
+    return o;
   });
   alValOut = results;
   // Only ever today's, and only when a date column says which day a job is on.
@@ -13838,21 +14074,33 @@ function alValRun() {
   // Deliberately NOT folded into flagged: that number and the rate kept
   // beside it are a thirty-day record of whether the allocations are
   // drifting, and a run of Clover Kiosks is not allocation drift.
-  const needStock = results.filter(r => r.stock);
-  // Per device, because that is the unit a stock check is counted in - how
-  // many kiosks do we need, not how many jobs are flagged. Commonest first,
-  // ties broken by the watch list's own order so two runs of the same file
-  // can never draw it differently.
-  const stockModels = (() => {
+  const needStock = results.filter(r => r.stockWhy.length);
+  // One block per reason, because that is the unit a stock check is counted
+  // in: how many kiosks do we need, how many units go to Tamworth. Parts
+  // first, then named depots, then subcontractors - the order the rules are
+  // written in on the page - and within a kind the commonest first, ties
+  // broken by name so two runs of the same file can never draw it
+  // differently.
+  //
+  // A job trips up to three rules and appears under exactly one of them, the
+  // first it tripped, carrying the others as tags on its row. Counting it in
+  // every block it qualified for would be the truer answer to a question
+  // nobody is asking - the number wanted here is jobs to go and check.
+  const stockGroups = (() => {
     const by = new Map();
     needStock.forEach(r => {
-      if (!by.has(r.stock)) by.set(r.stock, []);
-      by.get(r.stock).push(r);
+      const p = r.stockWhy[0];
+      const k = p.kind + '|' + p.label.toLowerCase();
+      if (!by.has(k)) by.set(k, { kind: p.kind, label: p.label, rows: [] });
+      by.get(k).rows.push(r);
     });
-    return [...by.entries()].sort((a, b) =>
-      b[1].length - a[1].length ||
-      AL_STOCK_MODELS.indexOf(a[0]) - AL_STOCK_MODELS.indexOf(b[0]));
+    const rank = { model: 0, depot: 1, sub: 2 };
+    return [...by.values()].sort((a, b) => rank[a.kind] - rank[b.kind] ||
+      b.rows.length - a.rows.length || a.label.localeCompare(b.label));
   })();
+  const stockKinds = ['model', 'depot', 'sub']
+    .map(k => [k, stockGroups.filter(g => g.kind === k).length])
+    .filter(p => p[1]);
 
   // Everything flagged becomes something to chase, carrying whatever you
   // already decided about it yesterday.
@@ -13872,7 +14120,7 @@ function alValRun() {
     sum: head
        + (bad && r.stock ? ', stock may be required' : '')
        + (r.site ? ' — ' + r.site : ''),
-    detail: [r.stock ? 'Stock: ' + r.stock : '',
+    detail: [r.stock ? 'Stock: ' + alStockWhyText(r) : '',
              r.tech ? 'Has: ' + r.tech : 'Nobody allocated',
              r.expected ? 'Zone expects: ' + r.expected : '',
              r.zone ? 'Zone ' + r.zone : ''].filter(Boolean).join(' · '),
@@ -13945,7 +14193,7 @@ function alValRun() {
         <span class="al-vrow-sub">
           <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
           ${r.stock ? `<span class="al-vrow-stk"
-            title="${escAttr(r.model + ' \u2014 stock may be required')}"><i class="ti ti-package"></i>stock</span>` : ''}
+            title="${escAttr('Stock may be required \u2014 ' + alStockWhyText(r))}"><i class="ti ti-package"></i>stock</span>` : ''}
         </span>
       </span>
       <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
@@ -13971,7 +14219,13 @@ function alValRun() {
         : '\u2014'}</span>
       <span class="al-vrow-who">
         <span class="al-vrow-site">${esc(r.site || r.zone || '\u2014')}</span>
-        <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
+        <span class="al-vrow-sub">
+          <span class="al-vrow-zone">${esc(r.zoneName || r.zone || '')}</span>
+          ${(r.stockWhy || []).slice(1).map(w => `<span class="al-stk-also ${w.kind}"
+            title="${escAttr(w.why + (w.from === 'zone'
+              ? ' \u2014 nobody is allocated yet, so this is the depot the zone calls for' : ''))}"><i
+            class="ti ${AL_STOCK_KIND[w.kind].ico}"></i>${esc(w.label)}</span>`).join('')}
+        </span>
       </span>
       <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
       <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
@@ -14088,7 +14342,7 @@ function alValRun() {
           notech.length ? `${notech.length.toLocaleString()} ${notech.length !== 1 ? 'have' : 'has'} nobody allocated` : ''
         ].filter(Boolean).join(' \u00b7 ')}. Every one is listed below.${needStock.length
           ? ` ${needStock.length.toLocaleString()} job${needStock.length !== 1 ? 's' : ''} in this file
-             carr${needStock.length !== 1 ? 'y' : 'ies'} a model that may need stock.` : ''}</span>
+             also need${needStock.length !== 1 ? '' : 's'} a stock check.` : ''}</span>
       </span>
       <span class="al-vbanner-n">${judged ? Math.round(n('match') / judged * 100) : 0}% of judged rows correct</span>
     </div>` : needStock.length ? `<div class="al-vbanner stk">
@@ -14096,8 +14350,8 @@ function alValRun() {
       <span class="al-vbanner-t">
         <strong>Allocations agree \u2014 ${needStock.length.toLocaleString()} to check for stock</strong>
         <span>Every row that could be judged has the technician its zone calls for, but
-          ${needStock.length.toLocaleString()} ${needStock.length !== 1 ? 'carry' : 'carries'} a model
-          off the stock watch list. Listed below.</span>
+          ${needStock.length.toLocaleString()} ${needStock.length !== 1 ? 'trip' : 'trips'} one of
+          your stock rules. Listed below, with the rule it tripped.</span>
       </span>
       <span class="al-vbanner-n">${results.length.toLocaleString()} rows checked</span>
     </div>` : `<div class="al-vbanner ok">
@@ -14146,31 +14400,45 @@ function alValRun() {
           <i class="ti ti-chevron-right al-vsec-chev${open ? ' open' : ''}"></i>
           <i class="ti ti-package"></i> Stock may be required
           <span class="al-vsec-n stk">${needStock.length.toLocaleString()}</span>
-          <span class="al-vsec-sub stk">${stockModels.length} of the ${AL_STOCK_MODELS.length}
-            watched model${stockModels.length !== 1 ? 's are' : ' is'} in this file</span>
+          <span class="al-vsec-sub stk">${stockKinds.map(([k, n]) => n.toLocaleString() + ' '
+            + AL_STOCK_KIND[k].word + (n !== 1 ? 's' : '')).join(' \u00b7 ')}</span>
         </button>
       </div>
       ${!open ? '' : `<div class="al-stk-wrap">
-        ${stockModels.map(([name, list]) => {
+        ${stockGroups.map(g => {
+          const K = AL_STOCK_KIND[g.kind];
           // Every spelling of this model the file used, where it differs from
-          // the watch list's - so a row counted here can always be traced
-          // back to the value that was actually in the column.
-          const spel = [...new Set(list.map(r => r.model).filter(v => v && v !== name))];
-          return `<div class="al-stk-mod">
+          // the parts list's - so a row counted here can always be traced
+          // back to the value that was actually in the column. Only ever a
+          // part: a depot block holds whatever models happened to be going
+          // there, and listing them as aliases would be a lie.
+          const spel = g.kind !== 'model' ? []
+            : [...new Set(g.rows.map(r => r.model).filter(v => v && v !== g.label))];
+          return `<div class="al-stk-mod ${g.kind}">
           <div class="al-stk-hd">
-            <i class="ti ti-package"></i>
-            <span class="al-stk-n2">${esc(name)}</span>
-            <span class="al-stk-c">${list.length.toLocaleString()} job${list.length !== 1 ? 's' : ''}</span>
+            <i class="ti ${K.ico}"></i>
+            <span class="al-stk-n2">${esc(g.label)}</span>
+            <span class="al-stk-c">${g.rows.length.toLocaleString()} job${g.rows.length !== 1 ? 's' : ''}</span>
+            <span class="al-stk-k ${g.kind}">${esc(K.note)}</span>
             ${spel.length ? `<span class="al-stk-as"
               title="${escAttr('In this file: ' + spel.join(' \u00b7 '))}">written
               as ${esc(spel.join(' \u00b7 '))}</span>` : ''}
           </div>
-          ${list.map(stockRow).join('')}
+          ${g.rows.map(stockRow).join('')}
         </div>`; }).join('')}
         <div class="al-stk-foot">
-          Flagged on the model alone, matched against the watch list \u2014 ${esc(AL_STOCK_MODELS.join(', '))}.
-          None of this says a unit is missing: it says one of these is on the job and somebody has to
-          check there is one to take.
+          ${(() => {
+            const R = alStockGetRules();
+            const parts = alStockModelList();
+            const deps = alStockDepotList();
+            return [
+              'Parts: ' + (parts.length ? esc(parts.join(', ')) : 'none'),
+              deps.length ? 'Depots: ' + esc(deps.join(', ')) : '',
+              R.subs ? 'Every depot that is not Amtek' : ''
+            ].filter(Boolean).join('. ') + '.';
+          })()}
+          Set these on the Stock Checks page. None of it says a unit is missing: it says this job
+          trips a rule you wrote and somebody has to check there is one to take.
         </div>
       </div>`}
     </div>`; })() : ''}
@@ -14433,7 +14701,7 @@ function alValDownload(btn) {
     'Technician Read As': (r.how === 'city' || r.how === 'named') ? r.resolved : '',
     'Verdict':           VL[r.verdict] || '',
     'Reason':            r.why || '',
-    'Stock Required':    r.stock ? 'YES \u2014 ' + r.stock : ''
+    'Stock Required':    r.stock ? 'YES \u2014 ' + alStockWhyText(r) : ''
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -15347,6 +15615,256 @@ function stkEditRule(key) {
 
 // Shown whether or not a file is open: a name saved for good is worth being
 // able to check without hunting up the export it was saved from.
+// ---- Always check stock: the rules themselves -----------------------------
+// The one place the three rules are written, on the page they are mostly
+// read from. They are stored globally and consulted inside alStockWhy, so
+// the Allocation Validator picks them up on its own page without knowing
+// this panel exists - the same arrangement the taught zones and technicians
+// already use.
+
+// Open by default only until you have written something. Before that it is
+// the thing on this page worth finding; afterwards it is a setting, and a
+// setting that reopens itself every visit is in the way.
+let alStockRulesOpen = null;
+// The rules in force, for the badge: the parts list plus the named depots
+// plus the switch. Never nought, because six parts ship with the app.
+function alStockRuleCount() {
+  const R = alStockGetRules();
+  return alStockModelList().length + alStockDepotList().length + (R.subs ? 1 : 0);
+}
+// What YOU have written, which is what the default turns on - a part added, a
+// shipped one switched off, a depot named, the switch thrown.
+function alStockRuleOwnCount() {
+  const R = alStockGetRules();
+  return Object.keys(R.models).length + Object.keys(R.off).length
+       + Object.keys(R.depots).length + (R.subs ? 1 : 0);
+}
+function alStockRulesShown() {
+  if (alStockRulesOpen === null) alStockRulesOpen = alStockRuleOwnCount() === 0;
+  return alStockRulesOpen;
+}
+function alStockToggleRules() {
+  alStockRulesOpen = !alStockRulesShown();
+  alStockRulesRender();
+}
+
+// How many jobs in the file on screen a rule actually catches. A rule you
+// cannot see the effect of is a rule you have to take on trust, so every
+// change says what it just did - including when the answer is none.
+function alStockRuleHits(kind, label) {
+  const rows = (typeof alValOut !== 'undefined' && alValOut) || [];
+  if (!rows.length) return -1;
+  const norm = kind === 'model' ? alStockNorm(label) : alNormAlloc(label);
+  return rows.filter(r => (r.stockWhy || []).some(w => w.kind === kind &&
+    (!label || (kind === 'model' ? alStockNorm(w.label) === norm
+                                 : alNormAlloc(w.label) === norm)))).length;
+}
+
+// Save, redraw, re-judge, and say what happened. The re-judge is the shared
+// one, so the board above, the allocation check under it and the validator on
+// its own page all move together rather than waiting for their next upload.
+function alStockAfter(msg, kind, label) {
+  alStockSaveRules();
+  alStockRulesRender();
+  alValRefreshAfterTeach();
+  let tail = '';
+  if (kind) {
+    const n = alStockRuleHits(kind, label);
+    if (n >= 0) tail = ' \u2014 ' + (n
+      ? n.toLocaleString() + ' job' + (n !== 1 ? 's' : '') + ' in this file'
+      : 'nothing in this file carries it');
+  }
+  if (typeof showToast === 'function')
+    showToast('<i class="ti ti-check"></i> ' + msg + tail, 3600);
+}
+
+function alStockAddPart() {
+  const inp = document.getElementById('srl-part');
+  const nm = String(inp ? inp.value : '').trim();
+  if (!nm) { if (inp) inp.focus(); return; }
+  const k = alStockNorm(nm);
+  if (!k) { showToast('<i class="ti ti-alert-circle"></i> That is not a model name', 2600); return; }
+  const R = alStockGetRules();
+  // A name that is one of the shipped six is not a new rule, it is the
+  // shipped one switched back on - adding it again would list it twice.
+  const built = AL_STOCK_BUILTIN.find(b => alStockNorm(b) === k);
+  if (built) {
+    const wasOff = !!R.off[k];
+    delete R.off[k];
+    if (inp) inp.value = '';
+    alStockAfter(wasOff ? esc(built) + ' is back on the parts list'
+                        : esc(built) + ' is already on the parts list', 'model', built);
+    return;
+  }
+  if (R.models[k]) {
+    showToast('<i class="ti ti-info-circle"></i> ' + esc(R.models[k].name)
+      + ' is already on the parts list', 2800);
+    if (inp) inp.value = '';
+    return;
+  }
+  R.models[k] = { name: nm };
+  if (inp) inp.value = '';
+  alStockAfter(esc(nm) + ' \u2014 stock checked on every job carrying it', 'model', nm);
+}
+function alStockDropPart(k) {
+  const R = alStockGetRules();
+  const nm = (R.models[k] && R.models[k].name) || '';
+  delete R.models[k];
+  alStockAfter((nm ? esc(nm) : 'That part') + ' is off the parts list');
+}
+// The shipped six are switched rather than deleted, and only the switching
+// off is recorded - so a seventh added to the app later still arrives for
+// you, and one you turned off stays off.
+function alStockTogglePart(k) {
+  const R = alStockGetRules();
+  const nm = AL_STOCK_BUILTIN.find(b => alStockNorm(b) === k) || k;
+  if (R.off[k]) { delete R.off[k]; alStockAfter(esc(nm) + ' is back on the parts list', 'model', nm); }
+  else { R.off[k] = 1; alStockAfter(esc(nm) + ' will no longer flag a job on its own'); }
+}
+
+function alStockAddDepot() {
+  const sel = document.getElementById('srl-depot');
+  const nm = String(sel ? sel.value : '').trim();
+  if (!nm) { showToast('<i class="ti ti-alert-circle"></i> Pick a depot first', 2600); return; }
+  const R = alStockGetRules();
+  const k = alNormAlloc(nm);
+  if (R.depots[k]) {
+    showToast('<i class="ti ti-info-circle"></i> ' + esc(nm) + ' is already on the list', 2800);
+    return;
+  }
+  R.depots[k] = { name: nm };
+  if (sel) sel.value = '';
+  alStockAfter(esc(nm) + ' \u2014 stock checked on every job that lands there', 'depot', nm);
+}
+function alStockDropDepot(k) {
+  const R = alStockGetRules();
+  const nm = (R.depots[k] && R.depots[k].name) || '';
+  delete R.depots[k];
+  alStockAfter((nm ? esc(nm) : 'That depot') + ' is off the list');
+}
+
+function alStockSetSubs(on) {
+  alStockGetRules().subs = !!on;
+  alStockAfter(on
+    ? 'Every job going to a depot that is not Amtek will be checked for stock'
+    : 'Subcontractor depots no longer flag a job on their own', on ? 'sub' : '');
+}
+
+function alStockRulesRender() {
+  const el = document.getElementById('stk-stockrules');
+  if (!el) return;
+  const R = alStockGetRules();
+  const map = alStockModelMap();
+  // The shipped six in their own order, on or off, then yours alphabetically.
+  // Theirs first because theirs are the ones you are deciding about rather
+  // than the ones you wrote.
+  const parts = AL_STOCK_BUILTIN.map(nm => ({
+      name: nm, k: alStockNorm(nm), own: false, on: !R.off[alStockNorm(nm)] }))
+    .concat(Object.keys(R.models)
+      .filter(k => map[k] && map[k].own)
+      .sort((a, b) => R.models[a].name.localeCompare(R.models[b].name))
+      .map(k => ({ name: R.models[k].name, k, own: true, on: true })));
+  const partsOn = parts.filter(p => p.on).length;
+  const deps = alStockDepotList();
+  const names = (typeof alAllocNames !== 'undefined' ? alAllocNames : []);
+  const subs = alSubbieDepots();
+  const n = alStockRuleCount();
+  const open = alStockRulesShown();
+
+  const row = (label, tag, tagCls, btn) => `<div class="srl-row">
+    <span class="srl-n" title="${escAttr(label)}">${esc(label)}</span>
+    ${tag ? `<span class="srl-tag ${tagCls || ''}">${esc(tag)}</span>` : '<span></span>'}
+    <span>${btn}</span>
+  </div>`;
+
+  el.innerHTML = `<div class="al-vgrp srl${open ? ' open' : ''}">
+    <button class="al-vgrp-hd" onclick="alStockToggleRules()" aria-expanded="${open}">
+      <i class="ti ti-chevron-right al-vgrp-chev${open ? ' open' : ''}"></i>
+      <i class="ti ti-package-import al-vgrp-ico stk"></i>
+      <span class="al-vgrp-l">Always check stock</span>
+      <span class="al-vgrp-n stk">${n.toLocaleString()}</span>
+      <span class="al-vgrp-note">parts, depots and subcontractors \u2014 used by the
+        allocation check above and by the Allocation Validator</span>
+    </button>
+    ${!open ? '' : `<div class="srl-body">
+
+      <div class="srl-sec">
+        <div class="srl-hd"><i class="ti ti-package"></i> Parts
+          <span class="srl-c">${partsOn.toLocaleString()} of ${parts.length.toLocaleString()} on</span></div>
+        <div class="srl-why">A device nobody fits out of the back of a van. Matched on the model
+          as the file writes it \u2014 case, spacing and punctuation aside, and nothing looser, so
+          <b>Move 5000 Integrated</b> does not catch <b>ANZ MOVE 5000 INT</b>. Add the second
+          one too if it is the same device under another contract's naming.</div>
+        <div class="srl-list">
+          ${parts.map(p => row(p.name,
+            p.own ? 'yours' : (p.on ? 'built in' : 'switched off'),
+            p.own ? 'own' : (p.on ? '' : 'off'),
+            p.own
+              ? `<button class="stk-rule-x" onclick="alStockDropPart(${escAttr(JSON.stringify(p.k))})">Forget</button>`
+              : `<button class="stk-rule-x" onclick="alStockTogglePart(${escAttr(JSON.stringify(p.k))})">${
+                  p.on ? 'Switch off' : 'Switch on'}</button>`)).join('')}
+        </div>
+        <div class="srl-add">
+          <input class="field-input srl-in" id="srl-part" type="text" autocomplete="off"
+            placeholder="Model name, exactly as the file writes it"
+            aria-label="Model name to always check stock for"
+            onkeydown="if (event.key === 'Enter') { event.preventDefault(); alStockAddPart(); }">
+          <button class="al-fix-go" onclick="alStockAddPart()">Add part</button>
+        </div>
+      </div>
+
+      <div class="srl-sec">
+        <div class="srl-hd"><i class="ti ti-building-warehouse"></i> Depots
+          <span class="srl-c">${deps.length.toLocaleString()}</span></div>
+        <div class="srl-why">Every job that lands at one of these, whatever is on it. The depot
+          taken is the one the technician belongs to; with nobody allocated yet it is the depot
+          the zone calls for, and the job says so.</div>
+        <div class="srl-list">
+          ${deps.length
+            ? deps.map(d => row(d, alIsAmtekDepot(d) ? 'ours' : 'subcontractor',
+                alIsAmtekDepot(d) ? '' : 'sub',
+                `<button class="stk-rule-x" onclick="alStockDropDepot(${escAttr(JSON.stringify(alNormAlloc(d)))})">Forget</button>`)).join('')
+            : '<div class="srl-none">No depot is checked on its own yet.</div>'}
+        </div>
+        <div class="srl-add">
+          <select class="field-input srl-in" id="srl-depot" aria-label="Depot to always check stock for">
+            ${names.length
+              ? `<option value="">\u2014 pick a depot \u2014</option>` + names
+                  .filter(a => a && a !== '?' && !alStockDepotMap()[alNormAlloc(a)])
+                  .map(a => `<option value="${esc(a)}">${esc(a)}${alIsAmtekDepot(a) ? '' : '  \u00b7  subcontractor'}</option>`).join('')
+              : `<option value="">Loading the depot list\u2026</option>`}
+          </select>
+          <button class="al-fix-go" onclick="alStockAddDepot()">Add depot</button>
+        </div>
+      </div>
+
+      <div class="srl-sec">
+        <div class="srl-hd"><i class="ti ti-truck-delivery"></i> Subcontractors</div>
+        <label class="srl-sw${R.subs ? ' on' : ''}">
+          <input type="checkbox" ${R.subs ? 'checked' : ''} onchange="alStockSetSubs(this.checked)">
+          <span class="srl-sw-t">
+            <b>Every depot that is not Amtek</b>
+            <span>Our own depots have a unit on the shelf; a subcontractor has to be sent one,
+              so a job going to one is always worth checking. ${subs.length
+                ? `That is <b>${subs.length.toLocaleString()}</b> of the
+                   ${names.filter(a => a && a !== '?').length.toLocaleString()} depots in the
+                   allocator \u2014 everything other than
+                   ${esc(names.filter(a => a && alIsAmtekDepot(a))
+                     .filter((a, i, all) => all.findIndex(b =>
+                       alNormAlloc(b) === alNormAlloc(a)) === i).join(', '))}.`
+                : ''}</span>
+          </span>
+        </label>
+        ${deps.some(d => !alIsAmtekDepot(d)) && R.subs ? `<div class="srl-why">
+          ${deps.filter(d => !alIsAmtekDepot(d)).length.toLocaleString()} of the named depots above
+          ${deps.filter(d => !alIsAmtekDepot(d)).length !== 1 ? 'are' : 'is'} a subcontractor and so
+          already covered by this \u2014 harmless, and a job is still only listed once.</div>` : ''}
+      </div>
+
+    </div>`}
+  </div>`;
+}
+
 function stkRenderRules() {
   const el = document.getElementById('stk-rules');
   if (!el) return;
@@ -17201,9 +17719,13 @@ async function inboxInit(page) {
 function stkInit() {
   stkRenderConfig();
   stkRenderRules();
+  alStockRulesRender();
   // Technician names are read through the allocation sheet, so start it
   // loading on arrival rather than on the first file.
-  if (typeof alEnsureData === 'function') alEnsureData().catch(() => {});
+  // The depot picker is that same sheet's list of depots, so it is drawn
+  // once now - empty, saying so - and again when the sheet lands.
+  if (typeof alEnsureData === 'function')
+    alEnsureData().then(() => alStockRulesRender()).catch(() => {});
 }
 
 // ---- Unallocated: everything with no technician ----
@@ -28484,6 +29006,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.51.0', type: 'feature', date: '19 Nov 2026', title: 'You decide when stock has to be checked', changes: [
+    'Stock Checks has an <b>Always check stock</b> panel: the parts that mean a stock check, the depots that mean one whatever is on the job, and a switch for every depot that is not Amtek \u2014 because ours have a unit on the shelf and a subcontractor has to be sent one',
+    'The six models the app already watched are on that list rather than buried in the code. Add your own, or switch one of the six off \u2014 only your change is kept, so anything added to the app later still reaches you',
+    'A job that trips more than one rule is listed once, under the first, carrying the others beside it \u2014 and every change says how many jobs in the file on screen it just caught, including when the answer is none',
+    'The depot taken is the one the technician belongs to; with nobody allocated yet it is the one the zone calls for, and the job says which. Written on Stock Checks, read by the Allocation Validator too',
+  ]},
   { ver: '4.50.1', type: 'patch', date: '18 Nov 2026', title: 'Needs attention and Stock may be required fold away', changes: [
     'Both findings sections now fold, the way the verdict groups under them already did — so a file you have worked through can be put away and the whole page fits on one screen',
     'They start open, because they are the reason the file was run, and folding one leaves its heading behind with the count and the breakdown on it. The whole-file download stays in the corner whether the list is open or shut',
