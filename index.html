@@ -4420,6 +4420,20 @@
   .stk-seg button:hover { color:var(--text-2); }
   .stk-seg button.on { color:var(--text); background:var(--bg); }
   .stk-seg-eg { font-size:11px; color:var(--text-3); font-family:ui-monospace, Menlo, monospace; }
+  /* On the same row as the search mode, because both settings are about what
+     a link on this page does when you click it. Teal, like the links it
+     governs, rather than the page accent. */
+  .stk-seg-sw { display:inline-flex; align-items:center; gap:7px; margin-left:auto;
+    padding:5px 11px; font-size:11.5px; font-weight:600; color:var(--text-3);
+    background:var(--surface2); border:0.5px solid var(--border-md); border-radius:8px;
+    cursor:pointer; transition:color .13s, border-color .13s, background .13s; }
+  .stk-seg-sw:hover { color:var(--text-2); border-color:var(--text-3); }
+  .stk-seg-sw.on { color:var(--teal-text); background:var(--teal-bg);
+    border-color:color-mix(in srgb, var(--teal) 34%, transparent); }
+  .stk-seg-sw input { width:14px; height:14px; margin:0; accent-color:var(--teal-text);
+    cursor:pointer; flex-shrink:0; }
+  .stk-seg-sw:focus-within { outline:2px solid var(--teal-text); outline-offset:1px; }
+  @media (max-width: 760px) { .stk-seg-sw { margin-left:0; min-height:36px; } }
 
   @keyframes stkCardIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
   /* min() rather than a bare 430px, so the track can go narrower than its
@@ -14221,11 +14235,15 @@ function stkCheckLink(r) {
   if (!depot || !term) return `<span class="al-stk-nolk" title="${escAttr(!depot
     ? 'Nowhere to search \u2014 nobody is allocated and the zone is not in the allocator'
     : 'No model on this job, so there is nothing to search for')}">\u2014</span>`;
+  // One job to a row here, so "both" is exactly two tabs.
+  const job = (stkGetBoth() && r.jobId) ? buildHelpdeskUrl(r.jobId) : '';
   return `<a class="al-stk-go" href="${escAttr(stkUrl(depot, term))}" target="_blank" rel="noopener"
-    title="${escAttr('Search ' + depot + ' for \u201c' + term + '\u201d'
+    ${job ? `onclick="return stkOpenJobWith(${escAttr(JSON.stringify(job))})"` : ''}
+    title="${escAttr((job ? 'Two tabs: job ' + r.jobId + ', and ' + depot + ' searched for \u201c'
+        : 'Search ' + depot + ' for \u201c') + term + '\u201d'
       + (term !== r.model ? ' \u2014 the name you saved for ' + r.model : '')
       + (r.resolved ? '' : ' \u2014 nobody is allocated, so this is the depot the zone calls for'))
-    }">Check stock <i class="ti ti-arrow-up-right"></i></a>`;
+    }">${job ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i></a>`;
 }
 
 const AL_STOCK_KIND = {
@@ -15074,6 +15092,7 @@ let stkFaultCol = '';         // the column stkFaultList was built from
 let stkShowAllFaults = false;
 let stkOpenGroup = new Set();
 let stkSearchBy = null;       // 'model' | 'code' - read from storage on first use
+let stkBothOn = null;         // open the job alongside the warehouse page
 let stkRules = null;          // model name -> the warehouse name to search for it
 let stkCons = null;           // contract code -> the badge number it was given
 let stkHidden = null;         // "contract|model" pairs you never want to see
@@ -15083,6 +15102,7 @@ let stkLocIndex = [];         // the depot cards on screen, each with its row sl
 let stkChecked = null;        // { day, rows } - the parts ticked off today
 let stkEditing = [];          // the model name(s) the open modal is editing
 const STK_SEARCH_KEY = 'zarif_stk_search_by';
+const STK_BOTH_KEY = 'zarif_stk_open_both';
 const STK_RULES_KEY = 'zarif_stk_model_terms';
 const STK_CONS_KEY = 'zarif_stk_contract_badges';
 const STK_HIDE_KEY = 'zarif_stk_hidden_pairs';
@@ -15121,6 +15141,49 @@ function stkSetSearchBy(v) {
   stkSearchBy = v;
   dbSet(STK_SEARCH_KEY, v);
   stkRun();
+}
+
+// On by default, because a warehouse page read without the job in front of
+// you is half an answer, and opening the two by hand was the thing being
+// done one at a time. Stored as 'off' rather than a boolean so that a
+// missing record - a new browser, a cleared store - reads as on.
+function stkGetBoth() {
+  if (stkBothOn === null) stkBothOn = dbGet(STK_BOTH_KEY) !== 'off';
+  return stkBothOn;
+}
+function stkSetBoth(v) {
+  if (stkGetBoth() === !!v) return;
+  stkBothOn = !!v;
+  dbSet(STK_BOTH_KEY, stkBothOn ? 'on' : 'off');
+  // Every link on the page says in its own label which of the two it does,
+  // so they all have to be drawn again.
+  stkRun();
+}
+
+// One click, two tabs: the warehouse search, and the job it is being done
+// for.
+//
+// The warehouse page stays the link's own href, so it opens as a plain link
+// activation and can never be blocked; the job is the single programmatic
+// open, which every browser allows inside a click it can see. If it is
+// blocked anyway the warehouse still opens - returning false here would
+// have cost you both - and the toast says which one did not, because a tab
+// that silently fails to appear is worse than one that says so.
+function stkOpenJobWith(jobUrl) {
+  if (!jobUrl) return true;
+  let w = null;
+  try { w = window.open(jobUrl, '_blank'); } catch (e) { w = null; }
+  if (w) {
+    // Dropped where the browser allows it, so the helpdesk tab holds no
+    // handle on this one. It is still about:blank at this instant, which is
+    // why it usually does.
+    try { w.opener = null; } catch (e) {}
+    return true;
+  }
+  showToast('<b>The job tab was blocked</b><br>Your browser stopped the second tab from '
+    + 'opening. Allow pop-ups for this page, or switch off \u201cOpen the job too\u201d '
+    + 'and use the job number on the row.');
+  return true;
 }
 
 function stkStatus(msg, type) {
@@ -17350,6 +17413,7 @@ function stkRun() {
   shown.forEach(h => { if (h.con) conCount.set(h.con, (conCount.get(h.con) || 0) + 1); });
   const conList = [...conCount].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const by = stkGetSearchBy();
+  const bothOn = stkGetBoth();
   const egModel = linkable.length ? linkable[0].model : '';
   const open = stkOpenGroup.has('stuck');
   const nOpen = stkOpenGroup.has('fromnotes');
@@ -17515,6 +17579,13 @@ function stkRun() {
         <button class="${by === 'code' ? 'on' : ''}" onclick="stkSetSearchBy('code')">Part code</button>
       </span>
       ${egModel ? `<span class="stk-seg-eg">part_type_search=${esc(stkTerm(egModel))}</span>` : ''}
+      <label class="stk-seg-sw${bothOn ? ' on' : ''}" title="${escAttr('Every Check stock link '
+        + 'opens two tabs: the warehouse search, and the job or jobs it is for. Remembered, and '
+        + 'used by the Allocation Validator as well. Off, the links do only the warehouse and the '
+        + 'job number on the row stays the way to open the job.')}">
+        <input type="checkbox" ${bothOn ? 'checked' : ''} onchange="stkSetBoth(this.checked)">
+        Open the job too
+      </label>
     </div>` : ''}
 
     ${conList.length ? `<div class="stk-legend">
@@ -17567,6 +17638,8 @@ function stkRun() {
           // there to warn about, so it is read off the sites, not the total.
           const piled = Pt.jobs.length > 1 && stkSiteGroups(Pt.jobs).some(g => g.jobs.length > 1);
           const sites = stkSiteGroups(Pt.jobs).length;
+          const rowIds = Pt.jobs.map(j => j.id).filter(Boolean);
+          const rowJobs = (bothOn && rowIds.length) ? buildHelpdeskUrl(rowIds.join(' ')) : '';
           const pTick = stkRowTick(L.name, Pt.term);
           const pDone = !!pTick;
           const pCar = pDone && pTick.d !== stkToday() ? pTick.d : '';
@@ -17588,8 +17661,14 @@ function stkRun() {
               ${stkDueChip(Pt.jobs, now)}
               ${stkMisLabel(Pt)}
             </span>
-            <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener">
-              Check stock <i class="ti ti-arrow-up-right"></i>
+            <a class="stk-go" href="${escAttr(stkUrl(L.name, Pt.term))}" target="_blank" rel="noopener"
+              ${rowJobs ? `onclick="return stkOpenJobWith(${escAttr(JSON.stringify(rowJobs))})"` : ''}
+              title="${escAttr(rowJobs
+                ? 'Two tabs: ' + L.name + ' searched for \u201c' + Pt.term + '\u201d, and '
+                  + (rowIds.length === 1 ? 'job ' + rowIds[0]
+                     : 'the ' + rowIds.length + ' jobs on this row')
+                : 'Search ' + L.name + ' for \u201c' + Pt.term + '\u201d')}">
+              ${rowJobs ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i>
             </a>
             <button class="stk-done${pDone ? ' on' : ''}${pCar ? ' carried' : ''}" onclick="stkToggleDone(${Pt.ix})"
               aria-pressed="${pDone ? 'true' : 'false'}"
@@ -29528,6 +29607,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.54.0', type: 'feature', date: '19 Nov 2026', title: 'One click, both tabs', changes: [
+    'Every <b>Check stock</b> link on this page now opens the job beside the warehouse search. It reads <b>Check both</b> when it will, and the tooltip names what the two tabs are going to be',
+    'On the board a part row can be several jobs, so they arrive as <b>one helpdesk tab holding all of them</b> rather than one tab each. In Stock may be required a row is a single job, so it is exactly the two',
+    'A switch on the search row \u2014 <b>Open the job too</b> \u2014 turns it off if you would rather have the warehouse on its own. On by default, remembered, and used by the Allocation Validator as well',
+    'If your browser ever blocks the second tab the warehouse still opens, and a message says which one did not arrive rather than leaving you to notice',
+  ]},
   { ver: '4.53.0', type: 'feature', date: '19 Nov 2026', title: 'Stock by contract, and a way to settle an allocation', changes: [
     'Stock is now only checked on <b>TSH-KMART</b>, <b>ALD</b> and <b>TSH-TRG</b>. A <b>Contracts</b> block at the top of Always check stock holds them \u2014 add your own, switch one of the three off, or take them all off and every contract counts again, which is what the list says when you do',
     'The contract codes the file on screen carries sit under that box as one-click chips, so a code is picked rather than typed from memory. A file with no contract column picked is not filtered at all, and the footnote under the list says so',
