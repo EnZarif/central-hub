@@ -3633,12 +3633,39 @@
   /* The flagged list's columns, so the two lists on this page line up and
      read as one. Same widths up to the date; the technician then takes the
      room the "has -> wants" pair needed, and the flag takes the arrow's. */
-  .al-stk-row { display:grid; gap:0 13px; align-items:center;
-    grid-template-columns:70px minmax(130px,1.25fr) 48px 80px minmax(110px,1.5fr)
-                          minmax(135px,1.15fr) minmax(96px,0.8fr);
-    padding:7px 13px; font-size:11.5px;
+  .al-stk-row, .al-stk-head { display:grid; gap:0 11px; align-items:center;
+    grid-template-columns:66px minmax(110px,1.1fr) minmax(120px,1.2fr) 40px 72px 86px
+                          minmax(104px,1fr) 70px 104px;
+    padding:7px 13px; font-size:11.5px; }
+  .al-stk-row {
     border-top:0.5px solid color-mix(in srgb, var(--purple-text) 12%, transparent);
     transition:background .14s; }
+  /* One strip of labels per block rather than per row. Without it the part
+     and the technician are two names side by side with nothing saying which
+     is which. */
+  .al-stk-head { padding:5px 13px; font-size:8.5px; font-weight:700; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-3);
+    border-top:0.5px solid color-mix(in srgb, var(--purple-text) 12%, transparent);
+    background:color-mix(in srgb, var(--purple-text) 4%, transparent); }
+  .al-stk-head > span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* What is actually being checked for. The model as the file writes it,
+     because that is the value the link is built from; the contract under it,
+     because the same device can be ours to stock on one and not on another. */
+  .al-stk-part { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
+  .al-stk-pn { max-width:100%; font-size:11px; font-weight:600; color:var(--text-2);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-stk-part .stk-con { font-size:9px; padding:1px 5px; }
+  .al-stk-go { display:inline-flex; align-items:center; justify-content:center; gap:4px;
+    width:100%; padding:4px 7px; border-radius:6px; font-size:10px; font-weight:700;
+    letter-spacing:.01em; white-space:nowrap; text-decoration:none;
+    color:var(--purple-text); background:color-mix(in srgb, var(--purple-text) 13%, transparent);
+    border:0.5px solid color-mix(in srgb, var(--purple-text) 30%, transparent);
+    transition:background .13s, border-color .13s; }
+  .al-stk-go:hover { background:color-mix(in srgb, var(--purple-text) 24%, transparent);
+    border-color:var(--purple-text); }
+  .al-stk-go i { font-size:11px; }
+  .al-stk-go:focus-visible { outline:2px solid var(--purple-text); outline-offset:1px; }
+  .al-stk-nolk { display:block; text-align:center; font-size:11px; color:var(--text-3); cursor:help; }
   .al-stk-row:hover { background:color-mix(in srgb, var(--purple-text) 8%, transparent); }
   .al-stk-row .j { font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
   .al-stk-row .j a { color:var(--teal-text); text-decoration:none; }
@@ -3658,16 +3685,28 @@
     background:color-mix(in srgb, var(--purple-text) 5%, transparent); }
   /* On a phone the job keeps its column and everything else stacks beside
      it, the same way the flagged list collapses. */
+  @media (max-width: 980px) {
+    .al-stk-row, .al-stk-head { grid-template-columns:62px minmax(0,1.1fr) minmax(0,1fr)
+                                                      74px minmax(0,1fr) 96px; gap:0 9px; }
+    /* State and the flagged mark fold away first: both are on the list above,
+       and neither is what a stock check needs. */
+    .al-stk-row .al-vrow-st, .al-stk-head > span:nth-child(4),
+    .al-stk-row .f, .al-stk-head > span:nth-child(8) { display:none; }
+  }
   @media (max-width: 760px) {
+    .al-stk-head { display:none; }
     .al-stk-row { grid-template-columns:66px minmax(0,1fr) auto; gap:3px 10px;
       align-items:center; padding:9px 13px; }
+    .al-stk-row .al-vrow-st, .al-stk-row .f { display:none; }
     .al-stk-row .j            { grid-area:1 / 1 / 2 / 2; align-self:start; padding-top:1px; }
     .al-stk-row .al-vrow-who  { grid-area:1 / 2 / 2 / 4; }
-    .al-stk-row .al-vrow-st   { grid-area:2 / 2 / 3 / 3; }
-    .al-stk-row .al-vrow-rt   { grid-area:2 / 3 / 3 / 4; justify-self:end; }
-    .al-stk-row .al-vrow-when { grid-area:3 / 2 / 4 / 4; }
-    .al-stk-row .t            { grid-area:4 / 2 / 5 / 3; }
-    .al-stk-row .f            { grid-area:4 / 3 / 5 / 4; justify-self:end; }
+    .al-stk-row .al-stk-part  { grid-area:2 / 2 / 3 / 4; }
+    .al-stk-row .al-vrow-rt   { grid-area:3 / 3 / 4 / 4; justify-self:end; }
+    .al-stk-row .al-vrow-when { grid-area:3 / 2 / 4 / 3; }
+    .al-stk-row .t            { grid-area:4 / 2 / 5 / 4; }
+    .al-stk-row .al-stk-lk    { grid-area:5 / 2 / 6 / 4; padding-top:4px; }
+    .al-stk-row .al-stk-go    { width:auto; padding:6px 11px; }
+    .al-stk-row .al-stk-nolk  { text-align:left; }
     .al-stk-hd { flex-wrap:wrap; }
     .al-stk-as { margin-left:0; flex:1 1 100%; white-space:normal; }
   }
@@ -4200,6 +4239,13 @@
   .stk-avsec-n { font-size:11px; font-weight:800; border-radius:5px; padding:2px 7px;
     background:var(--green-bg); color:var(--green-text); font-variant-numeric:tabular-nums; }
   .stk-avsec-n.bad { background:var(--coral-text); color:var(--bg); }
+  .stk-avsec-n.stk { background:var(--purple-bg); color:var(--purple-text); }
+  .stk-stksec { border-color:color-mix(in srgb, var(--purple-text) 28%, transparent); }
+  .stk-stksec .stk-avsec-ico { color:var(--purple-text); }
+  /* Its body is the list itself, which brings its own border and padding. */
+  .stk-stksec .stk-avsec-body { padding:0; }
+  .stk-stksec .al-stk-wrap { margin:0; border:none; border-radius:0;
+    border-top:0.5px solid color-mix(in srgb, var(--purple-text) 22%, transparent); }
   .stk-avsec-note { flex:1 1 240px; min-width:0; font-size:11px; color:var(--text-3); line-height:1.5; }
   .stk-avsec-body { padding:0 15px 15px; }
   .stk-avsec:not(.open) .stk-avsec-body { display:none; }
@@ -7168,6 +7214,9 @@
       </button>
     </div>
 
+    <!-- The board: the depot cards, which are what the page is for. The
+         lists that used to follow it are in #stk-groups below, so the two
+         checks can sit between them rather than at the bottom of the page. -->
     <div id="stk-result" style="margin-top:16px;"></div>
 
     <!-- The Allocation Validator, run over this same file. Not a copy of it:
@@ -7177,6 +7226,19 @@
       <button class="stk-avsec-hd" id="stk-avsec-hd" onclick="stkToggleAv()" aria-expanded="false"></button>
       <div class="stk-avsec-body"><div id="stk-av-result"></div></div>
     </section>
+
+    <!-- Stock may be required: a section of its own rather than a fold
+         inside the allocation check. The same jobs the validator finds, with
+         the part, the contract and the link to check that part at that
+         depot. alValRun() draws the body; the chrome is stkDrawStock(). -->
+    <section class="stk-avsec stk-stksec" id="stk-stocksec" style="display:none;">
+      <button class="stk-avsec-hd" id="stk-stocksec-hd" onclick="stkToggleStock()" aria-expanded="false"></button>
+      <div class="stk-avsec-body"><div id="stk-stock-result"></div></div>
+    </section>
+
+    <!-- Past their response time, allocated elsewhere, and the rest of what
+         the file has to say. Second half of stkRun()'s output. -->
+    <div id="stk-groups"></div>
 
     <!-- When stock has to be checked: parts, depots and subcontractors.
          Written here, read by the allocation check above and by the
@@ -13435,7 +13497,8 @@ let alValRows = [], alValHeaders = [], alValName = '', alValOut = null;
 // the two can never end up drawing into each other.
 let alValHost = null;
 const AL_V_CTL = { tech:'al-v-tech', zone:'al-v-zone', id:'al-v-id',
-                   site:'al-v-site', date:'al-v-date', model:'al-v-model' };
+                   site:'al-v-site', date:'al-v-date', model:'al-v-model',
+                   con:'al-v-con' };
 function alValCtl(k) {
   return document.getElementById((alValHost ? alValHost.ctl : AL_V_CTL)[k] || '')?.value || '';
 }
@@ -13969,6 +14032,34 @@ function alStockWhy(o) {
   return out;
 }
 
+// "3 parts \u00b7 1 depot \u00b7 11 subcontractors" - the breakdown every heading
+// uses, so two headings counting the same thing can never word it differently.
+function stkKindWords(kinds) {
+  return (kinds || []).map(([k, n]) => n.toLocaleString() + ' ' + AL_STOCK_KIND[k].word
+    + (n !== 1 ? 's' : '')).join(' \u00b7 ');
+}
+
+// The warehouse, for this part at this depot.
+//
+// The depot is the technician's own, because that is the shelf the unit
+// would come off; with nobody allocated yet it is the one the zone calls
+// for, since that is who would be sent, and the tooltip says which it is.
+// The search name is whatever the board above already searches that model
+// by - the one you saved for it, else the model as the file writes it - so
+// this link lands on the same result the board would, not a second opinion.
+function stkCheckLink(r) {
+  const depot = String(r.resolved || '').trim() || String(r.expected || '').trim();
+  const term = r.model ? stkTerm(r.model) : '';
+  if (!depot || !term) return `<span class="al-stk-nolk" title="${escAttr(!depot
+    ? 'Nowhere to search \u2014 nobody is allocated and the zone is not in the allocator'
+    : 'No model on this job, so there is nothing to search for')}">\u2014</span>`;
+  return `<a class="al-stk-go" href="${escAttr(stkUrl(depot, term))}" target="_blank" rel="noopener"
+    title="${escAttr('Search ' + depot + ' for \u201c' + term + '\u201d'
+      + (term !== r.model ? ' \u2014 the name you saved for ' + r.model : '')
+      + (r.resolved ? '' : ' \u2014 nobody is allocated, so this is the depot the zone calls for'))
+    }">Check stock <i class="ti ti-arrow-up-right"></i></a>`;
+}
+
 const AL_STOCK_KIND = {
   model: { ico: 'ti-package',            word: 'part',          note: 'on the parts list' },
   depot: { ico: 'ti-building-warehouse', word: 'depot',         note: 'a depot you always check' },
@@ -14000,6 +14091,7 @@ function alValRenderMapper() {
      <div class="sv-col-row"><span class="sv-col-label">Site <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-site', svAutoDetect(alValHeaders, ['Location Name','Site','Store'], ['location','site','store']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Scheduled date <span style="font-weight:400;color:var(--text-3)">(optional)</span></span>${sel('al-v-date', svAutoDetect(alValHeaders, ['Scheduled','Scheduled Date','Date','Due Date'], ['scheduled','date','due']))}</div>
      <div class="sv-col-row"><span class="sv-col-label">Model <span style="font-weight:400;color:var(--text-3)">(optional \u2014 for stock)</span></span>${sel('al-v-model', svAutoDetect(alValHeaders, ['Model','Model Name','Part','Part Type'], ['model','part','device']))}</div>
+    <div class="sv-col-row"><span class="sv-col-label">Contract <span style="font-weight:400;color:var(--text-3)">(optional \u2014 for stock)</span></span>${sel('al-v-con', svAutoDetect(alValHeaders, ['Contract','Contract Name','Client','Account'], ['contract','client','account']))}</div>
      </div>
      <div class="al-vcfg-go">
        <button class="generate-btn" onclick="alValValidate()">
@@ -14017,6 +14109,7 @@ function alValRun() {
   const siteCol = alValCtl('site');
   const dateCol = alValCtl('date');
   const modelCol = alValCtl('model');
+  const conCol   = alValCtl('con');
   const srcRows = alValSrcRows();
   const out = alValOutEl();
   if (!out) return;
@@ -14046,7 +14139,8 @@ function alValRun() {
     // the other needs reassigning.
     const { verdict, why, zi, ti } = alVerdict(tech, zone);
 
-    const o = { row, jobId, site, tech, zone, sched, model, verdict, why,
+    const con = conCol ? String(row[conCol] || '').trim() : '';
+    const o = { row, jobId, site, tech, zone, sched, model, con, verdict, why,
              expected: zi ? zi.a1 : '', zoneName: zi ? zi.zone : '',
              zoneType: zi ? zi.rt : '', zoneN: zi ? zi.n : 0, state: zi ? zi.st : '',
              resolved: ti.alloc, how: ti.how, code: ti.code || '', person: ti.person || '' };
@@ -14227,14 +14321,72 @@ function alValRun() {
             class="ti ${AL_STOCK_KIND[w.kind].ico}"></i>${esc(w.label)}</span>`).join('')}
         </span>
       </span>
+      <span class="al-stk-part">
+        <span class="al-stk-pn" title="${escAttr(r.model || 'No model on this job')}">${esc(r.model || '\u2014')}</span>
+        ${r.con ? stkConChip(r.con) : ''}
+      </span>
       <span class="al-vrow-st">${esc(r.state || '\u2014')}</span>
       <span class="al-vrow-rt ${/metro/i.test(r.zoneType || '') ? 'metro' : 'reg'}">${esc(r.zoneType || '\u2014')}</span>
       <span class="al-vrow-when${d.dim ? ' dim' : ''}${d.past ? ' past' : ''}">${esc(d.t)}</span>
       <span class="t" title="${escAttr(r.tech || '')}">${esc(r.tech || 'Unallocated')}</span>
       <span class="f">${bad
         ? `<i class="ti ti-alert-triangle"></i> flagged` : ''}</span>
+      <span class="al-stk-lk">${stkCheckLink(r)}</span>
     </div>`;
   };
+
+  // On Stock Checks the stock list is a section of its own, under the
+  // allocation check. On the validator's own page it stays a fold inside
+  // this output, because there is no section there to put it in. Same body
+  // either way: only the chrome round it changes.
+  const stockHosted = !!(alValHost && alValHost.stockOut
+    && document.getElementById(alValHost.stockOut));
+
+  // The whole list, drawn the same wherever it is shown. A thunk rather than
+  // a string because a folded section must not pay to build what nobody is
+  // looking at - on a five thousand row file that is the difference between
+  // folding instantly and folding visibly.
+  const stockBody = () => `<div class="al-stk-wrap">
+    ${stockGroups.map(g => {
+      const K = AL_STOCK_KIND[g.kind];
+      // Every spelling of this model the file used, where it differs from
+      // the parts list's - so a row counted here can always be traced back
+      // to the value that was actually in the column. Only ever a part: a
+      // depot block holds whatever models happened to be going there, and
+      // listing them as aliases would be a lie.
+      const spel = g.kind !== 'model' ? []
+        : [...new Set(g.rows.map(r => r.model).filter(v => v && v !== g.label))];
+      return `<div class="al-stk-mod ${g.kind}">
+      <div class="al-stk-hd">
+        <i class="ti ${K.ico}"></i>
+        <span class="al-stk-n2">${esc(g.label)}</span>
+        <span class="al-stk-c">${g.rows.length.toLocaleString()} job${g.rows.length !== 1 ? 's' : ''}</span>
+        <span class="al-stk-k ${g.kind}">${esc(K.note)}</span>
+        ${spel.length ? `<span class="al-stk-as"
+          title="${escAttr('In this file: ' + spel.join(' \u00b7 '))}">written
+          as ${esc(spel.join(' \u00b7 '))}</span>` : ''}
+      </div>
+      <div class="al-stk-head">
+        <span>Job</span><span>Site &amp; zone</span><span>Part</span><span>State</span>
+        <span>Region</span><span>Booked</span><span>Technician</span><span></span><span>Warehouse</span>
+      </div>
+      ${g.rows.map(stockRow).join('')}
+    </div>`; }).join('')}
+    <div class="al-stk-foot">
+      ${(() => {
+        const R = alStockGetRules();
+        const parts = alStockModelList();
+        const deps = alStockDepotList();
+        return [
+          'Parts: ' + (parts.length ? esc(parts.join(', ')) : 'none'),
+          deps.length ? 'Depots: ' + esc(deps.join(', ')) : '',
+          R.subs ? 'Every depot that is not Amtek' : ''
+        ].filter(Boolean).join('. ') + '.';
+      })()}
+      Set these on the Stock Checks page. None of it says a unit is missing: it says this job
+      trips a rule you wrote and somebody has to check there is one to take.
+    </div>
+  </div>`;
 
   const groupRows = list => `<div class="sv-cov-table-wrap al-val-wrap"><table class="al-rows">
       <thead><tr><th>Job</th><th>Site &amp; zone</th><th>Technician</th><th>Zone expects</th><th>Why</th></tr></thead>
@@ -14340,12 +14492,12 @@ function alValRun() {
         <span>${[
           mismatch.length ? `${mismatch.length.toLocaleString()} ${mismatch.length !== 1 ? 'are' : 'is'} with a technician the zone does not call for` : '',
           notech.length ? `${notech.length.toLocaleString()} ${notech.length !== 1 ? 'have' : 'has'} nobody allocated` : ''
-        ].filter(Boolean).join(' \u00b7 ')}. Every one is listed below.${needStock.length
+        ].filter(Boolean).join(' \u00b7 ')}. Every one is listed below.${needStock.length && !stockHosted
           ? ` ${needStock.length.toLocaleString()} job${needStock.length !== 1 ? 's' : ''} in this file
              also need${needStock.length !== 1 ? '' : 's'} a stock check.` : ''}</span>
       </span>
       <span class="al-vbanner-n">${judged ? Math.round(n('match') / judged * 100) : 0}% of judged rows correct</span>
-    </div>` : needStock.length ? `<div class="al-vbanner stk">
+    </div>` : needStock.length && !stockHosted ? `<div class="al-vbanner stk">
       <i class="ti ti-package"></i>
       <span class="al-vbanner-t">
         <strong>Allocations agree \u2014 ${needStock.length.toLocaleString()} to check for stock</strong>
@@ -14391,7 +14543,7 @@ function alValRun() {
           <i class="ti ti-download"></i> ${results.length.toLocaleString()} rows
         </button></div></div>`}
 
-    ${needStock.length ? (() => {
+    ${needStock.length && !stockHosted ? (() => {
       const open = !alValShutSec.has('stock');
       return `<div class="al-vsec">
       <div class="al-vsec-hd stk">
@@ -14400,47 +14552,10 @@ function alValRun() {
           <i class="ti ti-chevron-right al-vsec-chev${open ? ' open' : ''}"></i>
           <i class="ti ti-package"></i> Stock may be required
           <span class="al-vsec-n stk">${needStock.length.toLocaleString()}</span>
-          <span class="al-vsec-sub stk">${stockKinds.map(([k, n]) => n.toLocaleString() + ' '
-            + AL_STOCK_KIND[k].word + (n !== 1 ? 's' : '')).join(' \u00b7 ')}</span>
+          <span class="al-vsec-sub stk">${stkKindWords(stockKinds)}</span>
         </button>
       </div>
-      ${!open ? '' : `<div class="al-stk-wrap">
-        ${stockGroups.map(g => {
-          const K = AL_STOCK_KIND[g.kind];
-          // Every spelling of this model the file used, where it differs from
-          // the parts list's - so a row counted here can always be traced
-          // back to the value that was actually in the column. Only ever a
-          // part: a depot block holds whatever models happened to be going
-          // there, and listing them as aliases would be a lie.
-          const spel = g.kind !== 'model' ? []
-            : [...new Set(g.rows.map(r => r.model).filter(v => v && v !== g.label))];
-          return `<div class="al-stk-mod ${g.kind}">
-          <div class="al-stk-hd">
-            <i class="ti ${K.ico}"></i>
-            <span class="al-stk-n2">${esc(g.label)}</span>
-            <span class="al-stk-c">${g.rows.length.toLocaleString()} job${g.rows.length !== 1 ? 's' : ''}</span>
-            <span class="al-stk-k ${g.kind}">${esc(K.note)}</span>
-            ${spel.length ? `<span class="al-stk-as"
-              title="${escAttr('In this file: ' + spel.join(' \u00b7 '))}">written
-              as ${esc(spel.join(' \u00b7 '))}</span>` : ''}
-          </div>
-          ${g.rows.map(stockRow).join('')}
-        </div>`; }).join('')}
-        <div class="al-stk-foot">
-          ${(() => {
-            const R = alStockGetRules();
-            const parts = alStockModelList();
-            const deps = alStockDepotList();
-            return [
-              'Parts: ' + (parts.length ? esc(parts.join(', ')) : 'none'),
-              deps.length ? 'Depots: ' + esc(deps.join(', ')) : '',
-              R.subs ? 'Every depot that is not Amtek' : ''
-            ].filter(Boolean).join('. ') + '.';
-          })()}
-          Set these on the Stock Checks page. None of it says a unit is missing: it says this job
-          trips a rule you wrote and somebody has to check there is one to take.
-        </div>
-      </div>`}
+      ${!open ? '' : stockBody()}
     </div>`; })() : ''}
 
     ${dateCol ? (() => {
@@ -14506,6 +14621,9 @@ function alValRun() {
   // Kept against this block's id, so its own buttons can find it again after
   // the other page has drawn over the globals.
   _alValCtx[out.id] = { out: results, today: alValToday, name: alValSrcName() };
+
+  // ...and if Stock Checks is hosting, hand it the list for its own section.
+  if (stockHosted) stkDrawStock(needStock.length, stockKinds, stockBody);
 }
 
 // Everything you have told it, in one place with a way to take it back. An
@@ -16508,8 +16626,7 @@ async function stkLoad(file) {
   if (typeof stkGoTop === 'function') stkGoTop(false);
   stkFaultList = []; stkFaultPick = null; stkFaultCol = ''; stkShowAllFaults = false;
   stkRenderConfig();
-  const res = document.getElementById('stk-result');
-  if (res) res.innerHTML = '';
+  stkWipeResult();
   // A new file has not been judged yet, so the previous file's allocation
   // verdicts must not sit there looking like they belong to it.
   stkOpenGroup.delete('av-seen');
@@ -16517,6 +16634,11 @@ async function stkLoad(file) {
   if (avSec) avSec.style.display = 'none';
   const avBox = document.getElementById('stk-av-result');
   if (avBox) avBox.innerHTML = '';
+  const stkSec = document.getElementById('stk-stocksec');
+  if (stkSec) stkSec.style.display = 'none';
+  const stkBox = document.getElementById('stk-stock-result');
+  if (stkBox) stkBox.innerHTML = '';
+  stkOpenGroup.delete('stksec-seen');
   try {
     await alEnsureData();
     if (typeof alRows !== 'undefined' && !alRows) alBuild();
@@ -16561,12 +16683,47 @@ async function stkLoad(file) {
 // what the same file is able to tell you.
 const STK_AV_HOST = {
   out: 'stk-av-result',
+  // Where the stock list goes on this page: its own section below, not a
+  // fold inside the allocation check.
+  stockOut: 'stk-stocksec',
   ctl: { tech:'stk-c-tech', zone:'stk-c-zone', id:'stk-c-id',
-         site:'stk-c-site', date:'stk-c-sched', model:'stk-c-model' },
+         site:'stk-c-site', date:'stk-c-sched', model:'stk-c-model',
+         con:'stk-c-con' },
   rows: () => stkRows,
   name: () => stkName,
   ready: () => stkDone
 };
+
+function stkToggleStock() {
+  if (stkOpenGroup.has('stksec')) stkOpenGroup.delete('stksec'); else stkOpenGroup.add('stksec');
+  stkAllocFull();
+}
+
+// The chrome round the stock list on this page. The body comes from
+// alValRun(), the one thing that knows which jobs are on it - so this draws
+// the heading and the fold and nothing else.
+function stkDrawStock(n, kinds, body) {
+  const sec = document.getElementById('stk-stocksec');
+  const hd  = document.getElementById('stk-stocksec-hd');
+  const box = document.getElementById('stk-stock-result');
+  if (!sec || !hd || !box) return;
+  if (!n) { sec.style.display = 'none'; box.innerHTML = ''; return; }
+  // First sight of a file with stock on it opens the section; after that it
+  // remembers whatever you last did to it.
+  if (!stkOpenGroup.has('stksec') && !stkOpenGroup.has('stksec-seen')) stkOpenGroup.add('stksec');
+  stkOpenGroup.add('stksec-seen');
+  const open = stkOpenGroup.has('stksec');
+  sec.style.display = '';
+  sec.classList.toggle('open', open);
+  hd.setAttribute('aria-expanded', open ? 'true' : 'false');
+  hd.innerHTML = `<i class="ti ti-chevron-right stk-avsec-chev${open ? ' open' : ''}"></i>
+    <i class="ti ti-package stk-avsec-ico"></i>
+    <span class="stk-avsec-l">Stock may be required</span>
+    <span class="stk-avsec-n stk">${n.toLocaleString()}</span>
+    <span class="stk-avsec-note">${stkKindWords(kinds)} \u2014 each one with the part, the
+      contract and a link straight to that part at that depot</span>`;
+  box.innerHTML = open ? body() : '';
+}
 
 function stkToggleAv() {
   if (stkOpenGroup.has('av')) stkOpenGroup.delete('av'); else stkOpenGroup.add('av');
@@ -16582,6 +16739,8 @@ function stkAllocFull() {
     sec.style.display = 'none';
     const box = document.getElementById('stk-av-result');
     if (box) box.innerHTML = '';
+    // The stock list is judged by the same run, so it goes away with it.
+    stkDrawStock(0);
     return;
   }
   // The render has to happen before the heading can be written, because the
@@ -16593,7 +16752,6 @@ function stkAllocFull() {
   const mis = res.filter(r => r.verdict === 'mismatch').length;
   const nAl = res.filter(r => r.verdict === 'notech').length;
   const unsure = res.filter(r => r.verdict === 'unknown' || r.verdict === 'nozone').length;
-  const stk = res.filter(r => r.stock).length;
   // First sight of a file with findings opens it; after that it remembers
   // whatever you last did to it.
   if (!stkOpenGroup.has('av') && !stkOpenGroup.has('av-seen') && bad) stkOpenGroup.add('av');
@@ -16612,8 +16770,23 @@ function stkAllocFull() {
          nAl ? nAl.toLocaleString() + ' with nobody allocated' : ''].filter(Boolean).join(' \u00b7 ')
         + ' \u2014 across all ' + res.length.toLocaleString() + ' rows in this file, not just the ones waiting on a part'
       : 'every one of the ' + res.length.toLocaleString() + ' rows in this file has the technician its zone calls for'}${
-      unsure ? ' \u00b7 ' + unsure.toLocaleString() + ' could not be judged' : ''}${
-      stk ? ' \u00b7 ' + stk.toLocaleString() + ' may need stock' : ''}</span>`;
+      unsure ? ' \u00b7 ' + unsure.toLocaleString() + ' could not be judged' : ''}</span>`;
+}
+
+// stkRun() still builds one string. This is where it is cut in two: the
+// board above, the lists below, and the two checks dropped into the gap by
+// the page rather than by the template - so the template stays one piece and
+// the order on screen is something the markup decides.
+const STK_SPLIT = '<!--stk-split-->';
+
+// Both halves are emptied together. Emptying only the first would leave
+// yesterday's lists sitting under today's board with nothing to say they do
+// not belong to it.
+function stkWipeResult() {
+  ['stk-result', 'stk-groups'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
 }
 
 function stkRun() {
@@ -16630,7 +16803,7 @@ function stkRun() {
   const out = document.getElementById('stk-result');
   if (!out) return;
   if (!stkRows.length || !stkDone || !modelCol || !faultCol || !techCol) {
-    out.innerHTML = '';
+    stkWipeResult();
     stkOut = null;
     return;
   }
@@ -16971,7 +17144,7 @@ function stkRun() {
     </div>` : ''}
   </div>`;
 
-  out.innerHTML = `
+  const html = `
     ${snapStripHtml('stock', [
       { key: 'shown',    label: 'Awaiting parts', lower: true },
       { key: 'total',    label: 'Rows in file',   lower: false },
@@ -17085,7 +17258,7 @@ function stkRun() {
         </div>`; }).join('')}
       </section>`;
     }).join('')}</div>` : ''}
-
+    ${STK_SPLIT}
     ${stkBreached.length ? `<div class="al-vgrp${bOpen ? ' open' : ''}" id="stk-brc-grp" style="margin-top:16px;">
       <button class="al-vgrp-hd" onclick="stkToggleGroup('brc')" aria-expanded="${bOpen}">
         <i class="ti ti-chevron-right al-vgrp-chev${bOpen ? ' open' : ''}"></i>
@@ -17232,10 +17405,17 @@ function stkRun() {
         </tr>`).join('')}</tbody></table></div>` : ''}
     </div>` : ''}`;
 
+  const cut = html.indexOf(STK_SPLIT);
+  const grp = document.getElementById('stk-groups');
+  out.innerHTML = cut < 0 ? html : html.slice(0, cut);
+  if (grp) grp.innerHTML = cut < 0 ? '' : html.slice(cut + STK_SPLIT.length);
+
   // The ticks you already made, back onto a freshly built board.
   stkPaintDone();
   if (byClock) stkDueTimer();
-  // ...and the same file's whole allocation picture underneath it.
+  // ...and the same file's whole allocation picture, in the gap between the
+  // board and those lists. alValRun() draws the stock section on its way
+  // through, so both land before the lists do.
   stkAllocFull();
 }
 
@@ -29006,6 +29186,13 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.52.0', type: 'feature', date: '19 Nov 2026', title: 'The two checks move up, and the stock list gets the part', changes: [
+    'On Stock Checks the <b>allocation check</b> now sits straight under the board, above <b>Past their response time</b> \u2014 it is something to act on, not an appendix',
+    '<b>Stock may be required</b> is a section of its own underneath it rather than a fold inside the allocation check, with its own heading and its own count',
+    'Every row on it now carries the <b>part</b> and the <b>contract</b> beside the job, and a <b>Check stock</b> link straight to that part at that depot \u2014 the same warehouse search the board above uses, so the two cannot disagree',
+    'The depot in the link is the technician\u2019s own; with nobody allocated yet it is the one the zone calls for, and the link says so. A row with no model says that instead of offering a search for nothing',
+    'The Allocation Validator can be told which column holds the contract, so its own stock list carries it too',
+  ]},
   { ver: '4.51.0', type: 'feature', date: '19 Nov 2026', title: 'You decide when stock has to be checked', changes: [
     'Stock Checks has an <b>Always check stock</b> panel: the parts that mean a stock check, the depots that mean one whatever is on the job, and a switch for every depot that is not Amtek \u2014 because ours have a unit on the shelf and a subcontractor has to be sent one',
     'The six models the app already watched are on that list rather than buried in the code. Add your own, or switch one of the six off \u2014 only your change is kept, so anything added to the app later still reaches you',
