@@ -3659,9 +3659,12 @@
   /* The flagged list's columns, so the two lists on this page line up and
      read as one. Same widths up to the date; the technician then takes the
      room the "has -> wants" pair needed, and the flag takes the arrow's. */
+  /* The warehouse button leads the row: it is the one thing on it you act
+     on, and down the left edge every button sits in one line under the
+     last, where the eye starts each row anyway. */
   .al-stk-row, .al-stk-head { display:grid; gap:0 11px; align-items:center;
-    grid-template-columns:66px minmax(110px,1.1fr) minmax(120px,1.2fr) 40px 72px 86px
-                          minmax(104px,1fr) 70px 104px;
+    grid-template-columns:104px 66px minmax(110px,1.1fr) minmax(120px,1.2fr) 40px 72px 86px
+                          minmax(104px,1fr) 70px;
     padding:7px 13px; font-size:11.5px; }
   .al-stk-row {
     border-top:0.5px solid color-mix(in srgb, var(--purple-text) 12%, transparent);
@@ -3712,12 +3715,12 @@
   /* On a phone the job keeps its column and everything else stacks beside
      it, the same way the flagged list collapses. */
   @media (max-width: 980px) {
-    .al-stk-row, .al-stk-head { grid-template-columns:62px minmax(0,1.1fr) minmax(0,1fr)
-                                                      74px minmax(0,1fr) 96px; gap:0 9px; }
+    .al-stk-row, .al-stk-head { grid-template-columns:96px 62px minmax(0,1.1fr) minmax(0,1fr)
+                                                      56px 74px minmax(0,1fr); gap:0 9px; }
     /* State and the flagged mark fold away first: both are on the list above,
        and neither is what a stock check needs. */
-    .al-stk-row .al-vrow-st, .al-stk-head > span:nth-child(4),
-    .al-stk-row .f, .al-stk-head > span:nth-child(8) { display:none; }
+    .al-stk-row .al-vrow-st, .al-stk-head > span:nth-child(5),
+    .al-stk-row .f, .al-stk-head > span:nth-child(9) { display:none; }
   }
   @media (max-width: 1100px) {
     .al-vrow { grid-template-columns:66px minmax(110px,1.2fr) 44px 72px minmax(92px,1fr)
@@ -14575,6 +14578,7 @@ function alValRun() {
     const d = schedText(r);
     const bad = r.verdict === 'mismatch' || r.verdict === 'notech';
     return `<div class="al-stk-row">
+      <span class="al-stk-lk">${stkCheckLink(r)}</span>
       <span class="j">${r.jobId
         ? `<a href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener">${esc(r.jobId)}</a>`
         : '\u2014'}</span>
@@ -14598,7 +14602,6 @@ function alValRun() {
       <span class="t" title="${escAttr(r.tech || '')}">${esc(r.tech || 'Unallocated')}</span>
       <span class="f">${bad
         ? `<i class="ti ti-alert-triangle"></i> flagged` : ''}</span>
-      <span class="al-stk-lk">${stkCheckLink(r)}</span>
     </div>`;
   };
 
@@ -14634,8 +14637,8 @@ function alValRun() {
           as ${esc(spel.join(' \u00b7 '))}</span>` : ''}
       </div>
       <div class="al-stk-head">
-        <span>Job</span><span>Site &amp; zone</span><span>Part</span><span>State</span>
-        <span>Region</span><span>Booked</span><span>Technician</span><span></span><span>Warehouse</span>
+        <span>Warehouse</span><span>Job</span><span>Site &amp; zone</span><span>Part</span><span>State</span>
+        <span>Region</span><span>Booked</span><span>Technician</span><span></span>
       </div>
       ${g.rows.map(stockRow).join('')}
     </div>`; }).join('')}
@@ -29808,6 +29811,9 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.57.1', type: 'patch', date: '24 Nov 2026', title: 'Check both leads the row', changes: [
+    'In <b>Stock may be required</b> the <b>Check both</b> button now sits on the left of every row, before the job number, so the buttons run in one straight line down the list instead of at the far end of it',
+  ]},
   { ver: '4.57.0', type: 'fix', date: '23 Nov 2026', title: 'Loading a report no longer starts Outlook', changes: [
     'The Outlook helper checked it could send by starting Outlook over COM — every time a daily report went into the KPI page. With Outlook closed that meant a hidden copy loading the whole mailbox and setting the search indexer going, and the PC crawled for it',
     'It now looks to see whether Outlook is already open first. If it is not, and sending has worked on this machine before, it says so without touching it. Pressing <b>Send</b> or <b>Check again</b> still does the full check, so a real problem still shows',
