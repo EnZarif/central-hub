@@ -65,7 +65,37 @@ const HEALTH_FAIL_TTL_MS = 20 * 1000;
 
 let healthCache = { at: 0, value: null };
 
+// The last time a real check found Outlook able to send, kept on disk so it
+// outlives a restart of this helper. It holds the account address, which is
+// why it lives here (gitignored) and not anywhere the Hub can read.
+const STATE_PATH = path.join(__dirname, '.bridge-state.json');
+
+function readState() {
+  try { return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')) || {}; }
+  catch { return {}; }
+}
+function writeState(s) {
+  try { fs.writeFileSync(STATE_PATH, JSON.stringify(s), 'utf8'); } catch { /* best effort */ }
+}
+
 function log(...a) { console.log('[mail-bridge]', ...a); }
+
+/**
+ * Is classic Outlook already running?
+ *
+ * Asked before anything touches COM, because touching COM is not a
+ * question - it is an action. New-Object Outlook.Application starts a
+ * hidden OUTLOOK.EXE when none is running, which loads the whole mailbox
+ * and sets the search indexer going. A health check did that every time a
+ * daily report was loaded into the Hub, and the PC crawled for it.
+ */
+function outlookRunning() {
+  return new Promise((resolve) => {
+    execFile('tasklist', ['/FI', 'IMAGENAME eq OUTLOOK.EXE', '/NH', '/FO', 'CSV'],
+      { timeout: 10000, windowsHide: true },
+      (err, stdout) => resolve(!err && /"OUTLOOK\.EXE"/i.test(String(stdout))));
+  });
+}
 
 /** Run the sender. `whatIf` builds everything and sends nothing. */
 function runPowerShell(messages, whatIf) {
@@ -151,11 +181,28 @@ async function health(force) {
   const now = Date.now();
   const ttl = (healthCache.value && healthCache.value.ready) ? HEALTH_TTL_MS : HEALTH_FAIL_TTL_MS;
   if (!force && healthCache.value && now - healthCache.at < ttl) return healthCache.value;
+
+  // Outlook is closed and sending has worked on this machine before: say so
+  // without starting it. Sending starts Outlook itself and runs the same
+  // account check first, so a problem still surfaces - at the moment
+  // someone presses Send, not every time a file is loaded.
+  if (!force && !(await outlookRunning())) {
+    const st = readState();
+    if (st.account) {
+      const value = { ready: true, account: st.account, error: null, idle: true };
+      healthCache = { at: now, value };
+      return value;
+    }
+    // Never verified: one real check is the only way to know, so fall
+    // through to it. That happens once per machine, not once per load.
+  }
+
   // One message, never sent - just enough for the script to reach its
   // account check and report what it found.
   const r = await runPowerShell(
     [{ to: 'preflight@invalid', cc: '', subject: 'preflight', html: '<p></p>' }], true);
   const value = { ready: !!r.ok, account: r.account || null, error: r.error || null };
+  if (value.ready && value.account) writeState({ account: value.account, at: now });
   healthCache = { at: now, value };
   return value;
 }
@@ -251,6 +298,7 @@ const server = http.createServer(async (req, res) => {
       const result = await runPowerShell(fresh, false);
       log('result:', JSON.stringify(result).slice(0, 300));
       if (result.sent > 0 || result.ok) rememberSends(fresh, result.failed);
+      if (result.sent > 0 && result.account) writeState({ account: result.account, at: Date.now() });
       result.skippedDuplicates = duplicates.length;
       healthCache = { at: 0, value: null };   // a real run is better evidence than a probe
       return send(res, 200, result);
@@ -264,7 +312,11 @@ const server = http.createServer(async (req, res) => {
 
 /** Ask Outlook whether it can send, giving it time to finish starting. */
 async function warmUp(attemptsLeft) {
-  const h = await health(true).catch(e => ({ ready: false, error: e.message }));
+  // Not forced: at login Outlook is usually not open yet, and this helper
+  // has no business opening it. If sending has worked here before, the
+  // answer is known without it; only a never-verified machine pays for
+  // one real check.
+  const h = await health(false).catch(e => ({ ready: false, error: e.message }));
   if (h.ready) { log('outlook: ready as', h.account); return; }
   if (attemptsLeft <= 1) {
     log('outlook: not ready -', h.error);
@@ -284,10 +336,11 @@ function start() {
   server.listen(PORT, HOST, () => {
     log('listening on http://' + HOST + ':' + PORT);
     log('allowed origins:', [...ALLOWED_ORIGINS].join(', '));
-    // Warm the answer now rather than on the first question. Checking
-    // Outlook means starting it over COM, which takes the better part of
-    // ten seconds - long enough that a page asking on load would give up
-    // and report the helper as unavailable when it is merely thinking.
+    // Warm the answer now rather than on the first question. A real check
+    // takes the better part of ten seconds - long enough that a page asking
+    // on load would give up and report the helper as unavailable when it is
+    // merely thinking. It only goes over COM when Outlook is already open
+    // or sending has never been confirmed here; see health().
     //
     // It retries because this runs at login, when it is competing with
     // everything else Windows starts. COM refusing at second three and
@@ -297,4 +350,4 @@ function start() {
   });
 }
 
-module.exports = { start };
+module.exports = { start, _health: health };

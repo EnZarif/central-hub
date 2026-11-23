@@ -8241,6 +8241,8 @@
 <script>
 // ===== GLOBE LOADER =====
 let _globeLoaderActive = true;
+// Restarts the globe after it has stopped itself; null until it is set up.
+let _globeKick = null;
 (async () => {
   const canvas = document.getElementById('globe-canvas');
   if (!canvas) return;
@@ -8265,8 +8267,13 @@ let _globeLoaderActive = true;
   const path = d3.geoPath(projection, ctx);
   const sphere = { type: 'Sphere' };
 
+  let looping = false;
   function draw() {
-    if (!_globeLoaderActive) return;
+    // Stop the moment nothing shows it. Redrawing every country sixty times
+    // a second is most of a CPU core, and with no session the loader is
+    // hidden behind the sign-in screen while this went on spinning - for as
+    // long as that screen was left open.
+    if (!_globeLoaderActive || !canvas.offsetParent) { looping = false; return; }
     ctx.clearRect(0, 0, size, size);
     projection.rotate([rotation, -18]);
 
@@ -8295,7 +8302,8 @@ let _globeLoaderActive = true;
     rotation += 0.5;
     requestAnimationFrame(draw);
   }
-  draw();
+  _globeKick = () => { if (!looping && _globeLoaderActive) { looping = true; draw(); } };
+  _globeKick();
 })();
 
 // ===== SUPABASE =====
@@ -29800,6 +29808,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.57.0', type: 'fix', date: '23 Nov 2026', title: 'Loading a report no longer starts Outlook', changes: [
+    'The Outlook helper checked it could send by starting Outlook over COM — every time a daily report went into the KPI page. With Outlook closed that meant a hidden copy loading the whole mailbox and setting the search indexer going, and the PC crawled for it',
+    'It now looks to see whether Outlook is already open first. If it is not, and sending has worked on this machine before, it says so without touching it. Pressing <b>Send</b> or <b>Check again</b> still does the full check, so a real problem still shows',
+    'The loading globe stops whenever it cannot be seen. Behind the sign-in screen it was redrawing every country sixty times a second, which is most of a CPU core for as long as that screen stayed open',
+  ]},
   { ver: '4.56.0', type: 'fix', date: '23 Nov 2026', title: 'Parts are checked on every contract', changes: [
     'The contract filter was in front of <b>everything</b>, the parts list included \u2014 so a payment job carrying a part you had named by hand was passed over because <b>ANZ-WL</b> or <b>FIS</b> is not <b>TSH-KMART</b>. On today\u2019s file that was 15 jobs the Allocation Validator said nothing about',
     'It now holds back only the <b>depot</b> and <b>subcontractor</b> rules, which are the ones about where a job is going. A part on the list is checked wherever it goes and whatever contract it came in on, because naming the device was already the decision',
@@ -32393,6 +32406,9 @@ async function handleSignIn(e) {
   showAuthGate(false);
   const loadEl = document.getElementById('app-loading');
   if (loadEl) loadEl.style.display = 'flex';
+  // The globe stopped itself while the sign-in screen was up; the loader is
+  // back, so it spins again until initApp finishes.
+  if (typeof _globeKick === 'function') _globeKick();
   initApp().catch(bootFailed);
 }
 
