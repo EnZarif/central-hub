@@ -14083,6 +14083,7 @@ function alStockGetRules() {
   if (!alStockRules.cons   || typeof alStockRules.cons   !== 'object') alStockRules.cons   = {};
   if (!alStockRules.conOff || typeof alStockRules.conOff !== 'object') alStockRules.conOff = {};
   alStockRules.subs = !!alStockRules.subs;
+  alStockRules.conParts = !!alStockRules.conParts;
   return alStockRules;
 }
 // Every path that changes a rule comes through here, so nothing can change a
@@ -14204,11 +14205,21 @@ function alSubbieDepots() {
 // trips. Takes a row that already knows its depot, so the depot is resolved
 // once by the allocation check rather than twice by two different readings.
 function alStockWhy(o) {
-  // The contract decides whether the question is even asked.
-  if (!alStockConOk(o.con, o.conKnown)) return [];
   const out = [];
+  const gate = alStockConOk(o.con, o.conKnown);
+  // A part written on the list by name is the decision already made, so the
+  // contract filter does not overrule it. The filter exists to stop the
+  // depot and subcontractor rules flooding the list with every job going to
+  // a firm that is not us; a part is not about where the job is going at
+  // all. Payment work is the case that proves it - a Move 5000 is ours to
+  // stock whether the job came in on ANZ-WL, on FIS or on Kmart, and the
+  // parts list shipped full of payment hardware while the contracts in front
+  // of it were retail. The Contracts block can put the list behind the gate
+  // as well, for anyone who wants the stricter reading.
   const mdl = alStockModel(o.model);
-  if (mdl) out.push({ kind: 'model', label: mdl, why: 'On the parts list' });
+  if (mdl && (gate || !alStockGetRules().conParts))
+    out.push({ kind: 'model', label: mdl, why: 'On the parts list' });
+  if (!gate) return out;
   // Whoever is actually going to attend. The technician's own depot first,
   // because that is the shelf the unit would come off; with nobody allocated
   // yet, the depot the zone calls for, said as such so a guess is never
@@ -14631,7 +14642,9 @@ function alValRun() {
         const gate = !cons.length ? 'Every contract.'
           : !conCol ? 'Contracts: ' + esc(cons.join(', '))
             + ' \u2014 but no contract column is picked on this file, so nothing was filtered out.'
-          : 'Only ' + esc(cons.join(', ')) + '.';
+          : R.conParts ? 'Only ' + esc(cons.join(', ')) + ', the parts list included.'
+          : 'Depots and subcontractors only on ' + esc(cons.join(', '))
+            + ' \u2014 a part on the list is checked on every contract.';
         return [
           gate,
           'Parts: ' + (parts.length ? esc(parts.join(', ')) : 'none') + '.',
@@ -16305,6 +16318,13 @@ function alStockSetSubs(on) {
     : 'Subcontractor depots no longer flag a job on their own', on ? 'sub' : '');
 }
 
+function alStockSetConParts(on) {
+  alStockGetRules().conParts = !!on;
+  alStockAfter(on
+    ? 'A job carrying a listed part is now passed over unless its contract is on the list'
+    : 'Parts on the list are checked again whatever contract the job is on', '');
+}
+
 function alStockRulesRender() {
   const el = document.getElementById('stk-stockrules');
   if (!el) return;
@@ -16368,9 +16388,13 @@ function alStockRulesRender() {
           <span class="srl-c${conOn.length ? '' : ' all'}">${conOn.length
             ? conOn.length.toLocaleString() + ' only' : 'every contract'}</span></div>
         <div class="srl-why">${conOn.length
-          ? `A gate in front of everything below: a job is only ever checked for stock if it is on
-             one of these. Everything on any other contract is left alone, whatever part is on it
-             and wherever it is going. <b>Take them all off and every contract counts again.</b>`
+          ? `A gate in front of the <b>depot</b> and <b>subcontractor</b> rules: a job going to one
+             of those is only chased if it is on one of these contracts. ${R.conParts
+               ? 'The parts list is behind it too, so a job carrying a listed part is passed over '
+                 + 'unless its contract is here.'
+               : '<b>The parts list is not</b> \u2014 a part you named by hand is checked wherever '
+                 + 'the job is going and whatever contract it came in on.'}
+             <b>Take them all off and every contract counts again.</b>`
           : `Nothing here, so <b>every contract</b> is checked \u2014 the rules below decide on their
              own. Name one and only that contract will be considered.`}
           A file with no contract column picked is not filtered at all, and the list says so when
@@ -16397,6 +16421,18 @@ function alStockRulesRender() {
             onclick="document.getElementById('srl-con').value = ${escAttr(JSON.stringify(c))}; alStockAddCon();"
             title="${escAttr(alStockConMap()[alStockNorm(c)]
               ? c + ' is already on the list' : 'Add ' + c)}">${esc(c)}</button>`).join('')}</div>` : ''}
+        ${conOn.length ? `<label class="srl-sw${R.conParts ? ' on' : ''}">
+          <input type="checkbox" ${R.conParts ? 'checked' : ''}
+            onchange="alStockSetConParts(this.checked)">
+          <span class="srl-sw-t">
+            <b>Hold the parts list to these contracts too</b>
+            <span>Left off, a part on the list below is checked wherever the job is going and
+            whatever contract it is on, because naming the device was the decision \u2014 the
+            contracts only hold back the depot and subcontractor rules. Switch it on and a job
+            carrying a listed part is passed over unless its contract is named above, which is
+            what happens to payment work when the contracts here are retail ones.</span>
+          </span>
+        </label>` : ''}
       </div>
 
       <div class="srl-sec">
@@ -29764,6 +29800,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.56.0', type: 'fix', date: '23 Nov 2026', title: 'Parts are checked on every contract', changes: [
+    'The contract filter was in front of <b>everything</b>, the parts list included \u2014 so a payment job carrying a part you had named by hand was passed over because <b>ANZ-WL</b> or <b>FIS</b> is not <b>TSH-KMART</b>. On today\u2019s file that was 15 jobs the Allocation Validator said nothing about',
+    'It now holds back only the <b>depot</b> and <b>subcontractor</b> rules, which are the ones about where a job is going. A part on the list is checked wherever it goes and whatever contract it came in on, because naming the device was already the decision',
+    'A switch in the <b>Contracts</b> block puts the parts list back behind the filter if you want the stricter reading, and both the block and the footnote under the list say which of the two is in force',
+  ]},
   { ver: '4.55.0', type: 'feature', date: '20 Nov 2026', title: 'Names you can change by hand', changes: [
     '<b>Saved part names</b> can now be written straight into the list. Until now a name could only be changed from the pencil on a part that happened to be waiting today, so a name you already knew was wrong had to wait for the job that proved it',
     'And a new <b>Saved depot names</b> list beside it, for when the warehouse files a depot under a name the job file does not use. That one costs the whole search rather than part of it, because the warehouse matches the location name instead of guessing at it',
