@@ -3507,6 +3507,19 @@
   .hub-ibx-x:hover { color:var(--coral-text); background:var(--coral-bg); }
   .hub-ibx-foot { padding:8px 14px; font-size:11px; color:var(--text-3);
     border-top:0.5px solid var(--border); font-style:italic; }
+  /* Whether old files clear themselves, and the one press that changes it. */
+  .hub-ibx-auto { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; padding:8px 14px;
+    font-size:11px; color:var(--text-3); border-top:0.5px solid var(--border); }
+  .hub-ibx-auto > .ti { font-size:13px; }
+  .hub-ibx-auto.on > .ti { color:var(--teal-text); }
+  .hub-ibx-autob { margin-left:auto; flex-shrink:0; font-size:11px; font-family:inherit;
+    color:var(--text-3); background:transparent; border:0.5px solid var(--border-md);
+    border-radius:7px; padding:4px 9px; cursor:pointer;
+    transition:color .13s, background .13s, border-color .13s; }
+  .hub-ibx-autob:hover { color:var(--teal-text); background:var(--teal-bg);
+    border-color:color-mix(in srgb, var(--teal-text) 32%, transparent); }
+  .hub-ibx-autob:focus-visible { outline:2px solid var(--teal-text); outline-offset:1px; }
+  @media (max-width: 560px) { .hub-ibx-autob { min-height:34px; } }
   @media (max-width: 560px) {
     .hub-ibx-f { flex-wrap:wrap; gap:7px 9px; }
     .hub-ibx-nm { flex:1 1 100%; white-space:normal; overflow-wrap:anywhere; }
@@ -18512,6 +18525,93 @@ async function inboxPeek(path) {
   return info;
 }
 
+// ---- clearing out old files ----------------------------------------------
+// The reports arrive every morning and are only ever wanted on the day they
+// came: nobody loads yesterday's validator file today. Left alone the bucket
+// grows by a file or two a day, and every one of them is a "waiting" badge
+// and a task until it is binned by hand. So anything that arrived more than
+// a day ago goes by itself. The original is still in your email - which is
+// why this can happen without asking, when removing one by hand still asks.
+const INBOX_KEEP_MS   = 24 * 60 * 60 * 1000;
+const INBOX_CLEAN_KEY = 'zarif_inbox_autoclean';
+let inboxCleanAt = 0;      // when this session last looked, so a poll every
+                           // five minutes does not list the bucket twice over
+
+// On unless you said otherwise. Stored as 'off' rather than a boolean so a
+// missing record - a new browser, a cleared store - reads as on.
+function inboxCleanOn() { return dbGet(INBOX_CLEAN_KEY) !== 'off'; }
+
+// Which of a bucket listing arrived more than a day ago. Only ever what is
+// in the inbox folder - this is handed that folder's listing and nothing
+// else - and never a file whose arrival cannot be read: not knowing how old
+// something is is not a reason to delete it.
+function inboxStale(objs, now) {
+  return (objs || []).filter(o => {
+    if (!o || !o.name || o.name.startsWith('.')) return false;
+    const d = inboxWhen(o, o.name);
+    return !!d && !isNaN(d.getTime()) && (now - d.getTime()) > INBOX_KEEP_MS;
+  });
+}
+
+async function inboxClean(uid, force) {
+  if (!uid || !inboxCleanOn()) return 0;
+  const now = Date.now();
+  if (!force && now - inboxCleanAt < 10 * 60 * 1000) return 0;
+  inboxCleanAt = now;
+  const dir = uid + '/inbox';
+  try {
+    // Its own listing, oldest first and long, rather than the fifty newest
+    // the inbox shows - the files most in need of clearing are exactly the
+    // ones that listing would leave out.
+    const { data, error } = await _sb.storage.from(INBOX_BUCKET)
+      .list(dir, { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
+    if (error || !data) return 0;
+    const old = inboxStale(data, now);
+    if (!old.length) return 0;
+    const paths = old.map(o => dir + '/' + o.name);
+    const { error: rmErr } = await _sb.storage.from(INBOX_BUCKET).remove(paths);
+    if (rmErr) throw rmErr;
+
+    // Forget what was remembered about them, so hub_data does not carry
+    // marks for files that are gone.
+    inboxStore();
+    let idx = false, seen = false;
+    paths.forEach(p => {
+      if (inboxIndex[p]) { delete inboxIndex[p]; idx = true; }
+      ['validator|', 'stock|'].forEach(pre => {
+        if (inboxSeen[pre + p]) { delete inboxSeen[pre + p]; seen = true; }
+      });
+      Object.keys(inboxCur).forEach(pg => { if (inboxCur[pg] === p) delete inboxCur[pg]; });
+    });
+    if (idx) dbSet('zarif_inbox_index', inboxIndex);
+    if (seen) dbSet('zarif_inbox_seen', inboxSeen);
+    inboxFiles = inboxFiles.filter(f => paths.indexOf(f.path) < 0);
+
+    showToast('<i class="ti ti-trash"></i> Cleared ' + old.length + ' inbox file'
+      + (old.length !== 1 ? 's' : '') + ' from more than a day ago \u2014 the original'
+      + (old.length !== 1 ? 's are' : ' is') + ' still in your email', 4200);
+    return old.length;
+  } catch (e) {
+    // Tidying is allowed to fail quietly; the next look tries again.
+    console.warn('[inbox] clean-up failed', e);
+    inboxCleanAt = 0;
+    return 0;
+  }
+}
+
+async function inboxSetClean(on, page) {
+  dbSet(INBOX_CLEAN_KEY, on ? 'on' : 'off');
+  if (on) {
+    showToast('<i class="ti ti-check"></i> Inbox files will clear a day after they arrive', 2800);
+    inboxCleanAt = 0;
+    await inboxRefresh(page);
+    inboxPoll();
+  } else {
+    showToast('<i class="ti ti-check"></i> Inbox files are kept until you remove them', 2800);
+    inboxRender(page);
+  }
+}
+
 async function inboxRefresh(page, manual) {
   if (inboxBusy) return;
   inboxBusy = true;
@@ -18520,6 +18620,8 @@ async function inboxRefresh(page, manual) {
     inboxStore();
     const uid = await inboxUid();
     if (!uid) { inboxFiles = []; return; }
+    // Before listing, so what is shown is already without them.
+    await inboxClean(uid);
     const dir = uid + '/inbox';
     const { data, error } = await _sb.storage.from(INBOX_BUCKET)
       .list(dir, { limit: 50, sortBy: { column: 'name', order: 'desc' } });
@@ -18587,7 +18689,17 @@ function inboxRender(page) {
         <button class="hub-ibx-x" onclick="inboxDrop('${page}', ${ix})" title="Remove from inbox"><i class="ti ti-x"></i></button>
       </div>`;
     }).join('')}
-    ${away.length ? `<div class="hub-ibx-foot">${away.length} other file${away.length !== 1 ? 's' : ''} here ${away.length !== 1 ? 'are' : 'is'} for ${otherPage}.</div>` : ''}`;
+    ${away.length ? `<div class="hub-ibx-foot">${away.length} other file${away.length !== 1 ? 's' : ''} here ${away.length !== 1 ? 'are' : 'is'} for ${otherPage}.</div>` : ''}
+    ${(() => {
+      const on = inboxCleanOn();
+      return `<div class="hub-ibx-auto${on ? ' on' : ''}">
+        <i class="ti ti-${on ? 'clock-check' : 'clock-pause'}"></i>
+        <span>${on ? 'Files clear themselves a day after they arrive. The originals stay in your email.'
+                   : 'Old files are kept until you remove them.'}</span>
+        <button class="hub-ibx-autob" onclick="inboxSetClean(${on ? 'false' : 'true'}, '${page}')">${on
+          ? 'Keep them instead' : 'Clear after a day'}</button>
+      </div>`;
+    })()}`;
 }
 
 async function inboxLoad(page, ix) {
@@ -18675,6 +18787,9 @@ async function inboxPoll() {
     inboxStore();
     const uid = await inboxUid();
     if (!uid) { inboxWaiting = zero; inboxPollOk = false; renderInboxAlerts(); return inboxWaiting; }
+    // The poll is what runs on every page every five minutes, so it is what
+    // clears a file that went stale while you were somewhere else.
+    await inboxClean(uid);
     const dir = uid + '/inbox';
     const { data, error } = await _sb.storage.from(INBOX_BUCKET)
       .list(dir, { limit: 50, sortBy: { column: 'name', order: 'desc' } });
@@ -30184,6 +30299,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.59.0', type: 'feature', date: '24 Nov 2026', title: 'The inbox clears itself', changes: [
+    'Files in the <b>Inbox</b> are removed automatically once they arrived more than a day ago, and the “Review emailed file” tasks for them go with them. The original attachment is still in your email',
+    'It happens whenever the inbox is checked — opening the Allocation Validator or Stock Checks, and the five-minute check on every page — and a toast says how many went',
+    'Only the inbox folder is touched: your daily backups sit in the same storage and are left alone, and a file whose arrival time cannot be read is never removed',
+    '<b>Keep them instead</b> at the foot of the inbox turns it off; <b>Clear after a day</b> turns it back on',
+  ]},
   { ver: '4.58.0', type: 'feature', date: '24 Nov 2026', title: 'Busy sites', changes: [
     'The Allocation Validator has a new <b>Busy sites</b> section: one depot with a lot of jobs for the same part at one site, close together. Each job alone can be fine while all of them are not — a depot with four of a terminal is covered for one visit and short for twelve',
     'Each card gives the count, the site, the depot, the part and the dates, every job number, and a <b>Check both</b> button on the left that searches that depot for that part and opens all the jobs in one tab',
