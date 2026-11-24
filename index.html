@@ -3839,6 +3839,11 @@
   .qc-meta { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; color:var(--text-3); }
   .qc-meta span { display:inline-flex; align-items:center; gap:4px; min-width:0; }
   .qc-meta code { font-family:'JetBrains Mono', ui-monospace, Consolas, monospace; font-size:11px; color:var(--text-2); }
+  .qc-note { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-2); }
+  .qc-note .ti { color:var(--qc-ac); }
+  .qc-mid { margin-right:6px; padding:0 5px; border-radius:4px; font-family:inherit; font-size:9.5px; font-weight:700;
+    letter-spacing:.04em; color:var(--teal-text); background:color-mix(in srgb, var(--teal-text) 14%, transparent); cursor:help; }
+  .qc-col > span em { font-style:normal; font-weight:600; letter-spacing:.02em; text-transform:none; opacity:.8; }
   .qc-also { font-style:normal; font-weight:700; color:var(--coral-text); }
   .qc-oklist { display:flex; flex-direction:column; border-radius:11px; overflow:hidden;
     border:0.5px solid var(--border); background:var(--surface); }
@@ -14546,6 +14551,9 @@ let qcRows = null, qcHeaders = [], qcName = '', qcCols = {}, qcOut = null, qcSho
 
 const QC_RCPT = /TID\s*on\s*receipt/i;
 const QC_FILE = /TID\s*on\s*file/i;
+// With no TID on the receipt, the MID is the next thing that ties it to the
+// site - checked against the job's Customer Location ID, which holds it.
+const QC_RMID = /MID\s*on\s*receipt/i;
 const QC_NEXT = /(?:TID|MID)\s*on\s*(?:receipt|file)|Address\s*on\s*(?:receipt|file)|Trading\s*name\s*on\s*(?:receipt|file)|qc\s*check/i;
 
 // Only notes written in the template are checked. "TID on Receipt" alone could
@@ -14598,12 +14606,13 @@ function qcDiff(a, b) {
 }
 
 // What is wrong, in the words you would say it.
-function qcWhy(sub, tid) {
+function qcWhy(sub, tid, what) {
+  what = what || 'TID';
   const a = qcKey(sub), b = qcKey(tid);
-  if (!a) return 'The job has no Sublocation';
+  if (!a) return what === 'MID' ? 'The job has no Customer Location ID' : 'The job has no Sublocation';
   if (a.length !== b.length) {
     const d = b.length - a.length, k = Math.abs(d);
-    return 'Receipt TID is ' + k + ' digit' + (k !== 1 ? 's' : '') + (d < 0 ? ' short' : ' too long');
+    return 'Receipt ' + what + ' is ' + k + ' digit' + (k !== 1 ? 's' : '') + (d < 0 ? ' short' : ' too long');
   }
   const at = [];
   for (let x = 0; x < a.length; x++) if (a[x] !== b[x]) at.push(x);
@@ -14625,6 +14634,7 @@ function qcPickCols() {
     loc:   pick(/^location\s*name/i, /^location$/i, /^site/i),
     tech:  pick(/^technician/i, /^tech/i),
     by:    pick(/last\s*updated\s*by/i),
+    clid:  pick(/customer\s*location\s*id/i, /customer\s*location/i),
   };
 }
 
@@ -14679,7 +14689,9 @@ function qcRenderCols() {
       <select class="qc-sel" onchange="qcSetCol('notes', this.value)">${opts(qcCols.notes)}</select></label>
     <i class="ti ti-arrows-left-right qc-col-vs" aria-hidden="true"></i>
     <label class="qc-col"><span>Sublocation</span>
-      <select class="qc-sel" onchange="qcSetCol('sub', this.value)">${opts(qcCols.sub)}</select></label>`;
+      <select class="qc-sel" onchange="qcSetCol('sub', this.value)">${opts(qcCols.sub)}</select></label>
+    <label class="qc-col" title="Used when the receipt has no TID: its MID is checked against this instead"><span>Customer Location ID <em>if no TID</em></span>
+      <select class="qc-sel" onchange="qcSetCol('clid', this.value)">${opts(qcCols.clid).replace('Choose a column', 'Not in this file')}</select></label>`;
 }
 
 function qcRun() {
@@ -14699,10 +14711,26 @@ function qcRun() {
     if (!qcHasTemplate(note)) { out.skipped++; return; }
     const rc = qcField(note, QC_RCPT), fl = qcField(note, QC_FILE);
     const row = { job: get(r, 'job'), loc: get(r, 'loc'), tech: get(r, 'tech'), by: get(r, 'by'),
-      sub: get(r, 'sub'), tid: rc.tid, raw: rc.raw, file: fl.tid };
-    if (!row.tid) out.blank.push(row);
-    else if (qcSame(row.sub, row.tid)) out.ok.push(row);
-    else out.bad.push(row);
+      sub: get(r, 'sub'), tid: rc.tid, raw: rc.raw, file: fl.tid,
+      basis: 'TID', want: get(r, 'sub'), got: rc.tid };
+    if (row.tid) {
+      (qcSame(row.want, row.got) ? out.ok : out.bad).push(row);
+      return;
+    }
+    // No TID: fall back to the MID. A receipt MID of nothing but zeros is how
+    // the desk writes "not printed", so it counts as blank, not as a MID.
+    const mid = qcField(note, QC_RMID).tid;
+    const midOk = mid && !/^0+$/.test(qcKey(mid));
+    const clid = get(r, 'clid');
+    if (midOk && clid) {
+      Object.assign(row, { basis: 'MID', want: clid, got: mid });
+      (qcSame(clid, mid) ? out.ok : out.bad).push(row);
+      return;
+    }
+    row.noMid = !midOk ? 'No MID on the receipt either'
+      : !qcCols.clid ? 'Has a MID, but there is no Customer Location ID column to check it against'
+      : 'Has a MID, but the job has no Customer Location ID';
+    out.blank.push(row);
   });
   qcOut = out;
   qcRender();
@@ -14754,19 +14782,22 @@ function qcRender() {
   ].filter(Boolean).join('');
 
   const card = (r, i, kind) => {
-    const d = kind === 'bad' ? qcDiff(r.sub, r.tid) : { a: esc(r.sub), b: '' };
+    const mid = r.basis === 'MID';
+    const d = kind === 'bad' ? qcDiff(r.want, r.got) : { a: esc(r.sub), b: '' };
     const rcpt = kind === 'bad' ? d.b
       : (r.raw ? `<span class="qc-raw" title="What the note has after TID on Receipt">\u201c${esc(r.raw)}\u201d</span>` : '<span class="qc-raw">blank</span>');
-    const why = kind === 'bad' ? qcWhy(r.sub, r.tid) : (r.raw ? 'No TID in what was written' : 'Left blank in the note');
+    const why = kind === 'bad' ? qcWhy(r.want, r.got, r.basis) : (r.raw ? 'No TID in what was written' : 'TID left blank in the note');
     return `<div class="qc-card ${kind}" style="animation-delay:${Math.min(i, 14) * 28}ms">
       ${link(r)}
       <div class="qc-main">
         <div class="qc-head"><b class="qc-job">${esc(r.job || '\u2014')}</b><span class="qc-loc" title="${escAttr(r.loc)}">${esc(r.loc)}</span>
           <span class="qc-why">${esc(why)}</span></div>
         <div class="qc-cmp">
-          <span class="qc-lbl">Sublocation</span><code class="qc-v">${d.a || '<span class="qc-raw">none</span>'}</code>
-          <span class="qc-lbl">TID on receipt</span><code class="qc-v ${kind}">${rcpt}</code>
+          <span class="qc-lbl">${mid ? 'Customer Location ID' : 'Sublocation'}</span><code class="qc-v">${d.a || '<span class="qc-raw">none</span>'}</code>
+          <span class="qc-lbl">${mid ? 'MID on receipt' : 'TID on receipt'}</span><code class="qc-v ${kind}">${rcpt}</code>
         </div>
+        ${mid ? `<div class="qc-note"><i class="ti ti-info-circle"></i>No TID on the receipt, so its MID was checked instead</div>` : ''}
+        ${r.noMid ? `<div class="qc-note"><i class="ti ti-info-circle"></i>${esc(r.noMid)}</div>` : ''}
         ${meta(r) ? `<div class="qc-meta">${meta(r)}</div>` : ''}
       </div>
     </div>`;
@@ -14789,7 +14820,7 @@ function qcRender() {
   const okRows = o.ok.map(r => `<div class="qc-okrow">
       <span class="qc-okj">${r.job ? `<a href="${escAttr(buildHelpdeskUrl(r.job))}" target="_blank" rel="noopener">${esc(r.job)}</a>` : '\u2014'}</span>
       <span class="qc-okl" title="${escAttr(r.loc)}">${esc(r.loc)}</span>
-      <code>${esc(r.tid)}</code></div>`).join('');
+      <code>${r.basis === 'MID' ? '<span class="qc-mid" title="No TID on the receipt - its MID matched the Customer Location ID">MID</span>' : ''}${esc(r.got)}</code></div>`).join('');
   const okSec = o.ok.length ? `<div class="al-vsec">
       <div class="al-vsec-hd qc-hd ok">
         <button class="al-vsec-toggle" onclick="qcToggleOk()" aria-expanded="${qcShowOk}">
@@ -30786,6 +30817,11 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.62.0', type: 'feature', date: '24 Nov 2026', title: 'QC Check falls back to the MID', changes: [
+    'When the receipt has <b>no TID</b>, QC Check now holds the <b>MID on receipt</b> against the job\u2019s <b>Customer Location ID</b> instead — still only for notes written in the QC template',
+    'A MID that matches goes into <b>Match</b>, tagged <b>MID</b>. One that differs goes into <b>Doesn\u2019t match</b> with the digits marked, and says it was checked on the MID',
+    'Jobs with nothing to go on stay under <b>No TID on receipt</b>, saying why: no MID either (a MID written as 0 counts as none), no Customer Location ID on the job, or no such column in the file',
+  ]},
   { ver: '4.61.1', type: 'patch', date: '24 Nov 2026', title: 'QC Check moves to Helpdesk', changes: [
     '<b>QC Check</b> now sits in the <b>Helpdesk Management</b> hub instead of Dispatch. It moves across once on its own; if you put it back in Dispatch afterwards, it stays there',
   ]},
