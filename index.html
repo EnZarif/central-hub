@@ -3643,6 +3643,98 @@
   .al-vsec-hd.stk, .al-vsec-hd.stk .ti { color:var(--purple-text); }
   .al-vsec-n.stk { color:var(--purple-text); background:var(--purple-bg); }
   .al-vsec-sub.stk { color:var(--purple-text); }
+
+  /* BUSY SITES - one depot, one site, one part, more jobs in a day or two
+     than its shelf may hold. Amber, because it is a warning about a number,
+     not a fault in an allocation (coral) or a rule you wrote (purple). */
+  .al-vsec-hd.busy, .al-vsec-hd.busy .ti { color:var(--amber-text); }
+  .al-vsec-n.busy { color:var(--amber-text); background:var(--amber-bg); }
+  .al-vsec-sub.busy { color:var(--amber-text); }
+  .al-busy-rule { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 10px;
+    font-size:11.5px; line-height:1.5; color:var(--text-2); }
+  .al-busy-rule > span { flex:1 1 260px; min-width:0; }
+  .al-busy-rule b { color:var(--amber-text); font-weight:700; }
+  .al-busy-edit { display:inline-flex; align-items:center; gap:5px; flex-shrink:0; padding:5px 10px;
+    border-radius:7px; font:inherit; font-size:11px; font-weight:600; color:var(--text-2);
+    background:var(--surface2); border:0.5px solid var(--border-md); cursor:pointer;
+    transition:color .14s, border-color .14s; }
+  .al-busy-edit .ti { font-size:13px; }
+  .al-busy-edit:hover, .al-busy-edit.on { color:var(--amber-text);
+    border-color:color-mix(in srgb, var(--amber-text) 50%, transparent); }
+  .al-busy-edit:focus-visible, .al-busy-seg button:focus-visible, .al-busy-x:focus-visible {
+    outline:2px solid var(--amber-text); outline-offset:1px; }
+  .al-busy-set { display:flex; flex-direction:column; gap:12px; margin:0 0 12px; padding:13px 15px;
+    border-radius:11px; background:var(--surface); border:0.5px solid var(--border-md); }
+  .al-busy-srow { display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; }
+  .al-busy-srow.top { align-items:flex-start; }
+  .al-busy-lbl { width:96px; flex-shrink:0; font-size:9.5px; font-weight:700; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-3); }
+  .al-busy-srow.top .al-busy-lbl { padding-top:9px; }
+  .al-busy-seg { display:inline-flex; gap:2px; padding:2px; border-radius:8px; background:var(--bg);
+    border:0.5px solid var(--border-md); }
+  .al-busy-seg button { padding:5px 11px; border-radius:6px; font:inherit; font-size:11.5px; font-weight:600;
+    color:var(--text-3); background:none; border:none; cursor:pointer; transition:color .14s, background .14s; }
+  .al-busy-seg button:hover { color:var(--text-2); }
+  .al-busy-seg button.on { color:var(--amber-text); background:var(--amber-bg); }
+  .al-busy-inl { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2); }
+  .al-busy-num { width:64px !important; flex-shrink:0; padding:6px 8px !important; text-align:center;
+    font-variant-numeric:tabular-nums; }
+  .al-busy-deps { flex:1 1 300px; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .al-busy-dep { display:flex; align-items:center; gap:8px; }
+  .al-busy-dn { flex:1 1 auto; min-width:0; font-size:12px; font-weight:600; color:var(--text);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-busy-dn-in { flex:1 1 auto; min-width:0; }
+  .al-busy-x { flex-shrink:0; padding:5px 9px; border-radius:6px; font:inherit; font-size:11px;
+    color:var(--text-3); background:none; border:0.5px solid var(--border); cursor:pointer;
+    transition:color .14s, border-color .14s; }
+  .al-busy-x:hover { color:var(--coral-text); border-color:color-mix(in srgb, var(--coral-text) 45%, transparent); }
+  .al-busy-hint { font-size:11px; line-height:1.5; color:var(--text-3); }
+  .al-busy-list { display:flex; flex-direction:column; gap:8px; }
+  /* Accent bar down the left, a faint amber wash and the underglow - the
+     same card language as the search box and the command palette. */
+  .al-busy-card { position:relative; overflow:hidden; padding:11px 14px 11px 17px; border-radius:11px;
+    background:linear-gradient(90deg, color-mix(in srgb, var(--amber-text) 7%, var(--surface)), var(--surface) 60%);
+    border:0.5px solid color-mix(in srgb, var(--amber-text) 22%, transparent);
+    box-shadow:0 12px 26px -20px color-mix(in srgb, var(--amber-text) 70%, transparent);
+    animation:zDrop .28s ease both; }
+  .al-busy-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--amber-text); }
+  .al-busy-top { display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; }
+  /* Fixed width, first in the row: every card's button in one line down the
+     left, the way the stock list has them. */
+  .al-busy-top > .al-stk-go, .al-busy-top > .al-stk-nolk { width:104px; flex-shrink:0; }
+  .al-busy-c { flex-shrink:0; font-size:11px; font-weight:600; color:var(--amber-text); }
+  .al-busy-c b { margin-right:2px; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .al-busy-what { flex:1 1 220px; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .al-busy-site { font-size:12.5px; font-weight:700; color:var(--text);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-busy-sub { font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-busy-sub em { font-style:normal; color:var(--text-2); }
+  .al-busy-z { margin-left:4px; padding:0 5px; border-radius:4px; font-size:9.5px; font-weight:700;
+    letter-spacing:.03em; text-transform:uppercase; color:var(--amber-text); background:var(--amber-bg); cursor:help; }
+  .al-busy-lim { flex-shrink:0; margin-left:auto; font-size:9.5px; font-weight:700; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--text-3); cursor:help; }
+  .al-busy-jobs { display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; padding-left:116px; }
+  .al-busy-j { display:inline-flex; align-items:baseline; gap:5px; padding:3px 8px; border-radius:6px;
+    font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--teal-text);
+    text-decoration:none; background:var(--surface2); border:0.5px solid var(--border);
+    transition:border-color .14s; }
+  .al-busy-j span { font-size:10px; font-weight:500; color:var(--text-3); }
+  .al-busy-j:hover { border-color:var(--teal-text); }
+  .al-busy-j:focus-visible { outline:2px solid var(--teal-text); outline-offset:1px; }
+  .al-busy-j.dead { color:var(--text-3); }
+  .al-busy-none { display:flex; align-items:center; gap:8px; padding:11px 14px; border-radius:11px;
+    font-size:12px; color:var(--text-3); background:var(--surface); border:0.5px solid var(--border); }
+  .al-busy-none .ti { color:var(--green-text); }
+  .al-busy-foot { margin-top:8px; font-size:11px; line-height:1.5; color:var(--text-3); }
+  @media (max-width: 760px) {
+    .al-busy-jobs { padding-left:0; }
+    .al-busy-lbl { width:100%; }
+    .al-busy-srow.top .al-busy-lbl { padding-top:0; }
+    .al-busy-lim { margin-left:0; }
+    .al-busy-num, .al-busy-x, .al-busy-seg button, .al-busy-edit { min-height:36px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .al-busy-card { animation:none; } }
   /* One block per device, because that is the unit the warehouse counts in. */
   .al-stk-wrap { border:0.5px solid color-mix(in srgb, var(--purple-text) 26%, transparent);
     border-radius:11px; overflow:hidden; }
@@ -14284,6 +14376,283 @@ function stkCheckLink(r) {
     }">${job ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i></a>`;
 }
 
+// ===== BUSY SITES =====
+// One depot, one site, one part, a lot of jobs in a day or two. Each of them
+// alone can be fine while all of them together are not: a depot holding four
+// of a terminal is covered for any one visit and short for twelve. So these
+// are counted together, and flagged when the count reaches a number you set -
+// with a number per depot where you want one, because an Amtek shelf and a
+// two-man subcontractor do not run short at the same point.
+const AL_BUSY_KEY = 'zarif_al_busy_sites';
+let alBusyRules = null;
+function alBusyGet() {
+  if (alBusyRules === null) {
+    const saved = dbGet(AL_BUSY_KEY);
+    alBusyRules = (saved && typeof saved === 'object') ? saved : {};
+  }
+  // Shaped on the way out, as the stock rules are, so an old or half-written
+  // record still reads as the defaults instead of throwing on the first job.
+  const R = alBusyRules;
+  R.win = R.win === 1 ? 1 : 2;
+  R.def = alBusyNum(R.def) || 5;
+  if (!R.deps || typeof R.deps !== 'object') R.deps = {};
+  return R;
+}
+function alBusySave() { dbSet(AL_BUSY_KEY, alBusyGet()); }
+// A count worth flagging at: a whole number, and at least two - one job at a
+// site is not a cluster of anything.
+function alBusyNum(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!/^\d+$/.test(s)) return 0;
+  const n = parseInt(s, 10);
+  return (n >= 2 && n <= 999) ? n : 0;
+}
+function alBusyLimit(depot) {
+  const R = alBusyGet();
+  const o = R.deps[alNormAlloc(depot)];
+  return (o && alBusyNum(o.n)) || R.def;
+}
+// Whoever is going: the technician's own depot, else the one the zone calls
+// for - the same reading the stock rules and the warehouse link use.
+function alBusyDepotOf(r) {
+  return String(r.resolved || '').trim() || String(r.expected || '').trim();
+}
+function alDayAdd(day, n) {
+  const p = String(day).split('-').map(Number);
+  return ymd(new Date(p[0], p[1] - 1, p[2] + n));
+}
+
+// The clusters in a validated file. Jobs are grouped by depot, site and part
+// - the same device, because stock is held per device - and within a group
+// the busiest window of the chosen length is taken first, then the next
+// busiest of what is left, so twelve jobs over a fortnight at one shop are
+// only flagged where they actually bunch up. A job with no date, no site or
+// nobody to send cannot be placed in any of that and is left out.
+function alBusyClusters(results) {
+  const R = alBusyGet();
+  const groups = new Map();
+  (results || []).forEach(r => {
+    const depot = alBusyDepotOf(r);
+    const site = String(r.site || '').trim();
+    if (!depot || !site || !r.sched) return;
+    const k = alNormAlloc(depot) + '|' + site.toLowerCase().replace(/\s+/g, ' ')
+      + '|' + alStockNorm(r.model || '');
+    if (!groups.has(k)) groups.set(k, { depot, site, model: String(r.model || '').trim(), rows: [] });
+    groups.get(k).rows.push(r);
+  });
+  const out = [];
+  groups.forEach(g => {
+    const limit = alBusyLimit(g.depot);
+    let left = g.rows.slice();
+    while (left.length >= limit) {
+      let best = null;
+      [...new Set(left.map(r => r.sched))].sort().forEach(d => {
+        const end = alDayAdd(d, R.win - 1);
+        const hit = left.filter(r => r.sched >= d && r.sched <= end);
+        if (!best || hit.length > best.length) best = hit;
+      });
+      if (!best || best.length < limit) break;
+      const took = new Set(best);
+      left = left.filter(r => !took.has(r));
+      const rows = best.slice().sort((a, b) => a.sched.localeCompare(b.sched)
+        || String(a.jobId).localeCompare(String(b.jobId), undefined, { numeric: true }));
+      out.push({ depot: g.depot, site: g.site, model: g.model, limit, rows,
+        from: rows[0].sched, to: rows[rows.length - 1].sched,
+        fromZone: rows.some(r => !String(r.resolved || '').trim()) });
+    }
+  });
+  return out.sort((a, b) => b.rows.length - a.rows.length || a.from.localeCompare(b.from)
+    || a.depot.localeCompare(b.depot) || a.site.localeCompare(b.site));
+}
+
+// One warehouse search for the whole cluster - one depot, one part - and,
+// with "Open the job too" on, every job in it as a single helpdesk tab.
+function alBusyLink(c) {
+  const term = c.model ? stkTerm(c.model) : '';
+  if (!term) return `<span class="al-stk-nolk" title="No model on these jobs, so there is nothing to search for">\u2014</span>`;
+  const ids = c.rows.map(r => r.jobId).filter(Boolean);
+  const job = (stkGetBoth() && ids.length) ? buildHelpdeskUrl(ids.join(' ')) : '';
+  const loc = stkLocTerm(c.depot);
+  return `<a class="al-stk-go" href="${escAttr(stkUrl(c.depot, term))}" target="_blank" rel="noopener"
+    ${job ? `onclick="return stkOpenJobWith(${escAttr(JSON.stringify(job))})"` : ''}
+    title="${escAttr((job ? 'Two tabs: ' + (ids.length === 1 ? 'job ' + ids[0] : 'the ' + ids.length + ' jobs')
+        + ', and ' + c.depot + ' searched for \u201c' : 'Search ' + c.depot + ' for \u201c') + term + '\u201d'
+      + (term !== c.model ? ' \u2014 the name you saved for ' + c.model : '')
+      + (loc !== c.depot ? ' \u2014 searched as \u201c' + loc + '\u201d, the warehouse name you saved for ' + c.depot : '')
+      + (c.fromZone ? ' \u2014 some of these have nobody allocated, so this is the depot the zone calls for' : ''))
+    }">${job ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i></a>`;
+}
+
+function alBusySetWin(w) {
+  const R = alBusyGet();
+  const v = w === 1 ? 1 : 2;
+  if (R.win === v) return;
+  R.win = v;
+  alBusySave();
+  alValRun();
+}
+function alBusySetDef(v) {
+  const n = alBusyNum(v);
+  if (!n) {
+    showToast('<b>A whole number from 2 up</b><br>That is how many jobs at one site it takes to flag.');
+    alValRun();
+    return;
+  }
+  alBusyGet().def = n;
+  alBusySave();
+  alValRun();
+}
+function alBusySetDepot(k, v) {
+  const R = alBusyGet();
+  if (!R.deps[k]) return;
+  const n = alBusyNum(v);
+  if (!n) {
+    showToast('<b>A whole number from 2 up</b><br>Or press Forget to use the number every depot uses.');
+    alValRun();
+    return;
+  }
+  R.deps[k].n = n;
+  alBusySave();
+  alValRun();
+}
+function alBusyAddDepot() {
+  const dEl = document.getElementById('al-busy-dep');
+  const nEl = document.getElementById('al-busy-n');
+  const dep = dEl ? dEl.value.trim() : '';
+  const n = alBusyNum(nEl ? nEl.value : '');
+  if (!dep) {
+    showToast('<b>Which depot?</b><br>Type the depot, or pick one the box offers.');
+    if (dEl) dEl.focus();
+    return;
+  }
+  if (!n) {
+    showToast('<b>How many jobs?</b><br>A whole number from 2 up.');
+    if (nEl) nEl.focus();
+    return;
+  }
+  const R = alBusyGet();
+  const k = alNormAlloc(dep);
+  const had = !!R.deps[k];
+  R.deps[k] = { name: dep, n };
+  alBusySave();
+  alValRun();
+  showToast(`<b>${had ? 'Changed' : 'Saved'}</b><br>${esc(dep)} is flagged at ${n} jobs or more at one site.`);
+}
+function alBusyForget(k) {
+  const R = alBusyGet();
+  if (!R.deps[k]) return;
+  const name = R.deps[k].name;
+  delete R.deps[k];
+  alBusySave();
+  alValRun();
+  showToast(`<b>Forgotten</b><br>${esc(name)} is back on ${R.def} like every other depot.`);
+}
+
+// The section. Open when it has something to say; with nothing flagged it
+// folds to its heading, which still carries the rule, so the settings are
+// one press away rather than nowhere.
+function alBusySection(busy, results) {
+  const R = alBusyGet();
+  const total = busy.reduce((s, c) => s + c.rows.length, 0);
+  const open = busy.length ? !alValShutSec.has('busy') : alValOpenGroup.has('busy0');
+  const toggle = busy.length ? "alValToggleSec('busy')" : "alValToggleGroup('busy0')";
+  const winWords = R.win === 1 ? 'on the same day' : 'within 2 days';
+  const own = Object.keys(R.deps).length;
+  const setOpen = alValOpenGroup.has('busyset');
+  const fileDeps = [...new Set((results || []).map(alBusyDepotOf).filter(Boolean))];
+  const allDeps = [...new Set(fileDeps.concat(typeof alAllocNames !== 'undefined'
+    ? alAllocNames.filter(a => a && a !== '?') : []))].sort((a, b) => a.localeCompare(b));
+  const keys = Object.keys(R.deps)
+    .sort((a, b) => String(R.deps[a].name).localeCompare(String(R.deps[b].name)));
+  const undated = (results || []).filter(r => !r.sched && String(r.site || '').trim()).length;
+  const enter = fn => `onkeydown="if(event.key==='Enter'){event.preventDefault();${fn}();}"`;
+
+  const settings = !setOpen ? '' : `<div class="al-busy-set">
+    <div class="al-busy-srow"><span class="al-busy-lbl">Window</span>
+      <span class="al-busy-seg" role="group" aria-label="How close together the jobs have to be">
+        <button class="${R.win === 1 ? 'on' : ''}" aria-pressed="${R.win === 1}" onclick="alBusySetWin(1)">Same day</button>
+        <button class="${R.win === 2 ? 'on' : ''}" aria-pressed="${R.win === 2}" onclick="alBusySetWin(2)">Within 2 days</button>
+      </span></div>
+    <div class="al-busy-srow"><span class="al-busy-lbl">Every depot</span>
+      <span class="al-busy-inl">Flag at
+        <input class="field-input al-busy-num" type="number" min="2" max="999" step="1" value="${R.def}"
+          aria-label="Jobs at one site that flag any depot" onchange="alBusySetDef(this.value)">
+        jobs or more</span></div>
+    <div class="al-busy-srow top"><span class="al-busy-lbl">Own number</span>
+      <div class="al-busy-deps">
+        ${keys.map(k => `<div class="al-busy-dep">
+          <span class="al-busy-dn" title="${escAttr(R.deps[k].name)}">${esc(R.deps[k].name)}</span>
+          <input class="field-input al-busy-num" type="number" min="2" max="999" step="1" value="${alBusyNum(R.deps[k].n) || R.def}"
+            aria-label="${escAttr('Jobs at one site that flag ' + R.deps[k].name)}"
+            onchange="alBusySetDepot(${escAttr(JSON.stringify(k))}, this.value)">
+          <button class="al-busy-x" onclick="alBusyForget(${escAttr(JSON.stringify(k))})"
+            title="Go back to the number every depot uses">Forget</button>
+        </div>`).join('')}
+        <div class="al-busy-dep">
+          <input class="field-input al-busy-dn-in" id="al-busy-dep" type="text" autocomplete="off"
+            list="al-busy-deplist" placeholder="Depot" aria-label="Depot" ${enter('alBusyAddDepot')}>
+          <datalist id="al-busy-deplist">${allDeps.map(d => `<option value="${escAttr(d)}"></option>`).join('')}</datalist>
+          <input class="field-input al-busy-num" id="al-busy-n" type="number" min="2" max="999" step="1"
+            placeholder="${R.def}" aria-label="Jobs at one site that flag this depot" ${enter('alBusyAddDepot')}>
+          <button class="al-fix-go" onclick="alBusyAddDepot()">Add</button>
+        </div>
+        <div class="al-busy-hint">A depot here is flagged at its own number instead of ${R.def}.
+          The box offers the ${fileDeps.length.toLocaleString()} depot${fileDeps.length !== 1 ? 's' : ''}
+          in this file first, then the rest of the allocator.</div>
+      </div></div>
+  </div>`;
+
+  const span = c => fmtShortDate(c.from) + (c.to !== c.from ? ' \u2013 ' + fmtShortDate(c.to) : '');
+  const cards = busy.map((c, i) => {
+    const multi = c.from !== c.to;
+    const ownN = !!R.deps[alNormAlloc(c.depot)];
+    return `<div class="al-busy-card" style="animation-delay:${Math.min(i, 10) * 0.03}s">
+      <div class="al-busy-top">
+        ${alBusyLink(c)}
+        <span class="al-busy-c"><b>${c.rows.length}</b>jobs</span>
+        <span class="al-busy-what">
+          <span class="al-busy-site" title="${escAttr(c.site)}">${esc(c.site)}</span>
+          <span class="al-busy-sub"><em>${esc(c.depot)}</em>${c.fromZone
+            ? `<span class="al-busy-z" title="Some of these have nobody allocated yet, so this is the depot their zone calls for">zone</span>` : ''}
+            \u00b7 ${esc(c.model || 'No model')} \u00b7 ${esc(span(c))}</span>
+        </span>
+        <span class="al-busy-lim" title="${escAttr(ownN ? 'The number you set for ' + c.depot
+          : 'The number every depot uses \u2014 give ' + c.depot + ' its own under Settings')}">flag at ${c.limit}</span>
+      </div>
+      <div class="al-busy-jobs">${c.rows.map(r => r.jobId
+        ? `<a class="al-busy-j" href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener"
+            title="${escAttr((r.tech || 'Nobody allocated') + ' \u00b7 ' + fmtShortDate(r.sched))}">${esc(r.jobId)}${multi
+              ? `<span>${esc(fmtShortDate(r.sched))}</span>` : ''}</a>`
+        : `<span class="al-busy-j dead">no job #</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="al-vsec">
+    <div class="al-vsec-hd busy">
+      <button class="al-vsec-toggle" onclick="${toggle}" aria-expanded="${open}"
+        title="${open ? 'Fold this away' : busy.length ? 'Show the ' + busy.length + ' busy sites' : 'Show the rule and its settings'}">
+        <i class="ti ti-chevron-right al-vsec-chev${open ? ' open' : ''}"></i>
+        <i class="ti ti-stack-2"></i> Busy sites
+        <span class="al-vsec-n busy">${busy.length.toLocaleString()}</span>
+        <span class="al-vsec-sub busy">${busy.length ? total.toLocaleString() + ' job' + (total !== 1 ? 's' : '') + ' \u00b7 ' : ''}${R.def}+ ${R.win === 1 ? 'on one day' : 'within 2 days'}</span>
+      </button>
+    </div>
+    ${!open ? '' : `<div class="al-busy">
+      <div class="al-busy-rule">
+        <span>Flagged when one depot has <b>${R.def} or more</b> jobs for the same part at one site
+          <b>${winWords}</b>${own ? ` \u00b7 ${own} depot${own !== 1 ? 's have their' : ' has its'} own number` : ''}.</span>
+        <button class="al-busy-edit${setOpen ? ' on' : ''}" onclick="alValToggleGroup('busyset')"
+          aria-expanded="${setOpen}"><i class="ti ti-adjustments-horizontal"></i>${setOpen ? 'Done' : 'Settings'}</button>
+      </div>
+      ${settings}
+      ${busy.length ? `<div class="al-busy-list">${cards}</div>`
+        : `<div class="al-busy-none"><i class="ti ti-circle-check"></i> No depot has that many jobs for one part at one site in this file.</div>`}
+      ${undated ? `<div class="al-busy-foot">${undated.toLocaleString()} job${undated !== 1 ? 's have' : ' has'}
+        no scheduled date, so ${undated !== 1 ? 'they are' : 'it is'} not counted here.</div>` : ''}
+    </div>`}
+  </div>`;
+}
+
 const AL_STOCK_KIND = {
   model: { ico: 'ti-package',            word: 'part',          note: 'on the parts list' },
   depot: { ico: 'ti-building-warehouse', word: 'depot',         note: 'a depot you always check' },
@@ -14420,6 +14789,8 @@ function alValRun() {
   const stockKinds = ['model', 'depot', 'sub']
     .map(k => [k, stockGroups.filter(g => g.kind === k).length])
     .filter(p => p[1]);
+  // Busy sites need both a site and a date to say anything at all.
+  const busy = (siteCol && dateCol) ? alBusyClusters(results) : null;
 
   // Everything flagged becomes something to chase, carrying whatever you
   // already decided about it yesterday.
@@ -14837,6 +15208,8 @@ function alValRun() {
       </div>
       ${!open ? '' : stockBody()}
     </div>`; })() : ''}
+
+    ${busy ? alBusySection(busy, results) : ''}
 
     ${dateCol ? (() => {
       const tOpen = alValOpenGroup.has('today');
@@ -29811,6 +30184,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.58.0', type: 'feature', date: '24 Nov 2026', title: 'Busy sites', changes: [
+    'The Allocation Validator has a new <b>Busy sites</b> section: one depot with a lot of jobs for the same part at one site, close together. Each job alone can be fine while all of them are not — a depot with four of a terminal is covered for one visit and short for twelve',
+    'Each card gives the count, the site, the depot, the part and the dates, every job number, and a <b>Check both</b> button on the left that searches that depot for that part and opens all the jobs in one tab',
+    'Under <b>Settings</b>: flag at <b>5</b> jobs or more by default, <b>same day</b> or <b>within 2 days</b>, and a number of its own for any depot — a big Amtek shelf and a small subcontractor do not run short at the same point',
+    'A job with nobody allocated counts toward the depot its zone calls for, and the card says so. A job with no date or no site cannot be placed and is left out, with a line saying how many',
+  ]},
   { ver: '4.57.1', type: 'patch', date: '24 Nov 2026', title: 'Check both leads the row', changes: [
     'In <b>Stock may be required</b> the <b>Check both</b> button now sits on the left of every row, before the job number, so the buttons run in one straight line down the list instead of at the far end of it',
   ]},
