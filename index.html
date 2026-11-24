@@ -3723,6 +3723,24 @@
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-busy-sub { font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .al-busy-sub em { font-style:normal; color:var(--text-2); }
+  /* Which depot it is, said loudest after the count: it is the shelf the
+     units come off, and the thing you act on. */
+  .al-busy-depl { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:3px; }
+  .al-busy-dep-b { display:inline-flex; align-items:center; gap:5px; max-width:100%; min-width:0;
+    padding:3px 9px 3px 7px; border-radius:6px; font-size:12px; font-weight:800; letter-spacing:.01em;
+    color:var(--amber-text); background:var(--amber-bg);
+    border:0.5px solid color-mix(in srgb, var(--amber-text) 45%, transparent);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:help; }
+  .al-busy-dep-b > .ti { flex-shrink:0; font-size:13px; }
+  .al-busy-dep-b.sub { color:var(--orange-text); background:var(--orange-bg);
+    border-color:color-mix(in srgb, var(--orange-text) 45%, transparent); }
+  .al-busy-dep-b .al-busy-z { margin-left:2px; color:inherit; background:color-mix(in srgb, currentColor 18%, transparent); }
+  .al-busy-kind { margin-right:4px; padding:0 5px; border-radius:4px; font-size:9.5px; font-weight:700;
+    letter-spacing:.03em; text-transform:uppercase; color:var(--orange-text); background:var(--orange-bg); cursor:help; }
+  .al-busy-card.day::before { background:var(--orange-text); }
+  .al-busy-sw { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2); cursor:pointer; }
+  .al-busy-sw input { accent-color:var(--amber-text); width:15px; height:15px; margin:0; cursor:pointer; }
+  .al-busy-sw.on { color:var(--text); }
   .al-busy-z { margin-left:4px; padding:0 5px; border-radius:4px; font-size:9.5px; font-weight:700;
     letter-spacing:.03em; text-transform:uppercase; color:var(--amber-text); background:var(--amber-bg); cursor:help; }
   .al-busy-lim { flex-shrink:0; margin-left:auto; font-size:9.5px; font-weight:700; letter-spacing:.05em;
@@ -14409,6 +14427,9 @@ function alBusyGet() {
   R.win = R.win === 1 ? 1 : 2;
   R.def = alBusyNum(R.def) || 5;
   if (!R.deps || typeof R.deps !== 'object') R.deps = {};
+  // Subcontractors counted across every site on a day. On unless switched
+  // off, so a record from before it existed reads as on.
+  R.subDay = R.subDay !== false;
   return R;
 }
 function alBusySave() { dbSet(AL_BUSY_KEY, alBusyGet()); }
@@ -14443,8 +14464,38 @@ function alDayAdd(day, n) {
 // nobody to send cannot be placed in any of that and is left out.
 function alBusyClusters(results) {
   const R = alBusyGet();
+  const out = [];
+  // Subcontractors first, by the day and not the site. Our own depots have a
+  // shelf, so what matters is one site eating it; a subcontractor has to be
+  // sent every unit, so a dozen jobs of one part on one day are a dozen to
+  // send whether they are at one shop or twelve. Jobs caught here are not
+  // counted again by the site rule below, so nothing reads as two warnings.
+  const used = new Set();
+  if (R.subDay) {
+    const days = new Map();
+    (results || []).forEach(r => {
+      const depot = alBusyDepotOf(r);
+      if (!depot || !r.sched || alIsAmtekDepot(depot)) return;
+      const k = alNormAlloc(depot) + '|' + alStockNorm(r.model || '') + '|' + r.sched;
+      if (!days.has(k)) days.set(k, { depot, model: String(r.model || '').trim(), rows: [] });
+      days.get(k).rows.push(r);
+    });
+    days.forEach(g => {
+      const limit = alBusyLimit(g.depot);
+      if (g.rows.length < limit) return;
+      const rows = g.rows.slice().sort((a, b) => String(a.site || '').localeCompare(String(b.site || ''))
+        || String(a.jobId).localeCompare(String(b.jobId), undefined, { numeric: true }));
+      rows.forEach(r => used.add(r));
+      const sites = [...new Set(rows.map(r => String(r.site || '').trim()).filter(Boolean))];
+      out.push({ kind: 'day', depot: g.depot, site: sites.length === 1 ? sites[0] : '', sites,
+        model: g.model, limit, rows, from: rows[0].sched, to: rows[0].sched,
+        fromZone: rows.some(r => !String(r.resolved || '').trim()) });
+    });
+  }
+
   const groups = new Map();
   (results || []).forEach(r => {
+    if (used.has(r)) return;
     const depot = alBusyDepotOf(r);
     const site = String(r.site || '').trim();
     if (!depot || !site || !r.sched) return;
@@ -14453,7 +14504,6 @@ function alBusyClusters(results) {
     if (!groups.has(k)) groups.set(k, { depot, site, model: String(r.model || '').trim(), rows: [] });
     groups.get(k).rows.push(r);
   });
-  const out = [];
   groups.forEach(g => {
     const limit = alBusyLimit(g.depot);
     let left = g.rows.slice();
@@ -14469,7 +14519,7 @@ function alBusyClusters(results) {
       left = left.filter(r => !took.has(r));
       const rows = best.slice().sort((a, b) => a.sched.localeCompare(b.sched)
         || String(a.jobId).localeCompare(String(b.jobId), undefined, { numeric: true }));
-      out.push({ depot: g.depot, site: g.site, model: g.model, limit, rows,
+      out.push({ kind: 'site', depot: g.depot, site: g.site, sites: [g.site], model: g.model, limit, rows,
         from: rows[0].sched, to: rows[rows.length - 1].sched,
         fromZone: rows.some(r => !String(r.resolved || '').trim()) });
     }
@@ -14501,6 +14551,13 @@ function alBusySetWin(w) {
   const v = w === 1 ? 1 : 2;
   if (R.win === v) return;
   R.win = v;
+  alBusySave();
+  alValRun();
+}
+function alBusySetSubDay(on) {
+  const R = alBusyGet();
+  if (R.subDay === !!on) return;
+  R.subDay = !!on;
   alBusySave();
   alValRun();
 }
@@ -14586,6 +14643,11 @@ function alBusySection(busy, results) {
         <button class="${R.win === 1 ? 'on' : ''}" aria-pressed="${R.win === 1}" onclick="alBusySetWin(1)">Same day</button>
         <button class="${R.win === 2 ? 'on' : ''}" aria-pressed="${R.win === 2}" onclick="alBusySetWin(2)">Within 2 days</button>
       </span></div>
+    <div class="al-busy-srow"><span class="al-busy-lbl">Subcontractors</span>
+      <label class="al-busy-sw${R.subDay ? ' on' : ''}">
+        <input type="checkbox" ${R.subDay ? 'checked' : ''} onchange="alBusySetSubDay(this.checked)">
+        Also flag them for that many jobs of one part on one day, at any site
+      </label></div>
     <div class="al-busy-srow"><span class="al-busy-lbl">Every depot</span>
       <span class="al-busy-inl">Flag at
         <input class="field-input al-busy-num" type="number" min="2" max="999" step="1" value="${R.def}"
@@ -14619,22 +14681,32 @@ function alBusySection(busy, results) {
   const cards = busy.map((c, i) => {
     const multi = c.from !== c.to;
     const ownN = !!R.deps[alNormAlloc(c.depot)];
-    return `<div class="al-busy-card" style="animation-delay:${Math.min(i, 10) * 0.03}s">
+    return `<div class="al-busy-card${c.kind === 'day' ? ' day' : ''}" style="animation-delay:${Math.min(i, 10) * 0.03}s">
       <div class="al-busy-top">
         ${alBusyLink(c)}
         <span class="al-busy-c"><b>${c.rows.length}</b>jobs</span>
         <span class="al-busy-what">
-          <span class="al-busy-site" title="${escAttr(c.site)}">${esc(c.site)}</span>
-          <span class="al-busy-sub"><em>${esc(c.depot)}</em>${c.fromZone
-            ? `<span class="al-busy-z" title="Some of these have nobody allocated yet, so this is the depot their zone calls for">zone</span>` : ''}
-            \u00b7 ${esc(c.model || 'No model')} \u00b7 ${esc(span(c))}</span>
+          <span class="al-busy-depl">
+            <span class="al-busy-dep-b${c.kind === 'day' ? ' sub' : ''}" title="${escAttr('The depot these jobs are for'
+              + (c.fromZone ? ' \u2014 some have nobody allocated yet, so this is the depot their zone calls for' : ''))}">
+              <i class="ti ti-building-warehouse"></i>${esc(c.depot)}${c.fromZone ? '<span class="al-busy-z">zone</span>' : ''}
+            </span>
+            ${c.kind === 'day' ? `<span class="al-busy-kind" title="A subcontractor has to be sent every unit, so a day's jobs count together wherever they are">subcontractor \u00b7 one day, any site</span>` : ''}
+          </span>
+          ${c.kind === 'day' && c.sites.length !== 1
+            ? `<span class="al-busy-site" title="${escAttr(c.sites.join(' \u00b7 '))}">${c.sites.length
+                ? c.sites.length + ' sites \u2014 ' + esc(c.sites.slice(0, 3).join(', ')) + (c.sites.length > 3 ? ' and ' + (c.sites.length - 3) + ' more' : '')
+                : 'No site on these jobs'}</span>`
+            : `<span class="al-busy-site" title="${escAttr(c.site)}">${esc(c.site)}</span>`}
+          <span class="al-busy-sub">${esc(c.model || 'No model')} \u00b7 ${esc(span(c))}</span>
         </span>
         <span class="al-busy-lim" title="${escAttr(ownN ? 'The number you set for ' + c.depot
           : 'The number every depot uses \u2014 give ' + c.depot + ' its own under Settings')}">flag at ${c.limit}</span>
       </div>
       <div class="al-busy-jobs">${c.rows.map(r => r.jobId
         ? `<a class="al-busy-j" href="${escAttr(buildHelpdeskUrl(r.jobId))}" target="_blank" rel="noopener"
-            title="${escAttr((r.tech || 'Nobody allocated') + ' \u00b7 ' + fmtShortDate(r.sched))}">${esc(r.jobId)}${multi
+            title="${escAttr((r.tech || 'Nobody allocated') + ' \u00b7 ' + fmtShortDate(r.sched)
+              + (c.kind === 'day' && r.site ? ' \u00b7 ' + r.site : ''))}">${esc(r.jobId)}${multi
               ? `<span>${esc(fmtShortDate(r.sched))}</span>` : ''}</a>`
         : `<span class="al-busy-j dead">no job #</span>`).join('')}</div>
     </div>`;
@@ -14653,7 +14725,8 @@ function alBusySection(busy, results) {
     ${!open ? '' : `<div class="al-busy">
       <div class="al-busy-rule">
         <span>Flagged when one depot has <b>${R.def} or more</b> jobs for the same part at one site
-          <b>${winWords}</b>${own ? ` \u00b7 ${own} depot${own !== 1 ? 's have their' : ' has its'} own number` : ''}.</span>
+          <b>${winWords}</b>${R.subDay ? ' \u2014 and a <b>subcontractor</b> with that many of one part <b>on one day</b>, at any site' : ''}${own
+            ? ` \u00b7 ${own} depot${own !== 1 ? 's have their' : ' has its'} own number` : ''}.</span>
         <button class="al-busy-edit${setOpen ? ' on' : ''}" onclick="alValToggleGroup('busyset')"
           aria-expanded="${setOpen}"><i class="ti ti-adjustments-horizontal"></i>${setOpen ? 'Done' : 'Settings'}</button>
       </div>
@@ -30299,6 +30372,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.60.0', type: 'feature', date: '24 Nov 2026', title: 'Busy days for subcontractors', changes: [
+    '<b>Busy sites</b> now also flags a <b>subcontractor</b> with that many jobs of one part on <b>one day, at any site</b>. A subcontractor has to be sent every unit, so eleven jobs across four dealerships are eleven units to send just as much as eleven at one shop',
+    'Those cards are marked <b>Subcontractor · one day, any site</b> and name the sites. A job caught that way is not counted again by the same-site rule, so nothing reads as two warnings. Our own depots are unchanged',
+    'The depot now leads every card as a badge of its own — amber for ours, orange for a subcontractor — so which depot a run of jobs is for is the first thing you read',
+    'A switch under <b>Settings</b> turns the subcontractor rule off. It uses the same numbers as everything else, including any depot’s own',
+  ]},
   { ver: '4.59.0', type: 'feature', date: '24 Nov 2026', title: 'The inbox clears itself', changes: [
     'Files in the <b>Inbox</b> are removed automatically once they arrived more than a day ago, and the “Review emailed file” tasks for them go with them. The original attachment is still in your email',
     'It happens whenever the inbox is checked — opening the Allocation Validator or Stock Checks, and the five-minute check on every page — and a toast says how many went',
