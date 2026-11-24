@@ -24194,12 +24194,12 @@ const HUB_META = {
   learning: { title:'Learning',            icon:'ti-school' },
 };
 const DEFAULT_HUB_LAYOUT = {
-  helpdesk: ['kpi','message','meetings','templates','suburbcheck','escalations'],
-  dispatch: ['morning','exceptions','allocvalidate','stock','alloccheck','qccheck'],
+  helpdesk: ['kpi','message','meetings','templates','suburbcheck','escalations','qccheck'],
+  dispatch: ['morning','exceptions','allocvalidate','stock','alloccheck'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
-const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions','morning','qccheck'];
+const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions','morning'];
 const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -24262,7 +24262,11 @@ const HUB_SEEDS = [
   { id: 'projanalysis', hub: 'projects', page: 'projanalysis', first: true },
   { id: 'morning',      hub: 'dispatch', page: 'morning', first: true },
   { id: 'escalations',  hub: 'helpdesk', page: 'escalations' },
-  { id: 'qccheck',      hub: 'dispatch', page: 'qccheck' }
+  { id: 'qccheck',      hub: 'helpdesk', page: 'qccheck' },
+  // QC Check went out under Dispatch for a day. A move, unlike a seed, takes
+  // the page out of wherever it is first - still only once, so putting it
+  // back in Dispatch afterwards sticks.
+  { id: 'qccheck-helpdesk', hub: 'helpdesk', page: 'qccheck', move: true }
 ];
 
 function applyHubSeeds(layout) {
@@ -24270,6 +24274,14 @@ function applyHubSeeds(layout) {
   let changed = false, placed = false;
   HUB_SEEDS.forEach(m => {
     if (done[m.id]) return;
+    if (m.move && Array.isArray(layout[m.hub]) && !layout[m.hub].includes(m.page)) {
+      HUBS.forEach(h => {
+        if (h !== m.hub && Array.isArray(layout[h]) && layout[h].includes(m.page)) {
+          layout[h] = layout[h].filter(p => p !== m.page);
+          placed = true;
+        }
+      });
+    }
     const anywhere = HUBS.some(h => (layout[h] || []).includes(m.page));
     if (!anywhere && Array.isArray(layout[m.hub])) {
       if (m.first) layout[m.hub].unshift(m.page); else layout[m.hub].push(m.page);
@@ -30774,6 +30786,9 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.61.1', type: 'patch', date: '24 Nov 2026', title: 'QC Check moves to Helpdesk', changes: [
+    '<b>QC Check</b> now sits in the <b>Helpdesk Management</b> hub instead of Dispatch. It moves across once on its own; if you put it back in Dispatch afterwards, it stays there',
+  ]},
   { ver: '4.61.0', type: 'feature', date: '24 Nov 2026', title: 'QC Check', changes: [
     'A new <b>QC Check</b> page under Dispatch. Load the job export and it reads the <b>TID on Receipt</b> out of each job\u2019s Last Updated Notes and holds it against the job\u2019s <b>Sublocation</b>',
     'Only jobs whose note carries the QC block — Address, Trading name, TID and MID on file and on receipt — are checked. The rest are left out, with a line saying how many',
