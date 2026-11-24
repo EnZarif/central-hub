@@ -3766,6 +3766,105 @@
     .al-busy-num, .al-busy-x, .al-busy-seg button, .al-busy-edit { min-height:36px; }
   }
   @media (prefers-reduced-motion: reduce) { .al-busy-card { animation:none; } }
+  /* ---- QC Check ---- */
+  .qc-cols { display:flex; align-items:flex-end; flex-wrap:wrap; gap:10px 14px; margin-top:12px; }
+  .qc-col { display:flex; flex-direction:column; gap:5px; flex:1 1 220px; min-width:0; }
+  .qc-col > span { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); }
+  .qc-sel { width:100%; min-height:34px; padding:6px 10px; border-radius:8px; font:inherit; font-size:12.5px;
+    color:var(--text); background:var(--surface2); border:0.5px solid var(--border-md); cursor:pointer; }
+  .qc-sel:focus-visible { outline:2px solid var(--teal-text); outline-offset:1px; }
+  .qc-col-vs { padding-bottom:9px; font-size:15px; color:var(--text-3); }
+  .qc-stats { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+  .qc-tile { position:relative; overflow:hidden; display:grid; grid-template-columns:auto 1fr; align-items:center;
+    gap:2px 10px; padding:12px 14px 12px 17px; border-radius:11px; background:var(--surface);
+    border:0.5px solid color-mix(in srgb, var(--qc-ac) 24%, transparent);
+    box-shadow:0 12px 26px -20px color-mix(in srgb, var(--qc-ac) 70%, transparent);
+    animation:zDrop .28s ease both; }
+  .qc-tile::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--qc-ac); }
+  .qc-tile .ti { grid-row:span 2; font-size:20px; color:var(--qc-ac); }
+  .qc-tile b { font-size:22px; font-weight:800; line-height:1.05; font-variant-numeric:tabular-nums; color:var(--qc-ac); }
+  .qc-tile span { font-size:11px; color:var(--text-3); }
+  .qc-tile.zero { opacity:.55; box-shadow:none; }
+  .qc-tile.bad, .qc-card.bad, .qc-hd.bad { --qc-ac:var(--coral-text); }
+  .qc-tile.blank, .qc-card.blank, .qc-hd.blank { --qc-ac:var(--amber-text); }
+  .qc-tile.ok, .qc-hd.ok { --qc-ac:var(--green-text); }
+  .qc-tile.all { --qc-ac:var(--teal-text); }
+  .qc-hd { flex-wrap:wrap; color:var(--qc-ac); }
+  .qc-hd > .ti, .qc-hd .al-vsec-toggle .ti { color:var(--qc-ac); }
+  .qc-n.bad { color:var(--coral-text); background:var(--coral-bg); }
+  .qc-n.blank { color:var(--amber-text); background:var(--amber-bg); }
+  .qc-n.ok { color:var(--green-text); background:var(--green-bg); }
+  .qc-acts { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+  .qc-act { position:relative; display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:7px;
+    font:inherit; font-size:11px; font-weight:600; letter-spacing:0; text-transform:none; text-decoration:none;
+    color:var(--text-2); background:var(--surface); border:0.5px solid var(--border-md); cursor:pointer;
+    transition:color .14s, border-color .14s; }
+  .qc-act::after { content:''; position:absolute; left:10px; right:10px; bottom:3px; height:1px;
+    background:currentColor; transform:scaleX(0); transform-origin:left; transition:transform .22s ease; }
+  .qc-act:hover { color:var(--qc-ac); border-color:color-mix(in srgb, var(--qc-ac) 45%, transparent); }
+  .qc-act:hover::after { transform:scaleX(1); }
+  .qc-act:focus-visible { outline:2px solid var(--qc-ac); outline-offset:1px; }
+  .qc-list { display:flex; flex-direction:column; gap:8px; }
+  /* Accent bar, a faint wash of the section's colour and the underglow -
+     the same card as Busy sites, in coral for wrong and amber for missing. */
+  .qc-card { position:relative; overflow:hidden; display:grid; grid-template-columns:104px minmax(0,1fr);
+    align-items:start; gap:12px; padding:12px 14px 12px 17px; border-radius:11px;
+    background:linear-gradient(90deg, color-mix(in srgb, var(--qc-ac) 7%, var(--surface)), var(--surface) 60%);
+    border:0.5px solid color-mix(in srgb, var(--qc-ac) 22%, transparent);
+    box-shadow:0 12px 26px -20px color-mix(in srgb, var(--qc-ac) 70%, transparent);
+    animation:zDrop .28s ease both; }
+  .qc-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--qc-ac); }
+  .qc-go { display:inline-flex; align-items:center; justify-content:center; gap:5px; margin-top:1px;
+    padding:5px 8px; border-radius:6px; font-size:10.5px; font-weight:700; white-space:nowrap; text-decoration:none;
+    color:var(--teal-text); background:color-mix(in srgb, var(--teal-text) 12%, transparent);
+    border:0.5px solid color-mix(in srgb, var(--teal-text) 30%, transparent); transition:background .13s, border-color .13s; }
+  .qc-go:hover { background:color-mix(in srgb, var(--teal-text) 22%, transparent); border-color:var(--teal-text); }
+  .qc-go:focus-visible { outline:2px solid var(--teal-text); outline-offset:1px; }
+  .qc-go.dead { color:var(--text-3); background:none; border-color:var(--border); cursor:help; }
+  .qc-main { min-width:0; display:flex; flex-direction:column; gap:8px; }
+  .qc-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; min-width:0; }
+  .qc-job { font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text); }
+  .qc-loc { flex:1 1 160px; min-width:0; font-size:12.5px; font-weight:600; color:var(--text-2);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .qc-why { flex-shrink:0; padding:2px 7px; border-radius:5px; font-size:10px; font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; color:var(--qc-ac); background:color-mix(in srgb, var(--qc-ac) 14%, transparent); }
+  .qc-cmp { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:4px 12px;
+    padding:8px 11px; border-radius:8px; background:var(--surface2); border:0.5px solid var(--border); }
+  .qc-lbl { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); white-space:nowrap; }
+  .qc-v { font-family:'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace; font-size:14px; font-weight:600;
+    letter-spacing:.06em; color:var(--text); overflow-wrap:anywhere; }
+  .qc-v.bad, .qc-v.blank { color:var(--qc-ac); }
+  .qc-x { padding:0 1px; border-radius:3px; color:var(--surface); background:var(--coral-text); }
+  .qc-raw { font-family:inherit; font-size:12px; font-weight:500; font-style:italic; letter-spacing:0; color:var(--text-3); }
+  .qc-meta { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; color:var(--text-3); }
+  .qc-meta span { display:inline-flex; align-items:center; gap:4px; min-width:0; }
+  .qc-meta code { font-family:'JetBrains Mono', ui-monospace, Consolas, monospace; font-size:11px; color:var(--text-2); }
+  .qc-also { font-style:normal; font-weight:700; color:var(--coral-text); }
+  .qc-oklist { display:flex; flex-direction:column; border-radius:11px; overflow:hidden;
+    border:0.5px solid var(--border); background:var(--surface); }
+  .qc-okrow { display:grid; grid-template-columns:90px minmax(0,1fr) auto; gap:12px; align-items:center;
+    padding:7px 14px; font-size:12px; border-top:0.5px solid var(--border); }
+  .qc-okrow:first-child { border-top:none; }
+  .qc-okj a { font-weight:700; font-variant-numeric:tabular-nums; color:var(--teal-text); text-decoration:none; }
+  .qc-okj a:hover { text-decoration:underline; }
+  .qc-okl { color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .qc-okrow code { font-family:'JetBrains Mono', ui-monospace, Consolas, monospace; font-size:12px; color:var(--green-text); }
+  .qc-empty { display:flex; align-items:flex-start; gap:12px; margin-top:14px; padding:14px 16px; border-radius:11px;
+    background:var(--surface); border:0.5px solid var(--border); }
+  .qc-empty > .ti { font-size:20px; color:var(--text-3); }
+  .qc-empty.good > .ti { color:var(--green-text); }
+  .qc-empty b { display:block; font-size:13px; color:var(--text); }
+  .qc-empty span { display:block; margin-top:3px; font-size:12px; line-height:1.5; color:var(--text-3); }
+  .qc-foot { margin-top:14px; font-size:11px; line-height:1.5; color:var(--text-3); }
+  @media (max-width: 760px) {
+    .qc-stats { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .qc-card { grid-template-columns:minmax(0,1fr); gap:10px; }
+    .qc-go { justify-self:start; min-height:36px; padding:6px 12px; }
+    .qc-act { min-height:36px; }
+    .qc-acts { margin-left:0; width:100%; }
+    .qc-col-vs { display:none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .qc-card, .qc-tile { animation:none; } .qc-act::after { transition:none; } }
   /* One block per device, because that is the unit the warehouse counts in. */
   .al-stk-wrap { border:0.5px solid color-mix(in srgb, var(--purple-text) 26%, transparent);
     border-radius:11px; overflow:hidden; }
@@ -7387,6 +7486,30 @@
     <div id="al-val-result" style="margin-top:16px;"></div>
   </div>
 
+  <!-- QC CHECK PAGE -->
+  <div class="page" id="page-qccheck">
+    <div class="header">
+      <div>
+        <h1><i class="ti ti-receipt"></i> QC Check</h1>
+        <p>Hold the TID on each job's receipt against the job's Sublocation</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:0;">
+      <div class="kpi-template-row" style="margin-bottom:0;">
+        <div class="kpi-template-info">
+          <div class="kpi-tpl-name">Job export with Last Updated Notes and Sublocation Name</div>
+          <div class="kpi-tpl-status" id="qc-status">No file loaded</div>
+        </div>
+        <input type="file" id="qc-input" class="kpi-file-input" accept=".xlsx,.xls,.csv" onchange="qcLoad(this.files[0]); this.value='';">
+        <button class="kpi-file-btn file-upload-btn" onclick="document.getElementById('qc-input').click()"><span class="fu-ico"><i class="ti ti-upload"></i></span> Upload file</button>
+      </div>
+      <div class="qc-cols" id="qc-cols" style="display:none;"></div>
+    </div>
+
+    <div id="qc-result" style="margin-top:16px;"></div>
+  </div>
+
   <!-- STOCK CHECKS PAGE -->
   <div class="page" id="page-stock">
     <div class="header">
@@ -9898,6 +10021,7 @@ const QL_ALL = [
   { id: 'helpdesk',     label: 'Helpdesk',             icon: 'ti-headset',    ac: 'var(--purple-text)' },
   { id: 'dispatch',     label: 'Dispatch',             icon: 'ti-route',      ac: 'var(--amber-text)' },
   { id: 'allocvalidate',label: 'Allocation Validator', icon: 'ti-shield-check', ac: 'var(--coral-text)' },
+  { id: 'qccheck',      label: 'QC Check',             icon: 'ti-receipt',    ac: 'var(--teal-text)' },
   { id: 'stock',        label: 'Stock Checks',         icon: 'ti-package',    ac: 'var(--green-text)' },
   { id: 'escalations',  label: 'Escalation Review',    icon: 'ti-mail-forward', ac: 'var(--purple-text)' },
   { id: 'alloccheck',   label: 'Allocation Lookup',    icon: 'ti-map-search', ac: 'var(--teal-text)' },
@@ -14405,6 +14529,282 @@ function stkCheckLink(r) {
           + depot : '')
       + (r.resolved ? '' : ' \u2014 nobody is allocated, so this is the depot the zone calls for'))
     }">${job ? 'Check both' : 'Check stock'} <i class="ti ti-arrow-up-right"></i></a>`;
+}
+
+// ===== QC CHECK =====
+// The QC note is a fixed block - address, trading name, TID and MID, once as
+// the job has them on file and once as the receipt prints them. The TID is the
+// one that matters: a receipt off the wrong terminal means the wrong terminal
+// is on site. This reads the receipt's TID out of the note and holds it against
+// the job's Sublocation, which is where the terminal ID lives.
+//
+// The export flattens the note onto one line and the desk types it by hand, so
+// labels run into their values ("Trading name on fileThe Avenue") and a value
+// can be blank. Every value is read as whatever sits between its label and the
+// next label of the block, and nothing more.
+let qcRows = null, qcHeaders = [], qcName = '', qcCols = {}, qcOut = null, qcShowOk = false;
+
+const QC_RCPT = /TID\s*on\s*receipt/i;
+const QC_FILE = /TID\s*on\s*file/i;
+const QC_NEXT = /(?:TID|MID)\s*on\s*(?:receipt|file)|Address\s*on\s*(?:receipt|file)|Trading\s*name\s*on\s*(?:receipt|file)|qc\s*check/i;
+
+// Only notes written in the template are checked. "TID on Receipt" alone could
+// be a sentence; with an "on file" label beside it, it is the block.
+function qcHasTemplate(note) {
+  const n = String(note || '');
+  return QC_RCPT.test(n) && /on\s*file/i.test(n);
+}
+
+// The value after a label, up to the next label. `tid` is its first word, and
+// only if that word has a digit in it - "N/A" or "see photo" is not a TID.
+function qcField(note, label) {
+  const n = String(note || '');
+  const m = n.match(label);
+  if (!m) return { raw: '', tid: '' };
+  let rest = n.slice(m.index + m[0].length).replace(/^\s*[:\-]?/, '');
+  const nx = rest.search(QC_NEXT);
+  if (nx >= 0) rest = rest.slice(0, nx);
+  const raw = rest.replace(/\s+/g, ' ').trim();
+  const tok = (raw.match(/^[^\s,;.]+/) || [''])[0].slice(0, 40);
+  return { raw: raw.slice(0, 80), tid: /\d/.test(tok) ? tok : '' };
+}
+
+function qcKey(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+// The same terminal, allowing for a spreadsheet having eaten a leading zero.
+function qcSame(a, b) {
+  const x = qcKey(a), y = qcKey(b);
+  if (!x || !y) return false;
+  return x === y || x.replace(/^0+/, '') === y.replace(/^0+/, '');
+}
+
+// Both values with the characters the other one does not share marked, from
+// the longest run they have in common - a dropped digit shows as one mark, not
+// as everything after it being wrong.
+function qcDiff(a, b) {
+  a = String(a || '').slice(0, 40); b = String(b || '').slice(0, 40);
+  const n = a.length, m = b.length;
+  const L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+    L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const ka = new Array(n).fill(false), kb = new Array(m).fill(false);
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { ka[i] = kb[j] = true; i++; j++; }
+    else if (L[i + 1][j] >= L[i][j + 1]) i++;
+    else j++;
+  }
+  const paint = (t, k) => [...t].map((c, x) => k[x] ? esc(c) : '<mark class="qc-x">' + esc(c) + '</mark>').join('');
+  return { a: paint(a, ka), b: paint(b, kb) };
+}
+
+// What is wrong, in the words you would say it.
+function qcWhy(sub, tid) {
+  const a = qcKey(sub), b = qcKey(tid);
+  if (!a) return 'The job has no Sublocation';
+  if (a.length !== b.length) {
+    const d = b.length - a.length, k = Math.abs(d);
+    return 'Receipt TID is ' + k + ' digit' + (k !== 1 ? 's' : '') + (d < 0 ? ' short' : ' too long');
+  }
+  const at = [];
+  for (let x = 0; x < a.length; x++) if (a[x] !== b[x]) at.push(x);
+  if (at.length === 2 && at[1] === at[0] + 1 && a[at[0]] === b[at[1]] && a[at[1]] === b[at[0]]) return 'Two digits swapped';
+  return at.length + ' digit' + (at.length !== 1 ? 's' : '') + ' different';
+}
+
+function qcStatus(msg, type) {
+  const el = document.getElementById('qc-status');
+  if (el) { el.textContent = msg; el.className = 'kpi-tpl-status' + (type ? ' sv-status-' + type : ''); }
+}
+
+function qcPickCols() {
+  const pick = (...res) => { for (const re of res) { const h = qcHeaders.find(x => re.test(x)); if (h) return h; } return ''; };
+  qcCols = {
+    notes: pick(/last\s*updated\s*notes/i, /notes?/i),
+    sub:   pick(/sub\s*-?\s*location/i),
+    job:   pick(/^job\s*#/i, /^job\s*(no|num|number|id)\b/i, /^job$/i),
+    loc:   pick(/^location\s*name/i, /^location$/i, /^site/i),
+    tech:  pick(/^technician/i, /^tech/i),
+    by:    pick(/last\s*updated\s*by/i),
+  };
+}
+
+async function qcLoad(file) {
+  if (!file) return;
+  qcOut = null; qcShowOk = false; qcRows = null;
+  document.getElementById('qc-result').innerHTML = '';
+  try {
+    // A CSV is read as plain text with nothing converted, so a TID that starts
+    // with a zero keeps it - otherwise 04315042501 arrives as a number.
+    const csv = /\.csv$/i.test(file.name);
+    const wb = csv ? XLSX.read(await file.text(), { type: 'string', raw: true })
+                   : XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    let hdrIdx = 0;
+    for (let i = 0; i < Math.min(raw.length, 25); i++) {
+      const cells = raw[i].map(c => String(c).toLowerCase());
+      if (cells.some(c => c.includes('notes') || c.includes('sublocation'))) { hdrIdx = i; break; }
+    }
+    const headers = (raw[hdrIdx] || []).map(c => String(c));
+    qcHeaders = headers.filter(h => h.trim() !== '');
+    qcRows = raw.slice(hdrIdx + 1).map(row => {
+      const o = {}; headers.forEach((h, i) => { o[h] = row[i] !== undefined ? row[i] : ''; }); return o;
+    }).filter(r => headers.some(h => String(r[h] || '').trim() !== ''));
+    qcName = file.name.replace(/\.[^.]+$/, '');
+    if (!qcRows.length) { qcRows = null; qcStatus('No data rows found', 'error'); return; }
+    qcStatus(`${qcName} \u00b7 ${qcRows.length.toLocaleString()} rows`, 'ok');
+    qcPickCols();
+    qcRun();
+  } catch (e) {
+    qcRows = null;
+    qcStatus('Could not read file: ' + e.message, 'error');
+  }
+}
+
+function qcSetCol(which, v) {
+  qcCols[which] = v;
+  qcShowOk = false;
+  qcRun();
+}
+
+function qcRenderCols() {
+  const el = document.getElementById('qc-cols');
+  if (!el) return;
+  if (!qcRows) { el.style.display = 'none'; return; }
+  const opts = cur => `<option value="">Choose a column</option>` + qcHeaders.map(h =>
+    `<option value="${escAttr(h)}"${h === cur ? ' selected' : ''}>${esc(h)}</option>`).join('');
+  el.style.display = '';
+  el.innerHTML = `
+    <label class="qc-col"><span>Notes</span>
+      <select class="qc-sel" onchange="qcSetCol('notes', this.value)">${opts(qcCols.notes)}</select></label>
+    <i class="ti ti-arrows-left-right qc-col-vs" aria-hidden="true"></i>
+    <label class="qc-col"><span>Sublocation</span>
+      <select class="qc-sel" onchange="qcSetCol('sub', this.value)">${opts(qcCols.sub)}</select></label>`;
+}
+
+function qcRun() {
+  const el = document.getElementById('qc-result');
+  if (!el || !qcRows) return;
+  qcRenderCols();
+  if (!qcCols.notes || !qcCols.sub) {
+    qcOut = null;
+    el.innerHTML = `<div class="qc-empty"><i class="ti ti-columns-3"></i><div><b>Choose the two columns above</b>
+      <span>The notes column holding the QC block, and the column with the job's Sublocation.</span></div></div>`;
+    return;
+  }
+  const out = { bad: [], blank: [], ok: [], skipped: 0, total: qcRows.length };
+  const get = (r, k) => qcCols[k] ? String(r[qcCols[k]] || '').trim() : '';
+  qcRows.forEach(r => {
+    const note = String(r[qcCols.notes] || '');
+    if (!qcHasTemplate(note)) { out.skipped++; return; }
+    const rc = qcField(note, QC_RCPT), fl = qcField(note, QC_FILE);
+    const row = { job: get(r, 'job'), loc: get(r, 'loc'), tech: get(r, 'tech'), by: get(r, 'by'),
+      sub: get(r, 'sub'), tid: rc.tid, raw: rc.raw, file: fl.tid };
+    if (!row.tid) out.blank.push(row);
+    else if (qcSame(row.sub, row.tid)) out.ok.push(row);
+    else out.bad.push(row);
+  });
+  qcOut = out;
+  qcRender();
+}
+
+function qcToggleOk() { qcShowOk = !qcShowOk; qcRender(); }
+
+function qcCopyIds(kind) {
+  const ids = ((qcOut && qcOut[kind]) || []).map(r => r.job).filter(Boolean);
+  if (!ids.length) return;
+  navigator.clipboard.writeText(ids.join(' ')).then(
+    () => showToast(`Copied ${ids.length} job number${ids.length !== 1 ? 's' : ''}`),
+    () => showToast('Could not reach the clipboard'));
+}
+
+function qcRender() {
+  const el = document.getElementById('qc-result');
+  const o = qcOut;
+  if (!el || !o) return;
+  const checked = o.bad.length + o.blank.length + o.ok.length;
+  const skipLine = o.skipped
+    ? `<div class="qc-foot">${o.skipped.toLocaleString()} job${o.skipped !== 1 ? 's' : ''} without the QC note in ${esc(qcCols.notes)} ${o.skipped !== 1 ? 'were' : 'was'} left out.</div>` : '';
+  if (!checked) {
+    el.innerHTML = `<div class="qc-empty"><i class="ti ti-file-search"></i><div><b>No job in this file has the QC note</b>
+      <span>Only jobs whose ${esc(qcCols.notes)} has the Address / Trading name / TID / MID on file and on receipt block are checked.
+      ${o.total.toLocaleString()} row${o.total !== 1 ? 's were' : ' was'} looked at.</span></div></div>`;
+    return;
+  }
+
+  const tile = (cls, n, label, ico) => `<div class="qc-tile ${cls}${n ? '' : ' zero'}">
+      <i class="ti ${ico}"></i><b>${n.toLocaleString()}</b><span>${label}</span></div>`;
+  const stats = `<div class="qc-stats">
+      ${tile('bad', o.bad.length, 'Don\u2019t match', 'ti-alert-triangle')}
+      ${tile('blank', o.blank.length, 'No TID on receipt', 'ti-receipt-off')}
+      ${tile('ok', o.ok.length, 'Match', 'ti-circle-check')}
+      ${tile('all', checked, 'Jobs checked', 'ti-list-check')}
+    </div>`;
+
+  const link = r => {
+    const url = r.job ? buildHelpdeskUrl(r.job) : '';
+    return url
+      ? `<a class="qc-go" href="${escAttr(url)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Open job</a>`
+      : `<span class="qc-go dead" title="No job number on this row">No job #</span>`;
+  };
+  const meta = r => [
+    r.tech ? `<span><i class="ti ti-user"></i>${esc(r.tech)}</span>` : '',
+    r.by ? `<span title="Last updated by"><i class="ti ti-pencil"></i>${esc(r.by)}</span>` : '',
+    r.file ? `<span title="The TID the note has on file">On file <code>${esc(r.file)}</code>${qcSame(r.file, r.sub) ? '' : ' <em class="qc-also">also differs</em>'}</span>` : '',
+  ].filter(Boolean).join('');
+
+  const card = (r, i, kind) => {
+    const d = kind === 'bad' ? qcDiff(r.sub, r.tid) : { a: esc(r.sub), b: '' };
+    const rcpt = kind === 'bad' ? d.b
+      : (r.raw ? `<span class="qc-raw" title="What the note has after TID on Receipt">\u201c${esc(r.raw)}\u201d</span>` : '<span class="qc-raw">blank</span>');
+    const why = kind === 'bad' ? qcWhy(r.sub, r.tid) : (r.raw ? 'No TID in what was written' : 'Left blank in the note');
+    return `<div class="qc-card ${kind}" style="animation-delay:${Math.min(i, 14) * 28}ms">
+      ${link(r)}
+      <div class="qc-main">
+        <div class="qc-head"><b class="qc-job">${esc(r.job || '\u2014')}</b><span class="qc-loc" title="${escAttr(r.loc)}">${esc(r.loc)}</span>
+          <span class="qc-why">${esc(why)}</span></div>
+        <div class="qc-cmp">
+          <span class="qc-lbl">Sublocation</span><code class="qc-v">${d.a || '<span class="qc-raw">none</span>'}</code>
+          <span class="qc-lbl">TID on receipt</span><code class="qc-v ${kind}">${rcpt}</code>
+        </div>
+        ${meta(r) ? `<div class="qc-meta">${meta(r)}</div>` : ''}
+      </div>
+    </div>`;
+  };
+
+  const ids = list => list.map(r => r.job).filter(Boolean);
+  const head = (kind, cls, ico, title, list) => {
+    const j = ids(list);
+    const all = j.length > 1 ? buildHelpdeskUrl(j.join(' ')) : '';
+    return `<div class="al-vsec-hd qc-hd ${cls}"><i class="ti ${ico}"></i>${title}<span class="al-vsec-n qc-n ${cls}">${list.length}</span>
+      <span class="qc-acts">
+        ${j.length ? `<button class="qc-act" onclick="qcCopyIds('${kind}')"><i class="ti ti-copy"></i>Copy job numbers</button>` : ''}
+        ${all ? `<a class="qc-act" href="${escAttr(all)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Open all ${j.length}</a>` : ''}
+      </span></div>`;
+  };
+
+  const sec = (kind, cls, ico, title, list) => list.length
+    ? `<div class="al-vsec">${head(kind, cls, ico, title, list)}<div class="qc-list">${list.map((r, i) => card(r, i, kind)).join('')}</div></div>` : '';
+
+  const okRows = o.ok.map(r => `<div class="qc-okrow">
+      <span class="qc-okj">${r.job ? `<a href="${escAttr(buildHelpdeskUrl(r.job))}" target="_blank" rel="noopener">${esc(r.job)}</a>` : '\u2014'}</span>
+      <span class="qc-okl" title="${escAttr(r.loc)}">${esc(r.loc)}</span>
+      <code>${esc(r.tid)}</code></div>`).join('');
+  const okSec = o.ok.length ? `<div class="al-vsec">
+      <div class="al-vsec-hd qc-hd ok">
+        <button class="al-vsec-toggle" onclick="qcToggleOk()" aria-expanded="${qcShowOk}">
+          <i class="ti ti-chevron-right al-vsec-chev${qcShowOk ? ' open' : ''}"></i><i class="ti ti-circle-check"></i>Match
+          <span class="al-vsec-n qc-n ok">${o.ok.length}</span></button></div>
+      ${qcShowOk ? `<div class="qc-oklist">${okRows}</div>` : ''}</div>` : '';
+
+  const allGood = !o.bad.length && !o.blank.length
+    ? `<div class="qc-empty good"><i class="ti ti-circle-check"></i><div><b>Every receipt TID matches its Sublocation</b>
+        <span>${checked} job${checked !== 1 ? 's' : ''} with the QC note checked.</span></div></div>` : '';
+
+  el.innerHTML = stats + allGood
+    + sec('bad', 'bad', 'ti-alert-triangle', 'Doesn\u2019t match', o.bad)
+    + sec('blank', 'blank', 'ti-receipt-off', 'No TID on receipt', o.blank)
+    + okSec + skipLine;
 }
 
 // ===== BUSY SITES =====
@@ -23775,6 +24175,7 @@ const PAGES = {
   alloccheck:     { title:'Allocation Lookup', icon:'ti-map-search',       color:'c-teal',   desc:'Look up the technician allocation and zone type by suburb, zone, postcode or state.' },
   projanalysis:   { title:'Project Analysis',  icon:'ti-chart-histogram',  color:'c-green',  desc:'Delivery, reschedule risk and booking lead time, reconstructed from the daily job exports.' },
   allocvalidate:  { title:'Allocation Validator', icon:'ti-shield-check',  color:'c-coral',  desc:'Flag jobs whose technician is not the one their zone allocates to.' },
+  qccheck:        { title:'QC Check',          icon:'ti-receipt',          color:'c-teal',   desc:'The TID on each job\u2019s receipt, held against its Sublocation, for every job with the QC note.' },
   stock:          { title:'Stock Checks',      icon:'ti-package',          color:'c-green',  desc:'Replacement jobs from a file, each with the warehouse stock link for that part at that technician.' },
   escalations:    { title:'Escalation Review', icon:'ti-mail-forward',     color:'c-purple', desc:'Which escalated jobs still need an email, once the desk\u2019s updates and the ones already sent are taken out.' },
   morning:        { title:'Morning Run',       icon:'ti-sunrise',          color:'c-amber',  desc:'The same five steps every morning, each one knowing whether you have already done it today.' },
@@ -23794,11 +24195,11 @@ const HUB_META = {
 };
 const DEFAULT_HUB_LAYOUT = {
   helpdesk: ['kpi','message','meetings','templates','suburbcheck','escalations'],
-  dispatch: ['morning','exceptions','allocvalidate','stock','alloccheck'],
+  dispatch: ['morning','exceptions','allocvalidate','stock','alloccheck','qccheck'],
   projects: ['projanalysis','meetings'],
   personal: ['wishlist','insights','notes','learning'],
 };
-const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions','morning'];
+const DISPATCH_PAGES = ['allocvalidate','stock','alloccheck','exceptions','morning','qccheck'];
 const AL_POS_FLAG = 'zarif_hub_alloc_2nd';
 let hubLayout = loadHubLayout(); // will be reloaded after dbLoad
 function loadHubLayout() {
@@ -23860,7 +24261,8 @@ const HUB_SEEDS = [
   { id: 'suburbcheck',  hub: 'helpdesk', page: 'suburbcheck' },
   { id: 'projanalysis', hub: 'projects', page: 'projanalysis', first: true },
   { id: 'morning',      hub: 'dispatch', page: 'morning', first: true },
-  { id: 'escalations',  hub: 'helpdesk', page: 'escalations' }
+  { id: 'escalations',  hub: 'helpdesk', page: 'escalations' },
+  { id: 'qccheck',      hub: 'dispatch', page: 'qccheck' }
 ];
 
 function applyHubSeeds(layout) {
@@ -30372,6 +30774,12 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.61.0', type: 'feature', date: '24 Nov 2026', title: 'QC Check', changes: [
+    'A new <b>QC Check</b> page under Dispatch. Load the job export and it reads the <b>TID on Receipt</b> out of each job\u2019s Last Updated Notes and holds it against the job\u2019s <b>Sublocation</b>',
+    'Only jobs whose note carries the QC block — Address, Trading name, TID and MID on file and on receipt — are checked. The rest are left out, with a line saying how many',
+    'Jobs that <b>don\u2019t match</b> come first, with the characters that differ marked and what is wrong said plainly — a digit short, two digits swapped. Jobs where the receipt TID was <b>left blank</b> come next. Matches fold away underneath',
+    'Each section can copy its job numbers or open them all in one helpdesk tab. A TID that starts with a zero keeps it when the file is a CSV',
+  ]},
   { ver: '4.60.0', type: 'feature', date: '24 Nov 2026', title: 'Busy days for subcontractors', changes: [
     '<b>Busy sites</b> now also flags a <b>subcontractor</b> with that many jobs of one part on <b>one day, at any site</b>. A subcontractor has to be sent every unit, so eleven jobs across four dealerships are eleven units to send just as much as eleven at one shop',
     'Those cards are marked <b>Subcontractor · one day, any site</b> and name the sites. A job caught that way is not counted again by the same-site rule, so nothing reads as two warnings. Our own depots are unchanged',
