@@ -3839,6 +3839,7 @@
   .qc-meta { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; color:var(--text-3); }
   .qc-meta span { display:inline-flex; align-items:center; gap:4px; min-width:0; }
   .qc-meta code { font-family:'JetBrains Mono', ui-monospace, Consolas, monospace; font-size:11px; color:var(--text-2); }
+  .qc-fva { color:var(--text-3); font-weight:500; }
   .qc-note { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-2); }
   .qc-note .ti { color:var(--qc-ac); }
   .qc-mid { margin-right:6px; padding:0 5px; border-radius:4px; font-family:inherit; font-size:9.5px; font-weight:700;
@@ -14578,11 +14579,23 @@ function qcField(note, label) {
 }
 
 function qcKey(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
-// The same terminal, allowing for a spreadsheet having eaten a leading zero.
+// The FVA in front of a TID is the system's, not the terminal's: the job holds
+// FVA26055400 and the receipt prints 26055400. It is set aside on both sides.
+function qcBare(v) { return qcKey(v).replace(/^FVA/, ''); }
+function qcHasFva(v) { return /^FVA/.test(qcKey(v)); }
+// The same terminal, allowing for an FVA prefix on one side and a spreadsheet
+// having eaten a leading zero.
 function qcSame(a, b) {
-  const x = qcKey(a), y = qcKey(b);
+  const x = qcBare(a), y = qcBare(b);
   if (!x || !y) return false;
   return x === y || x.replace(/^0+/, '') === y.replace(/^0+/, '');
+}
+// The diff with any FVA prefix shown plain, so only real differences are marked.
+function qcDiffFva(a, b) {
+  const pa = qcHasFva(a) ? String(a).trim().slice(0, 3) : '', pb = qcHasFva(b) ? String(b).trim().slice(0, 3) : '';
+  const d = qcDiff(String(a || '').trim().slice(pa.length), String(b || '').trim().slice(pb.length));
+  const tag = p => p ? `<span class="qc-fva" title="FVA prefix - ignored">${esc(p)}</span>` : '';
+  return { a: tag(pa) + d.a, b: tag(pb) + d.b };
 }
 
 // Both values with the characters the other one does not share marked, from
@@ -14608,7 +14621,7 @@ function qcDiff(a, b) {
 // What is wrong, in the words you would say it.
 function qcWhy(sub, tid, what) {
   what = what || 'TID';
-  const a = qcKey(sub), b = qcKey(tid);
+  const a = qcBare(sub), b = qcBare(tid);
   if (!a) return what === 'MID' ? 'The job has no Customer Location ID' : 'The job has no Sublocation';
   if (a.length !== b.length) {
     const d = b.length - a.length, k = Math.abs(d);
@@ -14783,7 +14796,7 @@ function qcRender() {
 
   const card = (r, i, kind) => {
     const mid = r.basis === 'MID';
-    const d = kind === 'bad' ? qcDiff(r.want, r.got) : { a: esc(r.sub), b: '' };
+    const d = kind === 'bad' ? qcDiffFva(r.want, r.got) : { a: esc(r.sub), b: '' };
     const rcpt = kind === 'bad' ? d.b
       : (r.raw ? `<span class="qc-raw" title="What the note has after TID on Receipt">\u201c${esc(r.raw)}\u201d</span>` : '<span class="qc-raw">blank</span>');
     const why = kind === 'bad' ? qcWhy(r.want, r.got, r.basis) : (r.raw ? 'No TID in what was written' : 'TID left blank in the note');
@@ -14820,7 +14833,8 @@ function qcRender() {
   const okRows = o.ok.map(r => `<div class="qc-okrow">
       <span class="qc-okj">${r.job ? `<a href="${escAttr(buildHelpdeskUrl(r.job))}" target="_blank" rel="noopener">${esc(r.job)}</a>` : '\u2014'}</span>
       <span class="qc-okl" title="${escAttr(r.loc)}">${esc(r.loc)}</span>
-      <code>${r.basis === 'MID' ? '<span class="qc-mid" title="No TID on the receipt - its MID matched the Customer Location ID">MID</span>' : ''}${esc(r.got)}</code></div>`).join('');
+      <code>${r.basis === 'MID' ? '<span class="qc-mid" title="No TID on the receipt - its MID matched the Customer Location ID">MID</span>' : ''}${qcHasFva(r.want) !== qcHasFva(r.got)
+        ? `<span class="qc-mid" title="Matched once the FVA prefix was set aside: ${escAttr(r.want)} against ${escAttr(r.got)}">FVA</span>` : ''}${esc(r.got)}</code></div>`).join('');
   const okSec = o.ok.length ? `<div class="al-vsec">
       <div class="al-vsec-hd qc-hd ok">
         <button class="al-vsec-toggle" onclick="qcToggleOk()" aria-expanded="${qcShowOk}">
@@ -30817,6 +30831,10 @@ function renderWishlist() {
 
 // ===== CHANGELOG =====
 const CHANGELOG = [
+  { ver: '4.62.1', type: 'patch', date: '26 Nov 2026', title: 'QC Check ignores the FVA prefix', changes: [
+    'A Sublocation of <b>FVA26055400</b> against a receipt TID of <b>26055400</b> is now a <b>match</b>, tagged <b>FVA</b> in the list — the prefix is the system\\u2019s, not the terminal\\u2019s. It is set aside on either side',
+    'When the digits do differ, the FVA is shown greyed out and only the real difference is marked and counted',
+  ]},
   { ver: '4.62.0', type: 'feature', date: '24 Nov 2026', title: 'QC Check falls back to the MID', changes: [
     'When the receipt has <b>no TID</b>, QC Check now holds the <b>MID on receipt</b> against the job\u2019s <b>Customer Location ID</b> instead — still only for notes written in the QC template',
     'A MID that matches goes into <b>Match</b>, tagged <b>MID</b>. One that differs goes into <b>Doesn\u2019t match</b> with the digits marked, and says it was checked on the MID',
